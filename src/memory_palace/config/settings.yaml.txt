@@ -1,0 +1,159 @@
+# =============================================================================
+# Memory Palace OS 全局运行时配置 (v1.2.0)
+# =============================================================================
+# 说明：
+#   1. 敏感配置使用占位符，实际值通过环境变量注入
+#   2. 支持 APP_ENV 环境变量切换 (dev/test/prod)
+#   3. 配置项可通过 MEMORY_PALACE_ 前缀覆盖
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. 基础系统设置
+# -----------------------------------------------------------------------------
+system:
+  app_name: "MemoryPalaceOS"
+  version: "1.2.0"
+  timezone: "Asia/Shanghai"
+  log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_dir: "./data/logs"
+  data_dir: "./data"
+
+# -----------------------------------------------------------------------------
+# 2. 大语言模型 (LLM) 配置
+# -----------------------------------------------------------------------------
+llm:
+  default_model: "gpt-4o"  # 生产环境建议替换为中转网关或内部 Proxy
+  timeout: 30.0           # 请求超时时间 (秒)
+  max_retries: 3          # 最大重试次数
+  retry_delay: 1.0        # 重试延迟 (秒)
+  # API 配置 - 敏感信息通过环境变量覆盖
+  base_url: "https://api.openai.com/v1"
+  # api_key: ""           # 通过 OPENAI_API_KEY 环境变量设置
+  # 支持多模型配置
+  models:
+    fast: "gpt-3.5-turbo"
+    standard: "gpt-4o"
+    premium: "gpt-4-turbo"
+    local: "local-model"  # 本地模型
+  # Embedding 配置
+  embedding:
+    model: "text-embedding-3-small"
+    dimension: 1536
+    batch_size: 100
+
+# -----------------------------------------------------------------------------
+# 3. 数据库与存储
+# -----------------------------------------------------------------------------
+storage:
+  sqlite_path: "data/memory.db"
+  vector_db_path: "data/vector_db"
+  pool_size: 10
+  max_overflow: 20
+  pool_timeout: 30
+  pool_recycle: 3600
+  echo_sql: false  # 是否输出 SQL 日志 (dev 环境可开启)
+
+# -----------------------------------------------------------------------------
+# 4. 企业微信网关参数
+# -----------------------------------------------------------------------------
+wechat:
+  callback_port: 8080
+  token_refresh_margin: 200  # Token 过期前多少秒执行强制续期
+  # 以下敏感信息通过环境变量配置:
+  # WECHAT_CORP_ID       - 企业 ID
+  # WECHAT_CORP_SECRET   - 应用密钥
+  # WECHAT_TOKEN          - 回调 Token
+  # WECHAT_ENCODING_AES_KEY - 加密密钥
+
+# -----------------------------------------------------------------------------
+# 5. SLA 监控红线 (Watcher Agent 的默认依从标准)
+# -----------------------------------------------------------------------------
+sla_policy:
+  p0_timeout_min: 3      # P0 紧急: 3 分钟超时
+  p1_timeout_min: 10     # P1 高优: 10 分钟超时
+  p2_timeout_min: 30     # P2 标准: 30 分钟超时
+  p3_timeout_min: 60     # P3 低优: 60 分钟超时
+  p4_timeout_min: 120    # P4 可延迟: 2 小时超时
+  auto_escalation: true  # 是否自动升级到更高优先级
+  escalation_chain:
+    - "commander"
+    - "watcher"
+    - "admin"  # 最终升级到管理员
+
+# -----------------------------------------------------------------------------
+# 6. 消息队列配置
+# -----------------------------------------------------------------------------
+queue:
+  max_size: 10000              # 队列最大长度
+  retry_limit: 3               # 消息重试次数
+  retry_delay_seconds: 1.0     # 重试延迟
+  retry_backoff: 2.0           # 退避系数
+  dead_letter_enabled: true   # 是否启用死信队列
+  dead_letter_path: "data/dead_letters"
+
+# -----------------------------------------------------------------------------
+# 7. 监控配置
+# -----------------------------------------------------------------------------
+metrics:
+  enabled: true
+  port: 9090                    # Prometheus 端口
+  scrape_interval: 15            # 采集间隔 (秒)
+  retention_days: 15             # 数据保留天数
+  # 以下通过环境变量配置:
+  # PROMETHEUS_USER     - Prometheus 用户名
+  # PROMETHEUS_PASSWORD - Prometheus 密码
+
+# -----------------------------------------------------------------------------
+# 8. 安全配置
+# -----------------------------------------------------------------------------
+security:
+  cors_enabled: true
+  cors_origins:
+    - "*"                       # 生产环境应限制具体域名
+  api_key_required: false
+  rate_limit_enabled: true
+  rate_limit_requests: 100      # 每分钟请求数
+  rate_limit_burst: 20           # 突发限制
+  # JWT 配置 (如启用)
+  jwt:
+    secret: ""                   # 通过环境变量 JWT_SECRET 设置
+    algorithm: "HS256"
+    expiration_hours: 24
+
+# -----------------------------------------------------------------------------
+# 9. 技能配置
+# -----------------------------------------------------------------------------
+skills:
+  # 路由配置
+  router:
+    use_regex_first: true       # 先用正则匹配，失败再用语义模型
+    confidence_threshold: 0.7   # 意图识别置信度阈值
+  # 记忆配置
+  memory_ops:
+    top_k: 5                    # 召回 top-k 条记忆
+    similarity_threshold: 0.7   # 相似度阈值
+    max_context_length: 4000    # 最大上下文长度
+  # 人格配置
+  persona:
+    max_conversation_turns: 20   # 最大对话轮数
+    temperature: 0.8             # 拟人化温度
+    presence_penalty: 0.1        # 存在惩罚
+    frequency_penalty: 0.1       # 频率惩罚
+  # 巡检配置
+  watcher:
+    check_interval_minutes: 5    # 巡检间隔
+    sla_threshold: 0.95         # SLA 达标阈值
+
+# -----------------------------------------------------------------------------
+# 10. 部署配置
+# -----------------------------------------------------------------------------
+deploy:
+  workers: 4                    # Gunicorn worker 数量
+  worker_class: "uvicorn.workers.UvicornWorker"
+  worker_connections: 1000
+  max_requests: 1000            # worker 最大请求数后重启
+  max_requests_jitter: 50
+  timeout: 30
+  keepalive: 5
+
+    

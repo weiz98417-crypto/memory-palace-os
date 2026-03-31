@@ -1,0 +1,42 @@
+# =============================================================================
+# 🧠 MemoryOps Agent (记忆专家) 运行时配置文件 (Industrial Grade)
+# =============================================================================
+
+# 1. 智能体基础元数据
+agent_metadata:
+  name: "MemoryOps_Agent"
+  version: "1.1.0"
+  description: "处突与记忆专家：通过向量数据库打捞历史处置经验，为现场决策提供 RAG 增强参考"
+
+# 2. 大语言模型 (LLM) 策略配置
+# 记忆专家需要结合历史案例做类比推理，建议使用推理能力强的模型。
+llm_config:
+  model: "gpt-4o"              # 旗舰模型，擅长跨案例类比推理
+  temperature: 0.3             # 中等随机性：既要保持判断的一致性，又要允许灵活类比
+  top_p: 0.95
+  max_tokens: 1200             # 允许输出较长的处置建议和参考案例说明
+  json_mode: true              # 必须开启，输出结构化的回复供下游系统解析
+  timeout: 20.0               # RAG 检索 + LLM 推理时间较长，允许 20 秒
+
+# 3. RAG 检索参数 (Retrieval-Augmented Generation)
+rag_config:
+  top_k: 3                    # 最多召回 3 条最相似的历史案例
+  similarity_threshold: 0.75   # 相似度低于 0.75 的案例将被静默丢弃，防止误导性类比
+  max_reference_chars: 2000    # 单条参考案例最多展示字符数，防止上下文溢出
+
+# 4. 业务逻辑控制 (Business Logic Guardrails)
+logic_controls:
+  # 无相关案例时的兜底策略
+  fallback_reply: "抱歉，记忆宫殿中暂未检索到相关历史处置案例。建议直接请示值班经理。"
+
+  # 是否优先召回同区域的历史案例（增强地理相关性）
+  geo_prioritized: false
+
+  # 是否优先召回同严重级别的历史案例
+  severity_prioritized: false
+
+# 5. 可观测性与审计 (Observability)
+observability:
+  log_level: "INFO"
+  track_recall_stats: true     # 记录每次检索的召回数量和相似度分布
+  audit_case_references: true   # 审计每条被引用案例的 case_id，便于事后溯源

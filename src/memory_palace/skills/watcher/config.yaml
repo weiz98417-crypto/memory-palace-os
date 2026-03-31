@@ -1,0 +1,41 @@
+# =============================================================================
+# 🦅 Watcher Agent (鹰眼巡检专家) 运行时配置文件 (Industrial Grade)
+# =============================================================================
+
+# 1. 智能体基础元数据
+agent_metadata:
+  name: "Watcher_Audit_Agent"
+  version: "1.2.0"
+  description: "后台定时巡检、SLA 超时监控与 SOP 合规性审查大模型引擎"
+
+# 2. 大语言模型 (LLM) 策略配置
+# 巡检专家是在做“法官”和“质检员”的工作，必须剥离所有的创造力和发散思维。
+llm_config:
+  model: "gpt-4o"            # 推荐使用逻辑最强的大模型进行复杂的日志阅读理解和指令比对
+  temperature: 0.0           # 【绝对红线】审计工作要求 100% 的确定性与铁面无私，温度必须降至 0
+  top_p: 1.0                 # 配合 temperature 0 使用
+  max_tokens: 1500           # 批量审查可能一次性输出多条违规工单明细，预留充足 Token
+  json_mode: true            # 必须开启，输出结构化的 escalated_cases 数组供外层程序自动报警
+  timeout: 30.0              # 批量阅读大量日志耗时极长，超时时间必须放到最大 (30秒)
+
+# 3. 巡检与合规审查逻辑 (Audit & SLA Guardrails)
+logic_controls:
+  batch_size_limit: 20       # 每次大模型最多同时审阅 20 条工单记录，防止超过大模型的“注意力极限”导致漏判
+  strict_sop_compliance: true # 【合规红线】是否严格要求一线员工的后续反馈中，必须实质性包含指挥官要求的 next_step_check
+
+  # SLA (Service Level Agreement) 超时升级告警红线
+  # 从事件发生起算，如果超过以下时间仍未收到闭环确认，鹰眼将强制判定为违规并升级 (Escalate)
+  sla_timeouts_minutes:
+    P0: 3                    # P0 级生命安全事件：3 分钟未闭环即最高级别告警
+    P1: 10                   # P1 级重大故障：10 分钟未闭环即告警
+    P2: 30                   # P2 级普通客诉：30 分钟未闭环即告警
+    P3: 120                  # P3/P4 级日常事件：2 小时未闭环即告警
+
+# 4. 可观测性与告警路由 (Observability & Alerting)
+observability:
+  log_level: "INFO"
+  record_audit_trail: true   # 将每次鹰眼的审查结论（即使是正常的）也落盘到 SQLite，供集团安监部月度抽查
+  escalation_action:
+    # 鹰眼发现违规后，系统层面将采取的动作映射
+    trigger_wechat_webhook: true
+    alert_duty_manager: true

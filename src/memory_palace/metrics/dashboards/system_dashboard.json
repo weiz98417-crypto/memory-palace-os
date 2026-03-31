@@ -1,0 +1,76 @@
+{
+  "dashboard": {
+    "title": "Memory Palace OS - 系统监控",
+    "uid": "memory_palace_system",
+    "panels": [
+      {
+        "id": 1,
+        "title": "CPU 使用率",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "memory_palace_cpu_usage_percent"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 0, "w": 6, "h": 6}
+      },
+      {
+        "id": 2,
+        "title": "内存使用 (RSS)",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "memory_palace_memory_usage_bytes{memory_type=\"rss\"} / 1024 / 1024"
+          }
+        ],
+        "gridPos": {"x": 6, "y": 0, "w": 6, "h": 6}
+      },
+      {
+        "id": 3,
+        "title": "线程数",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "memory_palace_threads_count{thread_type=\"active\"}"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 0, "w": 6, "h": 6}
+      },
+      {
+        "id": 4,
+        "title": "数据库活跃连接",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(memory_palace_db_connections_active)"
+          }
+        ],
+        "gridPos": {"x": 18, "y": 0, "w": 6, "h": 6}
+      },
+      {
+        "id": 5,
+        "title": "消息队列深度",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "memory_palace_queue_depth",
+            "legendFormat": "{{queue_name}}"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 6, "w": 12, "h": 8}
+      },
+      {
+        "id": 6,
+        "title": "队列消息处理速率",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(memory_palace_queue_messages_processed_total[5m])",
+            "legendFormat": "{{queue_name}} {{status}}"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 6, "w": 12, "h": 8}
+      }
+    ]
+  }
+}

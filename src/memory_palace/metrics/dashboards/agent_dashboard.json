@@ -1,0 +1,83 @@
+{
+  "dashboard": {
+    "title": "Memory Palace OS - Agent 监控",
+    "uid": "memory_palace_agent",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Agent 请求速率",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(memory_palace_agent_requests_total[5m])",
+            "legendFormat": "{{agent_name}} {{status}}"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}
+      },
+      {
+        "id": 2,
+        "title": "Agent 响应时间 P50/P95",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(memory_palace_agent_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "P50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(memory_palace_agent_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "P95"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8}
+      },
+      {
+        "id": 3,
+        "title": "Agent 交接 (Handoffs)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(memory_palace_agent_handoffs_total[5m])",
+            "legendFormat": "{{from_agent}} → {{to_agent}}"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8}
+      },
+      {
+        "id": 4,
+        "title": "活跃会话数",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(memory_palace_active_sessions)"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 8, "w": 6, "h": 4}
+      },
+      {
+        "id": 5,
+        "title": "Token 消耗速率",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(memory_palace_llm_tokens_total[5m])",
+            "legendFormat": "{{provider}}/{{model}}/{{token_type}}"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8}
+      },
+      {
+        "id": 6,
+        "title": "LLM 成本累计",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(memory_palace_llm_cost_total[1h])",
+            "legendFormat": "{{provider}}/{{model}} $/h"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 16, "w": 12, "h": 8}
+      }
+    ]
+  }
+}

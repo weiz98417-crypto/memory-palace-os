@@ -1,0 +1,56 @@
+{
+  "dashboard": {
+    "title": "Memory Palace OS - Agent 全景",
+    "uid": "memory_palace_agent_overview",
+    "panels": [
+      {
+        "id": 1,
+        "title": "各 Agent 请求量",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum by (agent_name) (rate(memory_palace_agent_requests_total[5m]))",
+            "legendFormat": "{{agent_name}}"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}
+      },
+      {
+        "id": 2,
+        "title": "Agent 成功率",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum by (agent_name) (rate(memory_palace_agent_requests_total{status=\"success\"}[5m])) / sum by (agent_name) (rate(memory_palace_agent_requests_total[5m])) * 100",
+            "legendFormat": "{{agent_name}} 成功率 %"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8}
+      },
+      {
+        "id": 3,
+        "title": "Token 消耗趋势",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum by (model) (rate(memory_palace_llm_tokens_total[1h]))",
+            "legendFormat": "{{model}} tokens/h"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8}
+      },
+      {
+        "id": 4,
+        "title": "Agent 交接热力图",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum by (from_agent, to_agent) (rate(memory_palace_agent_handoffs_total[5m]))",
+            "legendFormat": "{{from_agent}} → {{to_agent}}"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8}
+      }
+    ]
+  }
+}

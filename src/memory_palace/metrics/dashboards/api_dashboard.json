@@ -1,0 +1,78 @@
+{
+  "dashboard": {
+    "title": "Memory Palace OS - API 监控",
+    "uid": "memory_palace_api",
+    "panels": [
+      {
+        "id": 1,
+        "title": "请求速率 (QPS)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(memory_palace_http_requests_total[5m])",
+            "legendFormat": "{{method}} {{endpoint}} {{status}}"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}
+      },
+      {
+        "id": 2,
+        "title": "请求延迟 P50/P95/P99",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(memory_palace_http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "P50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(memory_palace_http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "P95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(memory_palace_http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "P99"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8}
+      },
+      {
+        "id": 3,
+        "title": "HTTP 错误率",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(memory_palace_http_requests_total{status=~\"5..\"}[5m])",
+            "legendFormat": "5xx Errors"
+          },
+          {
+            "expr": "rate(memory_palace_http_requests_total{status=~\"4..\"}[5m])",
+            "legendFormat": "4xx Errors"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8}
+      },
+      {
+        "id": 4,
+        "title": "活跃连接数",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "memory_palace_http_connections_active"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 8, "w": 6, "h": 4}
+      },
+      {
+        "id": 5,
+        "title": "请求队列深度",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "memory_palace_queue_depth{queue_name=\"http_requests\"}"
+          }
+        ],
+        "gridPos": {"x": 18, "y": 8, "w": 6, "h": 4}
+      }
+    ]
+  }
+}

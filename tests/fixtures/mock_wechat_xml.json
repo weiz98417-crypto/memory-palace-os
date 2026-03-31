@@ -1,0 +1,48 @@
+{
+  "emergency_p0_text": {
+    "ToUserName": "ww_palace_001",
+    "FromUserName": "staff_zhou_01",
+    "CreateTime": 1710745500,
+    "MsgType": "text",
+    "Content": "【紧急】一号门过山车排队区有人突发昏厥，呼吸微弱，请立即调度医护！",
+    "MsgId": "7345678901234567001",
+    "AgentID": 10001
+  },
+  "evidence_image": {
+    "ToUserName": "ww_palace_001",
+    "FromUserName": "security_05",
+    "CreateTime": 1710745600,
+    "MsgType": "image",
+    "PicUrl": "http://mmbiz.qpic.cn/mmbiz/evidence_demo/0",
+    "MediaId": "MEDIA_ID_999888777",
+    "MsgId": "7345678901234567002",
+    "AgentID": 10001
+  },
+  "location_report": {
+    "ToUserName": "ww_palace_001",
+    "FromUserName": "cleaner_12",
+    "CreateTime": 1710745700,
+    "MsgType": "event",
+    "Event": "LOCATION",
+    "Latitude": "31.2304",
+    "Longitude": "121.4737",
+    "Precision": "30.0000",
+    "AgentID": 10001
+  },
+  "malformed_empty_content": {
+    "ToUserName": "ww_palace_001",
+    "FromUserName": "tester_01",
+    "CreateTime": 1710745800,
+    "MsgType": "text",
+    "Content": "",
+    "MsgId": "7345678901234567003",
+    "AgentID": 10001
+  },
+  "extreme_long_text": {
+    "ToUserName": "ww_palace_001",
+    "FromUserName": "visitor_rep",
+    "Content": "这里是重复1000次的垃圾话内容...",
+    "MsgId": "7345678901234567004",
+    "AgentID": 10001
+  }
+}

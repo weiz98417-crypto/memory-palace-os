@@ -1,0 +1,49 @@
+# =============================================================================
+# 🚨 Commander Agent 运行时配置文件 (Industrial Grade)
+# =============================================================================
+
+# 1. 智能体基础元数据
+agent_metadata:
+  name: "Commander_Agent"
+  version: "1.2.5"
+  description: "突发事件实时分派与现场处置 SOP 指挥官"
+
+# 2. 大语言模型 (LLM) 策略配置
+# 指挥官建议：必须使用逻辑推理能力最强的模型（如 GPT-4o 或 Claude-3.5-Sonnet）。
+# 因为处理 P0 级事件不容许逻辑断层。
+llm_config:
+  model: "gpt-4o"            # 生产环境建议锁定为逻辑最强的版本
+  temperature: 0.1           # 极低随机性，确保在面对同一类事故时，给出的 SOP 指令保持高度一致
+  top_p: 1.0
+  max_tokens: 1000           # 允许更详尽的步骤说明，但需防止模型由于发散而话痨
+  json_mode: true            # 强制要求 LLM 返回 JSON，配合 llm_wrapper.py 的 json_object 模式
+  timeout: 15.0              # 执行层逻辑复杂，允许比路由层稍长的响应时间
+
+# 3. 现场处置逻辑控制 (Business Logic Guardrails)
+logic_controls:
+  # 自动升级策略：如果 P0 事件 3 分钟未反馈，是否向总值班室发送额外强提醒
+  auto_escalation: true
+  escalation_timeout_sec: 180
+  
+  # 强制项校验：是否要求模型在回复中必须包含"人员安全确认"
+  mandatory_safety_check: true
+  
+  # 坐标映射增强：是否启用地理位置到最近安全岗位的自动匹配
+  spatial_lookup_enabled: true
+
+# 4. 严重等级对应的处理策略 (Policy Mapping)
+policy_overrides:
+  P0:
+    priority: "URGENT"
+    require_approval: false  # P0 级无需审批，直接下发救命指令
+    notification_channels: ["wechat", "sms", "voice_call"]
+  P2:
+    priority: "NORMAL"
+    require_approval: false
+    notification_channels: ["wechat"]
+
+# 5. 可观测性监控
+observability:
+  log_level: "INFO"
+  track_detailed_latency: true
+  audit_log_enabled: true     # 是否记录每一条下发的指令到 SQLite 以便事故溯源

@@ -1,0 +1,48 @@
+# =============================================================================
+# 🤖 Router Agent 运行时配置文件 (Industrial Grade)
+# =============================================================================
+
+# 1. 基础元数据
+agent_metadata:
+  name: "Router_Agent"
+  version: "1.2.0"
+  description: "景区入口流量分诊与风险评级门神"
+
+# 2. 大语言模型 (LLM) 策略配置
+# 路由层建议：追求速度与确定性。不建议使用 Temperature > 0.3 的设置。
+llm_config:
+  model: "gpt-3.5-turbo"     # 推荐 gpt-3.5-turbo 或 deepseek-chat (低成本，高性能识别)
+  temperature: 0.1           # 极低随机性，确保意图分类结果的一致性
+  top_p: 0.9
+  max_tokens: 300            # 路由返回 JSON 长度受限，防止 Token 溢出消耗
+  json_mode: true            # 强制开启 JSON 模式，确保下游系统解析不崩溃
+  timeout: 10.0              # 路由层必须快，10秒超时退出
+
+# 3. L1 快速路径：正则拦截过滤配置 (Zero-Cost Interception)
+# 允许在不消耗大模型 Token 的情况下，极速处理高频重复消息。
+l1_filter:
+  enabled: true
+  # 关键词拦截库 (支持 Python 标准正则)
+  patterns:
+    - "^(你好|在吗|早上好|下午好|晚上好|哈喽|hi|hello|hey)$"
+    - "^(谢谢|辛苦了|太棒了|点赞|收到|好的|ok|OK|🆗)$"
+    - "^(1|2|3|测试|test|111)$"
+  # 拦截后的默认话术
+  default_reply: "您好！我是景区运营 AI 管家。我正实时监控全区状况，请问现场有突发事件需要处理，还是需要调取历史处置经验？"
+
+# 4. 业务逻辑微调
+logic_controls:
+  enable_context_history: false  # 路由通常只需要分析当前一句话，不建议带入长历史(节省费用)
+  min_confidence_score: 0.8       # LLM 判定的置信度阈值 (若 Prompt 支持输出 score)
+  critical_keywords_boost:        # 强制提权关键词 (检测到则强行判定为 P0)
+    - "落水"
+    - "火灾"
+    - "心脏病"
+    - "流血"
+    - "报警"
+
+# 5. 可观测性与调试
+observability:
+  log_level: "DEBUG"
+  track_token_usage: true
+  report_latency: true

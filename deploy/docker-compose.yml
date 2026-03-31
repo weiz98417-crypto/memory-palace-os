@@ -1,0 +1,109 @@
+version: "3.9"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Memory Palace OS — Docker Compose
+# 服务：app（FastAPI）+ chromadb + nginx
+# SQLite 文件直接挂载到宿主机，无需独立容器
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+services:
+
+  # ── 主应用（FastAPI + Gunicorn）────────────────────────────────
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: memory-palace-app
+    restart: unless-stopped
+    env_file:
+      - ../.env                       # 真实密钥从 .env 注入，不进镜像
+    environment:
+      # ChromaDB 连接地址（容器内服务名）
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: "8001"
+      # SQLite 路径映射到挂载卷
+      DB_PATH: /app/data/memory.db
+      LOG_DIR: /app/data/logs
+    volumes:
+      - sqlite-data:/app/data          # SQLite + 日志持久化
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    networks:
+      - internal
+    # 不对外暴露端口，由 nginx 代理
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── ChromaDB 向量数据库 ─────────────────────────────────────────
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: memory-palace-chroma
+    restart: unless-stopped
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE      # 关闭遥测，本地部署隐私优先
+    volumes:
+      - chroma-data:/chroma/chroma      # 向量数据持久化
+    networks:
+      - internal
+    expose:
+      - "8001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/api/v1/heartbeat"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ── Nginx 反向代理 ──────────────────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: memory-palace-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro         # SSL 证书目录（宿主机挂载）
+      - nginx-logs:/var/log/nginx
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - internal
+      - external
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 持久化卷
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+volumes:
+  sqlite-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data                   # 映射到宿主机 deploy/data/，方便备份
+  chroma-data:
+    driver: local
+  nginx-logs:
+    driver: local
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 网络隔离：internal 仅容器间通信，external 对外
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+networks:
+  internal:
+    driver: bridge
+    internal: true                     # ChromaDB 和 app 不直接暴露公网
+  external:
+    driver: bridge
+
+    
