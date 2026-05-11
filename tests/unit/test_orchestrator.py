@@ -11,7 +11,6 @@
 
 Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 """
-
 import pytest
 import asyncio
 from unittest.mock import AsyncMock, patch, MagicMock
@@ -52,28 +51,29 @@ class TestRoutingDecision:
             action_taken="commander_dispatched",
         )
 
-        with patch("src.memory_palace.core.orchestrator.get_skill_by_name") as mock_get:
-            def get_skill(name):
-                if name == "router":
-                    m = MagicMock()
-                    m.run = AsyncMock(return_value=mock_router_output)
-                    return m
-                if name == "commander":
-                    m = MagicMock()
-                    m.run = AsyncMock(return_value=mock_commander_output)
-                    return m
-                return None
+        with patch.object(orchestrator, "_save_message", new_callable=AsyncMock):
+            with patch("src.memory_palace.core.orchestrator.get_skill_by_name") as mock_get:
+                def get_skill(name):
+                    if name == "router":
+                        m = MagicMock()
+                        m.run = AsyncMock(return_value=mock_router_output)
+                        return m
+                    if name == "commander":
+                        m = MagicMock()
+                        m.run = AsyncMock(return_value=mock_commander_output)
+                        return m
+                    return None
 
-            mock_get.side_effect = get_skill
+                mock_get.side_effect = get_skill
 
-            result = await orchestrator.process(payload)
+                result = await orchestrator.process(payload)
 
-            assert result["status"] == "processed"
-            assert result["route"].get("target_agent") == "commander"
+                assert result["status"] == "processed"
+                assert result["route"].get("target_agent") == "commander"
 
     @pytest.mark.asyncio
-    async def test_routine_message_routes_to_deep_interview(self, orchestrator):
-        """常规消息走默认路由到 deep_interview（Persona）"""
+    async def test_routine_message_routes_to_persona_extract(self, orchestrator):
+        """常规消息走默认路由到 persona_extract"""
         payload = {
             "msg_id": "test_002",
             "trace_id": "trace_routine",
@@ -81,12 +81,13 @@ class TestRoutingDecision:
             "content": "今天天气怎么样？",
         }
 
-        with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
-            result = await orchestrator.process(payload)
+        with patch.object(orchestrator, "_save_message", new_callable=AsyncMock):
+            with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
+                result = await orchestrator.process(payload)
 
-            assert result["status"] == "processed"
-            assert result["route"].get("intent") == "routine"
-            assert result["route"].get("target_agent") == "deep_interview"
+                assert result["status"] == "processed"
+                assert result["route"].get("intent") == "routine"
+                assert result["route"].get("target_agent") == "persona_extract"
 
     @pytest.mark.asyncio
     async def test_router_failure_uses_default_route(self, orchestrator):
@@ -98,11 +99,12 @@ class TestRoutingDecision:
             "content": "测试路由失败",
         }
 
-        with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
-            result = await orchestrator.process(payload)
+        with patch.object(orchestrator, "_save_message", new_callable=AsyncMock):
+            with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
+                result = await orchestrator.process(payload)
 
-            assert result["route"].get("status") == "routed"
-            assert result["route"].get("target_agent") == "deep_interview"
+                assert result["route"].get("status") == "routed"
+                assert result["route"].get("target_agent") == "persona_extract"
 
 
 class TestSLARecording:
@@ -118,10 +120,11 @@ class TestSLARecording:
             "priority": "P0",
         }
 
-        with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
-            with patch("src.memory_palace.core.orchestrator.update_sla_response", new_callable=AsyncMock) as mock_sla:
-                await orchestrator.process(payload)
-                mock_sla.assert_called_once_with("test_p0_sla")
+        with patch.object(orchestrator, "_save_message", new_callable=AsyncMock):
+            with patch.object(orchestrator, "_update_sla_response", new_callable=AsyncMock) as mock_sla:
+                with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
+                    await orchestrator.process(payload)
+                    mock_sla.assert_called_once_with("test_p0_sla")
 
     @pytest.mark.asyncio
     async def test_p1_updates_sla_response(self, orchestrator):
@@ -134,10 +137,11 @@ class TestSLARecording:
             "priority": "P1",
         }
 
-        with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
-            with patch("src.memory_palace.core.orchestrator.update_sla_response", new_callable=AsyncMock) as mock_sla:
-                await orchestrator.process(payload)
-                mock_sla.assert_called_once_with("test_p1_sla")
+        with patch.object(orchestrator, "_save_message", new_callable=AsyncMock):
+            with patch.object(orchestrator, "_update_sla_response", new_callable=AsyncMock) as mock_sla:
+                with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
+                    await orchestrator.process(payload)
+                    mock_sla.assert_called_once_with("test_p1_sla")
 
     @pytest.mark.asyncio
     async def test_p3_does_not_update_sla(self, orchestrator):
@@ -150,10 +154,11 @@ class TestSLARecording:
             "priority": "P3",
         }
 
-        with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
-            with patch("src.memory_palace.core.orchestrator.update_sla_response", new_callable=AsyncMock) as mock_sla:
-                await orchestrator.process(payload)
-                mock_sla.assert_not_called()
+        with patch.object(orchestrator, "_save_message", new_callable=AsyncMock):
+            with patch.object(orchestrator, "_update_sla_response", new_callable=AsyncMock) as mock_sla:
+                with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
+                    await orchestrator.process(payload)
+                    mock_sla.assert_not_called()
 
 
 class TestAgentHandoff:
@@ -204,8 +209,8 @@ class TestMessageSaving:
             "content": "保存测试",
         }
 
-        with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
-            with patch("src.memory_palace.core.orchestrator.save_message", new_callable=AsyncMock) as mock_save:
+        with patch.object(orchestrator, "_save_message", new_callable=AsyncMock) as mock_save:
+            with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
                 await orchestrator.process(payload)
                 mock_save.assert_called_once()
                 call_args = mock_save.call_args[0][0]

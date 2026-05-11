@@ -14,6 +14,7 @@ memory-palace-os · 主入口
 """
 
 import asyncio
+import os
 import signal
 import sys
 from contextlib import asynccontextmanager
@@ -34,9 +35,11 @@ from src.memory_palace.api import v1_router, v2_router                  # API �
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 0. 启动前：Fail-Fast 环境变量校验
+# 0. 启动前：加载 .env + Fail-Fast 环境变量校验
 #    所有必需 Key 缺失时直接 sys.exit(1)，不让残缺配置的服务跑起来
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+from dotenv import load_dotenv
+load_dotenv()           # 加载 .env 文件中的环境变量
 validate_env()          # 内部会 sys.exit(1) + 打印缺失项
 setup_logger()          # 初始化 loguru（多文件归档、自动旋转）
 
@@ -44,9 +47,10 @@ setup_logger()          # 初始化 loguru（多文件归档、自动旋转）
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 1. 全局共享队列（asyncio.Queue）
 #    gateway.py 只负责把消息 put 进来，queue_worker 消费并派发给 Orchestrator
-#    队列深度 1000：防止节假日洪峰把内存撑爆；超出时 gateway 返回 202 先排队
+#    maxsize 从环境变量 MEMORY_PALACE_QUEUE_MAXSIZE 读取，默认 10000
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MESSAGE_QUEUE: asyncio.Queue = asyncio.Queue(maxsize=1000)
+_QUEUE_MAXSIZE = int(os.environ.get("MEMORY_PALACE_QUEUE_MAXSIZE", 10000))
+MESSAGE_QUEUE: asyncio.Queue = asyncio.Queue(maxsize=_QUEUE_MAXSIZE)
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -57,6 +61,10 @@ async def lifespan(app: FastAPI):
     """
     启动阶段：拉起队列消费者 + 定时任务调度器
     关机阶段：等待队列排空（最多 30 秒）后优雅退出
+
+    [Phase 3] 新增:
+    - Task Graph 持久化恢复
+    - Permission Engine 恢复待审批请求
     """
     logger.info("🚀 Memory Palace OS 正在启动...")
 
@@ -64,9 +72,39 @@ async def lifespan(app: FastAPI):
     _auto_register_skills()
     logger.info("✅ Agent 技能注册完成")
 
+    # —— 确保数据库表存在（幂等，先于 Phase 恢复）——
+    from src.memory_palace.knowledge.db_init import init_database
+    await init_database()
+    logger.info("✅ 数据库表初始化完成")
+
+    # [Phase 3] 恢复任务图
+    try:
+        from src.memory_palace.core.task_graph import task_graph
+        await task_graph.reload_from_db()
+        logger.info("✅ Task Graph 已从数据库恢复")
+    except Exception as e:
+        logger.warning(f"Task Graph 恢复失败（不影响启动）: {e}")
+
+    # [Phase 2] 恢复权限引擎待审批请求
+    try:
+        from src.memory_palace.core.permissions import permission_engine
+        await permission_engine.reload_from_db()
+        logger.info("✅ Permission Engine 已恢复待审批请求")
+    except Exception as e:
+        logger.warning(f"Permission Engine 恢复失败（不影响启动）: {e}")
+
+    # —— 初始化 DI 容器 ——
+    try:
+        from src.memory_palace.core.container import AppContainer
+        app_container = AppContainer()
+        logger.info("✅ DI 容器已初始化")
+    except Exception as e:
+        logger.warning(f"DI 容器初始化失败（降级运行）: {e}")
+        app_container = None
+
     # —— 启动队列消费者（后台 Task）——
     set_message_queue(MESSAGE_QUEUE)
-    worker = MessageQueueWorker(queue=MESSAGE_QUEUE)
+    worker = MessageQueueWorker(queue=MESSAGE_QUEUE, container=app_container)
     consumer_task = asyncio.create_task(worker.start(), name="queue-consumer")
     logger.info("✅ 异步消息队列消费者已启动")
 
@@ -86,14 +124,16 @@ async def lifespan(app: FastAPI):
 
     # 关闭企微 HTTP 客户端
     try:
-        from src.memory_palace.tools.wechat_client import wechat_client
-        await wechat_client.close()
+        from src.memory_palace.tools.wechat_client import get_wechat_client
+        wc = get_wechat_client()
+        if wc:
+            await wc.close()
         logger.info("✅ 企微 HTTP 客户端已关闭")
     except Exception as e:
         logger.warning(f"企微客户端关闭异常（不影响退出）: {e}")
 
     # 停止接收新任务
-    scheduler.shutdown(wait=False)
+    scheduler.shutdown()
 
     # 等待队列排空（最多 30 秒）
     try:
@@ -101,6 +141,11 @@ async def lifespan(app: FastAPI):
         logger.info("✅ 消息队列已排空")
     except asyncio.TimeoutError:
         logger.warning(f"⚠️  队列排空超时，剩余 {MESSAGE_QUEUE.qsize()} 条消息未处理")
+
+    # 记录死信队列内容
+    if hasattr(worker, '_dead_letter_queue') and worker._dead_letter_queue:
+        logger.error(f"⚠️ 死信队列包含 {len(worker._dead_letter_queue)} 条未发送回复: "
+                     f"{[d['msg_id'] for d in worker._dead_letter_queue]}")
 
     # 取消消费者 Task
     consumer_task.cancel()
@@ -139,8 +184,13 @@ app.include_router(v1_router, tags=["API v1"])
 # API v2（扩展接口）
 app.include_router(v2_router, tags=["API v2"])
 
-# 管理大屏静态文件
-app.mount("/admin", StaticFiles(directory="static", html=True), name="admin")
+# 管理大屏静态文件（/admin 重定向到 /admin/index.html，避免 307）
+from fastapi.responses import RedirectResponse
+@app.get("/admin", include_in_schema=False)
+async def admin_redirect():
+    return RedirectResponse(url="/admin/index.html", status_code=302)
+
+app.mount("/admin", StaticFiles(directory="static", html=True), name="admin_static")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

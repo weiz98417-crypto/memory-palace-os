@@ -75,12 +75,15 @@ class MessageQueueWorker:
         queue: asyncio.Queue,
         concurrency: int = 5,           # 并发处理的消息数（文旅场景不需要太高）
         orchestrator: Optional[Orchestrator] = None,
+        container = None,               # AppContainer (optional)
     ):
         self.queue = queue
         self.concurrency = concurrency
         self._orchestrator = orchestrator or Orchestrator()
+        self._container = container
         self._semaphore = asyncio.Semaphore(concurrency)
         self._running = True
+        self._dead_letter_queue: list[dict] = []   # 死信队列 stub
 
     # ── 公共接口 ──────────────────────────────────────────────────────────────
 
@@ -138,7 +141,27 @@ class MessageQueueWorker:
             f"[type={message.get('msg_type')}]"
         )
 
-        await self._orchestrator.dispatch(message)
+        result = await self._orchestrator.dispatch(message)
+
+        # —— 发送回复到企微用户 ——
+        if result and isinstance(result, dict):
+            reply_text = result.get("reply_text")
+            from_user = message.get("from_user")
+            trace_id = result.get("trace_id", msg_id)
+            if reply_text and from_user and self._container:
+                try:
+                    wc = self._container.wechat_client
+                    if wc:
+                        await wc.send_text(from_user, reply_text)
+                        logger.info(f"[Trace-{trace_id}] 回复已发送 to={from_user}")
+                except Exception as e:
+                    logger.error(f"[Trace-{trace_id}] 企微回复发送失败: {e}")
+                    self._dead_letter_queue.append({
+                        "msg_id": msg_id, "from_user": from_user,
+                        "reply_text": reply_text, "error": str(e),
+                    })
+            elif reply_text and not self._container:
+                logger.debug(f"[Trace-{trace_id}] 无容器注入，跳过回复发送")
 
         elapsed_ms = (time.time() - start) * 1000
         queue_wait_ms = (time.time() - enqueue_time) * 1000
@@ -154,6 +177,10 @@ class MessageQueueWorker:
                 f"🚨 SLA 预警：消息在队列中等待 {queue_wait_ms:.0f}ms，"
                 f"当前队列深度: {self.queue.qsize()}"
             )
+
+        # —— 死信队列内容日志（关机时汇总输出）——
+        if self._dead_letter_queue:
+            logger.debug(f"死信队列当前深度: {len(self._dead_letter_queue)}")
 
     # ── Redis 迁移预留接口 ────────────────────────────────────────────────────
     # 将来迁移到 Redis 时，只需重写以下两个方法，上层逻辑不变：

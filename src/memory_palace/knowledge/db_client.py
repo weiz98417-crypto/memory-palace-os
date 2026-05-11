@@ -10,12 +10,15 @@ Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 """
 
 import aiosqlite
+import json
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from contextlib import asynccontextmanager
 from loguru import logger
 
-DB_PATH = Path("data/memory.db")
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+DB_PATH = _PROJECT_ROOT / "data" / "memory.db"
 
 
 class AsyncDBClient:
@@ -216,3 +219,92 @@ async def update_sla_response(msg_id: str) -> int:
         "UPDATE messages SET sla_response_at = CURRENT_TIMESTAMP WHERE message_id = ?",
         (msg_id,),
     )
+
+
+async def save_confirmed_event(
+    push_id: str,
+    from_user: str,
+    raw_text: str,
+    event_type: str,
+    severity: str,
+    context_trigger_data: Dict[str, Any],
+    venue_id: Optional[str] = None,
+) -> str:
+    """
+    将员工确认的事件写入 confirmed_events 表（记忆库核心写入）
+
+    同时写入向量库（通过 vector_client）。
+
+    Returns:
+        event_id: 生成的事件ID
+    """
+    import uuid
+    from ..tools.llm_wrapper import sanitize_llm_output
+
+    event_id = str(uuid.uuid4())
+    vector_doc_id = f"evt_{event_id}"
+
+    # 消毒 event_data
+    cleaned, warns = sanitize_llm_output(
+        {"event_type": event_type, "raw_text": raw_text, "severity": severity},
+        "push_event",
+    )
+    if cleaned:
+        event_type = cleaned.get("event_type", event_type)
+        raw_text = cleaned.get("raw_text", raw_text)
+        severity = cleaned.get("severity", "P3")
+
+    # 1. 写入结构化表
+    await db_client.execute(
+        """
+        INSERT INTO confirmed_events (
+            event_id, push_id, from_user, raw_text, event_type, severity,
+            context_trigger_data, memory_content, vector_doc_id, confirmed_at, venue_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            event_id,
+            push_id,
+            from_user,
+            raw_text,
+            event_type,
+            severity,
+            json.dumps(context_trigger_data, ensure_ascii=False),
+            _build_memory_content(raw_text, event_type, severity),
+            vector_doc_id,
+            time.time(),
+            venue_id or "",
+        ),
+    )
+
+    # 2. 写入向量库（异步，不阻塞主流程）
+    try:
+        from .vector_store import get_vector_client
+
+        vc = get_vector_client()
+        if vc is None:
+            logger.warning("[PushLogger] 向量库未初始化，跳过向量写入")
+            return
+
+        metadata = {
+            "event_type": event_type,
+            "severity": severity,
+            "from_user": from_user,
+            "event_id": event_id,
+            "venue_id": venue_id or "",
+        }
+        vc.upsert_experience(
+            content=_build_memory_content(raw_text, event_type, severity),
+            metadata=metadata,
+            doc_id=vector_doc_id,
+        )
+    except Exception as e:
+        logger.error(f"[PushLogger] 向量库写入失败: {e}")
+
+    logger.info(f"[PushLogger] 事件写入记忆库: event_id={event_id}, type={event_type}")
+    return event_id
+
+
+def _build_memory_content(raw_text: str, event_type: str, severity: str) -> str:
+    """构建记忆库存储内容"""
+    return f"[{severity}] {event_type}事件：{raw_text}"

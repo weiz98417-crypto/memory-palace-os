@@ -60,17 +60,29 @@ class LLMClient:
         return self._client
 
     ### CHANGE: 方法添加 async 前缀
-    async def ask(self, 
-            system_prompt: str, 
-            user_prompt: str, 
+    async def ask(self,
+            system_prompt: str,
+            user_prompt: str,
             model: Optional[str] = None,
             temperature: float = 0.3,
+            max_tokens: Optional[int] = None,
             json_mode: bool = False,
             trace_id: str = "UNKNOWN") -> LLMResponse:
         """
         发起大模型调用，自带指数退避重试与防抖机制 (异步版本)。
         """
-        actual_model = model or self.default_model
+        # DEMO_MODE: 跳过真实 LLM 调用，返回 Mock 响应
+        if os.environ.get("DEMO_MODE", "").lower() == "true":
+            logger.info(f"[Trace-{trace_id}] DEMO_MODE: 返回 Mock 响应")
+            return LLMResponse(
+                content=f"[DEMO] Mock response for: {user_prompt[:50]}",
+                tokens_used=0,
+                model_name="demo",
+                latency_seconds=0.0,
+            )
+
+        env_model = os.environ.get("LLM_DEFAULT_MODEL", "")
+        actual_model = env_model or model or self.default_model
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
@@ -81,6 +93,8 @@ class LLMClient:
             "messages": messages,
             "temperature": temperature,
         }
+        if max_tokens is not None:
+            kwargs["max_tokens"] = max_tokens
         
         if json_mode:
             kwargs["response_format"] = {"type": "json_object"}
@@ -127,6 +141,109 @@ class LLMClient:
                 logger.warning(f"[Trace-{trace_id}] 大模型服务端内部错误 (500)，2秒后重试... 详情: {e}")
                 await asyncio.sleep(2.0)  ### CHANGE
                 
+            except Exception as e:
+                logger.error(f"[Trace-{trace_id}] LLM 调用发生未捕获的致命异常: {e}")
+                raise RuntimeError(f"LLM 致命异常: {str(e)}") from e
+
+        logger.error(f"[Trace-{trace_id}] LLM 接口历经 {self.max_retries} 次重试后彻底失败。")
+        raise last_exception
+
+    async def ask_with_reference_context(
+        self,
+        system_prompt: str,
+        context_messages: list,
+        user_prompt: str,
+        model: Optional[str] = None,
+        temperature: float = 0.3,
+        trace_id: str = "UNKNOWN"
+    ) -> LLMResponse:
+        """
+        [新] 带参考上下文的 LLM 调用
+
+        用于三层上下文压缩系统:
+        - context_messages: 从 Cold -> Warm -> Hot 组装的消息列表
+        - system_prompt: 系统提示词
+        - user_prompt: 当前用户输入
+
+        Args:
+            system_prompt: 系统提示词
+            context_messages: 格式化的上下文消息 [{"role": "...", "content": "..."}]
+            user_prompt: 当前用户输入
+            model: 模型名称
+            temperature: 温度参数
+            trace_id: 追踪 ID
+
+        Returns:
+            LLMResponse
+        """
+        if os.environ.get("DEMO_MODE", "").lower() == "true":
+            logger.info(f"[Trace-{trace_id}] DEMO_MODE: 返回 Mock 响应 (with context)")
+            return LLMResponse(
+                content=f"[DEMO] Mock response with {len(context_messages)} context messages",
+                tokens_used=0,
+                model_name="demo",
+                latency_seconds=0.0,
+            )
+
+        env_model = os.environ.get("LLM_DEFAULT_MODEL", "")
+        actual_model = env_model or model or self.default_model
+
+        messages = [
+            {"role": "system", "content": system_prompt}
+        ]
+
+        # 添加上下文消息 (通常是 system 角色)
+        messages.extend(context_messages)
+
+        # 添加当前用户输入
+        messages.append({"role": "user", "content": user_prompt})
+
+        kwargs = {
+            "model": actual_model,
+            "messages": messages,
+            "temperature": temperature,
+        }
+
+        last_exception = None
+
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                logger.debug(f"[Trace-{trace_id}] 开始请求 LLM (Attempt {attempt}/{self.max_retries}) | Model: {actual_model}")
+                start_time = time.time()
+
+                client = await self.get_client()
+                response = await client.chat.completions.create(**kwargs)
+
+                latency = time.time() - start_time
+                content = response.choices[0].message.content or ""
+                tokens = response.usage.total_tokens if response.usage else 0
+
+                logger.info(f"[Trace-{trace_id}] LLM 响应成功 | 耗时: {latency:.2f}s | Tokens: {tokens}")
+
+                return LLMResponse(
+                    content=content,
+                    tokens_used=tokens,
+                    model_name=actual_model,
+                    latency_seconds=latency
+                )
+
+            except RateLimitError as e:
+                last_exception = e
+                wait_time = self.base_backoff * (2 ** (attempt - 1))
+                logger.warning(f"[Trace-{trace_id}] 触发 API 限流 (RateLimit)，{wait_time}秒后重试... 详情: {e}")
+                await asyncio.sleep(wait_time)
+
+            except (APIConnectionError, APITimeoutError) as e:
+                last_exception = e
+                wait_time = self.base_backoff * attempt
+                logger.warning(f"[Trace-{trace_id}] 网络抖动或超时，{wait_time}秒后重试... 详情: {e}")
+                await asyncio.sleep(wait_time)
+
+            except InternalServerError as e:
+                last_exception = e
+                logger.warning(f"[Trace-{trace_id}] 大模型服务端内部错误 (500)，2秒后重试... 详情: {e}")
+                await asyncio.sleep(2.0)
+
             except Exception as e:
                 logger.error(f"[Trace-{trace_id}] LLM 调用发生未捕获的致命异常: {e}")
                 raise RuntimeError(f"LLM 致命异常: {str(e)}") from e
@@ -184,3 +301,189 @@ llm_client = LLMClient()
 def get_llm_client() -> LLMClient:
     """获取 LLM 客户端单例"""
     return llm_client
+
+
+# =============================================================================
+# LLM Output Sanitization Utility
+# =============================================================================
+
+INJECTION_TOKENS = [
+    "<|im_start|>", "<|im_end|>", "<|im_sep|>",
+    "[system]", "[/system]", "[INST]", "[/INST]",
+    "<system>", "</system>", "<|system|>",
+]
+
+_SANITIZE_SCHEMAS: Dict[str, Dict[str, Any]] = {}
+
+
+def register_sanitize_schema(name: str, schema: Dict[str, Any]) -> None:
+    """注册一个消毒 schema，供 sanitize_llm_output 按名称调用。"""
+    _SANITIZE_SCHEMAS[name] = schema
+
+
+def sanitize_llm_output(
+    data: Any,
+    schema_name: str,
+    *,
+    trace_id: str = "UNKNOWN",
+) -> tuple:
+    """
+    消毒 LLM 生成的输出数据，返回 (cleaned_data, warnings)。
+
+    schema_name 指向预注册的 schema dict，结构：
+        {
+            "fields": {
+                "field_name": {"type": "str", "max_len": 500, "required": True},
+                ...
+            },
+            "allow_unknown": False,
+        }
+
+    消毒规则：
+    1. required 字段必须存在且非空（str 时）
+    2. type 不匹配 → 尝试强制转换，失败则设为默认值
+    3. 字符串超过 max_len → 截断
+    4. 删除控制字符（ASCII 0-31 除 \\n \\r \\t）
+    5. 检测并移除注入 token → 记录警告
+    """
+    schema = _SANITIZE_SCHEMAS.get(schema_name)
+    if not schema:
+        logger.warning(f"[Trace-{trace_id}] 消毒 schema '{schema_name}' 未注册，跳过消毒")
+        return data, [f"schema '{schema_name}' not found — bypassed"]
+
+    warnings: list[str] = []
+    fields = schema.get("fields", {})
+    allow_unknown = schema.get("allow_unknown", False)
+
+    if not isinstance(data, dict):
+        return {}, ["input is not a dict — rejected"]
+
+    cleaned: Dict[str, Any] = {}
+
+    for field_name, field_spec in fields.items():
+        required = field_spec.get("required", False)
+        expected_type = field_spec.get("type", "str")
+        max_len = field_spec.get("max_len")
+
+        value = data.get(field_name)
+
+        if required and (value is None or (isinstance(value, str) and not value.strip())):
+            warnings.append(f"required field '{field_name}' missing or empty — rejected")
+            continue
+
+        if value is None:
+            cleaned[field_name] = field_spec.get("default")
+            continue
+
+        if expected_type == "str":
+            if not isinstance(value, str):
+                value = str(value)
+            value = _strip_control_chars(value)
+            value = _remove_injection_tokens(value, field_name, warnings)
+            if max_len is not None and len(value) > max_len:
+                value = value[:max_len]
+                warnings.append(f"'{field_name}' truncated to {max_len} chars")
+
+        elif expected_type == "int":
+            try:
+                value = int(value)
+            except (ValueError, TypeError):
+                warnings.append(f"'{field_name}' expected int, got {type(value).__name__} — set to 0")
+                value = 0
+
+        elif expected_type == "float":
+            try:
+                value = float(value)
+            except (ValueError, TypeError):
+                warnings.append(f"'{field_name}' expected float, got {type(value).__name__} — set to 0.0")
+                value = 0.0
+
+        elif expected_type == "bool":
+            if not isinstance(value, bool):
+                value = bool(value)
+
+        elif expected_type == "list":
+            if not isinstance(value, list):
+                warnings.append(f"'{field_name}' expected list, got {type(value).__name__} — set to []")
+                value = []
+
+        elif expected_type == "dict":
+            if not isinstance(value, dict):
+                warnings.append(f"'{field_name}' expected dict, got {type(value).__name__} — set to {{}}")
+                value = {}
+
+        cleaned[field_name] = value
+
+    if not allow_unknown:
+        extra_keys = set(data.keys()) - set(fields.keys())
+        if extra_keys:
+            warnings.append(f"unknown keys stripped: {extra_keys}")
+
+    if warnings:
+        logger.info(f"[Trace-{trace_id}] sanitize '{schema_name}': {len(warnings)} warning(s) — {warnings}")
+
+    return cleaned, warnings
+
+
+def _strip_control_chars(s: str) -> str:
+    """移除控制字符（保留 \\n \\r \\t）。"""
+    return ''.join(ch for ch in s if ch not in '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x0b\x0c\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x7f')
+
+
+def _remove_injection_tokens(s: str, field_name: str, warnings: list[str]) -> str:
+    """检测并移除注入 token。"""
+    result = s
+    for token in INJECTION_TOKENS:
+        if token.lower() in result.lower():
+            result = result.replace(token, '').replace(token.upper(), '').replace(token.lower(), '')
+            warnings.append(f"'{field_name}' contained injection token '{token}' — removed")
+    return result
+
+
+# ── 预注册 schema ────────────────────────────────────────────────────────────
+
+register_sanitize_schema("logic_entry", {
+    "fields": {
+        "trigger":  {"type": "str", "max_len": 500, "required": True},
+        "behavior": {"type": "str", "max_len": 500, "required": True},
+        "reason":   {"type": "str", "max_len": 500, "required": False},
+    },
+    "allow_unknown": False,
+})
+
+register_sanitize_schema("stage2_result", {
+    "fields": {
+        "trigger":    {"type": "bool", "required": True},
+        "severity":   {"type": "str", "max_len": 10, "required": True},
+        "event_type": {"type": "str", "max_len": 200, "required": True},
+        "confidence": {"type": "float", "required": True},
+    },
+    "allow_unknown": True,
+})
+
+ALLOWED_SEVERITIES = frozenset({"P0", "P1", "P2", "P3", "P4"})
+
+register_sanitize_schema("task_spec", {
+    "fields": {
+        "description": {"type": "str", "max_len": 500, "required": True},
+        "depends_on":  {"type": "list", "required": False, "default": []},
+    },
+    "allow_unknown": True,
+})
+
+register_sanitize_schema("write_memory", {
+    "fields": {
+        "content":  {"type": "str", "max_len": 10000, "required": True},
+        "metadata": {"type": "dict", "required": False, "default": {}},
+    },
+    "allow_unknown": True,
+})
+
+register_sanitize_schema("push_event", {
+    "fields": {
+        "event_type": {"type": "str", "max_len": 200, "required": True},
+        "raw_text":   {"type": "str", "max_len": 5000, "required": True},
+        "severity":   {"type": "str", "max_len": 10, "required": False, "default": "P3"},
+    },
+    "allow_unknown": True,
+})
