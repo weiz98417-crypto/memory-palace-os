@@ -27,6 +27,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from loguru import logger
 
+# ── 指标计数器 ────────────────────────────────────────────────────────────
+_queue_full_count: int = 0
+
 # ==============================================================================
 # 配置模型
 # ==============================================================================
@@ -137,67 +140,6 @@ def create_mock_wx_crypto():
 
 
 # ==============================================================================
-# 应用生命周期
-# ==============================================================================
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """应用生命周期管理"""
-    logger.info("🚀 Gateway 启动中...")
-
-    # 预热加解密
-    crypto = get_wx_crypto()
-    if not crypto:
-        global wx_crypto
-        wx_crypto = create_mock_wx_crypto()
-        logger.warning("⚠️ 已切换到 Mock 模式，请确保配置企微环境变量")
-
-    # 初始化指标收集器
-    try:
-        from src.memory_palace.core.metrics import init_metrics
-        init_metrics()
-        logger.info("✅ 指标收集器初始化成功")
-    except Exception as e:
-        logger.warning(f"⚠️ 指标收集器初始化失败: {e}")
-
-    yield
-
-    logger.info("👋 Gateway 关闭中...")
-
-
-# ==============================================================================
-# 创建 FastAPI 应用
-# ==============================================================================
-
-def create_app() -> FastAPI:
-    """创建并配置 FastAPI 应用"""
-    app = FastAPI(
-        title="Memory Palace OS",
-        description="企业级智能协作中枢",
-        version=config.version,
-        lifespan=lifespan
-    )
-
-    # CORS 中间件
-    if config.enable_cors:
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=config.cors_origins,
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
-
-    # 注册路由
-    app.include_router(root_router)
-    app.include_router(health_router)
-    app.include_router(wechat_router)
-    app.include_router(v1_router)
-    # app.include_router(v2_router)  # 预留 v2
-
-    return app
-
-
 # ==============================================================================
 # 路由定义
 # ==============================================================================
@@ -332,6 +274,7 @@ async def metrics_endpoint():
 # ==============================================================================
 
 wechat_router = APIRouter(prefix="/v1/wechat", tags=["WeChat Webhook"])
+router = wechat_router  # 别名，兼容 main.py 的导入方式
 
 
 @wechat_router.get("")
@@ -393,7 +336,11 @@ async def receive_wechat_message(
                 logger.error(f"[Trace-{trace_id}] 解密异常: {e}")
                 return PlainTextResponse("success")  # 防探测
         else:
-            decrypted_xml = raw_xml.decode("utf-8")
+            # Mock 模式：尝试 UTF-8 解码，失败则尝试系统默认编码
+            try:
+                decrypted_xml = raw_xml.decode("utf-8")
+            except UnicodeDecodeError:
+                decrypted_xml = raw_xml.decode("utf-8", errors="replace")
 
         # 3. 解析 XML 提取关键字段
         try:
@@ -443,8 +390,10 @@ async def receive_wechat_message(
                     f"网关耗时: {latency_ms:.1f}ms"
                 )
             except asyncio.QueueFull:
+                global _queue_full_count
+                _queue_full_count += 1
                 logger.error(
-                    f"[Trace-{trace_id}] 🚨 严重告警：系统消息队列已满！"
+                    f"[Trace-{trace_id}] 🚨 严重告警：系统消息队列已满！(累计 {_queue_full_count} 次)"
                 )
                 # 发送告警通知 (可选)
                 try:
@@ -711,7 +660,6 @@ async def add_knowledge(
 # ==============================================================================
 
 __all__ = [
-    "create_app",
     "GatewayConfig",
     "WeChatMessage",
     "HealthResponse",

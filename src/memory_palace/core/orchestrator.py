@@ -88,15 +88,18 @@ class Orchestrator:
         }
 
     async def _save_message(self, payload: Dict[str, Any]):
-        """保存消息到数据库"""
+        """保存消息到数据库（优先使用容器提供的 db_client）"""
         try:
-            from src.memory_palace.knowledge.db_client import save_message, create_or_update_session
-
-            await save_message(payload)
-
-            from_user = payload.get("from_user", "unknown")
-            await create_or_update_session(from_user)
-
+            if self.container and hasattr(self.container, 'db_client'):
+                db = self.container.db_client
+                await db.save_message(payload)
+                from_user = payload.get("from_user", "unknown")
+                await db.create_or_update_session(from_user)
+            else:
+                from src.memory_palace.knowledge.db_client import save_message, create_or_update_session
+                await save_message(payload)
+                from_user = payload.get("from_user", "unknown")
+                await create_or_update_session(from_user)
         except Exception as e:
             logger.error(f"❌ 保存消息失败: {e}")
 

@@ -21,7 +21,7 @@
 ## 3. Queue Configuration Alignment
 
 - [x] 3.1 Read queue maxsize from settings or `MEMORY_PALACE_QUEUE_MAXSIZE` env var in `main.py`, fallback to 10000
-- [ ] 3.2 Add `queue_full_events` metric counter in `gateway.py` when `QueueFull` is raised
+- [x] 3.2 Add `queue_full_events` metric counter in `gateway.py` when `QueueFull` is raised
 - [x] 3.3 Stub `dead_letter_queue` in `MessageQueueWorker` with append-on-max-retries logic
 - [x] 3.4 Log dead-letter queue contents on worker shutdown
 - [x] 3.5 Verify: `grep "maxsize=1000" main.py` returns zero results
@@ -58,7 +58,7 @@
 ## 7. DI Container Unification
 
 - [x] 7.1 Add `container: Optional[AppContainer]` parameter to `Orchestrator.__init__()` (already existed: line 28-32)
-- [ ] 7.2 Migrate `orchestrator._save_message()` to use `self._container.db_client` when available
+- [x] 7.2 Migrate `orchestrator._save_message()` to use `self._container.db_client` when available
 - [ ] 7.3 Migrate `orchestrator._route()` skill resolution to use `self._container` when available
 - [ ] 7.4 Add `container` parameter to `gateway.py` message handlers, replace module-level `wx_crypto` with container-provided instance
 - [ ] 7.5 Verify: `grep -r "from.*knowledge.db_client import|from.*tools.llm_wrapper import|from.*tools.wechat" src/memory_palace/core/` shows deprecation warnings or zero results
