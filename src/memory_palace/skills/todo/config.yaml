@@ -1,0 +1,15 @@
+# TodoWrite Skill Configuration
+
+llm_config:
+  model: gpt-4o-mini  # 使用较小的模型进行任务分解，更快更便宜
+
+max_tasks: 10  # 最多分解为 10 个任务
+
+agent_metadata:
+  name: TodoWrite_Agent
+  description: 任务分解智能体，将复杂目标分解为可执行的任务图
+
+# 分解策略
+decomposition:
+  min_task_length: 5   # 任务描述最小长度
+  max_task_length: 200 # 任务描述最大长度

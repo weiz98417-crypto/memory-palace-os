@@ -1,0 +1,39 @@
+# =============================================================================
+# Persona Extract Skill (老员工经验萃取) 运行时配置文件
+# =============================================================================
+
+agent_metadata:
+  name: "PersonaExtract_Skill"
+  version: "1.0.0"
+  description: "结构化访谈萃取老员工判断逻辑的专家"
+
+llm_config:
+  model: "gpt-4o"
+  temperature: 0.3
+  max_tokens: 1000
+  json_mode: true
+
+# 访谈配置
+interview_config:
+  max_questions: 8
+  timeout_minutes: 60
+  enable录音备注: false
+
+# 萃取配置
+extraction_config:
+  min_entries_per_interview: 3
+  deduplicate_similar: true
+  similarity_threshold: 0.85
+
+# 分身调用配置 (Sprint 3)
+invoke_config:
+  # 默认每条回答使用的逻辑条目数
+  top_k_entries: 3
+  # 是否强制要求第一条包含 trigger 匹配
+  require_trigger_match: true
+  # 相似度阈值（低于此值不采用）
+  relevance_threshold: 0.3
+  # 回答模型
+  invoke_model: "gpt-4o-mini"
+  # 回答最大字数
+  max_reply_chars: 120

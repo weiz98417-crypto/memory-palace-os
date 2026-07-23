@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>记忆宫殿 · 管理后台</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #333; }
+
+  /* ── 顶部导航 ── */
+  .topbar { background: #1a73e8; color: #fff; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar h1 { font-size: 18px; font-weight: 600; }
+  .topbar .badge { font-size: 12px; opacity: 0.8; }
+
+  /* ── Tab 导航 ── */
+  .tabs { background: #fff; border-bottom: 1px solid #e0e0e0; display: flex; padding: 0 24px; overflow-x: auto; }
+  .tab { padding: 14px 20px; font-size: 14px; color: #666; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: all 0.2s; }
+  .tab:hover { color: #1a73e8; }
+  .tab.active { color: #1a73e8; border-bottom-color: #1a73e8; font-weight: 600; }
+
+  /* ── 内容区 ── */
+  .content { padding: 24px; max-width: 1200px; margin: 0 auto; }
+
+  /* ── 统计卡片 ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .stat-card .label { font-size: 13px; color: #888; margin-bottom: 8px; }
+  .stat-card .value { font-size: 28px; font-weight: 700; color: #1a73e8; }
+  .stat-card .sub { font-size: 12px; color: #aaa; margin-top: 4px; }
+
+  /* ── 通用卡片 ── */
+  .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 20px; }
+  .card-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+
+  /* ── 表格 ── */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; color: #888; font-weight: 500; border-bottom: 1px solid #eee; }
+  td { padding: 10px 12px; border-bottom: 1px solid #f5f5f5; }
+  tr:hover td { background: #f9fafb; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+  .tag-red { background: #fce8e6; color: #c5221f; }
+  .tag-orange { background: #fef7e0; color: #e37400; }
+  .tag-green { background: #e6f4ea; color: #1e8e3e; }
+  .tag-blue { background: #e8f0fe; color: #1a73e8; }
+  .tag-gray { background: #f1f3f4; color: #5f6368; }
+
+  /* ── 表单 ── */
+  .form-row { margin-bottom: 14px; }
+  .form-row label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; font-weight: 500; }
+  .form-row input, .form-row select, .form-row textarea { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; transition: border-color 0.2s; }
+  .form-row input:focus, .form-row select:focus, .form-row textarea:focus { outline: none; border-color: #1a73e8; }
+  .form-row textarea { resize: vertical; min-height: 80px; }
+  .btn { padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-primary { background: #1a73e8; color: #fff; }
+  .btn-primary:hover { background: #1557b0; }
+  .btn-danger { background: #dc3545; color: #fff; }
+  .btn-danger:hover { background: #c82333; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+  /* ── 搜索栏 ── */
+  .search-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .search-bar input { flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+  .search-bar select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+
+  /* ── 分页 ── */
+  .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 16px; }
+  .pagination button { padding: 6px 14px; border: 1px solid #ddd; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .pagination button:hover { background: #f5f5f5; }
+  .pagination button.active { background: #1a73e8; color: #fff; border-color: #1a73e8; }
+
+  /* ── 模态框 ── */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: #fff; border-radius: 12px; padding: 24px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .modal-header h2 { font-size: 16px; }
+  .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #888; }
+  .modal-close:hover { color: #333; }
+
+  /* ── 图表区 ── */
+  .chart-area { display: flex; gap: 16px; flex-wrap: wrap; }
+  .chart-item { flex: 1; min-width: 280px; }
+
+  /* ── 空状态 ── */
+  .empty { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+  /* ── 加载 ── */
+  .loading { text-align: center; padding: 30px; color: #888; }
+
+  /* ── Toast ── */
+  .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; background: #333; color: #fff; border-radius: 8px; font-size: 13px; z-index: 2000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  .toast.success { background: #1e8e3e; }
+  .toast.error { background: #c5221f; }
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="topbar">
+  <h1>🏛️ 记忆宫殿 · 管理后台</h1>
+  <span class="badge">v1.0.0</span>
+</div>
+
+<!-- Tab 导航 -->
+<div class="tabs">
+  <div class="tab active" data-tab="dashboard">📊 仪表盘</div>
+  <div class="tab" data-tab="events">🧠 事件记忆库</div>
+  <div class="tab" data-tab="pushlogs">📨 推送日志</div>
+  <div class="tab" data-tab="add">➕ 添加记录</div>
+  <div class="tab" data-tab="personas">👤 数字分身</div>
+</div>
+
+<!-- 内容区 -->
+<div class="content">
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 仪表盘 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div id="tab-dashboard" class="tab-content">
+    <div class="stats-grid" id="stats-cards">
+      <div class="loading">加载中...</div>
+    </div>
+    <div class="card">
+      <div class="card-title">事件类型分布</div>
+      <div id="type-distribution" class="empty">加载中...</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 事件记忆库 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div id="tab-events" class="tab-content" style="display:none">
+    <div class="search-bar">
+      <input type="text" id="event-search" placeholder="搜索事件内容..." onkeydown="if(event.key==='Enter')loadEvents()">
+      <select id="event-type-filter">
+        <option value="">全部类型</option>
+        <option value="人员安全">人员安全</option>
+        <option value="设施故障">设施故障</option>
+        <option value="客诉冲突">客诉冲突</option>
+        <option value="天气环境">天气环境</option>
+        <option value="其他">其他</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="loadEvents()">搜索</button>
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>事件ID</th>
+            <th>发送者</th>
+            <th>类型</th>
+            <th>严重度</th>
+            <th>原始内容</th>
+            <th>确认时间</th>
+          </tr>
+        </thead>
+        <tbody id="events-tbody"><tr><td colspan="6" class="loading">加载中...</td></tr></tbody>
+      </table>
+      <div class="pagination" id="events-pagination"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 推送日志 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div id="tab-pushlogs" class="tab-content" style="display:none">
+    <div class="search-bar">
+      <select id="push-status-filter">
+        <option value="">全部状态</option>
+        <option value="pending">待确认</option>
+        <option value="adopted">已采纳</option>
+        <option value="modified">已修改</option>
+        <option value="rejected">已拒绝</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="loadPushLogs()">筛选</button>
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>推送ID</th>
+            <th>发送者</th>
+            <th>事件类型</th>
+            <th>严重度</th>
+            <th>触发关键词</th>
+            <th>状态</th>
+            <th>推送时间</th>
+          </tr>
+        </thead>
+        <tbody id="pushlogs-tbody"><tr><td colspan="7" class="loading">加载中...</td></tr></tbody>
+      </table>
+      <div class="pagination" id="pushlogs-pagination"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 添加记录 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div id="tab-add" class="tab-content" style="display:none">
+    <div class="card">
+      <div class="card-title">手动录入历史事件</div>
+      <form id="add-event-form" onsubmit="submitEvent(event)">
+        <div class="form-row">
+          <label>发送者</label>
+          <input type="text" name="from_user" placeholder="如：张班长" required>
+        </div>
+        <div class="form-row">
+          <label>事件类型</label>
+          <select name="event_type" required>
+            <option value="">请选择</option>
+            <option value="人员安全">人员安全</option>
+            <option value="设施故障">设施故障</option>
+            <option value="客诉冲突">客诉冲突</option>
+            <option value="天气环境">天气环境</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>严重程度</label>
+          <select name="severity" required>
+            <option value="">请选择</option>
+            <option value="P0">P0 - 紧急</option>
+            <option value="P1">P1 - 高</option>
+            <option value="P2">P2 - 中</option>
+            <option value="P3/P4">P3/P4 - 低</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>事件内容</label>
+          <textarea name="raw_text" placeholder="描述事件经过..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">提交</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 数字分身 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div id="tab-personas" class="tab-content" style="display:none">
+    <div class="search-bar">
+      <input type="text" id="persona-search" placeholder="搜索岗位..." onkeydown="if(event.key==='Enter')loadPersonas()">
+      <button class="btn btn-primary btn-sm" onclick="loadPersonas()">搜索</button>
+    </div>
+    <div class="card">
+      <div class="card-title">分身档案列表</div>
+      <table>
+        <thead>
+          <tr>
+            <th>岗位名称</th>
+            <th>景区</th>
+            <th>逻辑条目数</th>
+            <th>创建时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="personas-tbody"><tr><td colspan="5" class="loading">加载中...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- 详情模态框 -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">详情</h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = '/api/v1';
+
+let eventsPage = 0;
+let pushLogsPage = 0;
+
+// ── Toast ──────────────────────────────────────
+function showToast(msg, type='default') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (type || '');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Tab 切换 ────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+    const contentId = 'tab-' + tab.dataset.tab;
+    document.getElementById(contentId).style.display = 'block';
+
+    // 懒加载各 Tab 数据
+    if (tab.dataset.tab === 'dashboard') loadDashboard();
+    if (tab.dataset.tab === 'events') loadEvents();
+    if (tab.dataset.tab === 'pushlogs') loadPushLogs();
+    if (tab.dataset.tab === 'personas') loadPersonas();
+  });
+});
+
+// ── 仪表盘 ─────────────────────────────────────
+async function loadDashboard() {
+  const grid = document.getElementById('stats-cards');
+  const dist = document.getElementById('type-distribution');
+  try {
+    const res = await fetch(`${API_BASE}/admin/dashboard`);
+    if (!res.ok) throw new Error('请求失败');
+    const d = await res.json();
+
+    grid.innerHTML = `
+      <div class="stat-card"><div class="label">记忆库总量</div><div class="value">${d.total_memory_count}</div><div class="sub">条事件记录</div></div>
+      <div class="stat-card"><div class="label">本周新增</div><div class="value">${d.week_new_events}</div><div class="sub">条事件</div></div>
+      <div class="stat-card"><div class="label">推送采纳率</div><div class="value">${d.push_adoption_rate}%</div><div class="sub">${d.adopted_pushes} / ${d.total_pushes} 条</div></div>
+      <div class="stat-card"><div class="label">总推送数</div><div class="value">${d.total_pushes}</div><div class="sub">条</div></div>
+    `;
+
+    if (!d.event_type_distribution || d.event_type_distribution.length === 0) {
+      dist.innerHTML = '<div class="empty">暂无数据</div>';
+    } else {
+      const total = d.event_type_distribution.reduce((s, i) => s + i.count, 0);
+      dist.innerHTML = d.event_type_distribution.map(item => {
+        const pct = total > 0 ? (item.count / total * 100).toFixed(1) : 0;
+        const color = { '人员安全': '#c5221f', '设施故障': '#e37400', '客诉冲突': '#1a73e8', '天气环境': '#9c27b0', '其他': '#5f6368' }[item.type] || '#888';
+        return `<div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+            <span>${item.type}</span><span style="font-weight:600">${item.count} (${pct}%)</span>
+          </div>
+          <div style="background:#f0f0f0;border-radius:4px;height:8px">
+            <div style="background:${color};height:100%;border-radius:4px;width:${pct}%"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  } catch (e) {
+    grid.innerHTML = '<div class="empty">加载失败: ' + e.message + '</div>';
+    dist.innerHTML = '<div class="empty">-</div>';
+  }
+}
+
+// ── 事件记忆库 ─────────────────────────────────
+async function loadEvents(page = 0) {
+  eventsPage = page;
+  const type = document.getElementById('event-type-filter').value;
+  const search = document.getElementById('event-search').value;
+  const tbody = document.getElementById('events-tbody');
+
+  tbody.innerHTML = '<tr><td colspan="6" class="loading">加载中...</td></tr>';
+
+  try {
+    const params = new URLSearchParams({ limit: 20, offset: page * 20 });
+    if (type) params.append('event_type', type);
+
+    const res = await fetch(`${API_BASE}/admin/events?${params}`);
+    const d = await res.json();
+
+    if (!d.events || d.events.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">暂无记录</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = d.events.map(ev => `
+      <tr onclick="showEventDetail('${ev.event_id}')" style="cursor:pointer">
+        <td><code style="font-size:11px">${ev.event_id.slice(0,8)}</code></td>
+        <td>${ev.from_user}</td>
+        <td>${tag(ev.event_type)}</td>
+        <td>${sevTag(ev.severity)}</td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ev.raw_text}</td>
+        <td>${fmtTime(ev.confirmed_at)}</td>
+      </tr>
+    `).join('');
+
+    renderPagination('events-pagination', d.limit, d.offset, page, loadEvents);
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty">加载失败: ${e.message}</td></tr>`;
+  }
+}
+
+async function showEventDetail(eventId) {
+  const res = await fetch(`${API_BASE}/admin/events/${eventId}`);
+  const ev = await res.json();
+  document.getElementById('modal-title').textContent = '事件详情';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-row"><label>事件ID</label><div>${ev.event_id}</div></div>
+    <div class="form-row"><label>发送者</label><div>${ev.from_user}</div></div>
+    <div class="form-row"><label>类型 / 严重度</label><div>${ev.event_type} / ${ev.severity}</div></div>
+    <div class="form-row"><label>原始内容</label><div style="background:#f9f9f9;padding:10px;border-radius:6px;white-space:pre-wrap">${ev.raw_text}</div></div>
+    <div class="form-row"><label>确认时间</label><div>${fmtTime(ev.confirmed_at)}</div></div>
+    <div class="form-row"><label>创建时间</label><div>${fmtTime(ev.created_at)}</div></div>
+  `;
+  document.getElementById('detail-modal').classList.add('show');
+}
+
+// ── 推送日志 ───────────────────────────────────
+async function loadPushLogs(page = 0) {
+  pushLogsPage = page;
+  const status = document.getElementById('push-status-filter').value;
+  const tbody = document.getElementById('pushlogs-tbody');
+
+  tbody.innerHTML = '<tr><td colspan="7" class="loading">加载中...</td></tr>';
+
+  try {
+    const params = new URLSearchParams({ limit: 20, offset: page * 20 });
+    if (status) params.append('adoption_status', status);
+
+    const res = await fetch(`${API_BASE}/admin/push_logs?${params}`);
+    const d = await res.json();
+
+    if (!d.push_logs || d.push_logs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无记录</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = d.push_logs.map(log => `
+      <tr>
+        <td><code style="font-size:11px">${log.push_id}</code></td>
+        <td>${log.from_user}</td>
+        <td>${log.event_type}</td>
+        <td>${sevTag(log.severity)}</td>
+        <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${log.hit_keywords || ''}</td>
+        <td>${statusTag(log.adoption_status)}</td>
+        <td>${fmtTime(log.pushed_at)}</td>
+      </tr>
+    `).join('');
+
+    renderPagination('pushlogs-pagination', d.limit, d.offset, page, loadPushLogs);
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty">加载失败: ${e.message}</td></tr>`;
+  }
+}
+
+// ── 添加记录 ───────────────────────────────────
+async function submitEvent(e) {
+  e.preventDefault();
+  const form = e.target;
+  const fd = new FormData(form);
+  const body = Object.fromEntries(fd.entries());
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error('提交失败');
+    const d = await res.json();
+    showToast('事件添加成功！', 'success');
+    form.reset();
+  } catch (err) {
+    showToast('提交失败: ' + err.message, 'error');
+  }
+}
+
+// ── 数字分身 ───────────────────────────────────
+async function loadPersonas() {
+  const search = document.getElementById('persona-search').value;
+  const tbody = document.getElementById('personas-tbody');
+
+  tbody.innerHTML = '<tr><td colspan="5" class="loading">加载中...</td></tr>';
+
+  try {
+    const params = new URLSearchParams();
+    if (search) params.append('job_title', search);
+
+    const res = await fetch(`${API_BASE}/admin/personas?${params}`);
+    const d = await res.json();
+
+    if (!d.personas || d.personas.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty">暂无分身档案</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = d.personas.map(p => `
+      <tr>
+        <td><b>${p.job_title}</b></td>
+        <td>${p.venue_id || '通用'}</td>
+        <td>${(p.logic_entries || []).length} 条</td>
+        <td>${fmtTime(p.created_at)}</td>
+        <td>
+          <button class="btn btn-sm" onclick="showPersonaDetail('${p.id}')">查看</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePersona('${p.id}')">删除</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty">加载失败: ${e.message}</td></tr>`;
+  }
+}
+
+async function showPersonaDetail(personaId) {
+  const res = await fetch(`${API_BASE}/admin/personas`);
+  const d = await res.json();
+  const p = (d.personas || []).find(x => x.id === personaId);
+  if (!p) { showToast('未找到该分身', 'error'); return; }
+
+  const entries = p.logic_entries || [];
+  document.getElementById('modal-title').textContent = '分身详情: ' + p.job_title;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-row"><label>岗位</label><div>${p.job_title}</div></div>
+    <div class="form-row"><label>景区</label><div>${p.venue_id || '通用'}</div></div>
+    <div class="form-row"><label>创建时间</label><div>${fmtTime(p.created_at)}</div></div>
+    <div class="form-row"><label>逻辑条目 (${entries.length}条)</label>
+      <div style="max-height:300px;overflow-y:auto">
+        ${entries.length === 0 ? '<div class="empty">无条目</div>' : entries.map((e, i) => `
+          <div style="background:#f9f9f9;padding:10px;border-radius:6px;margin-bottom:8px">
+            <div style="font-size:12px;color:#888;margin-bottom:4px">条目 ${i+1}</div>
+            <div><b>触发：</b>${e.trigger}</div>
+            <div><b>行为：</b>${e.behavior}</div>
+            <div><b>原因：</b>${e.reason}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  document.getElementById('detail-modal').classList.add('show');
+}
+
+async function deletePersona(personaId) {
+  if (!confirm('确定删除该分身档案？此操作不可恢复。')) return;
+  try {
+    const res = await fetch(`${API_BASE}/admin/personas/${personaId}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('删除失败');
+    showToast('删除成功', 'success');
+    loadPersonas();
+  } catch (e) {
+    showToast('删除失败: ' + e.message, 'error');
+  }
+}
+
+// ── 模态框 ─────────────────────────────────────
+function closeModal() {
+  document.getElementById('detail-modal').classList.remove('show');
+}
+document.getElementById('detail-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('detail-modal')) closeModal();
+});
+
+// ── 辅助函数 ───────────────────────────────────
+function tag(type) {
+  const map = { '人员安全': 'tag-red', '设施故障': 'tag-orange', '客诉冲突': 'tag-blue', '天气环境': 'tag-purple', '其他': 'tag-gray' };
+  return `<span class="tag ${map[type] || 'tag-gray'}">${type}</span>`;
+}
+
+function sevTag(sev) {
+  const map = { 'P0': 'tag-red', 'P1': 'tag-orange', 'P2': 'tag-blue', 'P3/P4': 'tag-gray' };
+  return `<span class="tag ${map[sev] || 'tag-gray'}">${sev}</span>`;
+}
+
+function statusTag(s) {
+  const map = { 'pending': 'tag-orange', 'adopted': 'tag-green', 'modified': 'tag-blue', 'rejected': 'tag-red' };
+  return `<span class="tag ${map[s] || 'tag-gray'}">${s}</span>`;
+}
+
+function fmtTime(ts) {
+  if (!ts) return '-';
+  const d = new Date(ts * 1000);
+  if (isNaN(d)) return '-';
+  return d.toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+function renderPagination(containerId, limit, offset, currentPage, loadFn) {
+  const container = document.getElementById(containerId);
+  const totalPages = 5; // 简化处理
+  container.innerHTML = Array.from({ length: Math.min(totalPages, 3) }, (_, i) => {
+    const p = i;
+    return `<button class="${p === currentPage ? 'active' : ''}" onclick="(${loadFn.name})(${p})">${p + 1}</button>`;
+  }).join('');
+}
+
+// 初始加载仪表盘
+loadDashboard();
+</script>
+</body>
+</html>

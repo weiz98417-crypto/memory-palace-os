@@ -1,47 +1,31 @@
+# Sensitive config
+.env
+
+# Runtime data
+data/
+!data/.gitkeep
+
 # Python
 __pycache__/
-*.py[cod]
-*.so
-.Python
-build/
-dist/
-*.egg-info/
-.eggs/
-
-# Virtual env
-venv/
+*.pyc
+*.pyo
 .venv/
-ENV/
+venv/
 
-# Data
-data/
-*.db
-*.sqlite
-*.sqlite3
-chroma/
-
-# Environment
-.env
-.env.local
+# Test artifacts
+htmlcov/
+.coverage
+.pytest_cache/
 
 # IDE
-.idea/
 .vscode/
+.idea/
 *.swp
 *.swo
-
-# Logs
-*.log
-logs/
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Testing
-.coverage
-htmlcov/
-.pytest_cache/
-
-# Docker
-*.pid
+# ChromaDB
+chroma_db/

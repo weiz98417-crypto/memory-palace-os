@@ -1,0 +1,59 @@
+# =============================================================================
+# Context Trigger Skill (情境触发专家) 运行时配置文件
+# =============================================================================
+# 对应 docx 中描述的两阶段事件触发系统
+# Stage1: 关键词极速预过滤（O(n)扫描，无LLM调用）
+# Stage2: LLM语义判断
+
+# 1. 智能体基础元数据
+agent_metadata:
+  name: "ContextTrigger_Skill"
+  version: "1.0.0"
+  description: "关键词预过滤 + LLM情境判断的两阶段事件触发器"
+
+# 2. 景区类型配置
+# 可选组合：ancient_town, museum, theme_park, mountain
+scenic_types:
+  - "ancient_town"      # 古镇/古街型
+  # - "museum"          # 博物馆/展馆型（取消注释启用）
+  # - "theme_park"     # 主题公园/游乐型（取消注释启用）
+  # - "mountain"       # 山岳/户外型（取消注释启用）
+
+# 3. Stage1 配置（关键词过滤）
+stage1_config:
+  enable_extended_keywords: true   # 是否启用景区扩展关键词
+  case_sensitive: false            # 关键词匹配是否大小写敏感
+
+# 4. Stage2 配置（LLM判断）
+stage2_config:
+  enabled: true                    # 是否启用 Stage2 LLM 判断
+  # 当 Stage1 未触发时，是否仍送 Stage2（兜底）
+  fallback_to_llm: true
+  llm_config:
+    model: "gpt-4o-mini"           # 使用较小模型做快速判断
+    temperature: 0.0               # 确定性判断，温度为0
+    max_tokens: 500                # 简短判断，不需要长回复
+    json_mode: true
+
+# 5. 推送延迟配置（秒）
+# 员工发送消息后，延迟N秒再推送，避免员工正在输入时打扰
+push_delay_seconds: 3
+
+# 6. 确认卡片延迟配置（秒）
+# 推送处置卡片后，等待 N 秒再发送确认卡片（让员工先处理紧急情况）
+confirm_delay_seconds: 180
+
+# 7. 确认卡片配置
+confirm_card:
+  enabled: true
+  # 按钮文案（企微 serverchan 卡片支持 markdown 点击链）
+  button_confirm: "✅ 一键确认"
+  button_supplement: "📝 补充说明"
+  # 确认超时时间（秒），超时未确认视为已处理
+  timeout_seconds: 3600
+
+# 8. 可观测性配置
+observability:
+  log_level: "INFO"
+  record_trigger_stats: true       # 记录触发统计到 metrics
+  record_push_logs: true           # 记录推送日志到 push_logs 表

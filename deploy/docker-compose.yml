@@ -26,6 +26,7 @@ services:
       LOG_DIR: /app/data/logs
     volumes:
       - sqlite-data:/app/data          # SQLite + 日志持久化
+      - workspaces-data:/app/data/workspaces  # [Phase 4] 工作区隔离
     depends_on:
       chromadb:
         condition: service_healthy
@@ -91,6 +92,12 @@ volumes:
       type: none
       o: bind
       device: ./data                   # 映射到宿主机 deploy/data/，方便备份
+  workspaces-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/workspaces        # [Phase 4] 工作区隔离目录
   chroma-data:
     driver: local
   nginx-logs:

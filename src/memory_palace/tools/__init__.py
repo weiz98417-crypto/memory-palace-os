@@ -4,11 +4,11 @@ tools/__init__.py - 工具集成层导出
 from .wechat_crypto import WXBizMsgCrypt, MockWeChatCrypto, WeChatCryptoError, create_wechat_crypto
 from .llm_wrapper import LLMClient, LLMResponse, llm_client
 from .circuit_breaker import CircuitBreaker, CircuitBreakerOpen
-from .embedding_client import EmbeddingClient, embedding_client
-from .wechat_client import WeChatClient
+from .embedding_client import EmbeddingClient, get_embedding_client
+from .wechat_client import WeChatWorkClient as WeChatClient
 from .sms_client import send_alert, send_sms, send_voice_call
-from .logger_config import setup_logger
-from .time_utils import format_sla_deadline, is_sla_breached, get_current_timestamp
+from .logger_config import setup_logging as setup_logger
+from .time_utils import get_now, parse_to_datetime, calculate_elapsed_minutes, format_for_log, is_business_hours, get_relative_time_desc
 from .db_client import db_manager, DatabaseManager
 
 __all__ = [
@@ -26,7 +26,7 @@ __all__ = [
     "CircuitBreakerOpen",
     # Embedding
     "EmbeddingClient",
-    "embedding_client",
+    "get_embedding_client",
     # 企微客户端
     "WeChatClient",
     # 短信告警
@@ -36,9 +36,12 @@ __all__ = [
     # 日志
     "setup_logger",
     # 时间工具
-    "format_sla_deadline",
-    "is_sla_breached",
-    "get_current_timestamp",
+    "get_now",
+    "parse_to_datetime",
+    "calculate_elapsed_minutes",
+    "format_for_log",
+    "is_business_hours",
+    "get_relative_time_desc",
     # 数据库
     "db_manager",
     "DatabaseManager",

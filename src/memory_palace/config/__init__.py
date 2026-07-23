@@ -15,8 +15,8 @@
 Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 """
 
-# 直接从 init.py（模块文件）导入，Python 会查找同目录的 init.py
-from .init import ConfigManager, ConfigSubscriber, get_config, config
+# 从 config_manager.py 导入核心配置类
+from .config_manager import ConfigManager, ConfigSubscriber, get_config, config
 
 __all__ = [
     "ConfigManager",

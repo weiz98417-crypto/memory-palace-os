@@ -29,9 +29,9 @@
 ### 输出契约 (OUTPUT SCHEMA)
 你必须且只能返回合法的 JSON 格式数据，严禁输出任何多余的解释说明。格式如下：
 
-{
+{{
     "reply_text": "【此处填写直接回复给一线员工的具体行动指令，必须包含明确的动作】",
     "action_taken": "emergency_dispatch_sop",
     "required_tools": ["此处填写需要的工具，如 medical_kit, camera, security_backup"],
     "next_step_check": "【此处填写要求员工反馈的具体核对项，例如：'请在3分钟内确认救护车是否到达'】"
-}
+}}

@@ -5,11 +5,11 @@
 """
 
 from .db_client import db_manager, SOPDocument, IncidentLog
-from .vector_store import vector_client
+from .vector_store import get_vector_client
 
 __all__ = [
     "db_manager",
     "SOPDocument",
     "IncidentLog",
-    "vector_client"
+    "get_vector_client"
 ]

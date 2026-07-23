@@ -7,13 +7,17 @@
 3. 滑动窗口历史：为 Persona 等需要历史记忆的 Agent 提供对话上下文
 4. 分布式安全：支持 SQLite/Redis 后端，重启不丢状态
 
+[升级] Phase 1:
+- Per-Agent History Scoping: 每个 Agent 维护独立的历史记录
+- 防止 Agent 间内存互相污染
+
 Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 """
 
 import json
 import time
 from typing import Any, Dict, List, Optional
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from enum import Enum
 
@@ -51,10 +55,13 @@ class AgentTurn:
 class SessionState:
     """
     用户会话状态数据类
-    
+
     字段设计原则：
     - 所有 Agent 需要共享的上下文放这里
     - 大字段（如完整历史）单独存储，主记录保持轻量
+
+    [升级] 新增 agent_scoped_history:
+    - 每个 Agent 维护独立的历史记录，防止内存污染
     """
     user_id: str                     # 企微 UserID
     session_id: str                  # 会话唯一标识（每次新事件生成）
@@ -66,7 +73,10 @@ class SessionState:
     active_agent: Optional[str] = None        # 当前激活的 Agent
     context_payload: Dict[str, Any] = None    # 额外的上下文数据（如 case_id）
     history_summary: str = ""                 # 历史对话摘要（压缩后）
-    
+
+    # [升级] Per-Agent 历史隔离
+    agent_scoped_history: Dict[str, List[AgentTurn]] = field(default_factory=dict)
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "user_id": self.user_id,
@@ -80,7 +90,7 @@ class SessionState:
             "context_payload": json.dumps(self.context_payload) if self.context_payload else "{}",
             "history_summary": self.history_summary
         }
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "SessionState":
         return cls(
@@ -268,7 +278,96 @@ class SessionStateManager:
         
         # 4. 更新会话摘要（用于快速恢复上下文）
         await self._update_history_summary(session_id)
-    
+
+    async def record_agent_turn(
+        self,
+        session_id: str,
+        agent_name: str,
+        input_text: str,
+        output_text: Optional[str],
+        structured_data: Dict[str, Any],
+        tokens_used: int = 0
+    ) -> None:
+        """
+        [升级] 记录单 Agent 的交互（用于 Agent 内存隔离）
+
+        与 record_turn 的区别:
+        - record_turn: 记录所有 Agent 的共享历史
+        - record_agent_turn: 只记录特定 Agent 的历史，防止互相干扰
+        """
+        turn = AgentTurn(
+            agent_name=agent_name,
+            timestamp=time.time(),
+            input_text=input_text,
+            output_text=output_text,
+            structured_data=structured_data,
+            tokens_used=tokens_used
+        )
+
+        # 1. 更新 per-agent 内存缓存
+        session = await self.get_session(session_id)
+        if session:
+            if session.agent_scoped_history is None:
+                session.agent_scoped_history = {}
+
+            if agent_name not in session.agent_scoped_history:
+                session.agent_scoped_history[agent_name] = []
+
+            session.agent_scoped_history[agent_name].append(turn)
+
+            # 限制每个 Agent 的历史大小
+            if len(session.agent_scoped_history[agent_name]) > 50:
+                session.agent_scoped_history[agent_name] = \
+                    session.agent_scoped_history[agent_name][-50:]
+
+        # 2. 仍然写入共享历史 (用于审计和通用查询)
+        await self.record_turn(
+            session_id=session_id,
+            agent_name=agent_name,
+            input_text=input_text,
+            output_text=output_text,
+            structured_data=structured_data,
+            tokens_used=tokens_used
+        )
+
+        logger.debug(
+            f"[SessionState] Agent {agent_name} in {session_id}: "
+            f"scoped turn recorded"
+        )
+
+    async def get_agent_history(
+        self,
+        session_id: str,
+        agent_name: str,
+        limit: int = 10
+    ) -> List[Dict[str, Any]]:
+        """
+        [升级] 获取特定 Agent 的对话历史
+
+        Args:
+            session_id: 会话 ID
+            agent_name: Agent 名称
+            limit: 返回的消息对数量
+
+        Returns:
+            格式兼容 OpenAI Message 格式:
+            [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]
+        """
+        session = await self.get_session(session_id)
+        if not session or not session.agent_scoped_history:
+            return []
+
+        agent_turns = session.agent_scoped_history.get(agent_name, [])
+        recent_turns = agent_turns[-limit:]
+
+        result = []
+        for turn in recent_turns:
+            result.append({"role": "user", "content": turn.input_text})
+            if turn.output_text:
+                result.append({"role": "assistant", "content": turn.output_text})
+
+        return result
+
     async def get_conversation_history(
         self, 
         session_id: str, 

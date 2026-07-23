@@ -88,18 +88,12 @@ class Orchestrator:
         }
 
     async def _save_message(self, payload: Dict[str, Any]):
-        """保存消息到数据库（优先使用容器提供的 db_client）"""
+        """保存消息到数据库"""
         try:
-            if self.container and hasattr(self.container, 'db_client'):
-                db = self.container.db_client
-                await db.save_message(payload)
-                from_user = payload.get("from_user", "unknown")
-                await db.create_or_update_session(from_user)
-            else:
-                from src.memory_palace.knowledge.db_client import save_message, create_or_update_session
-                await save_message(payload)
-                from_user = payload.get("from_user", "unknown")
-                await create_or_update_session(from_user)
+            from src.memory_palace.knowledge.db_client import save_message, create_or_update_session
+            await save_message(payload)
+            from_user = payload.get("from_user", "unknown")
+            await create_or_update_session(from_user)
         except Exception as e:
             logger.error(f"❌ 保存消息失败: {e}")
 
@@ -236,9 +230,10 @@ class Orchestrator:
         """
         intent_agent_map = {
             "incident_report": "commander",      # 突发事件 → 指挥官
-            "emergency_advice": "memory_ops",     # 应急经验检索 → 记忆专家
-            "chitchat": "persona",               # 闲聊 → 人设专家
-            "other": "persona",                  # 其他 → 人设专家
+            "emergency_dispatch": "commander",   # 紧急调度 → 指挥官
+            "emergency_advice": "memory_ops",    # 应急经验检索 → 记忆专家
+            "chitchat": "persona",              # 闲聊 → 人设专家
+            "other": "persona",                 # 其他 → 人设专家
         }
         return intent_agent_map.get(intent, "persona")
 
@@ -255,7 +250,7 @@ class Orchestrator:
         return {
             "status": "routed",
             "intent": "routine",
-            "priority": "P3",
+            "priority": payload.get("priority", "P3"),
             "target_agent": "persona_extract",
             "from_user": payload.get("from_user", "unknown"),
             "content": payload.get("content", ""),

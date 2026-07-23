@@ -1,55 +1,104 @@
 # Memory Palace OS
 
-景区运营智能应急响应系统。
+**景区运营智能应急响应与经验传承系统**
+
+基于 OpenClaw 多Agent架构启发，融合 Harness 式自主Agent生命周期管理，打造景区运营场景下的**智能体协作平台**。
 
 ---
 
-## 一句话定位
+## 核心定位
 
-当员工在企微群发"有人晕倒了"，系统 30 秒内自动完成：**识别紧急程度 → 下发处置指令 → 通知值班经理 → 记录归档**。比人快，比人全，比人不漏。
+当员工在企微群发"有人晕倒了"，系统 30 秒内自动完成：**P0 事件识别 → SOP 指令下发 → 责任人通知 → 全链路记录**。
+
+这不是一个聊天机器人，而是一个**多Agent协作的智能体网络**——每个 Agent 各司其职，从上下文感知到经验检索，从推理决策到推送生成，整个过程无需人工介入，且全程可审计、可干预、可追溯。
 
 ---
 
-## 核心场景
+## 架构哲学
 
-### 场景 A：突发应急（实时）
-
-```
-员工企微群 →「B区长廊有老年游客晕倒了，呼吸微弱」
-         ↓
-    Gateway 接收 XML，解密，分配 trace_id
-         ↓
-    Router 识别 → P0 紧急 / intent=emergency_dispatch
-         ↓
-    Commander 下发 SOP →「1.立即拨打120 2.取AED 3.拉警戒线」
-         ↓
-    WeChat 推送指令给员工 + 短信/语音通知值班经理
-         ↓
-    SLA 记录响应时间
-    IncidentLog 归档
-```
-
-### 场景 B：例行巡检（离线）
+### OpenClaw 式多Agent协作
 
 ```
-Scheduler 每日 20:00 定时触发
-         ↓
-    Watcher 扫描全量未闭环工单
-         ↓
-    超时 → WeChat 催办卡片 + SMS 通知
-    闭环 → 萃取经验，生成 SOP 草稿
+企微消息
+    ↓
+┌──────────────────────────────────────────────────────────────┐
+│                     Orchestrator (主控)                       │
+│  意图分发 · SLA 记录 · Agent 调度 · 上下文管理                │
+└──────────────────────────────────────────────────────────────┘
+    ↓
+┌─────────┐  ┌──────────┐  ┌───────────┐  ┌────────────┐
+│  Router │→│ Commander│→│ Memory Ops│→│  Persona   │
+│ (情境感知)│  │ (SOP执行) │  │ (经验检索) │  │ (数字分身)  │
+└─────────┘  └──────────┘  └───────────┘  └────────────┘
+                                           ↑
+              ┌────────────────────────────┘
+              ↓
+┌─────────┐  ┌──────────┐  ┌───────────┐  ┌────────────┐
+│ Watcher │  │ TodoWrite │  │(主动监控) │  │(任务分解)   │
+└─────────┘  └──────────┘  └───────────┘  └────────────┘
 ```
 
-### 场景 C：员工对话（日常）
+**Agent 矩阵：**
+
+| Agent | 职责 | 触发方式 |
+|-------|------|----------|
+| **Router** | 情境感知 · 意图识别 · P0 关键字检测 | 所有消息 |
+| **Commander** | SOP 指令下发 · 企微/短信/语音通知 | P0/P1 事件 |
+| **Memory Ops** | RAG 经验检索 · SOP 草稿萃取 | routine 检索 |
+| **Persona** | 数字分身对话 · 访谈萃取 · 个性化建议生成 | 多轮对话 |
+| **PersonaExtract** | 老员工结构化访谈萃取 · 逻辑条目提取 | 管理后台 / 访谈 API |
+| **Watcher** | SLA 巡检 · 催办触发 · 异常预警 | 定时任务 |
+| **TodoWrite** | 复杂目标 → 任务依赖图分解 | Agent 调用 |
+
+### 四层上下文压缩 (Token 防火墙)
 
 ```
-员工提问 → Router 识别为 routine
-         ↓
-    Memory Ops RAG 检索相似历史处置经验
-         ↓
-    Persona 数字分身给出个性化建议
-         ↓
-    结果返回企微
+┌─────────────────────────────────────────────────────┐
+│                   LLM Context                       │
+├─────────────────────────────────────────────────────┤
+│  Tier 0 (Hot)   │ 最近 10 条 · 完整 fidelity        │
+├─────────────────┼───────────────────────────────────┤
+│  Tier 1 (Warm)  │ 被 evict 消息的 LLM 摘要          │
+├─────────────────┼───────────────────────────────────┤
+│  Tier 2 (Cold)  │ 会话级叙事摘要 · 50 轮触发        │
+└─────────────────┴───────────────────────────────────┘
+```
+
+### 权限引擎 (企业级安全边界)
+
+| Level | 名称 | 行为 |
+|-------|------|------|
+| **FREE** | 直接执行 | `search_memory`, `get_context` |
+| **LOGGED** | 执行+审计 | `write_memory`, `update_session` |
+| **APPROVAL** | 需审批 | `send_sms`, `send_alert`, `send_wechat_message` |
+
+```
+工具调用 → 权限检查 → [APPROVAL] → 挂起 → 微信通知 Admin → 等待审批 → 执行
+```
+
+### 任务依赖图 (Docker 重启不死)
+
+```python
+# 复杂目标自动分解为任务图
+goal: "生成月报并发送"
+    ↓ TodoWrite Skill
+task_1: 收集数据 ──→ task_2: 生成报告 ──→ task_3: 发送邮件
+              │              │
+              └────── A 失败，B 挂起 ──────┘
+                            ↓
+              Docker 重启后自动恢复 PENDING 任务
+```
+
+### 工作区隔离 (文件系统沙盒)
+
+```
+data/workspaces/{task-id}/
+├── input/       # 任务输入
+├── output/      # 生成输出
+├── temp/        # 临时文件 (完成时清理)
+└── metadata/    # 元数据
+
+路径遍历攻击 → ValueError: 路径逃逸检测
 ```
 
 ---
@@ -61,15 +110,28 @@ Scheduler 每日 20:00 定时触发
          ↓
     Gateway ─── 签名验证 / 消息去重 / XML解析
          ↓
-    Orchestrator ─── 意图分发 / SLA记录 / Agent调度
+    Orchestrator ─── 意图分发 / SLA 记录 / Agent 调度
          │
-         ├── Router      意图识别 & 紧急分诊
-         ├── Commander   P0/P1 级 SOP 指令下发
-         ├── Memory Ops  RAG 历史经验检索
-         ├── Persona     数字分身对话
-         └── Watcher     SLA 巡检 & 催办
+         ├── Router          意图识别 & P0 紧急分诊
+         ├── Commander        P0/P1 SOP 指令下发
+         ├── Memory Ops       RAG 历史经验检索
+         ├── Persona          数字分身对话
+         ├── Watcher          SLA 巡检 & 催办
+         └── TodoWrite        任务分解 (Phase 3)
+         │
+         ▼
+    [Phase 1] 三层上下文压缩 ── Hot/Warm/Cold tiering
+         │
+         ▼
+    [Phase 2] 权限引擎 ── Level 0/1/2 + 审批流
+         │
+         ▼
+    [Phase 3] 任务依赖图 ── 持久化 & Docker 重启恢复
+         │
+         ▼
+    [Phase 4] 工作区隔离 ── chroot + 路径遍历防护
 
-工具层 ── WeChat Client / SMS Client / Voice Call / LLM Wrapper
+工具层 ── WeChat / SMS / Voice Call / LLM Wrapper / Tool Executor
          ↓
     ChromaDB (向量) + SQLite (元数据)
 ```
@@ -80,45 +142,40 @@ Scheduler 每日 20:00 定时触发
 
 ```
 src/memory_palace/
-├── api/                        # FastAPI 路由
-│   ├── v1/                     # v1 API
-│   │   └── endpoints/           # admin / sessions / messages / skills
-│   └── v2/                     # v2 API
-├── config/                      # 配置加载 (app_settings / env_validator)
-├── core/                        # 核心引擎
-│   ├── orchestrator.py         # 调度器：意图路由 → Agent派发
-│   ├── gateway.py              # 网关：企微回调入口
-│   ├── skill_base.py          # Agent 基类 & SkillOutput
-│   ├── health.py               # 三层健康检查 (live/ready/deep)
-│   ├── hot_reload.py           # 技能热更新
-│   ├── scheduler.py            # APScheduler 定时任务
-│   ├── queue_worker.py         # 异步消息队列
-│   └── session_state.py        # 会话状态管理
-├── skills/                      # 5 大 Agent
-│   ├── router/                 # 意图识别 & P0 关键字检测
-│   ├── commander/              # SOP 下发 & 企微通知
-│   ├── memory_ops/             # RAG 检索 & SOP 萃取
-│   ├── persona/               # 数字分身对话
-│   └── watcher/                # SLA 巡检 & 催办触发
-├── knowledge/                  # 知识层
-│   ├── db_client.py            # SQLite + aiosqlite 元数据
-│   ├── vector_store.py         # ChromaDB 向量检索
-│   ├── db_init.py              # 建表脚本
-│   ├── data_seeder.py          # 种子数据导入
-│   └── migrate_seed_data.py    # 数据迁移
-├── tools/                      # 工具集
-│   ├── llm_wrapper.py          # LLM 统一接口
-│   ├── wechat_client.py        # 企微消息收发
-│   ├── sms_client.py           # 短信/语音 (ThreadPool 并行)
-│   ├── circuit_breaker.py      # 熔断器
-│   └── rate_limiter.py         # 限流器
-├── metrics/                    # 监控
-│   ├── alerting.py             # 告警规则
-│   └── collectors/             # 各维度指标采集
-static/                         # 前端静态文件
-main.py                         # FastAPI 应用入口
-requirements.txt
-.env.example
+├── api/
+│   ├── v1/endpoints/       # admin / sessions / messages / skills
+│   └── v2/                 # dispatch / context / handoff
+├── config/                 # 配置加载 & 环境校验
+├── core/
+│   ├── orchestrator.py     # 主控调度器
+│   ├── gateway.py           # 企微回调入口
+│   ├── skill_base.py       # Agent/Skill 基类
+│   ├── context_tier.py      # [Phase 1] 三层上下文压缩
+│   ├── agent_memory.py      # [Phase 1] Agent 内存隔离
+│   ├── permissions.py       # [Phase 2] 权限引擎
+│   ├── task_graph.py        # [Phase 3] 任务依赖图
+│   ├── workspace.py         # [Phase 4] 工作区隔离
+│   ├── session_state.py     # 会话状态管理
+│   ├── health.py            # 三层健康检查
+│   └── hot_reload.py        # 技能热更新
+├── skills/
+│   ├── router/              # 情境感知 + 意图识别
+│   ├── commander/           # SOP 下发 + 通知
+│   ├── memory_ops/          # RAG 检索 + SOP 萃取
+│   ├── persona/             # 数字分身对话
+│   ├── persona_extract/     # 老员工访谈萃取 (F-013)
+│   ├── watcher/             # SLA 巡检 + 催办
+│   └── todo/                # 任务分解
+├── knowledge/
+│   ├── db_client.py         # SQLite 元数据
+│   ├── vector_store.py      # ChromaDB 向量检索
+│   └── db_init.py           # 建表脚本
+└── tools/
+    ├── llm_wrapper.py       # LLM 统一接口
+    ├── wechat_client.py     # 企微消息
+    ├── sms_client.py        # 短信/语音
+    ├── tool_executor.py     # 工具执行器 + 权限 hook
+    └── circuit_breaker.py   # 熔断器
 ```
 
 ---
@@ -134,33 +191,24 @@ requirements.txt
 ### 安装
 
 ```bash
-# 1. 进入目录
 cd memory-palace-os
-
-# 2. 创建虚拟环境
 python -m venv .venv
 source .venv/bin/activate  # Linux/macOS
 # .\.venv\Scripts\activate  # Windows
 
-# 3. 安装依赖
 pip install -r requirements.txt
-
-# 4. 配置环境变量
 cp .env.example .env
-# 编辑 .env，填入企业微信参数和 LLM API Key
+# 编辑 .env 填入企业微信参数和 LLM API Key
 
-# 5. 初始化数据库
 python -c "from src.memory_palace.knowledge.db_init import init_db; init_db()"
-
-# 6. 启动服务
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### 验证
 
 ```bash
-# 健康检查
 curl http://localhost:8000/health
+# 健康检查返回 {"status": "ok"}
 
 # 企微回调地址（外网可达后）
 https://your-domain.com/webhook/v1/callback
@@ -168,19 +216,30 @@ https://your-domain.com/webhook/v1/callback
 # 前端管理界面
 http://localhost:8000/admin
 # 管理员账号: admin / 123456
+
+### 管理后台功能
+
+访问 `/admin` 进入管理控制台，包含以下模块：
+
+| 模块 | 说明 |
+|------|------|
+| **记忆卷宗** | 事件列表 · 事件详情 · 手动录入 |
+| **数字分身** | 分身列表 · 创建分身 · 访谈萃取 · 向分身提问 |
+| **推送日志** | 推送采纳率统计 · 推送记录查询 |
+| **仪表盘** | 记忆库总量 · 本周新增 · 采纳率 · 事件分布 |
+
+**数字分身访谈萃取流程：**
+
 ```
-
----
-
-## Agent 矩阵
-
-| Agent | 优先级 | 触发条件 | 核心输出 |
-|---|---|---|---|
-| Router | P0 | 任意消息 | intent / severity / target_agent |
-| Commander | P1 | P0/P1 或 intent=emergency_dispatch | SOP 指令 + 企微推送 + SLA记录 |
-| Memory Ops | P2 | routine 或显式检索 | RAG 检索结果 + SOP 草稿 |
-| Persona | P3 | 多轮对话 | 个性化建议 + 经验萃取 |
-| Watcher | 后台 | 定时触发 / 超时监控 | 催办卡片 + 告警通知 |
+点击「唤醒新专家分身」→ 填写专家代号与职务 → 确认保存
+    ↓ 自动弹出访谈窗口
+回答 5 类结构化问题（触发情境 / 判断行为 / 经验教训等）
+    ↓ 全部回答完毕
+点击「结束萃取」→ 逻辑条目自动存入分身档案
+    ↓
+点击分身卡片 → 向该专家提问 → 获取第一人称回答
+```
+```
 
 ---
 
@@ -200,23 +259,6 @@ http://localhost:8000/admin
 | `LLM_MODEL` | 选填 | 模型名，默认 gpt-4 |
 | `DEMO_MODE` | 选填 | `true` 时跳过 LLM 调用，使用 Mock 响应 |
 
-### 技能热更新
-
-每个 Skill 目录下的 `config.yaml` 变更后自动生效，无需重启服务。
-
-```yaml
-# skill 内部 config.yaml 示例
-rag_config:
-  top_k: 5
-  similarity_threshold: 0.72
-  max_reference_chars: 2000
-critical_keywords_boost:
-  - 晕倒
-  - 明火
-  - 持械
-  - 120
-```
-
 ---
 
 ## API 端点
@@ -233,12 +275,26 @@ critical_keywords_boost:
 | `DELETE` | `/api/v1/sessions/{id}` | 关闭会话 |
 | `GET` | `/api/v1/messages/{id}` | 消息详情 |
 | `GET` | `/api/v1/skills` | 注册技能列表 |
+| `GET` | `/api/v1/admin/dashboard` | 仪表盘统计 |
+| `GET` | `/api/v1/admin/events` | 事件记忆库列表 |
+| `POST` | `/api/v1/admin/events` | 手动录入事件 |
+| `GET` | `/api/v1/admin/push_logs` | 推送日志 |
+| `GET` | `/api/v1/admin/personas` | 数字分身列表 |
+| `POST` | `/api/v1/admin/personas` | 创建数字分身 |
+| `DELETE` | `/api/v1/admin/personas/{id}` | 删除数字分身 |
+| `POST` | `/api/v1/admin/personas/{id}/interview/start` | 启动访谈萃取 |
+| `POST` | `/api/v1/admin/personas/{id}/interview/continue` | 继续访谈 |
+| `POST` | `/api/v1/admin/personas/{id}/interview/finalize` | 完成访谈萃取 |
+| `POST` | `/api/v1/admin/personas/{id}/chat` | 向分身提问 |
+| `GET` | `/api/v1/admin/approvals` | 列出待审批请求 |
+| `POST` | `/api/v1/admin/approvals/{id}/approve` | 批准审批 |
+| `POST` | `/api/v1/admin/approvals/{id}/reject` | 拒绝审批 |
 
 ### v2
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| `POST` | `/api/v2/dispatch` | 直接派发消息（绕企微） |
+| `POST` | `/api/v2/dispatch` | 直接派发消息 |
 | `GET` | `/api/v2/sessions/{id}/context` | 获取会话上下文 |
 | `POST` | `/api/v2/sessions/{id}/handoff` | 跨 Agent 交接 |
 
@@ -246,27 +302,22 @@ critical_keywords_boost:
 
 ## 监控指标
 
-通过 `/metrics` 端点暴露（Prometheus 格式）：
-
 ```
-# 核心指标
 memory_palace_requests_total{method, endpoint, status}
 memory_palace_request_duration_seconds{method, endpoint}
 memory_palace_messages_processed_total{agent, status}
 memory_palace_llm_calls_total{provider, model}
-memory_palace_llm_latency_seconds{provider}
 
 # SLA 指标
-memory_palace_sla_breach_total{priority}  # P0/P1/P2 超时次数
-memory_palace_sla_response_seconds{priority}  # P0/P1 实际响应时长
+memory_palace_sla_breach_total{priority}     # P0/P1/P2 超时次数
+memory_palace_sla_response_seconds{priority}  # 实际响应时长
 
 # 熔断指标
 memory_palace_circuit_breaker_state{name, state}
 memory_palace_circuit_breaker_failures_total{name}
 ```
 
-健康检查端点：
-
+健康检查：
 ```
 GET /health/live    → Kubernetes liveness probe
 GET /health/ready   → Kubernetes readiness probe

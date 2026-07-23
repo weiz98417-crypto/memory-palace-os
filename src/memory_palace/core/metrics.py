@@ -346,6 +346,56 @@ class MetricsRegistry:
             ["level", "type"]  # level: P0, P1, P2, P3, P4
         )
 
+        # ─────────────────────────────────────────────────────────────
+        # Context Trigger (关键词触发) 指标
+        # ─────────────────────────────────────────────────────────────
+
+        self.context_trigger_messages_total = Counter(
+            f"{NAMESPACE}_context_trigger_messages_total",
+            "Total messages processed by ContextTrigger",
+            ["stage"]  # stage: stage1, stage2, bypassed
+        )
+
+        self.context_trigger_excluded_total = Counter(
+            f"{NAMESPACE}_context_trigger_excluded_total",
+            "Total messages excluded by Stage1 EXCLUDE_KEYWORDS",
+            ["exclude_category"]  # resolved, notification, daily_checkin
+        )
+
+        self.context_trigger_triggered_total = Counter(
+            f"{NAMESPACE}_context_trigger_triggered_total",
+            "Total messages triggered by Stage1 TRIGGER_KEYWORDS",
+            ["trigger_category"]  # personnel_status, emotion_conflict, urgency, etc.
+        )
+
+        self.context_trigger_llm_calls_total = Counter(
+            f"{NAMESPACE}_context_trigger_llm_calls_total",
+            "Total Stage2 LLM calls",
+            ["status"]  # success, error, fallback
+        )
+
+        self.context_trigger_push_total = Counter(
+            f"{NAMESPACE}_context_trigger_push_total",
+            "Total pushes triggered",
+            ["severity", "event_type"]  # P0/P1/P2/P3, personnel/equipment/emotion/etc.
+        )
+
+        self.context_trigger_push_adopted_total = Counter(
+            f"{NAMESPACE}_context_trigger_push_adopted_total",
+            "Total pushes adopted by employees"
+        )
+
+        self.context_trigger_push_rejected_total = Counter(
+            f"{NAMESPACE}_context_trigger_push_rejected_total",
+            "Total pushes rejected by employees"
+        )
+
+        # 推送采纳率 (Gauge，便于 Prometheus 聚合计算)
+        self.context_trigger_push_adoption_rate = Gauge(
+            f"{NAMESPACE}_context_trigger_push_adoption_rate",
+            "Push adoption rate (ratio of adopted to total pushes)"
+        )
+
     def register_custom_metric(self, name: str, metric: Any):
         """注册自定义指标"""
         self._custom_metrics[name] = metric
@@ -551,6 +601,98 @@ def record_alert(level: str, alert_type: str, message: str):
 
 
 # ==============================================================================
+# Context Trigger 指标辅助函数
+# ==============================================================================
+
+def record_context_trigger_stage1(
+    excluded: bool = False,
+    excluded_category: str = None,
+    triggered: bool = False,
+    trigger_category: str = None
+):
+    """
+    记录 Stage1 关键词匹配结果
+
+    Args:
+        excluded: 是否被排除
+        excluded_category: 排除分类（resolved/notification/daily_checkin）
+        triggered: 是否触发
+        trigger_category: 触发分类（personnel_status/emotion_conflict/urgency等）
+    """
+    registry = get_metrics_registry()
+
+    if excluded:
+        registry.context_trigger_excluded_total.labels(
+            exclude_category=excluded_category or "unknown"
+        ).inc()
+
+    if triggered:
+        registry.context_trigger_triggered_total.labels(
+            trigger_category=trigger_category or "unknown"
+        ).inc()
+
+
+def record_context_trigger_stage2(status: str = "success"):
+    """
+    记录 Stage2 LLM 调用
+
+    Args:
+        status: 调用状态 (success/error/fallback)
+    """
+    registry = get_metrics_registry()
+    registry.context_trigger_llm_calls_total.labels(status=status).inc()
+
+
+def record_context_trigger_push(severity: str, event_type: str, adopted: bool = None):
+    """
+    记录推送结果
+
+    Args:
+        severity: 严重等级 (P0/P1/P2/P3)
+        event_type: 事件类型 (人员安全/设施故障/客诉冲突/天气环境/其他)
+        adopted: 是否被采纳 (True/False/None表示未知)
+    """
+    registry = get_metrics_registry()
+
+    registry.context_trigger_push_total.labels(
+        severity=severity,
+        event_type=event_type
+    ).inc()
+
+    if adopted is True:
+        registry.context_trigger_push_adopted_total.inc()
+    elif adopted is False:
+        registry.context_trigger_push_rejected_total.inc()
+
+    # 更新采纳率
+    _update_push_adoption_rate()
+
+
+def _update_push_adoption_rate():
+    """更新推送采纳率 Gauge"""
+    registry = get_metrics_registry()
+    try:
+        # 安全访问 Counter 内部值（跨版本兼容性处理）
+        def get_counter_value(counter):
+            try:
+                # Prometheus client 0.x - 4.x 兼容
+                return counter._value._value if hasattr(counter._value, '_value') else counter._value
+            except (AttributeError, TypeError):
+                return 0
+
+        adopted = get_counter_value(registry.context_trigger_push_adopted_total)
+        rejected = get_counter_value(registry.context_trigger_push_rejected_total)
+        total = adopted + rejected
+        if total > 0:
+            rate = adopted / total
+            registry.context_trigger_push_adoption_rate.set(rate)
+        else:
+            registry.context_trigger_push_adoption_rate.set(0.0)
+    except Exception:
+        pass
+
+
+# ==============================================================================
 # 异步指标采集器
 # ==============================================================================
 
@@ -637,6 +779,11 @@ __all__ = [
     "update_system_metrics",
     "record_agent_handoff",
     "record_alert",
+
+    # Context Trigger 指标
+    "record_context_trigger_stage1",
+    "record_context_trigger_stage2",
+    "record_context_trigger_push",
 
     # 异步采集
     "AsyncMetricsCollector",

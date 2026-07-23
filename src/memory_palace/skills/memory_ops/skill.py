@@ -26,10 +26,10 @@ except ImportError:
 
 # 引入知识库的向量检索客户端
 try:
-    from ...knowledge.vector_store import vector_client
+    from ...knowledge.vector_store import get_vector_client
 except ImportError:
-    logger.warning("vector_client 尚未实现，MemoryOps 向量检索将以模拟模式运行")
-    vector_client = None
+    logger.warning("get_vector_client 尚未实现，MemoryOps 向量检索将以模拟模式运行")
+    get_vector_client = None
 
 
 @register_skill("memory_ops")
@@ -103,19 +103,10 @@ class MemoryOpsSkill(BaseAgentSkill):
             top_k = rag_params.get("top_k", 3)
             threshold = rag_params.get("similarity_threshold", 0.75)
 
-            ### CHANGE: 如果 vector_client.search 是异步，添加 await
-            # 假设 vector_client 已改造为异步，如果仍是同步则保持原样
-            # 注意：ChromaDB 本地查询很快，通常不需要异步，但如果封装了异步接口则使用 await
-            if vector_client and hasattr(vector_client, 'asearch'):  # 优先使用异步接口
-                retrieved_docs = await vector_client.asearch(
-                    query=query_text,
-                    top_k=top_k,
-                    threshold=threshold
-                )
-            elif vector_client:
-                # 同步调用 (ChromaDB 本地查询毫秒级，可接受)
-                retrieved_docs = vector_client.search(
-                    query=query_text,
+            vc = get_vector_client() if get_vector_client else None
+            if vc:
+                retrieved_docs = vc.query_experience(
+                    text=query_text,
                     top_k=top_k,
                     threshold=threshold
                 )

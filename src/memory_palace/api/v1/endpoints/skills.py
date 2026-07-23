@@ -3,15 +3,16 @@ v1/endpoints/skills.py - Skills endpoint
 """
 from fastapi import APIRouter, HTTPException
 from ..schemas import SkillInfo
-from ...skills import get_registered_skills
+from ....skills import get_registered_skills
 
 router = APIRouter()
 
 
+@router.get("", response_model=list[SkillInfo])
 @router.get("/", response_model=list[SkillInfo])
 async def list_skills():
     """列出所有注册的技能"""
-    from ...skills import list_skill_names, get_skill_by_name
+    from ....skills import list_skill_names, get_skill_by_name
     names = list_skill_names()
     skills = []
     for name in names:

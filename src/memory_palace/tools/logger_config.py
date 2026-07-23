@@ -21,6 +21,13 @@ def setup_logging():
     配置全局日志处理器。
     在 main.py 或 orchestrator.py 启动时调用一次。
     """
+    # 0. Windows 下强制 stdout 使用 utf-8，防止 emoji 编码崩溃
+    if sys.platform == "win32":
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
     # 1. 确保日志目录存在
     log_dir = Path("data/logs")
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -75,6 +82,11 @@ def setup_logging():
     )
 
     logger.success("🚀 工业级日志引擎已启动，已挂载 data/logs/ 进行持久化。")
+
+
+# 别名，兼容旧导入
+setup_logger = setup_logging
+
 
 # 导出配置函数
 if __name__ == "__main__":

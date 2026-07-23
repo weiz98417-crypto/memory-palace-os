@@ -343,6 +343,14 @@ input:checked+.sl::before{transform:translateX(19px);background:#10b981}
                 <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 数字分身大脑
             </div>
+            <div class="sb-item" data-path="pushlogs">
+                <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                推送日志
+            </div>
+            <div class="sb-item" data-path="addevent">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                添加记录
+            </div>
             <div class="sb-item" data-path="watcher">
                 <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 鹰眼巡检策略
@@ -525,6 +533,63 @@ input:checked+.sl::before{transform:translateX(19px);background:#10b981}
             </div>
         </div>
 
+        <!-- Push Logs -->
+        <div id="rv-pushlogs" class="rv">
+            <div class="fb">
+                <div class="fs">
+                    <svg style="width:14px;height:14px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="pl-search" class="fi" placeholder="搜索推送内容...">
+                </div>
+                <select id="pl-status" class="fs2" onchange="App.loadPushLogs()">
+                    <option value="">全部状态</option>
+                    <option value="pending">待确认</option>
+                    <option value="adopted">已采纳</option>
+                    <option value="modified">已修改</option>
+                    <option value="rejected">已拒绝</option>
+                </select>
+            </div>
+            <div class="mc">
+                <table class="tbl">
+                    <thead><tr><th>推送ID</th><th>发送者</th><th>类型</th><th>严重度</th><th>触发关键词</th><th>状态</th><th>推送时间</th></tr></thead>
+                    <tbody id="pl-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Add Event -->
+        <div id="rv-addevent" class="rv">
+            <div style="max-width:600px">
+                <div class="cc" style="padding:24px">
+                    <div style="font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:6px">手动录入历史事件</div>
+                    <div style="font-size:12px;color:#64748b;margin-bottom:20px">将已处理完毕的事件补充录入记忆库，作为后续 SOP 生成的种子数据</div>
+                    <div class="bx"><label class="bl">发送者（员工姓名）</label><input type="text" id="ae-user" placeholder="如：张班长"></div>
+                    <div class="bx">
+                        <label class="bl">事件类型</label>
+                        <select id="ae-type" style="width:100%;padding:11px 13px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.08);border-radius:7px;color:#e2e8f0;font-size:13px;appearance:none">
+                            <option value="">请选择</option>
+                            <option value="人员安全">人员安全</option>
+                            <option value="设施故障">设施故障</option>
+                            <option value="客诉冲突">客诉冲突</option>
+                            <option value="天气环境">天气环境</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    <div class="bx">
+                        <label class="bl">严重程度</label>
+                        <select id="ae-sev" style="width:100%;padding:11px 13px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.08);border-radius:7px;color:#e2e8f0;font-size:13px;appearance:none">
+                            <option value="">请选择</option>
+                            <option value="P0">P0 - 紧急</option>
+                            <option value="P1">P1 - 高</option>
+                            <option value="P2">P2 - 中</option>
+                            <option value="P3/P4">P3/P4 - 低</option>
+                        </select>
+                    </div>
+                    <div class="bx" style="margin-bottom:20px"><label class="bl">事件内容</label><textarea id="ae-text" style="width:100%;padding:11px 13px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.08);border-radius:7px;color:#e2e8f0;font-size:13px;min-height:100px;resize:vertical" placeholder="描述事件经过..."></textarea></div>
+                    <button class="btn-p" onclick="App.submitEvent()">确认录入记忆库</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Strategy -->
         <div id="rv-strategy" class="rv">
             <div class="cc" style="padding:24px">
@@ -602,7 +667,7 @@ input:checked+.sl::before{transform:translateX(19px);background:#10b981}
         <div class="mb-bd">
             <div class="bx"><label class="bl">专家代号</label><input type="text" id="mp-name" placeholder="如：安保老王"></div>
             <div class="bx" style="margin-bottom:16px"><label class="bl">职务与经验设定</label><input type="text" id="mp-role" placeholder="如：西区安保大队长，在职12年"></div>
-            <button class="btn-p" onclick="App.savePersona()">确认保存配置</button>
+            <button class="btn-p" id="mp-save-btn" type="button" onclick="App.savePersona()">确认保存配置</button>
         </div>
     </div>
 </div>
@@ -623,7 +688,7 @@ input:checked+.sl::before{transform:translateX(19px);background:#10b981}
             <div class="ch-in">
                 <input type="text" id="ct-input" placeholder="代入专家经验回答，按 Enter 发送..." onkeypress="if(event.key==='Enter')App.send()">
                 <button class="pb" style="width:auto;padding:10px 16px" onclick="App.send()">发送</button>
-                <button class="btn-g" onclick="UI.close('mk-chat')">结束</button>
+                <button class="btn-g" onclick="App.finalizeInterview()">结束</button>
             </div>
         </div>
     </div>
@@ -642,19 +707,398 @@ const VM = { show(id) {
     if(t){ t.style.display='flex'; t.offsetHeight; t.classList.add('active'); }
 }};
 
-const DB = {
-    events:[
-        {id:108,time:'2026-03-16 14:30',type:'医疗急救',severity:'P0',text:'B区长廊有老年游客突发晕厥，家属情绪完全失控并在现场大声呼救。',resolution:'1. 静默呼叫医务室带AED前往\n2. 安保拉警戒线背对伤者阻挡拍摄\n3. 协助120送医',status:'closed'},
-        {id:107,time:'2026-03-16 11:15',type:'设施故障',severity:'P1',text:'游船码头2号闸机突然断电死机，导致后方排队超过50米。',resolution:'1. 立即转人工检票\n2. 广播安抚',status:'closed'},
-        {id:106,time:'2026-03-15 19:40',type:'客诉纠纷',severity:'P2',text:'游客投诉充电宝充不进电，要求十倍赔偿并在店内开启直播。',resolution:'',status:'unknown'},
-        {id:105,time:'2026-03-14 09:20',type:'安保冲突',severity:'P0',text:'入口处黄牛因抢客发生剧烈肢体冲突，一人掏出金属甩棍。',resolution:'1. 防暴队3分钟内到达\n2. 疏散周边3米内游客\n3. 夺下凶器后移交警方',status:'closed'},
-        {id:104,time:'2026-03-13 16:05',type:'医疗急救',severity:'P1',text:'儿童乐园有小孩被游乐设施夹住手指，现场家长情绪激动。',resolution:'1. 立即停机断电\n2. 呼叫急救',status:'closed'},
-        {id:103,time:'2026-03-12 20:30',type:'设施故障',severity:'P2',text:'夜间灯光秀设备突然黑屏，约200名游客在场等待。',resolution:'',status:'unknown'},
-    ],
-    personas:[
-        {id:'p1',name:'安保老王',role:'西区安保大队长 · 在职12年',logics:14,sample:'遇到持械纠纷，第一动作绝不是上去夺刀，而是先大声疏散周围3米内的无关游客。'},
-        {id:'p2',name:'客服李姐',role:'VIP客诉专家 · 在职8年',logics:19,sample:'如果游客拿着手机直播要求十倍赔偿，第一时间必须把他请到没有其他游客的贵宾室倒水。'}
-    ]
+const API = '/api/v1';
+
+const App = {
+    s:{events:[],personas:[],stats:{},cur:null},
+    // interviewState: { personaId, interviewId, phase:'idle'|'interview'|'chat', currentQuestion }
+    interviewState: { personaId:null, interviewId:null, phase:'idle', currentQuestion:0, personaName:'' },
+
+    async boot(){
+        VM.show('view-loader');
+        setTimeout(()=>VM.show('view-login'),900);
+        document.getElementById('form-login').onsubmit = e=>{e.preventDefault();this.login();};
+        document.querySelectorAll('.sb-item').forEach(el=>el.onclick=()=>this.nav(el.dataset.path));
+        document.getElementById('f-search').oninput=()=>this.mem();
+        document.getElementById('f-type').onchange=()=>this.mem();
+    },
+
+    login(){
+        const u=document.querySelector('#form-login input[type=text]').value;
+        const p=document.querySelector('#form-login input[type=password]').value;
+        if(u!=='admin'||p!=='123456'){UI.toast('身份验证失败','err');return;}
+        const btn=document.getElementById('btn-login');
+        btn.classList.add('loading');
+        btn.innerHTML='<svg style="animation:spin 0.8s linear infinite" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10"/></svg> 身份核验中...';
+        VM.show('view-trans');
+        let p2=0;
+        const bar=document.getElementById('tr-fill');
+        const t=setInterval(()=>{
+            p2+=8; bar.style.width=p2+'%';
+            if(p2>=100){
+                clearInterval(t);
+                this.render();
+                VM.show('view-main');
+                setTimeout(()=>Charts.init(),100);
+                UI.toast('内核验证通过，数字资产系统已就绪','suc');
+            }
+        },55);
+    },
+
+    logout(){
+        UI.toast('正在安全阻断加密链路...','warn');
+        setTimeout(()=>{
+            VM.show('view-login');
+            document.querySelector('#form-login input[type=password]').value='';
+            const btn=document.getElementById('btn-login');
+            btn.classList.remove('loading');
+            btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> 安全接入系统';
+            this.nav('dashboard');
+            setTimeout(()=>UI.toast('已安全登出','info'),400);
+        },1000);
+    },
+
+    nav(path){
+        document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('active'));
+        const a=document.querySelector('.sb-item[data-path="'+path+'"]');
+        if(a)a.classList.add('active');
+        document.querySelectorAll('.rv').forEach(v=>v.classList.remove('active'));
+        const rv=document.getElementById('rv-'+path);
+        if(rv)rv.classList.add('active');
+        if(a)document.getElementById('page-title').innerText=a.innerText.trim();
+        setTimeout(()=>Charts.resize(),50);
+        // Lazy load data per tab
+        if(path==='pushlogs') this.loadPushLogs();
+    },
+
+    sync(){
+        UI.toast('云端资产全量同步中...','info');
+        this.render().then(()=>{UI.toast('云端资产全量同步成功','suc');Charts.resize();}).catch(()=>{UI.toast('同步失败，请检查网络','err');});
+    },
+
+    async render(){
+        try {
+            const [stats, evRes, pRes] = await Promise.all([
+                fetch(`${API}/admin/dashboard`).then(r=>r.json()),
+                fetch(`${API}/admin/events?limit=100`).then(r=>r.json()),
+                fetch(`${API}/admin/personas`).then(r=>r.json()),
+            ]);
+            this.s.stats = stats;
+            this.s.events = (evRes.events||[]).map(e=>({
+                id:e.event_id, time:this.fmtTime(e.confirmed_at||e.created_at),
+                type:e.event_type, severity:e.severity,
+                text:e.raw_text, resolution:e.memory_content||'',
+                status:e.confirmed_at?'closed':'unknown'
+            }));
+            this.s.personas = (pRes.personas||[]).map(p=>({
+                id:p.id, name:p.job_title, role:(p.venue_id||'通用')+' · 数字分身',
+                logics:(p.logic_entries||[]).length,
+                sample:(p.logic_entries||[])[0]?.behavior||'暂无经验条目'
+            }));
+        } catch(e) {
+            console.error('render failed',e);
+        }
+        this.dash();this.mem();this.personas();
+    },
+
+    async loadStats(){
+        try {
+            const s = await fetch(`${API}/admin/dashboard`).then(r=>r.json());
+            this.s.stats = s;
+        } catch(e){}
+    },
+
+    async loadPushLogs(){
+        const status = document.getElementById('pl-status')?.value||'';
+        const params = new URLSearchParams({limit:50});
+        if(status) params.set('adoption_status',status);
+        const tbody = document.getElementById('pl-tbody');
+        tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#64748b;padding:40px">加载中...</td></tr>';
+        try {
+            const d = await fetch(`${API}/admin/push_logs?${params}`).then(r=>r.json());
+            const logs = d.push_logs||[];
+            if(!logs.length){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#64748b;padding:40px">暂无推送记录</td></tr>'; return; }
+            tbody.innerHTML=logs.map(l=>`
+                <tr>
+                    <td style="font-size:11px;color:#64748b">${(l.push_id||'').slice(0,8)}</td>
+                    <td>${l.from_user}</td>
+                    <td>${l.event_type}</td>
+                    <td>${UI.badge(l.severity)}</td>
+                    <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#94a3b8">${Array.isArray(l.hit_keywords)?l.hit_keywords.join(', '):''}</td>
+                    <td>${this.statusTag(l.adoption_status)}</td>
+                    <td style="white-space:nowrap;font-size:11px;color:#64748b">${this.fmtTime(l.pushed_at)}</td>
+                </tr>`).join('');
+        } catch(e){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#ef4444;padding:40px">加载失败</td></tr>'; }
+    },
+
+    async submitEvent(){
+        const user=document.getElementById('ae-user')?.value.trim();
+        const type=document.getElementById('ae-type')?.value;
+        const sev=document.getElementById('ae-sev')?.value;
+        const text=document.getElementById('ae-text')?.value.trim();
+        if(!user||!type||!sev||!text){UI.toast('请填写完整信息','err');return;}
+        try {
+            const r = await fetch(`${API}/admin/events`,{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({from_user:user,event_type:type,severity:sev,raw_text:text})
+            });
+            if(!r.ok) throw new Error('提交失败');
+            UI.toast('事件已录入记忆库','suc');
+            document.getElementById('ae-user').value='';
+            document.getElementById('ae-text').value='';
+            document.getElementById('ae-type').value='';
+            document.getElementById('ae-sev').value='';
+        } catch(e){ UI.toast('提交失败: '+e.message,'err'); }
+    },
+
+    fmtTime(ts){
+        if(!ts) return '-';
+        const d=new Date(ts*1000);
+        if(isNaN(d)) return '-';
+        return d.toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    },
+
+    statusTag(s){
+        const m={pending:'tg-warn',adopted:'tg-ok',modified:'tg-p2',rejected:'tg-p0'};
+        return'<span class="tg '+(m[s]||'tg-warn')+'">'+(s||'pending')+'</span>';
+    },
+
+    dash(){
+        const d=this.s.events;
+        const s=this.s.stats;
+        document.getElementById('m-total').innerText=s.total_memory_count||d.length;
+        document.getElementById('m-p0').innerText=(s.event_type_distribution||[]).find(x=>x.type==='人员安全')?.count||d.filter(x=>x.severity==='P0').length||0;
+        document.getElementById('m-unk').innerText=d.filter(x=>x.status==='unknown').length||(s.total_pushes-s.adopted_pushes)||0;
+        document.getElementById('dash-tbody').innerHTML=(d.slice(0,10)).map(e=>`
+            <tr onclick="App.openDrawer(${e.id})">
+                <td style="white-space:nowrap;font-size:11px;color:#64748b">${e.time}</td>
+                <td>${UI.badge(e.severity)}</td>
+                <td><span class="tx" style="font-weight:600;color:#cbd5e1">${e.text}</span></td>
+                <td>${e.status==='closed'?'<span class="tg tg-ok">已归档</span>':'<span class="tg tg-warn">待催办</span>'}</td>
+            </tr>`).join('');
+        // update pie chart with real type distribution
+        if(typeof Charts!=='undefined' && Charts.i.pie && s.event_type_distribution){
+            Charts.i.pie.setOption({
+                series:[{data:s.event_type_distribution.map((x,i)=>({name:x.type,value:x.count,itemStyle:{color:Charts.C[i%Charts.C.length]}}))}]
+            });
+        }
+    },
+
+    addPersona(){
+        document.getElementById('mp-name').value = '';
+        document.getElementById('mp-role').value = '';
+        document.getElementById('mp-title').innerHTML = '<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>配置专家分身';
+        UI.open('mk-persona');
+    },
+
+    async savePersona(){
+        if(this._saving){ UI.toast('正在保存中，请稍候','warn'); return; }
+        const btn = document.getElementById('mp-save-btn');
+        const name = document.getElementById('mp-name').value.trim();
+        const role = document.getElementById('mp-role').value.trim();
+        if(!name){ UI.toast('请输入专家代号','warn'); return; }
+        this._saving = true;
+        if(btn) btn.disabled = true;
+        try {
+            const res = await fetch(`${API}/admin/personas`, {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({job_title:name, venue_id:role, description:'', logic_entries:[]})
+            });
+            if(!res.ok) throw new Error(await res.text());
+            UI.toast('分身创建成功，即将开始访谈','suc');
+            UI.close('mk-persona');
+            const data = await res.json();
+            // reload personas then open chat (which auto-starts interview for empty persona)
+            const pRes = await fetch(`${API}/admin/personas`).then(r=>r.json());
+            this.s.personas = (pRes.personas||[]).map(p=>({
+                id:p.id, name:p.job_title, role:(p.venue_id||'通用')+' · 数字分身',
+                logics:(p.logic_entries||[]).length,
+                sample:(p.logic_entries||[])[0]?.behavior||'暂无经验条目'
+            }));
+            this.personas();
+            // 自动打开访谈
+            await this.openPersonaChat(data.persona_id);
+        } catch(e){ UI.toast('创建失败: '+e.message,'err'); }
+        finally {
+            this._saving = false;
+            if(btn) btn.disabled = false;
+        }
+    },
+
+    personas(){
+        const grid = document.getElementById('persona-grid');
+        const list = this.s.personas||[];
+        if(!list.length){
+            grid.innerHTML='<div style="text-align:center;color:#64748b;padding:60px 0;font-size:13px">暂无分身档案，点击上方「唤醒新专家分身」开始创建</div>';
+            return;
+        }
+        grid.innerHTML=list.map(p=>`
+            <div class="pc" onclick="App.openPersonaChat('${p.id}')">
+                <div class="pt">
+                    <div class="pa">${(p.name||'?').slice(0,1)}</div>
+                    <div>
+                        <div class="pn">${p.name}</div>
+                        <div class="pr">${p.role}</div>
+                    </div>
+                    <span class="pb2">${p.logics} 条逻辑</span>
+                </div>
+                <div class="ps">
+                    <div class="ps-l">示例逻辑</div>
+                    <div class="ps-t">${p.sample}</div>
+                </div>
+                <div class="pac">
+                    <button class="pk-btn" onclick="event.stopPropagation();App.delPersona('${p.id}')">删除</button>
+                </div>
+            </div>`).join('');
+    },
+
+    // 打开分身交互：访谈 or 问答
+    async openPersonaChat(personaId){
+        const p = this.s.personas.find(x=>x.id===personaId);
+        if(!p) return;
+        this.interviewState = {
+            personaId: personaId,
+            interviewId: null,
+            phase: p.logics === 0 ? 'interview' : 'chat',
+            currentQuestion: 0,
+            personaName: p.name,
+        };
+        // 设置弹窗标题
+        document.getElementById('ct-title').innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${p.logics === 0 ? '动态经验访谈萃取' : '向 '+p.name+' 提问'}`;
+        // 清空聊天记录
+        document.getElementById('ct-box').innerHTML = '';
+        document.getElementById('ct-logic').innerHTML = '';
+        document.getElementById('ct-input').placeholder = p.logics === 0 ? '代入专家经验回答，按 Enter 发送...' : '输入问题，按 Enter 发送...';
+        UI.open('mk-chat');
+        // 空分身直接开始访谈
+        if(p.logics === 0){
+            await this.startInterview(personaId);
+        }
+    },
+
+    // 开始访谈（调用 /interview/start）
+    async startInterview(personaId){
+        try {
+            const res = await fetch(`${API}/admin/personas/${personaId}/interview/start`, {method:'POST'});
+            if(!res.ok){ UI.toast('访谈启动失败','err'); return; }
+            const data = await res.json();
+            this.interviewState.interviewId = data.interview_id;
+            this.interviewState.phase = 'interview';
+            this.interviewState.currentQuestion = data.current_question;
+            // 显示 AI 的开场白+问题
+            this._addChatMsg(data.reply_text, 'ai');
+            document.getElementById('ct-logic').innerHTML = `<div style="font-size:11px;color:#a78bfa;margin-bottom:6px">第 ${data.current_question} / ${data.total_questions} 题</div>`;
+        } catch(e){ UI.toast('访谈启动异常','err'); }
+    },
+
+    // 发送消息（访谈继续 or 问答）
+    async send(){
+        const input = document.getElementById('ct-input');
+        const text = input.value.trim();
+        if(!text) return;
+        input.value = '';
+        this._addChatMsg(text, 'user');
+        if(this.interviewState.phase === 'interview'){
+            await this._continueInterview(text);
+        } else {
+            await this._chatPersona(text);
+        }
+    },
+
+    // 访谈继续（调用 /interview/continue）
+    async _continueInterview(answer){
+        try {
+            const res = await fetch(`${API}/admin/personas/${this.interviewState.personaId}/interview/continue`, {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({interview_id: this.interviewState.interviewId, answer})
+            });
+            if(!res.ok){ UI.toast('发送失败','err'); return; }
+            const data = await res.json();
+            if(data.prompt_finalize || data.stage === 'summary' || data.current_question > 5){
+                // 最后一题回答后，显示总结提示
+                this._addChatMsg(data.reply_text, 'ai');
+                document.getElementById('ct-logic').innerHTML = `<div style="font-size:12px;color:#a78bfa;margin-bottom:6px">访谈即将完成，请点击「结束萃取」保存逻辑</div>`;
+                this.interviewState.phase = 'finalize';
+            } else {
+                this._addChatMsg(data.reply_text, 'ai');
+                this.interviewState.currentQuestion = data.current_question;
+                document.getElementById('ct-logic').innerHTML = `<div style="font-size:11px;color:#a78bfa;margin-bottom:6px">第 ${data.current_question} / ${data.total_questions} 题</div>`;
+            }
+        } catch(e){ UI.toast('发送异常','err'); }
+    },
+
+    // 结束萃取（调用 /interview/finalize）
+    async finalizeInterview(){
+        if(this.interviewState.phase !== 'finalize' && this.interviewState.phase !== 'interview'){
+            UI.close('mk-chat');
+            return;
+        }
+        try {
+            const res = await fetch(`${API}/admin/personas/${this.interviewState.personaId}/interview/finalize`, {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({interview_id: this.interviewState.interviewId})
+            });
+            if(!res.ok){ UI.toast('萃取完成失败','err'); return; }
+            const data = await res.json();
+            this._addChatMsg(data.reply_text, 'ai');
+            document.getElementById('ct-logic').innerHTML = `<div style="font-size:12px;color:#10b981;margin-bottom:6px">萃取完成！共 ${data.total_entries} 条逻辑条目已存入档案。</div>`;
+            UI.toast('萃取完成！','suc');
+            // 关闭弹窗
+            setTimeout(()=>{ UI.close('mk-chat'); }, 2000);
+            // 重新加载分身列表
+            const pRes = await fetch(`${API}/admin/personas`).then(r=>r.json());
+            this.s.personas = (pRes.personas||[]).map(p=>({
+                id:p.id, name:p.job_title, role:(p.venue_id||'通用')+' · 数字分身',
+                logics:(p.logic_entries||[]).length,
+                sample:(p.logic_entries||[])[0]?.behavior||'暂无经验条目'
+            }));
+            this.personas();
+        } catch(e){ UI.toast('萃取完成异常','err'); }
+    },
+
+    // 向分身提问（调用 /chat）
+    async _chatPersona(question){
+        try {
+            const res = await fetch(`${API}/admin/personas/${this.interviewState.personaId}/chat`, {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({question})
+            });
+            if(!res.ok){ UI.toast('提问失败','err'); return; }
+            const data = await res.json();
+            this._addChatMsg(data.reply_text, 'ai');
+            document.getElementById('ct-logic').innerHTML = `<div style="font-size:11px;color:#64748b;margin-bottom:6px">使用了 ${data.entries_used || 0} 条逻辑条目</div>`;
+        } catch(e){ UI.toast('提问异常','err'); }
+    },
+
+    // 内部：向聊天框追加消息
+    _addChatMsg(text, who){
+        const box = document.getElementById('ct-box');
+        const div = document.createElement('div');
+        div.className = 'msg msg-' + (who === 'ai' ? 'ai' : 'user');
+        div.textContent = text;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+    },
+
+    async delPersona(id){
+        if(!confirm('确认删除此分身？')) return;
+        try {
+            await fetch(`${API}/admin/personas/${id}`, {method:'DELETE'});
+            UI.toast('已删除','suc');
+            const pRes = await fetch(`${API}/admin/personas`).then(r=>r.json());
+            this.s.personas = (pRes.personas||[]).map(p=>({
+                id:p.id, name:p.job_title, role:(p.venue_id||'通用')+' · 数字分身',
+                logics:(p.logic_entries||[]).length,
+                sample:(p.logic_entries||[])[0]?.behavior||'暂无经验条目'
+            }));
+            this.personas();
+        }catch(e){ UI.toast('删除失败','err'); }
+    }
 };
 
 const UI = {
@@ -761,208 +1205,6 @@ const Charts = {
         });
     },
     resize(){ Object.values(this.i).forEach(c=>c&&c.resize&&c.resize()); }
-};
-
-const App = {
-    s:{data:[...DB.events],personas:[...DB.personas],cur:null},
-
-    boot(){
-        VM.show('view-loader');
-        setTimeout(()=>VM.show('view-login'),900);
-        document.getElementById('form-login').onsubmit = e=>{e.preventDefault();this.login();};
-        document.querySelectorAll('.sb-item').forEach(el=>el.onclick=()=>this.nav(el.dataset.path));
-        document.getElementById('f-search').oninput=()=>this.mem();
-        document.getElementById('f-type').onchange=()=>this.mem();
-    },
-
-    login(){
-        const u=document.querySelector('#form-login input[type=text]').value;
-        const p=document.querySelector('#form-login input[type=password]').value;
-        if(u!=='admin'||p!=='123456'){UI.toast('身份验证失败','err');return;}
-        const btn=document.getElementById('btn-login');
-        btn.classList.add('loading');
-        btn.innerHTML='<svg style="animation:spin 0.8s linear infinite" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10"/></svg> 身份核验中...';
-        VM.show('view-trans');
-        let p2=0;
-        const bar=document.getElementById('tr-fill');
-        const t=setInterval(()=>{
-            p2+=8; bar.style.width=p2+'%';
-            if(p2>=100){
-                clearInterval(t);
-                this.render();
-                VM.show('view-main');
-                setTimeout(()=>Charts.init(),100);
-                UI.toast('内核验证通过，数字资产系统已就绪','suc');
-            }
-        },55);
-    },
-
-    logout(){
-        UI.toast('正在安全阻断加密链路...','warn');
-        setTimeout(()=>{
-            VM.show('view-login');
-            document.querySelector('#form-login input[type=password]').value='';
-            const btn=document.getElementById('btn-login');
-            btn.classList.remove('loading');
-            btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> 安全接入系统';
-            this.nav('dashboard');
-            setTimeout(()=>UI.toast('已安全登出','info'),400);
-        },1000);
-    },
-
-    nav(path){
-        document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('active'));
-        const a=document.querySelector('.sb-item[data-path="'+path+'"]');
-        if(a)a.classList.add('active');
-        document.querySelectorAll('.rv').forEach(v=>v.classList.remove('active'));
-        const rv=document.getElementById('rv-'+path);
-        if(rv)rv.classList.add('active');
-        if(a)document.getElementById('page-title').innerText=a.innerText.trim();
-        setTimeout(()=>Charts.resize(),50);
-    },
-
-    sync(){UI.toast('云端资产全量同步成功','suc');this.render();Charts.resize();},
-
-    render(){this.dash();this.mem();this.personas();},
-
-    dash(){
-        const d=this.s.data;
-        document.getElementById('m-total').innerText=d.length;
-        document.getElementById('m-p0').innerText=d.filter(x=>x.severity==='P0').length;
-        document.getElementById('m-unk').innerText=d.filter(x=>x.status==='unknown').length;
-        document.getElementById('dash-tbody').innerHTML=d.map(e=>`
-            <tr onclick="App.openDrawer(${e.id})">
-                <td style="white-space:nowrap;font-size:11px;color:#64748b">${e.time}</td>
-                <td>${UI.badge(e.severity)}</td>
-                <td><span class="tx" style="font-weight:600;color:#cbd5e1">${e.text}</span></td>
-                <td>${e.status==='closed'?'<span class="tg tg-ok">已归档</span>':'<span class="tg tg-warn">待催办</span>'}</td>
-            </tr>`).join('');
-    },
-
-    mem(){
-        const q=document.getElementById('f-search').value.toLowerCase();
-        const t=document.getElementById('f-type').value;
-        const arr=this.s.data.filter(e=>(e.text.toLowerCase().includes(q)||e.type.toLowerCase().includes(q))&&(t===''||e.type===t));
-        document.getElementById('mem-tbody').innerHTML=arr.length===0
-            ?'<tr><td colspan="5" style="text-align:center;color:#64748b;padding:40px">未找到匹配的案件记录</td></tr>'
-            :arr.map(e=>{
-                const isC=e.status==='closed';
-                const btn=isC
-                    ?'<span style="font-size:11px;color:#475569;font-weight:600">归档闭环</span>'
-                    :'<button class="btn-sm" style="color:#3b82f6;padding:4px 10px" onclick="event.stopPropagation();App.hawk(this,'+e.id+')">极速催办</button>';
-                return`<tr onclick="App.openDrawer(${e.id})">
-                    <td><div class="mono" style="font-weight:800;font-size:13px;color:#e2e8f0">#${e.id}</div><div style="font-size:10px;color:#475569;margin-top:2px">${e.time.split(' ')[0]}</div></td>
-                    <td><div style="font-weight:600;margin-bottom:4px;color:#e2e8f0">${e.type}</div>${UI.badge(e.severity)}</td>
-                    <td style="color:#94a3b8;line-height:1.5;max-width:200px"><span class="tx">${e.text}</span></td>
-                    <td>${isC?'<span class="tg tg-ok">已沉淀</span>':'<span class="tg tg-warn">待执行</span>'}</td>
-                    <td>${btn}</td>
-                </tr>`;
-            }).join('');
-    },
-
-    personas(){
-        document.getElementById('persona-grid').innerHTML=this.s.personas.map(p=>`
-            <div class="pc" onclick="App.chat('${p.id}')">
-                <div class="pt">
-                    <div class="pa">${p.name.slice(0,1)}</div>
-                    <div>
-                        <div class="pn">${p.name}</div>
-                        <div class="pr">${p.role}</div>
-                    </div>
-                    <div class="pb2"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>${p.logics}条</div>
-                </div>
-                <div class="ps">
-                    <div class="ps-l">隐性高维逻辑</div>
-                    <div class="ps-t">"${p.sample}"</div>
-                </div>
-                <div class="pac">
-                    <button class="btn-g" onclick="event.stopPropagation();App.editP('${p.id}')">配置设定</button>
-                    <button class="btn-g btn-d" onclick="event.stopPropagation();App.delP('${p.id}')">安全注销</button>
-                </div>
-            </div>`).join('');
-    },
-
-    openDrawer(id){
-        const e=this.s.data.find(x=>x.id===id);
-        const isC=e.status==='closed';
-        document.getElementById('dr-title').innerText='数字卷宗 #'+e.id;
-        document.getElementById('dr-meta').innerHTML=`
-            <div><div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;margin-bottom:5px">业务定性</div><div style="font-size:13px;font-weight:700;color:#e2e8f0">${e.type}</div></div>
-            <div><div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;margin-bottom:5px">严重定级</div>${UI.badge(e.severity)}</div>
-            <div><div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;margin-bottom:5px">流转状态</div><div style="font-size:13px;font-weight:700;color:${isC?'#10b981':'#f59e0b'}">${isC?'已安全闭环':'待人工处理'}</div></div>`;
-        document.getElementById('dr-body').innerHTML=`
-            <div style="margin-bottom:20px">
-                <div style="font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:9px">现场原始案情</div>
-                <div style="background:rgba(0,0,0,0.2);padding:16px;border-radius:7px;font-size:12.5px;line-height:1.7;color:#94a3b8;border:1px solid rgba(255,255,255,0.04)">${e.text}</div>
-            </div>
-            <div>
-                <div style="font-size:12px;font-weight:700;color:#10b981;margin-bottom:9px">专家防范资产沉淀</div>
-                ${isC
-                    ?'<div style="background:rgba(16,185,129,0.06);padding:16px;border-radius:7px;font-size:12.5px;line-height:1.7;color:#94a3b8;border:1px solid rgba(16,185,129,0.1)">'+e.resolution.replace(/\n/g,'<br>')+'</div>'
-                    :'<div style="color:#f59e0b;font-weight:600;font-style:italic;padding:12px">尚未闭环，暂无资产。</div>'}
-            </div>`;
-        UI.open('dr-m');
-    },
-
-    hawk(btn,id){
-        btn.disabled=true; btn.textContent='指令触达中...'; btn.style.opacity='0.6';
-        setTimeout(()=>{
-            btn.textContent='✓ 企微已通报'; btn.style.color='#10b981';
-            UI.toast('鹰眼 Agent 已将极速催办卡片下发至责任人企微 (ID: '+id+')','suc');
-        },1200);
-    },
-
-    editP(id=null){
-        if(id){
-            this.s.cur=this.s.personas.find(p=>p.id===id);
-            document.getElementById('mp-title').innerHTML='<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> 修改专家设定';
-            document.getElementById('mp-name').value=this.s.cur.name;
-            document.getElementById('mp-role').value=this.s.cur.role;
-        }else{
-            this.s.cur=null;
-            document.getElementById('mp-title').innerHTML='<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg> 唤醒新数字分身';
-            document.getElementById('mp-name').value='';
-            document.getElementById('mp-role').value='';
-        }
-        UI.open('mk-persona');
-    },
-    addPersona(){ this.editP(null); },
-
-    savePersona(){
-        const n=document.getElementById('mp-name').value.trim();
-        const r=document.getElementById('mp-role').value.trim();
-        if(!n||!r){UI.toast('专家核心设定不可为空','err');return;}
-        if(this.s.cur){this.s.cur.name=n;this.s.cur.role=r;UI.toast('专家参数已安全更新','suc');}
-        else{this.s.personas.push({id:'p'+Date.now(),name:n,role:r,logics:0,sample:'全新唤醒，等待 LLM 语境访谈注入灵魂...'});UI.toast('新一代特种业务分身唤醒成功','suc');}
-        UI.close('mk-persona');this.personas();
-    },
-
-    delP(id){
-        this.s.personas=this.s.personas.filter(p=>p.id!==id);
-        this.personas();
-        UI.toast('该数字分身档案已做物理销毁处理','warn');
-    },
-
-    chat(id){
-        const p=this.s.personas.find(x=>x.id===id);
-        document.getElementById('ct-title').innerHTML='<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 经验萃取访谈：'+p.name;
-        document.getElementById('ct-box').innerHTML='<div class="msg msg-ai">您好，我是系统神经元 Agent。针对最近多发的 "'+this.s.data[3].text+'"，基于您的安保防范经验，有什么不可逾越的红线操作吗？</div>';
-        document.getElementById('ct-logic').innerHTML='';
-        UI.open('mk-chat');
-    },
-
-    send(){
-        const inp=document.getElementById('ct-input');
-        const v=inp.value.trim(); if(!v)return;
-        const bx=document.getElementById('ct-box');
-        bx.innerHTML+='<div class="msg msg-user">'+v+'</div>';
-        inp.value=''; bx.scrollTop=bx.scrollHeight;
-        setTimeout(()=>{
-            document.getElementById('ct-logic').innerHTML='<div style="background:rgba(16,185,129,0.08);padding:10px 13px;border-radius:7px;margin-bottom:10px;border:1px solid rgba(16,185,129,0.12)"><div style="font-size:10px;font-weight:700;color:#10b981;margin-bottom:4px">LLM 实时隐性逻辑捕获</div><div style="font-size:12px;color:#10b981;font-weight:600">IF [发生硬性冲突] THEN [建立3米物理隔离带] → 已转化为代码级规则链</div></div>';
-            bx.innerHTML+='<div class="msg msg-ai">这段陈述极具实战价值，系统已将其解构为标准化逻辑并沉淀至知识图谱。关于事后的舆情压制，您有什么看法？</div>';
-            bx.scrollTop=bx.scrollHeight;
-        },1200);
-    }
 };
 
 document.addEventListener('DOMContentLoaded',()=>App.boot());

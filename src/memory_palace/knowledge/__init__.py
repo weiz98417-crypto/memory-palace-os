@@ -8,10 +8,10 @@ Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 """
 
 from .db_client import db_client, db_manager
-from .vector_store import vector_client
+from .vector_store import get_vector_client
 
 __all__ = [
     "db_client",
     "db_manager",
-    "vector_client",
+    "get_vector_client",
 ]

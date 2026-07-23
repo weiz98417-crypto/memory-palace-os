@@ -10,7 +10,7 @@ import uuid
 import asyncio
 from loguru import logger
 from src.memory_palace.tools.db_client import db_manager, SOPDocument
-from src.memory_palace.knowledge.vector_store import vector_client
+from src.memory_palace.knowledge.vector_store import get_vector_client
 
 
 def seed_knowledge_base():
@@ -49,7 +49,7 @@ async def _seed_knowledge_base_async():
     ]
 
     for case in historical_cases:
-        vector_client.upsert_experience(
+        get_vector_client().upsert_experience(
             content=case["content"],
             metadata=case["meta"],
             doc_id=f"SEED_{uuid.uuid4().hex[:8]}"

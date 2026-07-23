@@ -49,7 +49,7 @@ class LLMClient:
             base_url = os.environ.get("OPENAI_BASE_URL")
             if not api_key:
                 logger.warning("未检测到 OPENAI_API_KEY 环境变量，LLM 调用将会失败。")
-            
+
             ### CHANGE: 使用 AsyncOpenAI 替代 OpenAI
             self._client = AsyncOpenAI(
                 api_key=api_key,
@@ -58,6 +58,41 @@ class LLMClient:
                 max_retries=0
             )
         return self._client
+
+    def _demo_json(self, system_prompt: str) -> str:
+        """DEMO_MODE 下根据 system_prompt 推断并返回合法的 JSON 响应"""
+        import json as _json
+        sp = system_prompt.lower()
+        # ContextTrigger Stage2: 触发判断
+        if "trigger" in sp and "severity" in sp and "event_type" in sp:
+            return _json.dumps({
+                "trigger": False,
+                "severity": "P3",
+                "event_type": "其他",
+                "confidence": 0.1,
+                "reason": "DEMO_MODE mock",
+            }, ensure_ascii=False)
+        # Router: 意图识别
+        if "intent" in sp and ("chitchat" in sp or "incident" in sp or "emergency" in sp):
+            return _json.dumps({
+                "intent": "chitchat",
+                "severity": "P3",
+                "confidence": 0.5,
+            }, ensure_ascii=False)
+        # Persona: 人设回复
+        if "reply_text" in sp or "persona" in sp or "回复" in sp:
+            return _json.dumps({
+                "reply_text": "[DEMO] 这是模拟的文旅助手回复。在实际部署中，这里会由 LLM 生成个性化的游客服务回复。",
+                "reply_type": "text",
+                "tokens_used": 0,
+            }, ensure_ascii=False)
+        # Commander/TODO: 任务分解
+        if "task" in sp and "dependency" in sp:
+            return _json.dumps({
+                "tasks": [{"title": "DEMO 示例任务", "description": "模拟任务", "priority": "P3", "dependencies": []}],
+            }, ensure_ascii=False)
+        # Fallback: generic JSON
+        return _json.dumps({"status": "ok", "message": "DEMO_MODE mock"}, ensure_ascii=False)
 
     ### CHANGE: 方法添加 async 前缀
     async def ask(self,
@@ -71,11 +106,16 @@ class LLMClient:
         """
         发起大模型调用，自带指数退避重试与防抖机制 (异步版本)。
         """
-        # DEMO_MODE: 跳过真实 LLM 调用，返回 Mock 响应
-        if os.environ.get("DEMO_MODE", "").lower() == "true":
-            logger.info(f"[Trace-{trace_id}] DEMO_MODE: 返回 Mock 响应")
+        # MOCK_LLM: 独立控制 LLM mock（DEMO_MODE 不再强制 mock LLM）
+        if os.environ.get("MOCK_LLM", "").lower() == "true":
+            logger.info(f"[Trace-{trace_id}] MOCK_LLM: 返回 Mock 响应 (json={json_mode})")
+            if json_mode:
+                # 根据 system_prompt 推断 skill 类型，返回合法的 JSON
+                mock_content = self._demo_json(system_prompt)
+            else:
+                mock_content = f"[DEMO] 模拟回复: {user_prompt[:40]}..."
             return LLMResponse(
-                content=f"[DEMO] Mock response for: {user_prompt[:50]}",
+                content=mock_content,
                 tokens_used=0,
                 model_name="demo",
                 latency_seconds=0.0,
@@ -176,8 +216,8 @@ class LLMClient:
         Returns:
             LLMResponse
         """
-        if os.environ.get("DEMO_MODE", "").lower() == "true":
-            logger.info(f"[Trace-{trace_id}] DEMO_MODE: 返回 Mock 响应 (with context)")
+        if os.environ.get("MOCK_LLM", "").lower() == "true":
+            logger.info(f"[Trace-{trace_id}] MOCK_LLM: 返回 Mock 响应 (with context)")
             return LLMResponse(
                 content=f"[DEMO] Mock response with {len(context_messages)} context messages",
                 tokens_used=0,

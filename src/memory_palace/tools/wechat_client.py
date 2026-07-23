@@ -176,23 +176,74 @@ class WeChatWorkClient:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
 
+    # =========================================================================
+    # 业务层 API: 确认卡片 (Sprint 1 新增)
+    # =========================================================================
+
+    async def send_confirm_card(
+        self,
+        to_user: str,
+        push_id: str,
+        event_summary: str,
+        event_type: str,
+        severity: str,
+        confirm_url: str = "",
+        supplement_url: str = "",
+    ) -> bool:
+        """
+        发送确认卡片消息（企业微信交互卡片）
+
+        卡片包含：
+        - 事件摘要
+        - 两个按钮：「一键确认」「补充说明」
+
+        Args:
+            to_user: 接收人
+            push_id: 推送日志ID（用于回调标识）
+            event_summary: 事件摘要（20字以内）
+            event_type: 事件类型
+            severity: 严重程度
+            confirm_url: 确认按钮回调URL
+            supplement_url: 补充说明按钮回调URL
+
+        Returns:
+            是否发送成功
+        """
+        # 企业微信 markdown 卡片消息，支持点击链作为按钮
+        confirm_md = f"**事件确认**\n\n{event_summary}\n\n发送者：@{to_user}\n类型：{event_type}\n严重：{severity}\n\n[✅ 一键确认]({confirm_url})\n[📝 补充说明]({supplement_url})"
+
+        payload = {
+            "touser": to_user,
+            "msgtype": "markdown",
+            "agentid": self.agentid,
+            "markdown": {"content": confirm_md},
+            "safe": 0,
+        }
+        return await self._send_request(payload)
+
 
 # =============================================================================
-# 全局单例初始化 (异步版本)
+# 单例工厂（懒加载，避免 import 时依赖环境变量）
 # =============================================================================
-# 注意：异步客户端的初始化本身不需要 await，但使用时需要 await
 
-_corpid = os.environ.get("WX_CORPID")
-_corpsecret = os.environ.get("WX_CORPSECRET")
-_agentid = os.environ.get("WX_AGENTID")
+_wechat_client = None
 
-if _corpid and _corpsecret and _agentid:
-    try:
-        wechat_client = WeChatWorkClient(corpid=_corpid, corpsecret=_corpsecret, agentid=int(_agentid))
-        logger.info("企微客户端 (WeChatWorkClient) 异步版本实例化成功。")
-    except ValueError:
-        logger.error("WX_AGENTID 必须为整数，企微客户端实例化失败。")
-        wechat_client = None
-else:
-    logger.warning("当前环境变量中缺少企微配置，wechat_client 未初始化。")
-    wechat_client = None
+
+def get_wechat_client() -> Optional[WeChatWorkClient]:
+    """返回 WeChatWorkClient 单例，首次调用时初始化。配置缺失返回 None。"""
+    global _wechat_client
+    if _wechat_client is None:
+        corpid = os.environ.get("WX_CORPID")
+        corpsecret = os.environ.get("WX_CORPSECRET")
+        agentid = os.environ.get("WX_AGENTID")
+        if corpid and corpsecret and agentid:
+            try:
+                _wechat_client = WeChatWorkClient(corpid=corpid, corpsecret=corpsecret, agentid=int(agentid))
+                logger.info("企微客户端 (WeChatWorkClient) 异步版本实例化成功。")
+            except ValueError:
+                logger.error("WX_AGENTID 必须为整数，企微客户端实例化失败。")
+                _wechat_client = None
+        else:
+            logger.warning("当前环境变量中缺少企微配置，wechat_client 未初始化。")
+            _wechat_client = None
+    return _wechat_client

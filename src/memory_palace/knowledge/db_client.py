@@ -202,8 +202,8 @@ async def save_message(payload: Dict[str, Any]) -> int:
 async def create_or_update_session(user_id: str) -> int:
     """创建或更新会话"""
     sql = """
-        INSERT INTO sessions (session_id, user_id, agent_name, message_count, created_at, updated_at)
-        VALUES (?, ?, 'router', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        INSERT INTO sessions (session_id, user_id, agent_name, stage, message_count, created_at, updated_at)
+        VALUES (?, ?, 'router', 'active', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         ON CONFLICT(session_id) DO UPDATE SET
             message_count = message_count + 1,
             updated_at = CURRENT_TIMESTAMP

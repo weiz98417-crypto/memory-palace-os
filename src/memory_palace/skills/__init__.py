@@ -178,6 +178,9 @@ def _auto_register_skills():
         ("memory_ops", "src.memory_palace.skills.memory_ops"),
         ("persona", "src.memory_palace.skills.persona"),
         ("watcher", "src.memory_palace.skills.watcher"),
+        ("context_trigger", "src.memory_palace.skills.context_trigger"),
+        ("persona_extract", "src.memory_palace.skills.persona_extract"),
+        ("todo_write", "src.memory_palace.skills.todo"),
     ]
 
     from loguru import logger

@@ -644,6 +644,81 @@ async def add_knowledge(
 
 
 # ==============================================================================
+# Demo 路由 (仅在 DEMO_MODE=true 时挂载)
+# ==============================================================================
+
+demo_router = APIRouter(prefix="/demo", tags=["Demo"])
+
+# In-memory result cache: trace_id → {reply_text, route, ...}
+_demo_results: dict = {}
+
+class DemoMessage(BaseModel):
+    content: str = ""
+    from_user: str = "demo_user"
+
+
+@demo_router.post("/send")
+async def demo_send_message(payload: DemoMessage, request: Request):
+    """
+    Demo 消息入口：直接构造 payload 推入队列，跳过企微加密。
+    仅在 DEMO_MODE=true 时可用。
+    """
+    trace_id = uuid.uuid4().hex[:8]
+    msg_id = f"demo_{uuid.uuid4().hex[:12]}"
+
+    message = {
+        "msg_id": msg_id,
+        "from_user": payload.from_user,
+        "msg_type": "text",
+        "content": payload.content,
+        "event": "",
+        "timestamp": time.time(),
+        "raw_xml": "",
+        "trace_id": trace_id,
+        "api_version": "v1",
+    }
+
+    try:
+        queue: asyncio.Queue = request.app.state.message_queue
+        queue.put_nowait(message)
+        logger.info(
+            f"[Trace-{trace_id}] 📥 [Demo] 消息已入队 "
+            f"[MsgId={msg_id}] content={payload.content[:50]}"
+        )
+        return {
+            "code": 0,
+            "trace_id": trace_id,
+            "msg_id": msg_id,
+            "message": "Message enqueued. GET /demo/result/{trace_id} to get the reply.",
+        }
+    except asyncio.QueueFull:
+        global _queue_full_count
+        _queue_full_count += 1
+        logger.error(f"[Trace-{trace_id}] 🚨 Demo 消息入队失败：队列已满")
+        raise HTTPException(status_code=503, detail="Queue full")
+    except AttributeError:
+        logger.error(f"[Trace-{trace_id}] Demo 消息入队失败：队列未初始化")
+        raise HTTPException(status_code=500, detail="Queue not initialized")
+
+
+@demo_router.get("/result/{trace_id}")
+async def demo_get_result(trace_id: str):
+    """轮询获取指定 trace_id 的处理结果"""
+    result = _demo_results.pop(trace_id, None)
+    if result is None:
+        return {"code": 1, "trace_id": trace_id, "message": "Not ready yet. Pipeline may still be processing."}
+    return {"code": 0, "trace_id": trace_id, **result}
+
+
+def demo_store_result(trace_id: str, result: dict) -> None:
+    """存储处理结果供轮询（由 queue_worker 调用）"""
+    _demo_results[trace_id] = result
+    if len(_demo_results) > 100:
+        oldest = next(iter(_demo_results))
+        del _demo_results[oldest]
+
+
+# ==============================================================================
 # V2 路由 (预留)
 # ==============================================================================
 

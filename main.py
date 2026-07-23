@@ -40,7 +40,11 @@ from src.memory_palace.api import v1_router, v2_router                  # API �
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 from dotenv import load_dotenv
 load_dotenv()           # 加载 .env 文件中的环境变量
-validate_env()          # 内部会 sys.exit(1) + 打印缺失项
+# DEMO_MODE: 跳过环境变量严格校验，允许缺失 Key 运行时降级
+if os.environ.get("DEMO_MODE", "").lower() != "true":
+    validate_env()          # 内部会 sys.exit(1) + 打印缺失项
+else:
+    logger.info("🎮 DEMO_MODE 已启用 — 跳过环境变量严格校验")
 setup_logger()          # 初始化 loguru（多文件归档、自动旋转）
 
 
@@ -183,6 +187,12 @@ app.include_router(v1_router, tags=["API v1"])
 
 # API v2（扩展接口）
 app.include_router(v2_router, tags=["API v2"])
+
+# Demo 消息入口（仅 DEMO_MODE=true 时可用）
+if os.environ.get("DEMO_MODE", "").lower() == "true":
+    from src.memory_palace.core.gateway import demo_router
+    app.include_router(demo_router, tags=["Demo"])
+    logger.info("🎮 DEMO_MODE 已激活 — /demo/send 端点可用")
 
 # 管理大屏静态文件（/admin 重定向到 /admin/index.html，避免 307）
 from fastapi.responses import RedirectResponse

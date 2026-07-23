@@ -14,7 +14,7 @@ import os
 import asyncio
 from loguru import logger
 from src.memory_palace.tools.db_client import db_manager, IncidentLog
-from src.memory_palace.knowledge.vector_store import vector_client
+from src.memory_palace.knowledge.vector_store import get_vector_client
 
 OLD_DB_PATH = "data/old_memory.db"
 
@@ -65,7 +65,7 @@ async def _migrate_v1_to_v2_async():
             session.add(new_incident)
 
             # B. 映射到 ChromaDB 向量库 (重铸记忆)
-            vector_client.upsert_experience(
+            get_vector_client().upsert_experience(
                 content=row.get('raw_text', ''),
                 metadata={
                     "case_id": case_id,

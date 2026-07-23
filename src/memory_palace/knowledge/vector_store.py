@@ -81,5 +81,17 @@ class PalaceVectorStore:
             logger.error(f"[VectorStore] 检索过程中断: {e}")
             return []
 
-# 导出单例
-vector_client = PalaceVectorStore()
+# 单例工厂（懒加载，避免 import 时触发 ChromaDB/OpenAI 初始化）
+_vector_client = None
+
+
+def get_vector_client() -> Optional[PalaceVectorStore]:
+    """返回 PalaceVectorStore 单例，首次调用时初始化。初始化失败返回 None。"""
+    global _vector_client
+    if _vector_client is None:
+        try:
+            _vector_client = PalaceVectorStore()
+        except Exception as e:
+            logger.warning(f"[VectorStore] 初始化失败（将以降级模式运行）: {e}")
+            _vector_client = None
+    return _vector_client

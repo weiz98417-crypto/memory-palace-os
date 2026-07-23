@@ -1,5 +1,6 @@
 """
-工业级数据库连接池与 ORM 封装 (Database Client)
+Database Client (SQLAlchemy ORM) - for seed data & migration.
+For runtime queries, see knowledge/db_client.py (aiosqlite).
 
 核心特性：
 1. 高可用连接池 (Connection Pooling)：基于 SQLAlchemy 引擎，支持池化复用与连接自动回收 (Pool Recycle)，防止 MySQL/PostgreSQL 经典的长连接 8 小时断开问题。
@@ -11,8 +12,9 @@ Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 """
 
 import os
+from pathlib import Path
 from contextlib import contextmanager
-from typing import List, Dict, Any, Generator
+from typing import List, Dict, Any, Generator, Optional
 from loguru import logger
 from datetime import datetime
 
@@ -61,7 +63,9 @@ class DatabaseManager:
     def __init__(self):
         # 生产环境优先从环境变量读取 DB URI (例如 postgresql://user:pass@host/dbname)
         # 默认降级为本地 SQLite，方便开发测试
-        self.db_uri = os.environ.get("DATABASE_URI", "sqlite:///../../data/memory.db")
+        _project_root = Path(__file__).resolve().parent.parent.parent.parent
+        _default_db = _project_root / "data" / "memory.db"
+        self.db_uri = os.environ.get("DATABASE_URI", f"sqlite:///{_default_db}")
         
         # 针对 SQLite 和关系型数据库做不同的连接池配置
         connect_args = {}
@@ -106,8 +110,12 @@ class DatabaseManager:
         finally:
             session.close() # 释放连接回池中
 
-# 初始化全局数据库连接池单例
-db_manager = DatabaseManager()
+# 全局单例（延迟初始化，捕获初始化错误避免 import 时崩溃）
+db_manager: Optional[DatabaseManager] = None
+try:
+    db_manager = DatabaseManager()
+except Exception as e:
+    logger.warning(f"DatabaseManager (SQLAlchemy) 初始化失败（非致命，种子/迁移功能不可用）: {e}")
 
 
 # =============================================================================

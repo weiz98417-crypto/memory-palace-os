@@ -15,14 +15,30 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor
 
-# ---------------------------------------------------------------------------
-# [防御性导入业务 Agent]
-# ---------------------------------------------------------------------------
-try:
-    from ...skills.watcher import WatcherSkill
-except ImportError:
-    logger.warning("WatcherSkill 尚未实现，定时任务将以空跑模式注册。")
-    WatcherSkill = None
+
+# 定时任务回调（模块级函数，避免 APScheduler 序列化实例方法失败）
+def _run_watcher_callback():
+    """鹰眼巡检回调。由 APScheduler 在线程中调用。"""
+    import asyncio
+    from loguru import logger
+
+    logger.info("🦅 鹰眼定时巡检波次开始...")
+    try:
+        from src.memory_palace.skills.watcher import WatcherSkill
+    except ImportError:
+        logger.warning("WatcherSkill 尚未实现，跳过本次巡检。")
+        return
+
+    try:
+        watcher = WatcherSkill()
+
+        async def _run():
+            return await watcher.run(context={"trigger_source": "scheduler"})
+
+        result = asyncio.run(_run())
+        logger.success(f"🦅 鹰眼巡检波次结束 | processed: {result.structured_data.get('processed_count', 'N/A') if hasattr(result, 'structured_data') else 'N/A'}")
+    except Exception as e:
+        logger.error(f"🦅 鹰眼执行中发生未捕获异常: {e}")
 
 class TaskScheduler:
     """
@@ -59,14 +75,17 @@ class TaskScheduler:
         if not self.scheduler.running:
             self.scheduler.start()
             logger.success("⏱️ 系统调度引擎已启动 (SQLAlchemy Persistence Enabled)")
-            self._register_default_jobs()
+            try:
+                self._register_default_jobs()
+            except Exception as e:
+                logger.warning(f"定时任务注册失败（不影响启动）: {e}")
 
     def _register_default_jobs(self):
         """注册系统级预设任务（如每日鹰眼巡检）"""
         
         # 任务 A：每日上午 10:00 鹰眼全量巡检
         self.add_cron_job(
-            func=self._run_watcher_flow,
+            func=_run_watcher_callback,
             hour=10, minute=0,
             job_id="daily_watcher_morning",
             replace_existing=True
@@ -74,7 +93,7 @@ class TaskScheduler:
 
         # 任务 B：每日晚上 20:00 鹰眼全量巡检
         self.add_cron_job(
-            func=self._run_watcher_flow,
+            func=_run_watcher_callback,
             hour=20, minute=0,
             job_id="daily_watcher_evening",
             replace_existing=True
@@ -105,33 +124,7 @@ class TaskScheduler:
         )
         logger.info(f"📍 已排期一次性任务: {job_id} | 执行时间: {run_at}")
 
-    def _run_watcher_flow(self):
-        """
-        内部逻辑包装：实例化 Watcher 并执行
-        APScheduler runs in threads, so we use asyncio.run() here.
-        """
-        import asyncio
-        logger.info("🦅 鹰眼定时巡检波次开始...")
-        if not WatcherSkill:
-            logger.error("WatcherSkill 未定义，取消本次巡检。")
-            return
-
-        try:
-            watcher = WatcherSkill()
-
-            async def _run():
-                result = await watcher.run(context={"trigger_source": "scheduler"})
-                return result
-
-            result = asyncio.run(_run())
-            logger.success(f"🦅 鹰眼巡检波次结束 | processed: {result.get('processed_count', 0) if isinstance(result, dict) else 'N/A'}")
-        except Exception as e:
-            logger.error(f"🦅 鹰眼执行中发生未捕获异常: {e}")
-
     def shutdown(self):
         """优雅关闭"""
         self.scheduler.shutdown()
         logger.warning("⏱️ 系统调度引擎已关闭")
-
-# 全局单例
-sys_scheduler = TaskScheduler()

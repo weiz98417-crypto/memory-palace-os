@@ -159,6 +159,7 @@ class SecuritySettings(BaseModel):
 class AppSettings(BaseModel):
     """应用全局配置 (强类型)"""
 
+    EMBED_MODEL: str = Field(default="text-embedding-3-small", description="Embedding 模型")
     system: SystemSettings = Field(default_factory=SystemSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
     storage: StorageSettings = Field(default_factory=StorageSettings)

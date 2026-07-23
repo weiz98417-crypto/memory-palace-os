@@ -12,12 +12,14 @@ import aiosqlite
 from pathlib import Path
 from loguru import logger
 
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+
 
 async def init_database():
     """
     初始化 memory.db 数据库 (异步版本)
     """
-    db_path = Path("data/memory.db")
+    db_path = _PROJECT_ROOT / "data" / "memory.db"
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
     async with aiosqlite.connect(str(db_path)) as db:
@@ -57,6 +59,8 @@ async def init_database():
                 CREATE TABLE IF NOT EXISTS sessions (
                     session_id TEXT PRIMARY KEY,
                     user_id TEXT NOT NULL,
+                    agent_name TEXT DEFAULT '',
+                    message_count INTEGER DEFAULT 0,
                     stage TEXT NOT NULL,
                     created_at REAL NOT NULL,
                     updated_at REAL NOT NULL,
@@ -68,6 +72,13 @@ async def init_database():
                 )
             """)
             logger.info("✅ 创建表: sessions")
+
+            # 兼容旧表：添加可能缺失的列
+            for col, col_type in [("agent_name", "TEXT DEFAULT ''"), ("message_count", "INTEGER DEFAULT 0")]:
+                try:
+                    await db.execute(f"ALTER TABLE sessions ADD COLUMN {col} {col_type}")
+                except Exception:
+                    pass  # 列已存在则忽略
 
             # 4. 对话轮次表 (新增 - 用于滑动窗口历史)
             await db.execute("""
@@ -125,6 +136,163 @@ async def init_database():
                 CREATE INDEX IF NOT EXISTS idx_messages_user ON messages(from_user, created_at)
             """)
             logger.info("✅ 创建索引完成")
+
+            # [Phase 2] 8. 审批请求表 (Approval Requests)
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS approval_requests (
+                    approval_id TEXT PRIMARY KEY,
+                    tool_name TEXT NOT NULL,
+                    args TEXT NOT NULL,
+                    session_id TEXT,
+                    user_id TEXT,
+                    requested_at REAL NOT NULL,
+                    requested_by TEXT,
+                    status TEXT DEFAULT 'PENDING',
+                    reviewed_at REAL,
+                    reviewed_by TEXT,
+                    comment TEXT
+                )
+            """)
+            logger.info("✅ 创建表: approval_requests")
+
+            # [Phase 2] 9. 工具调用日志表 (Tool Invocation Logs)
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS tool_invocation_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    tool_name TEXT NOT NULL,
+                    args TEXT NOT NULL,
+                    session_id TEXT,
+                    user_id TEXT,
+                    agent_name TEXT,
+                    logged_at REAL NOT NULL
+                )
+            """)
+            logger.info("✅ 创建表: tool_invocation_logs")
+
+            # [Phase 2] 10. 任务表 (Tasks - Phase 3 会用到)
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS tasks (
+                    id TEXT PRIMARY KEY,
+                    session_id TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    status TEXT DEFAULT 'PENDING',
+                    dependencies TEXT DEFAULT '[]',
+                    result TEXT,
+                    error TEXT,
+                    assigned_agent TEXT,
+                    created_at REAL NOT NULL,
+                    updated_at REAL NOT NULL,
+                    started_at REAL,
+                    completed_at REAL,
+                    attempts INTEGER DEFAULT 0,
+                    max_attempts INTEGER DEFAULT 3
+                )
+            """)
+            logger.info("✅ 创建表: tasks")
+
+            # 创建任务相关索引
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_tasks_session ON tasks(session_id)
+            """)
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)
+            """)
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_approval_status ON approval_requests(status)
+            """)
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_approval_session ON approval_requests(session_id)
+            """)
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_tool_logs_session ON tool_invocation_logs(session_id)
+            """)
+            logger.info("✅ Phase 2/3 索引创建完成")
+
+            # =================================================================
+            # Sprint 1 新增: 推送日志表 + 确认事件表
+            # =================================================================
+
+            # 8. 推送日志表 (Push Logs)
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS push_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    push_id TEXT UNIQUE NOT NULL,
+                    msg_id TEXT,
+                    from_user TEXT NOT NULL,
+                    raw_text TEXT NOT NULL,
+                    event_type TEXT DEFAULT '其他',
+                    severity TEXT DEFAULT 'P3/P4',
+                    stage1_triggered BOOLEAN DEFAULT FALSE,
+                    hit_keywords TEXT DEFAULT '[]',
+                    stage2_triggered BOOLEAN,
+                    llm_confidence REAL,
+                    pushed_at REAL NOT NULL,
+                    confirmed_at REAL,
+                    adoption_status TEXT DEFAULT 'pending',
+                    confirmed_notes TEXT,
+                    confirmed_by TEXT,
+                    trace_id TEXT
+                )
+            """)
+            logger.info("✅ 创建表: push_logs")
+
+            # 9. 确认事件记忆表 (Confirmed Event Memories)
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS confirmed_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    event_id TEXT UNIQUE NOT NULL,
+                    push_id TEXT,
+                    from_user TEXT NOT NULL,
+                    raw_text TEXT NOT NULL,
+                    event_type TEXT NOT NULL,
+                    severity TEXT NOT NULL,
+                    context_trigger_data TEXT DEFAULT '{}',
+                    memory_content TEXT NOT NULL,
+                    vector_doc_id TEXT,
+                    created_at REAL DEFAULT (strftime('%s', 'now')),
+                    confirmed_at REAL,
+                    venue_id TEXT
+                )
+            """)
+            logger.info("✅ 创建表: confirmed_events")
+
+            # 创建推送日志相关索引
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_push_logs_user ON push_logs(from_user, pushed_at)
+            """)
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_push_logs_status ON push_logs(adoption_status, pushed_at)
+            """)
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_confirmed_events_user ON confirmed_events(from_user, created_at)
+            """)
+            logger.info("✅ Sprint 1 索引创建完成")
+
+            # =================================================================
+            # Sprint 2 新增: 数字分身档案表
+            # =================================================================
+
+            # 10. 数字分身档案表 (Personas)
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS personas (
+                    id TEXT PRIMARY KEY,
+                    venue_id TEXT,
+                    job_title TEXT NOT NULL,
+                    logic_entries TEXT NOT NULL,
+                    raw_answers TEXT,
+                    created_at REAL,
+                    updated_at REAL
+                )
+            """)
+            logger.info("✅ 创建表: personas")
+
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_personas_job ON personas(job_title)
+            """)
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_personas_venue ON personas(venue_id)
+            """)
+            logger.info("✅ Sprint 2 索引创建完成")
 
             await db.commit()
             logger.success(f"🎉 数据库初始化成功: {db_path}")

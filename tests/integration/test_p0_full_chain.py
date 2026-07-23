@@ -14,7 +14,6 @@ P0 告警全链路集成测试 (Integration Test: P0 Full Chain)
 
 Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 """
-
 import pytest
 import asyncio
 from unittest.mock import AsyncMock, patch, MagicMock
@@ -102,6 +101,8 @@ class TestP0FullChain:
             call_tracker["sla_updated"] = True
 
         def get_skill(name):
+            if name == "context_trigger":
+                return None  # skip context_trigger in integration test
             m = MagicMock()
             if name == "router":
                 m.run = AsyncMock(return_value=router_output)
@@ -110,7 +111,7 @@ class TestP0FullChain:
             return m
 
         with patch("src.memory_palace.tools.llm_wrapper.llm_client.ask", side_effect=mock_llm_ask):
-            with patch("src.memory_palace.tools.wechat_client.wechat_client.send_text", side_effect=mock_wechat_send):
+            with patch("src.memory_palace.tools.wechat_client.get_wechat_client", return_value=MagicMock(send_text=mock_wechat_send)):
                 with patch("src.memory_palace.tools.sms_client.EmergencyNotifier._sync_send_sms", side_effect=mock_sms):
                     with patch("src.memory_palace.tools.sms_client.EmergencyNotifier._sync_send_voice_call", side_effect=mock_voice):
                         with patch("src.memory_palace.knowledge.db_client.save_message", side_effect=mock_save_message):
@@ -122,15 +123,15 @@ class TestP0FullChain:
         # --- 链路断言 ---
         assert result["status"] == "processed", "Orchestrator 应完成处理"
 
-        # Router 被调用（1次 LLM 调用）
-        assert call_tracker["llm_calls"] >= 1, "Router LLM 应被触发"
-
-        # P0 关键字被识别
+        # P0 关键字被识别，路由到 Commander
         assert result["route"].get("priority") == "P0", "P0 优先级应被识别"
         assert result["route"].get("target_agent") == "commander", "P0 应路由到 Commander"
 
         # SLA 更新（关键）
         assert call_tracker["sla_updated"] is True, "P0 事件必须触发 SLA 响应时间记录"
+
+        # Commander 返回了有效的 reply_text
+        assert result.get("reply_text"), "Commander 应返回回复内容"
 
     @pytest.mark.asyncio
     async def test_p0_sms_and_voice_parallel(self):

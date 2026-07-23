@@ -148,6 +148,20 @@ class MessageQueueWorker:
             reply_text = result.get("reply_text")
             from_user = message.get("from_user")
             trace_id = result.get("trace_id", msg_id)
+
+            # Demo 模式: 存储结果供轮询
+            try:
+                from src.memory_palace.core.gateway import demo_store_result
+                demo_store_result(trace_id, {
+                    "reply_text": reply_text or "(no reply)",
+                    "route": result.get("route", {}).get("target_agent", "unknown"),
+                    "intent": result.get("route", {}).get("intent", "unknown"),
+                    "status": result.get("status", "unknown"),
+                })
+                logger.info(f"[Trace-{trace_id}] Demo 结果已存储")
+            except ImportError:
+                pass  # 非 demo 模式，忽略
+
             if reply_text and from_user and self._container:
                 try:
                     wc = self._container.wechat_client

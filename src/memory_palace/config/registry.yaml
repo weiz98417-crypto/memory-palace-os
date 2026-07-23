@@ -1,0 +1,204 @@
+# =============================================================================
+# Agent 路由动态注册表 (The Registry)
+# =============================================================================
+# 功能：
+#   1. 映射 intent_key -> agent_implementation_path
+#   2. 定义 Agent 优先级和依赖关系
+#   3. 配置 Agent 激活状态
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Agent 注册表
+# -----------------------------------------------------------------------------
+agents:
+  # ---------------------------------------------------------------------------
+  # 路由大管家 (Router)
+  # ---------------------------------------------------------------------------
+  router:
+    class: "memory_palace.skills.router.skill.RouterSkill"
+    description: "全局流量分诊官"
+    active: true
+    priority: 100  # 优先级 (数值越大越优先被选中)
+    timeout_seconds: 5
+    retry_on_failure: false
+    # 能力标签
+    capabilities:
+      - "intent_recognition"
+      - "agent_dispatch"
+    # 依赖
+    dependencies: []
+
+  # ---------------------------------------------------------------------------
+  # 现场指挥官 (Commander) - P0/P1 级响应
+  # ---------------------------------------------------------------------------
+  emergency_dispatch:
+    class: "memory_palace.skills.commander.skill.CommanderSkill"
+    description: "P0/P1级现场指挥官"
+    active: true
+    priority: 90
+    timeout_seconds: 10
+    retry_on_failure: true
+    max_retries: 2
+    capabilities:
+      - "emergency_response"
+      - "p0_handling"
+      - "sms_alert"
+      - "escalation"
+    dependencies:
+      - "wechat_client"
+      - "sms_client"
+
+  # ---------------------------------------------------------------------------
+  # 处突与记忆专家 (Memory Ops)
+  # ---------------------------------------------------------------------------
+  emergency_advice:
+    class: "memory_palace.skills.memory_ops.skill.MemoryOpsSkill"
+    description: "RAG 处突与历史经验专家"
+    active: true
+    priority: 80
+    timeout_seconds: 15
+    retry_on_failure: true
+    max_retries: 3
+    capabilities:
+      - "rag_retrieval"
+      - "history_search"
+      - "experience_summarize"
+    dependencies:
+      - "vector_store"
+      - "embedding_client"
+    # RAG 配置
+    rag:
+      top_k: 5
+      similarity_threshold: 0.7
+      max_context_tokens: 4000
+
+  # ---------------------------------------------------------------------------
+  # 知识分身专家 (Persona)
+  # ---------------------------------------------------------------------------
+  deep_interview:
+    class: "memory_palace.skills.persona.skill.PersonaSkill"
+    description: "知识分身与拟人交互专家"
+    active: true
+    priority: 70
+    timeout_seconds: 30
+    retry_on_failure: true
+    max_retries: 3
+    capabilities:
+      - "conversation"
+      - "multi_turn"
+      - "persona_adaptation"
+      - "emotion_detection"
+    dependencies:
+      - "llm_wrapper"
+    # 对话配置
+    conversation:
+      max_turns: 20
+      context_window: 10
+      temperature: 0.8
+
+  # ---------------------------------------------------------------------------
+  # 鹰眼巡检专家 (Watcher)
+  # ---------------------------------------------------------------------------
+  watcher:
+    class: "memory_palace.skills.watcher.skill.WatcherSkill"
+    description: "SLA 超时与合规审计专家"
+    active: true
+    priority: 60
+    timeout_seconds: 60
+    retry_on_failure: false
+    capabilities:
+      - "sla_monitoring"
+      - "compliance_audit"
+      - "report_generation"
+    dependencies: []
+    # 巡检配置
+    monitoring:
+      check_interval_minutes: 5
+      sla_thresholds:
+        p0: 3      # 分钟
+        p1: 10
+        p2: 30
+        p3: 60
+        p4: 120
+      alert_on_violation: true
+
+# -----------------------------------------------------------------------------
+# 回退机制
+# -----------------------------------------------------------------------------
+fallback_agent: "deep_interview"  # 当 Router 无法判定意图时的默认承接 Agent
+
+# -----------------------------------------------------------------------------
+# 意图关键词映射
+# -----------------------------------------------------------------------------
+intent_keywords:
+  emergency:
+    keywords:
+      - "紧急"
+      - "立即"
+      - "马上"
+      - "救命"
+      - "报警"
+    agent: "emergency_dispatch"
+
+  urgent:
+    keywords:
+      - "快"
+      - "尽快"
+      - "着急"
+      - "严重"
+    agent: "emergency_dispatch"
+
+  history:
+    keywords:
+      - "以前"
+      - "之前"
+      - "历史"
+      - "查一下"
+    agent: "emergency_advice"
+
+  question:
+    keywords:
+      - "?"
+      - "怎么"
+      - "如何"
+      - "是什么"
+    agent: "deep_interview"
+
+  greeting:
+    keywords:
+      - "你好"
+      - "嗨"
+      - "hi"
+      - "hello"
+    agent: "deep_interview"
+
+# -----------------------------------------------------------------------------
+# Agent 依赖声明 (工具层)
+# -----------------------------------------------------------------------------
+tools:
+  wechat_client:
+    class: "memory_palace.tools.wechat_client.WeChatClient"
+    description: "企业微信 API 客户端"
+    active: true
+
+  sms_client:
+    class: "memory_palace.tools.sms_client.SMSClient"
+    description: "短信/语音告警客户端"
+    active: true
+
+  llm_wrapper:
+    class: "memory_palace.tools.llm_wrapper.LLMWrapper"
+    description: "LLM 统一封装"
+    active: true
+
+  vector_store:
+    class: "memory_palace.knowledge.vector_store.VectorStore"
+    description: "向量数据库"
+    active: true
+
+  embedding_client:
+    class: "memory_palace.tools.embedding_client.EmbeddingClient"
+    description: "Embedding 生成"
+    active: true
+
+    
