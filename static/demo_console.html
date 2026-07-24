@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Palace OS  Demo Console</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+.header{background:#1e293b;border-bottom:1px solid #334155;padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:18px;font-weight:600}
+.badge{background:#059669;color:#fff;padding:4px 12px;border-radius:4px;font-size:11px;font-weight:600}
+.scenario-switch{margin-left:16px;display:flex;gap:6px;align-items:center}
+.scenario-switch select{background:#1e293b;border:1px solid #475569;color:#e2e8f0;padding:4px 8px;border-radius:4px;font-size:12px}
+.tabs{display:flex;gap:0;background:#1e293b;border-bottom:1px solid #334155;padding:0 24px}
+.tab{padding:10px 16px;cursor:pointer;font-size:12px;font-weight:500;color:#94a3b8;border-bottom:2px solid transparent;transition:all 0.15s}
+.tab:hover{color:#e2e8f0}.tab.active{color:#38bdf8;border-bottom-color:#38bdf8}
+.content{padding:16px 24px;max-width:1400px;margin:0 auto}
+.panel{display:none}.panel.active{display:block}
+.card{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;margin-bottom:12px}
+.card h3{font-size:14px;font-weight:600;margin-bottom:10px;color:#f1f5f9}
+.btn{padding:6px 14px;border:none;border-radius:5px;font-size:12px;cursor:pointer;font-weight:500;transition:all 0.15s}
+.btn-primary{background:#2563eb;color:#fff}.btn-primary:hover{background:#1d4ed8}
+.btn-danger{background:#dc2626;color:#fff}
+.btn-outline{background:transparent;border:1px solid #475569;color:#e2e8f0}
+.btn-outline:hover{background:#334155}
+.btn-sm{padding:4px 10px;font-size:11px}
+.preset-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.input-row{display:flex;gap:8px;margin-bottom:12px}
+.input-row input,.search-row input{flex:1;padding:8px 12px;border:1px solid #475569;border-radius:5px;background:#0f172a;color:#e2e8f0;font-size:13px;outline:none}
+.input-row input:focus,.search-row input:focus{border-color:#38bdf8}
+.pipeline{display:flex;align-items:center;gap:0;margin:12px 0;flex-wrap:wrap}
+.pipe-node{padding:8px 12px;border-radius:5px;font-size:11px;font-weight:600;text-align:center;min-width:70px;transition:all 0.3s}
+.pipe-arrow{color:#475569;font-size:16px;padding:0 4px}
+.pipe-pending{background:#334155;color:#94a3b8}
+.pipe-active{background:#1e40af;color:#bfdbfe;animation:pulse 0.6s infinite alternate}
+.pipe-done{background:#065f46;color:#a7f3d0}
+.pipe-error{background:#991b1b;color:#fecaca}
+.pipe-skipped{background:#1e293b;color:#64748b;opacity:0.6}
+@keyframes pulse{from{opacity:1}to{opacity:0.5}}
+.reply-box{background:#0f172a;border:1px solid #334155;border-radius:6px;padding:12px;margin-top:8px;white-space:pre-wrap;font-size:13px;line-height:1.5;max-height:300px;overflow-y:auto}
+.meta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;font-size:11px;color:#64748b}
+.meta-item{background:#1e293b;padding:4px 10px;border-radius:4px}
+.task-card{background:#1e293b;border:1px solid #334155;border-radius:6px;padding:12px;margin-bottom:6px;margin-left:0}
+.task-card.child{margin-left:24px;border-left:2px solid #475569}
+.task-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.status-badge{padding:2px 6px;border-radius:3px;font-size:10px;font-weight:600}
+.status-PENDING{background:#334155;color:#94a3b8}
+.status-BLOCKED{background:#991b1b;color:#fecaca}
+.status-RUNNING{background:#1e40af;color:#bfdbfe}
+.status-DONE{background:#065f46;color:#a7f3d0}
+.status-FAILED{background:#dc2626;color:#fff}
+.search-row{display:flex;gap:8px;margin-bottom:12px}
+.kb-result{background:#1e293b;border:1px solid #334155;border-radius:6px;padding:10px;margin-bottom:6px}
+.kb-score{font-size:10px;color:#38bdf8}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:16px}
+.stat-card{background:#1e293b;border:1px solid #334155;border-radius:6px;padding:14px;text-align:center}
+.stat-value{font-size:24px;font-weight:700;color:#38bdf8}.stat-label{font-size:11px;color:#94a3b8;margin-top:2px}
+.loading{color:#64748b;font-style:italic}.error{color:#f87171}
+.status-bar{background:#1e293b;border-top:1px solid #334155;padding:6px 24px;font-size:10px;color:#64748b;display:flex;justify-content:space-between;align-items:center}
+.dot-green{display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;margin-right:4px}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid #475569;border-top-color:#38bdf8;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:4px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.interview-card{background:#0f172a;border:1px solid #334155;border-radius:6px;padding:14px;margin-bottom:10px}
+.interview-card .q{color:#38bdf8;font-size:12px;font-weight:600;margin-bottom:4px}
+.interview-card .a{color:#a7f3d0;font-size:13px;margin-bottom:8px}
+.entry-card{background:#1e293b;border-left:3px solid #38bdf8;border-radius:4px;padding:10px;margin:6px 0}
+.entry-card .trigger{color:#fbbf24;font-size:12px}
+.entry-card .behavior{color:#a7f3d0;font-size:12px;margin:4px 0}
+.entry-card .reason{color:#94a3b8;font-size:11px}
+.log-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #334155;font-size:12px;align-items:center}
+.log-type{width:50px;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;text-align:center}
+.log-incident{background:#7f1d1d;color:#fecaca}.log-push{background:#1e3a5f;color:#bfdbfe}
+@media print{
+  .tabs,.header,.status-bar,.btn,.preset-btns,.input-row,.search-row,.scenario-switch{display:none!important}
+  .panel{display:block!important;page-break-inside:avoid}
+  body{background:#fff;color:#000;font-size:11px}
+  .card{background:#fff;border:1px solid #ccc;box-shadow:none}
+  .reply-box{background:#f9fafb}.pipe-node{background:#fff!important;border:1px solid #ccc}
+  .status-bar{display:block!important;border-top:1px solid #000;padding:8px 0}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;align-items:center;">
+    <h1>Memory Palace OS <span style="font-weight:400;color:#64748b;font-size:14px;">Demo Console</span></h1>
+    <div class="scenario-switch">
+      <select id="scenarioSelect" onchange="switchScenario()">
+        <option value="daily">日常运营</option>
+        <option value="emergency">突发事件演练</option>
+      </select>
+      <button class="btn btn-sm btn-outline" onclick="switchScenario()">切换场景</button>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <span class="badge" id="statusBadge"> Ready</span>
+    <button class="btn btn-sm btn-primary" id="btnAutoPlay" onclick="toggleAutoPlay()"> Auto Play</button>
+    <button class="btn btn-sm btn-outline" id="btnPause" style="display:none" onclick="pauseAutoPlay()"> Pause</button>
+    <button class="btn btn-sm btn-outline" id="btnStop" style="display:none" onclick="stopAutoPlay()"> Stop</button>
+    <button class="btn btn-sm btn-outline" onclick="window.print()"> Export Report</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="pipeline">消息链路</div>
+  <div class="tab" data-tab="tasks">任务系统</div>
+  <div class="tab" data-tab="persona">老员工访谈</div>
+  <div class="tab" data-tab="knowledge">知识库</div>
+  <div class="tab" data-tab="monitor">系统监控</div>
+  <div class="tab" data-tab="admin">管理</div>
+</div>
+
+<div class="content">
+  <!-- TAB 1: Pipeline -->
+  <div class="panel active" id="panel-pipeline">
+    <div class="card"><h3>预设消息</h3><div class="preset-btns" id="presetBtns"></div></div>
+    <div class="card"><h3>自定义消息</h3><div class="input-row"><input type="text" id="customMsg" placeholder="输入消息..." onkeydown="if(event.key==='Enter')sendMsg(document.getElementById('customMsg').value)"><button class="btn btn-primary" onclick="sendMsg(document.getElementById('customMsg').value)">发送</button></div></div>
+    <div class="card" id="pipelineCard" style="display:none"><h3>Pipeline</h3><div class="pipeline" id="pipelineViz"></div><div class="reply-box" id="replyBox"></div><div class="meta-row" id="metaRow"></div></div>
+  </div>
+
+  <!-- TAB 2: Tasks -->
+  <div class="panel" id="panel-tasks">
+    <div class="card"><h3>TaskGraph 任务列表</h3><div id="taskList"><span class="loading">Loading...</span></div>
+    <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="loadTasks()">Refresh</button></div>
+  </div>
+
+  <!-- TAB 3: Persona Interview -->
+  <div class="panel" id="panel-persona">
+    <div class="card">
+      <h3>开始访谈</h3>
+      <div class="input-row">
+        <input type="text" id="personaJobTitle" placeholder="岗位名称，如：安全巡检主管">
+        <button class="btn btn-primary" onclick="startInterview()">开始访谈</button>
+      </div>
+      <div style="margin-top:6px">
+        <button class="btn btn-sm btn-outline" onclick="autoRunInterview(0)">Auto-run: 安全巡检主管</button>
+        <button class="btn btn-sm btn-outline" onclick="autoRunInterview(1)">Auto-run: 客服主管</button>
+        <button class="btn btn-sm btn-outline" onclick="autoRunInterview(2)">Auto-run: 餐饮主管</button>
+      </div>
+    </div>
+    <div id="interviewStage" style="display:none">
+      <div class="card"><h3>访谈进行中 <span id="questionCounter"></span></h3>
+      <div id="interviewHistory"></div>
+      <div class="input-row" id="interviewInput" style="margin-top:8px">
+        <input type="text" id="interviewAnswer" placeholder="输入回答..." onkeydown="if(event.key==='Enter')continueInterview()">
+        <button class="btn btn-primary" onclick="continueInterview()">回答</button>
+      </div></div>
+    </div>
+    <div id="interviewResult" style="display:none">
+      <div class="card"><h3>提取的逻辑条目</h3><div id="logicEntries"></div></div>
+    </div>
+  </div>
+
+  <!-- TAB 4: Knowledge -->
+  <div class="panel" id="panel-knowledge">
+    <div class="card"><h3>知识库检索</h3>
+    <div class="search-row"><input type="text" id="kbQuery" placeholder="搜索景区知识..." onkeydown="if(event.key==='Enter')searchKB()"><button class="btn btn-primary" onclick="searchKB()">搜索</button></div>
+    <div id="kbResults"><span class="loading">输入关键词搜索。</span></div></div>
+  </div>
+
+  <!-- TAB 5: Monitor -->
+  <div class="panel" id="panel-monitor">
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="card"><h3>Watcher 巡检日志</h3><div id="watcherLog"><span class="loading">Loading...</span></div></div>
+    <button class="btn btn-outline btn-sm" onclick="loadStats();loadWatcherLog()">Refresh</button>
+  </div>
+
+  <!-- TAB 6: Admin -->
+  <div class="panel" id="panel-admin">
+    <div class="card"><h3>管理后台</h3><p style="color:#94a3b8;margin-bottom:8px">查看完整的消息记录、会话管理和系统配置</p>
+    <a href="/admin/admin_frontend.html" class="btn btn-primary" target="_blank">Open Admin Panel</a>
+    <a href="/docs" class="btn btn-outline" style="margin-left:6px" target="_blank">API Docs</a></div>
+  </div>
+</div>
+
+<div class="status-bar">
+  <span id="statusLeft"><span class="dot-green"></span>System Ready</span>
+  <span id="statusRight">DEMO_MODE | DeepSeek | scenario: daily</span>
+</div>
+
+<script>
+// ── Globals ────────────────────────────────────────────────────────────────
+let currentScenario = 'daily';
+let interviewId = null;
+let currentQuestion = 1;
+let interviewAnswers = {};
+let autoPlayRunning = false;
+let autoPlayPaused = false;
+let autoPlayTimeoutId = null;
+let autoPlayStepIdx = 0;
+let autoPlayConsecutiveTimeouts = 0;
+
+// ── Tabs ───────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-' + t.dataset.tab).classList.add('active');
+    if (t.dataset.tab === 'tasks') loadTasks();
+    if (t.dataset.tab === 'monitor') { loadStats(); loadWatcherLog(); }
+  });
+});
+
+// ── Scenario ───────────────────────────────────────────────────────────────
+async function switchScenario() {
+  const name = document.getElementById('scenarioSelect').value;
+  document.getElementById('statusBadge').innerHTML = '<span class="spinner"></span>';
+  try {
+    const res = await fetch('/demo/scenario/switch?name=' + name);
+    const data = await res.json();
+    if (data.code === 0) {
+      currentScenario = name;
+      document.getElementById('statusRight').textContent = 'DEMO_MODE | DeepSeek | scenario: ' + name;
+      loadPresetButtons();
+      document.getElementById('statusBadge').innerHTML = ' Ready';
+      document.getElementById('statusBadge').style.background = '#059669';
+    }
+  } catch(e) { document.getElementById('statusBadge').innerHTML = ' Error'; }
+}
+
+// ── Preset buttons ─────────────────────────────────────────────────────────
+function loadPresetButtons() {
+  const s = currentScenario;
+  const presets = s === 'daily'
+    ? [{l:'游客咨询餐厅',c:'景区附近有什么好吃的餐厅推荐吗'},{l:'询问景点历史',c:'这个景区有什么历史故事和主要景点'},{l:'询问门票',c:'景区门票多少钱？学生有优惠吗'},{l:'询问停车',c:'开车来景区在哪里停车？停车费多少'},{l:'游客受伤(紧急)',c:'景区西门有游客受伤了，需要紧急处理'}]
+    : [{l:'游客受伤(西门)',c:'景区西门有游客摔伤了，腿部出血需要急救'},{l:'老人走失',c:'一位70岁老人在千年古寺附近走散了，穿红色外套'},{l:'暴雨预警',c:'气象台发布了暴雨橙色预警，预计半小时后到达本区域'},{l:'询问急救物资',c:'景区里哪里能找到急救箱和AED'}];
+  document.getElementById('presetBtns').innerHTML = presets.map((p,i) =>
+    `<button class="btn ${i<3?'btn-outline':'btn-danger'} btn-sm preset-btn" data-msg="${esc(p.c)}">${esc(p.l)}</button>`
+  ).join('');
+  document.querySelectorAll('.preset-btn').forEach(b => b.addEventListener('click', () => sendMsg(b.dataset.msg)));
+}
+
+// ── Pipeline ───────────────────────────────────────────────────────────────
+async function sendMsg(content) {
+  const badge = document.getElementById('statusBadge');
+  badge.innerHTML = '<span class="spinner"></span> Processing';
+  badge.style.background = '#ca8a04';
+  const card = document.getElementById('pipelineCard');
+  const viz = document.getElementById('pipelineViz');
+  const reply = document.getElementById('replyBox');
+  const meta = document.getElementById('metaRow');
+  card.style.display = 'block';
+  viz.innerHTML = renderPipe(['pending','pending','pending','pending'], ['ContextTrigger<br>Stage1','ContextTrigger<br>Stage2','Router','Agent']);
+  reply.textContent = 'Sending...'; meta.innerHTML = '';
+
+  try {
+    const sr = await fetch('/demo/send', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content,from_user:'demo'})});
+    const sd = await sr.json();
+    if (sd.code !== 0) { reply.textContent = 'Error: '+JSON.stringify(sd); return; }
+    for (let i=0;i<15;i++) {
+      await sleep(1000);
+      const pr = await fetch('/demo/result/'+sd.trace_id);
+      const pd = await pr.json();
+      if (pd.code === 0) {
+        const states = ['done','done','done','done'];
+        const labels = ['ContextTrigger<br>Stage1','ContextTrigger<br>Stage2','Router<br>'+esc(pd.intent||'?'),esc(pd.route||'?')+'<br>replied'];
+        // Post-hoc animation
+        animatePipeline(states, labels, pd, reply, meta, viz, badge);
+        return;
+      }
+    }
+    reply.textContent = 'Timeout - pipeline may still be processing.';
+  } catch(e) { reply.textContent = 'Error: '+e.message; }
+  badge.innerHTML = ' Ready';
+  badge.style.background = '#059669';
+}
+
+function animatePipeline(states, labels, result, replyEl, metaEl, vizEl, badge) {
+  for (let i=0;i<states.length;i++) {
+    setTimeout(() => {
+      const cur = states.slice(); for (let j=0;j<=i;j++) cur[j]='done';
+      vizEl.innerHTML = renderPipe(cur, labels);
+      if (i===states.length-1) {
+        replyEl.textContent = result.reply_text || '(no reply)';
+        metaEl.innerHTML = `<span class="meta-item">Route: ${esc(result.route||'?')}</span><span class="meta-item">Intent: ${esc(result.intent||'?')}</span><span class="meta-item">Status: ${esc(result.status||'?')}</span><span class="meta-item">trace_id: ${esc(result.trace_id||'?')}</span>`;
+        badge.innerHTML = ' Ready'; badge.style.background = '#059669';
+      }
+    }, i * 300);
+  }
+}
+
+function renderPipe(states, labels) {
+  return states.map((s,i) => `<span class="pipe-node pipe-${s}">${labels[i]}</span>`).join('<span class="pipe-arrow">→</span>');
+}
+
+// ── Tasks ──────────────────────────────────────────────────────────────────
+async function loadTasks() {
+  const el = document.getElementById('taskList');
+  try {
+    const res = await fetch('/demo/tasks'); const data = await res.json();
+    if (!data.data||!data.data.length) { el.innerHTML = '<span class="loading">No tasks. Switch scenario or decompose a goal.</span>'; return; }
+    const tasks = data.data;
+    const byId = {}; tasks.forEach(t => byId[t.id] = t);
+    const children = new Set(); tasks.forEach(t => t.dependencies.forEach(d => children.add(d)));
+    const roots = tasks.filter(t => !t.dependencies || !t.dependencies.length);
+    function renderTree(t, level) {
+      let html = `<div class="task-card${level>0?' child':''}" style="margin-left:${level*24}px">
+        <div class="task-header"><strong>${esc(t.description)}</strong><span class="status-badge status-${t.status}">${t.status}</span></div>
+        <div style="font-size:11px;color:#64748b">${t.assigned_agent||''} ${t.id?t.id.slice(0,8):''}</div></div>`;
+      const deps = tasks.filter(d => (d.dependencies||[]).includes(t.id));
+      deps.forEach(d => html += renderTree(d, level+1));
+      return html;
+    }
+    el.innerHTML = roots.map(r => renderTree(r, 0)).join('');
+  } catch(e) { el.innerHTML = '<span class="error">'+esc(e.message)+'</span>'; }
+}
+
+// ── Persona Interview ──────────────────────────────────────────────────────
+async function startInterview(jobTitle) {
+  const jt = jobTitle || document.getElementById('personaJobTitle').value.trim();
+  if (!jt) return;
+  document.getElementById('statusBadge').innerHTML = '<span class="spinner"></span>';
+  try {
+    const res = await fetch('/demo/persona/interview/start', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_title:jt})});
+    const d = await res.json();
+    if (d.code!==0) { alert('Error: '+d.error); return; }
+    interviewId = d.data.interview_id; currentQuestion = 1; interviewAnswers = {};
+    document.getElementById('interviewResult').style.display = 'none';
+    document.getElementById('interviewStage').style.display = 'block';
+    document.getElementById('questionCounter').textContent = `(Question ${d.data.question_number}/4)`;
+    document.getElementById('interviewHistory').innerHTML = `<div class="interview-card"><div class="q">Q: ${esc(d.data.question)}</div></div>`;
+    document.getElementById('statusBadge').innerHTML = ' Ready'; document.getElementById('statusBadge').style.background = '#059669';
+  } catch(e) { alert(e.message); }
+}
+
+async function continueInterview(answer) {
+  const ans = answer || document.getElementById('interviewAnswer').value.trim();
+  if (!ans || !interviewId) return;
+  document.getElementById('statusBadge').innerHTML = '<span class="spinner"></span>';
+  try {
+    const res = await fetch('/demo/persona/interview/continue', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({interview_id:interviewId, answer:ans})});
+    const d = await res.json();
+    if (d.code!==0) { alert('Error: '+d.error); return; }
+    const hist = document.getElementById('interviewHistory');
+    hist.innerHTML += `<div class="interview-card"><div class="a">A: ${esc(ans)}</div></div>`;
+    document.getElementById('interviewAnswer').value = '';
+    currentQuestion = d.data.question_number || currentQuestion+1;
+    document.getElementById('questionCounter').textContent = `(Question ${currentQuestion}/4)`;
+    if (d.data.is_complete) {
+      document.getElementById('interviewInput').style.display = 'none';
+      hist.innerHTML += `<div class="interview-card"><div class="q" style="color:#fbbf24">Interview complete. Finalizing...</div></div>`;
+      await finalizeInterview();
+    } else {
+      hist.innerHTML += `<div class="interview-card"><div class="q">Q: ${esc(d.data.question)}</div></div>`;
+    }
+    document.getElementById('statusBadge').innerHTML = ' Ready'; document.getElementById('statusBadge').style.background = '#059669';
+  } catch(e) { alert(e.message); }
+}
+
+async function finalizeInterview() {
+  try {
+    const res = await fetch('/demo/persona/interview/finalize', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({interview_id:interviewId})});
+    const d = await res.json();
+    if (d.code===0 && d.data.logic_entries) {
+      document.getElementById('interviewStage').style.display = 'none';
+      document.getElementById('interviewResult').style.display = 'block';
+      document.getElementById('logicEntries').innerHTML = d.data.logic_entries.map(e => `
+        <div class="entry-card"><div class="trigger">WHEN ${esc(e.trigger)}</div><div class="behavior">THEN ${esc(e.behavior)}</div><div class="reason">WHY ${esc(e.reason)}</div></div>
+      `).join('');
+    }
+  } catch(e) {}
+}
+
+async function autoRunInterview(idx) {
+  const titles = ['安全巡检主管','客服主管','餐饮区域主管'];
+  const answers = [
+    ['每天早班第一件事就是检查所有消防设备指示灯是否正常','先把最近的人派到现场维持秩序，同时通知医务室','节假日前提早3天把全园安全查一遍'],
+    ['先让游客情绪稳定下来，倒杯水坐下慢慢说','超过30分钟排队就启动备用通道，给排队的发水','拿出多语言导览手册加上手势比划，基本都能解决'],
+    ['提前半小时把预制菜备好，所有收银全开','打电话给备用供应商，同时从隔壁店调货','立刻停灶查过敏原，提供替代菜品']
+  ];
+  await startInterview(titles[idx]);
+  for (let i=0;i<4&&i<answers[idx].length;i++) {
+    await sleep(800);
+    await continueInterview(answers[idx][i]);
+  }
+}
+
+// ── Knowledge ──────────────────────────────────────────────────────────────
+async function searchKB() {
+  const q = document.getElementById('kbQuery').value.trim();
+  const el = document.getElementById('kbResults');
+  if (!q) { el.innerHTML = '<span class="loading">Enter a search query.</span>'; return; }
+  el.innerHTML = '<span class="loading"><span class="spinner"></span>Searching...</span>';
+  try {
+    const res = await fetch('/demo/knowledge/search?q='+encodeURIComponent(q)+'&top_k=5');
+    const d = await res.json();
+    if (!d.data||!d.data.length) { el.innerHTML = '<span class="loading">No results. Switch scenario to load seed data.</span>'; return; }
+    el.innerHTML = d.data.map((r,i) => `<div class="kb-result"><div class="kb-score">#${i+1} Score: ${(r.score||0).toFixed(4)}</div><div style="margin-top:4px;font-size:13px">${esc((r.content||'').slice(0,300))}</div></div>`).join('');
+  } catch(e) { el.innerHTML = '<span class="error">'+esc(e.message)+'</span>'; }
+}
+
+// ── Stats + Watcher Log ────────────────────────────────────────────────────
+async function loadStats() {
+  const el = document.getElementById('statsGrid');
+  try {
+    const res = await fetch('/demo/stats'); const d = await res.json(); const s = d.data||{};
+    el.innerHTML = `<div class="stat-card"><div class="stat-value">${s.queue_depth??'?'}</div><div class="stat-label">Queue Depth</div></div>
+    <div class="stat-card"><div class="stat-value">${s.message_count??'?'}</div><div class="stat-label">Messages</div></div>
+    <div class="stat-card"><div class="stat-value">${s.task_count??'?'}</div><div class="stat-label">Tasks</div></div>
+    <div class="stat-card"><div class="stat-value">${s.skills_registered??'?'}</div><div class="stat-label">Skills</div></div>`;
+  } catch(e) {}
+}
+
+async function loadWatcherLog() {
+  const el = document.getElementById('watcherLog');
+  try {
+    const res = await fetch('/demo/watcher-log'); const d = await res.json();
+    if (!d.data||!d.data.length) { el.innerHTML = '<span class="loading">No patrol logs yet.</span>'; return; }
+    el.innerHTML = d.data.map(r => `<div class="log-item"><span class="log-type log-${r.type}">${r.type.toUpperCase()}</span><span style="flex:1">${esc(r.summary||'').slice(0,120)}</span><span style="color:#64748b">${esc(r.severity||'')}</span><span style="color:#475569;font-size:10px">${(r.created_at||'').slice(0,19)}</span></div>`).join('');
+  } catch(e) { el.innerHTML = '<span class="error">'+esc(e.message)+'</span>'; }
+}
+
+// ── Auto Play ──────────────────────────────────────────────────────────────
+const autoPlayTimeline = [
+  {delay:1000,action:'send',content:'景区西门有游客摔伤了，腿部出血需要急救',tab:'pipeline'},
+  {delay:10000,action:'send',content:'景区附近有什么好吃的餐厅推荐吗',tab:'pipeline'},
+  {delay:15000,action:'tab',target:'tasks'},
+  {delay:2000,action:'tab',target:'persona'},
+  {delay:1000,action:'interview',personaIdx:0},
+  {delay:25000,action:'tab',target:'knowledge'},
+  {delay:1000,action:'search',query:'安全应急预案'},
+  {delay:10000,action:'tab',target:'monitor'},
+];
+
+async function toggleAutoPlay() {
+  if (autoPlayRunning) { stopAutoPlay(); return; }
+  autoPlayRunning = true; autoPlayPaused = false; autoPlayStepIdx = 0; autoPlayConsecutiveTimeouts = 0;
+  document.getElementById('btnAutoPlay').textContent = ' Running...';
+  document.getElementById('btnPause').style.display = 'inline-block';
+  document.getElementById('btnStop').style.display = 'inline-block';
+  document.getElementById('statusBadge').innerHTML = ' Auto-Play'; document.getElementById('statusBadge').style.background = '#7c3aed';
+  await runAutoPlayStep();
+}
+
+async function runAutoPlayStep() {
+  if (!autoPlayRunning || autoPlayPaused || autoPlayStepIdx >= autoPlayTimeline.length) {
+    if (autoPlayStepIdx >= autoPlayTimeline.length) stopAutoPlay();
+    return;
+  }
+  const step = autoPlayTimeline[autoPlayStepIdx];
+  await sleep(step.delay);
+  if (!autoPlayRunning || autoPlayPaused) return;
+  try {
+    if (step.action === 'send') { await sendMsg(step.content); autoPlayConsecutiveTimeouts = 0; }
+    else if (step.action === 'tab') { document.querySelectorAll('.tab').forEach(t => { t.classList.toggle('active', t.dataset.tab === step.target); }); document.querySelectorAll('.panel').forEach(p => { p.classList.toggle('active', p.id === 'panel-'+step.target); }); }
+    else if (step.action === 'interview') { await autoRunInterview(step.personaIdx); }
+    else if (step.action === 'search') { document.getElementById('kbQuery').value = step.query; await searchKB(); }
+  } catch(e) {
+    autoPlayConsecutiveTimeouts++;
+    if (autoPlayConsecutiveTimeouts >= 3) { stopAutoPlay(); document.getElementById('statusBadge').innerHTML = ' Auto-Play Error'; document.getElementById('statusBadge').style.background = '#dc2626'; return; }
+  }
+  autoPlayStepIdx++;
+  if (autoPlayStepIdx < autoPlayTimeline.length) autoPlayTimeoutId = setTimeout(runAutoPlayStep, 100);
+}
+
+function pauseAutoPlay() { autoPlayPaused = !autoPlayPaused; document.getElementById('btnPause').textContent = autoPlayPaused ? ' Resume' : ' Pause'; if (!autoPlayPaused) runAutoPlayStep(); }
+function stopAutoPlay() { autoPlayRunning = false; autoPlayPaused = false; clearTimeout(autoPlayTimeoutId); document.getElementById('btnAutoPlay').textContent = ' Auto Play'; document.getElementById('btnPause').style.display = 'none'; document.getElementById('btnStop').style.display = 'none'; document.getElementById('statusBadge').innerHTML = ' Ready'; document.getElementById('statusBadge').style.background = '#059669'; }
+
+// ── Utils ──────────────────────────────────────────────────────────────────
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadPresetButtons();
+loadStats();
+loadWatcherLog();
+</script>
+</body>
+</html>

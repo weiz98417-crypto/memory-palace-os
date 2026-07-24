@@ -10,15 +10,26 @@ Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 """
 
 import os
+import time
 from loguru import logger
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor
 
 
+# Watcher 最后运行时间（供 demo/stats 查询）
+_last_watcher_run: float = 0.0
+
+
+def get_last_watcher_run() -> float:
+    """返回上次鹰眼巡检的 Unix 时间戳，未运行过返回 0"""
+    return _last_watcher_run
+
+
 # 定时任务回调（模块级函数，避免 APScheduler 序列化实例方法失败）
 def _run_watcher_callback():
     """鹰眼巡检回调。由 APScheduler 在线程中调用。"""
+    global _last_watcher_run
     import asyncio
     from loguru import logger
 
@@ -36,6 +47,7 @@ def _run_watcher_callback():
             return await watcher.run(context={"trigger_source": "scheduler"})
 
         result = asyncio.run(_run())
+        _last_watcher_run = time.time()
         logger.success(f"🦅 鹰眼巡检波次结束 | processed: {result.structured_data.get('processed_count', 'N/A') if hasattr(result, 'structured_data') else 'N/A'}")
     except Exception as e:
         logger.error(f"🦅 鹰眼执行中发生未捕获异常: {e}")

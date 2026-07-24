@@ -120,6 +120,21 @@ class Orchestrator:
 
         try:
             # ================================================================
+            # Demo: demo_todo_decompose msg_type bypass
+            # 必须在 ContextTrigger 之前，防止被拦截路由到 Commander
+            # ================================================================
+            if payload.get("msg_type") == "demo_todo_decompose":
+                return {
+                    "status": "routed",
+                    "target_agent": "todo_write",
+                    "content": raw_text,
+                    "from_user": payload.get("from_user", "unknown"),
+                    "trace_id": trace_id,
+                    "priority": "P3",
+                    "intent": "task_decomposition",
+                }
+
+            # ================================================================
             # 阶段 0: ContextTrigger 前置过滤（可选）
             # ================================================================
             context_trigger = get_skill_by_name("context_trigger")

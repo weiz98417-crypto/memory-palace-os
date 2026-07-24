@@ -657,6 +657,25 @@ class DemoMessage(BaseModel):
     from_user: str = "demo_user"
 
 
+class DemoInterviewStart(BaseModel):
+    job_title: str
+    venue_id: str = ""
+
+
+class DemoInterviewContinue(BaseModel):
+    interview_id: str
+    answer: str
+
+
+class DemoInterviewFinalize(BaseModel):
+    interview_id: str
+
+
+class DemoTodoDecompose(BaseModel):
+    goal: str
+    from_user: str = "demo"
+
+
 @demo_router.post("/send")
 async def demo_send_message(payload: DemoMessage, request: Request):
     """
@@ -708,6 +727,249 @@ async def demo_get_result(trace_id: str):
     if result is None:
         return {"code": 1, "trace_id": trace_id, "message": "Not ready yet. Pipeline may still be processing."}
     return {"code": 0, "trace_id": trace_id, **result}
+
+
+# ── PersonaExtract 访谈 ──────────────────────────────────────────────────
+
+@demo_router.post("/persona/interview/start")
+async def demo_persona_start(payload: DemoInterviewStart):
+    """开始 PersonaExtract 访谈，返回第一个问题"""
+    try:
+        from src.memory_palace.skills.persona_extract.skill import PersonaExtractSkill
+        skill = PersonaExtractSkill()
+        result = await skill.start_interview(
+            job_title=payload.job_title,
+            venue_id=payload.venue_id,
+            trace_id="demo_persona",
+        )
+        sd = result.structured_data or {}
+        return {
+            "code": 0,
+            "data": {
+                "interview_id": sd.get("interview_id", ""),
+                "question": result.reply_text,
+                "question_number": sd.get("current_question", 1),
+            },
+        }
+    except Exception as e:
+        return {"code": 1, "error": str(e)}
+
+
+@demo_router.post("/persona/interview/continue")
+async def demo_persona_continue(payload: DemoInterviewContinue):
+    """继续访谈，返回下一个问题或标记完成"""
+    try:
+        from src.memory_palace.skills.persona_extract.skill import PersonaExtractSkill
+        skill = PersonaExtractSkill()
+        result = await skill.continue_interview(
+            interview_id=payload.interview_id,
+            answer=payload.answer,
+            trace_id="demo_persona",
+        )
+        sd = result.structured_data or {}
+        return {
+            "code": 0,
+            "data": {
+                "interview_id": sd.get("interview_id", payload.interview_id),
+                "question": result.reply_text,
+                "question_number": sd.get("current_question", 0),
+                "is_complete": sd.get("stage") in ("summary", "summary_shown") or sd.get("prompt_finalize") == True,
+                "extracted_entries_count": sd.get("extracted_entries_count"),
+            },
+        }
+    except Exception as e:
+        return {"code": 1, "error": str(e)}
+
+
+@demo_router.post("/persona/interview/finalize")
+async def demo_persona_finalize(payload: DemoInterviewFinalize):
+    """完成访谈，保存 persona 并返回提取的逻辑条目"""
+    try:
+        from src.memory_palace.skills.persona_extract.skill import PersonaExtractSkill
+        skill = PersonaExtractSkill()
+        result = await skill.finalize_interview(
+            interview_id=payload.interview_id,
+            trace_id="demo_persona",
+        )
+        sd = result.structured_data or {}
+        return {
+            "code": 0,
+            "data": {
+                "interview_id": payload.interview_id,
+                "logic_entries": sd.get("entries", []),
+                "persona_id": sd.get("persona_id"),
+            },
+        }
+    except Exception as e:
+        return {"code": 1, "error": str(e)}
+
+
+# ── Todo 分解 ──────────────────────────────────────────────────────────────
+
+@demo_router.post("/todo/decompose")
+async def demo_todo_decompose(payload: DemoTodoDecompose, request: Request):
+    """触发 Todo skill 任务分解，通过消息队列派发"""
+    import uuid as _uuid
+    trace_id = _uuid.uuid4().hex[:8]
+    msg_id = f"demo_todo_{_uuid.uuid4().hex[:12]}"
+    message = {
+        "msg_id": msg_id,
+        "from_user": payload.from_user,
+        "msg_type": "demo_todo_decompose",
+        "content": payload.goal,
+        "event": "",
+        "timestamp": time.time(),
+        "raw_xml": "",
+        "trace_id": trace_id,
+        "api_version": "v1",
+    }
+    try:
+        queue: asyncio.Queue = request.app.state.message_queue
+        queue.put_nowait(message)
+        logger.info(f"[Trace-{trace_id}] Todo 分解已入队: {payload.goal[:50]}")
+        return {
+            "code": 0,
+            "trace_id": trace_id,
+            "message": f"Decomposition queued. Poll GET /demo/result/{trace_id}, then GET /demo/tasks.",
+        }
+    except asyncio.QueueFull:
+        raise HTTPException(status_code=503, detail="Queue full")
+    except AttributeError:
+        raise HTTPException(status_code=500, detail="Queue not initialized")
+
+
+# ── 知识库搜索 ──────────────────────────────────────────────────────────────
+
+# In-memory demo knowledge cache (loaded by /demo/scenario/switch)
+_demo_knowledge_cache: list = []
+
+@demo_router.get("/knowledge/search")
+async def demo_knowledge_search(q: str = "", top_k: int = 5):
+    """搜索 demo 知识库（基于子串匹配，因 DeepSeek 无 embedding API）"""
+    if not q or not _demo_knowledge_cache:
+        return {"code": 0, "data": [], "message": "No query or no knowledge loaded. Switch scenario first."}
+    results = []
+    ql = q.lower()
+    for item in _demo_knowledge_cache:
+        content = item.get("content", "")
+        score = content.lower().count(ql) * 10
+        if ql in content.lower():
+            score += 50
+        if score > 0:
+            results.append({"content": content, "score": score, "metadata": item.get("metadata", {})})
+    results.sort(key=lambda x: x["score"], reverse=True)
+    return {"code": 0, "data": results[:top_k]}
+
+
+# ── Watcher 日志 ────────────────────────────────────────────────────────────
+
+@demo_router.get("/watcher-log")
+async def demo_watcher_log():
+    """返回最近的 incident_logs + push_logs"""
+    try:
+        from src.memory_palace.knowledge.db_client import db_client as _db
+        incidents = await _db.fetch_all(
+            "SELECT case_id as id, severity, dispatched_instruction as summary, created_at FROM incident_logs ORDER BY created_at DESC LIMIT 20"
+        )
+        pushes = await _db.fetch_all(
+            "SELECT push_id as id, severity, event_type, raw_text, pushed_at FROM push_logs ORDER BY pushed_at DESC LIMIT 20"
+        )
+        items = []
+        for row in (incidents or []):
+            items.append({"id": row["id"], "type": "incident", "summary": row.get("summary") or "", "severity": row["severity"] or "P3", "created_at": row["created_at"]})
+        for row in (pushes or []):
+            ts = row["pushed_at"]
+            if isinstance(ts, (int, float)):
+                from datetime import datetime
+                ts = datetime.fromtimestamp(ts).isoformat()
+            items.append({"id": row["id"], "type": "push", "summary": row.get("raw_text") or row.get("event_type") or "", "severity": row["severity"] or "P3", "created_at": ts})
+        items.sort(key=lambda x: x["created_at"] or "", reverse=True)
+        return {"code": 0, "data": items[:30]}
+    except Exception as e:
+        return {"code": 1, "error": str(e), "data": []}
+
+
+# ── 场景切换 ────────────────────────────────────────────────────────────────
+
+@demo_router.get("/scenario/switch")
+async def demo_scenario_switch(name: str = ""):
+    """切换种子数据场景"""
+    if name not in ("daily", "emergency"):
+        return {"code": 1, "error": f"Unknown scenario: {name}. Valid: daily, emergency"}
+    try:
+        from scripts.seed_data import load_scenario
+        result = await load_scenario(name)
+        return {"code": 0, "data": result}
+    except ImportError:
+        return {"code": 1, "error": "seed_data module not found. Ensure scripts/ is in PYTHONPATH."}
+    except Exception as e:
+        return {"code": 1, "error": str(e)}
+
+
+@demo_router.get("/stats")
+async def demo_get_stats(request: Request):
+    """返回系统运行统计，供演示控制台仪表盘使用"""
+    stats = {
+        "queue_depth": 0,
+        "queue_capacity": 0,
+        "message_count": 0,
+        "task_count": 0,
+        "skills_registered": 0,
+        "last_watcher_run": None,
+    }
+    try:
+        queue: asyncio.Queue = request.app.state.message_queue
+        stats["queue_depth"] = queue.qsize()
+        stats["queue_capacity"] = getattr(queue, "maxsize", 10000)
+    except Exception as e:
+        logger.debug(f"demo/stats: queue read failed: {e}")
+
+    try:
+        from src.memory_palace.knowledge.db_client import db_client as _db
+        row = await _db.fetch_one("SELECT COUNT(*) as cnt FROM messages")
+        stats["message_count"] = row["cnt"] if row else 0
+    except Exception as e:
+        logger.debug(f"demo/stats: message_count read failed: {e}")
+
+    try:
+        from src.memory_palace.core.task_graph import task_graph as _tg
+        stats["task_count"] = len(_tg._tasks)
+    except Exception as e:
+        logger.debug(f"demo/stats: task_count read failed: {e}")
+
+    try:
+        from src.memory_palace.skills import list_skill_names
+        stats["skills_registered"] = len(list_skill_names())
+    except Exception as e:
+        logger.debug(f"demo/stats: skills_registered read failed: {e}")
+
+    try:
+        from src.memory_palace.core.scheduler import get_last_watcher_run
+        stats["last_watcher_run"] = get_last_watcher_run()
+    except Exception as e:
+        logger.debug(f"demo/stats: last_watcher_run read failed: {e}")
+
+    return {"code": 0, "data": stats}
+
+
+@demo_router.get("/tasks")
+async def demo_get_tasks():
+    """返回 TaskGraph 中的任务列表"""
+    try:
+        from src.memory_palace.core.task_graph import task_graph as _tg
+        tasks = []
+        for tid, t in _tg._tasks.items():
+            tasks.append({
+                "id": tid,
+                "description": t.description,
+                "status": t.status.value if hasattr(t.status, "value") else str(t.status),
+                "dependencies": t.dependencies,
+                "assigned_agent": t.assigned_agent,
+                "session_id": t.session_id,
+            })
+        return {"code": 0, "data": tasks}
+    except Exception as e:
+        return {"code": 0, "data": [], "error": str(e)}
 
 
 def demo_store_result(trace_id: str, result: dict) -> None:
