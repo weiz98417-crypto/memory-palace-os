@@ -1,8 +1,8 @@
 {
   ".claude/settings.local.json": {
-    "mtime": 1784897044.770948,
-    "ast_hash": "6ff93b39f45d72af3d5ee55d1274b513",
-    "semantic_hash": "6ff93b39f45d72af3d5ee55d1274b513"
+    "mtime": 1784903579.3947325,
+    "ast_hash": "d15cab746e78a5dc7cfd6446e3edcc71",
+    "semantic_hash": ""
   },
   "deploy/grafana/provisioning/dashboards/agent_overview.json": {
     "mtime": 1774869341.5495806,
@@ -10,9 +10,9 @@
     "semantic_hash": "3ff5c59730edc1bd546dde161207bb50"
   },
   "main.py": {
-    "mtime": 1784724704.3155348,
-    "ast_hash": "62ff08570dedccf82efcacd6b5064a22",
-    "semantic_hash": "62ff08570dedccf82efcacd6b5064a22"
+    "mtime": 1784959369.6291406,
+    "ast_hash": "45844825abaa886a2095accae69e7692",
+    "semantic_hash": ""
   },
   "pyproject.toml": {
     "mtime": 1774866646.9688833,
@@ -50,7 +50,7 @@
     "semantic_hash": "699be0757b346fcc223f3367fcb372ab"
   },
   "src/memory_palace/api/__init__.py": {
-    "mtime": 1774869845.2737727,
+    "mtime": 1784963266.9021442,
     "ast_hash": "edec82629b6a266a16bc0657a7473394",
     "semantic_hash": "edec82629b6a266a16bc0657a7473394"
   },
@@ -130,9 +130,9 @@
     "semantic_hash": "02b34afb495c668c55f5d40e48de4cc4"
   },
   "src/memory_palace/config/env_validator.py": {
-    "mtime": 1774866646.8264885,
-    "ast_hash": "e946c9b6b6811c5437accf3d471272b7",
-    "semantic_hash": "e946c9b6b6811c5437accf3d471272b7"
+    "mtime": 1784958648.337135,
+    "ast_hash": "a4e230cded80b3cb429c41def6368609",
+    "semantic_hash": ""
   },
   "src/memory_palace/core/__init__.py": {
     "mtime": 1774867569.0494788,
@@ -145,9 +145,9 @@
     "semantic_hash": "54cad341262826c322c8a62ff04a3bd4"
   },
   "src/memory_palace/core/container.py": {
-    "mtime": 1778492861.620531,
-    "ast_hash": "23841439f5dbce4d7410508f7950bce0",
-    "semantic_hash": "23841439f5dbce4d7410508f7950bce0"
+    "mtime": 1784903014.2890966,
+    "ast_hash": "75488ce344620ff11a0b64cc171bced2",
+    "semantic_hash": ""
   },
   "src/memory_palace/core/context_tier.py": {
     "mtime": 1778505069.0090995,
@@ -155,9 +155,9 @@
     "semantic_hash": "9e32887039fae5d1315a627d9a0d6dc2"
   },
   "src/memory_palace/core/gateway.py": {
-    "mtime": 1784894894.1540134,
-    "ast_hash": "75804219632df0c993d50b146f29a855",
-    "semantic_hash": "75804219632df0c993d50b146f29a855"
+    "mtime": 1784959420.8312676,
+    "ast_hash": "19b84dae86a7d47abf09ca0e46b43f3a",
+    "semantic_hash": ""
   },
   "src/memory_palace/core/health.py": {
     "mtime": 1774872630.0179262,
@@ -190,9 +190,9 @@
     "semantic_hash": "87c1abd5fb808fbc1c84b5027ebeb2e6"
   },
   "src/memory_palace/core/queue_worker.py": {
-    "mtime": 1784728310.706404,
-    "ast_hash": "6bdd4a88bc1bbc48cbb007af022859b1",
-    "semantic_hash": "6bdd4a88bc1bbc48cbb007af022859b1"
+    "mtime": 1784904240.1289756,
+    "ast_hash": "8350a954106d8f619d4291cb1130b880",
+    "semantic_hash": ""
   },
   "src/memory_palace/core/scheduler.py": {
     "mtime": 1784875046.8763773,
@@ -230,14 +230,14 @@
     "semantic_hash": "3d7c6c9c0d9e7151d2cbc4d68d938fae"
   },
   "src/memory_palace/knowledge/db_client.py": {
-    "mtime": 1784724996.9536607,
-    "ast_hash": "a1b4035bea68064bb5335ab22429e21a",
-    "semantic_hash": "a1b4035bea68064bb5335ab22429e21a"
+    "mtime": 1784902922.4610012,
+    "ast_hash": "920eec1bf9d7637eb38011caea5e9fe2",
+    "semantic_hash": ""
   },
   "src/memory_palace/knowledge/db_init.py": {
-    "mtime": 1778335267.9828348,
-    "ast_hash": "82242357badb59f96e8805a3a9a85824",
-    "semantic_hash": "82242357badb59f96e8805a3a9a85824"
+    "mtime": 1784902999.6582935,
+    "ast_hash": "a7041a73ba0dad9cfa31be63333598a7",
+    "semantic_hash": ""
   },
   "src/memory_palace/knowledge/init.py": {
     "mtime": 1778323764.0287194,
@@ -445,9 +445,9 @@
     "semantic_hash": "439465333a405325f39b24ec37d3a79f"
   },
   "src/memory_palace/tools/llm_wrapper.py": {
-    "mtime": 1784728144.066761,
-    "ast_hash": "323ebab9ea086723a738ac49d27faf9e",
-    "semantic_hash": "323ebab9ea086723a738ac49d27faf9e"
+    "mtime": 1784958286.8391767,
+    "ast_hash": "d64bcda0b0f169487eaa4f8ccfb0d415",
+    "semantic_hash": ""
   },
   "src/memory_palace/tools/logger_config.py": {
     "mtime": 1778323641.5784042,
@@ -650,9 +650,9 @@
     "semantic_hash": "57113371720ac0df87346b005767e87d"
   },
   "deploy/docker-compose.yml": {
-    "mtime": 1774941312.8370807,
-    "ast_hash": "b5df562bdf3113083fd773693dd610ea",
-    "semantic_hash": "b5df562bdf3113083fd773693dd610ea"
+    "mtime": 1784904301.8271947,
+    "ast_hash": "3aa0ab5c3448fc96ad2ae550213c0962",
+    "semantic_hash": ""
   },
   "deploy/grafana/provisioning/dashboards/dashboard.yml": {
     "mtime": 1774869341.5267863,
@@ -960,9 +960,9 @@
     "semantic_hash": "ba8d53d17c1b1fe600b55f8d84502ced"
   },
   "requirements.txt": {
-    "mtime": 1778479529.1431935,
-    "ast_hash": "9847e6bd989709d069b6859ede7bd1cd",
-    "semantic_hash": "9847e6bd989709d069b6859ede7bd1cd"
+    "mtime": 1784903038.609068,
+    "ast_hash": "c557767493aa3ba07a50b69517c90002",
+    "semantic_hash": ""
   },
   "scripts/seed_data/daily.yaml": {
     "mtime": 1784885581.0356805,
@@ -1120,9 +1120,9 @@
     "semantic_hash": "f37acffd85169abfebd217fc8d8090f5"
   },
   "static/demo_console.html": {
-    "mtime": 1784885794.266492,
-    "ast_hash": "50f5584d0ea7ee92f4466a275d13796f",
-    "semantic_hash": "50f5584d0ea7ee92f4466a275d13796f"
+    "mtime": 1784959891.879105,
+    "ast_hash": "91e7bf22afae0e68e941cc60b9cb9c08",
+    "semantic_hash": ""
   },
   "static/index.html": {
     "mtime": 1774967306.5444586,
@@ -1133,5 +1133,260 @@
     "mtime": 1781093870.524652,
     "ast_hash": "cb6635c7080082154d9ecce69f2979de",
     "semantic_hash": "cb6635c7080082154d9ecce69f2979de"
+  },
+  "scripts/locustfile.py": {
+    "mtime": 1784959383.4203503,
+    "ast_hash": "665d5c0e7584315f4ded5552062bbeb1",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/api/auth.py": {
+    "mtime": 1784904313.365096,
+    "ast_hash": "95cffc4e9762f44cc6408741d736fb31",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/api/rate_limit.py": {
+    "mtime": 1784904421.6141038,
+    "ast_hash": "85e5e2f9226efec577958415f4f9c1ad",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/config/secrets.py": {
+    "mtime": 1784904408.4584303,
+    "ast_hash": "87b1728af7156a556fc1b26b26af7178",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/core/cache.py": {
+    "mtime": 1784958542.2226636,
+    "ast_hash": "b6723632e3d7428fd44536a04f9f9d21",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/core/memory_queue.py": {
+    "mtime": 1784904212.8932319,
+    "ast_hash": "13c6ba7edf3e5624ae3b66ee14709e3c",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/core/queue_protocol.py": {
+    "mtime": 1784904210.6418023,
+    "ast_hash": "e058edae1639752145b1b5cb3f5cf824",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/core/redis_queue.py": {
+    "mtime": 1784904222.025623,
+    "ast_hash": "68c9e4aa65f8fb8dfe7431238ac2cd65",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/core/tenant.py": {
+    "mtime": 1784904418.2736845,
+    "ast_hash": "7aa3b04ba058d45430c6403fb1c26ade",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/knowledge/db_client_protocol.py": {
+    "mtime": 1784902892.6555762,
+    "ast_hash": "c332a623f5e69ed77dbfb79d254041d4",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/knowledge/postgres_client.py": {
+    "mtime": 1784902936.6247964,
+    "ast_hash": "86dd2770c8a874765baebcc3b0f5b6db",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/tools/llm_fallback.py": {
+    "mtime": 1784904403.9822316,
+    "ast_hash": "60dff9c003671200f961656b58e2fb8b",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/tools/trace_context.py": {
+    "mtime": 1784904393.9438057,
+    "ast_hash": "9606adaa7d6bcd77146186db65345c0b",
+    "semantic_hash": ""
+  },
+  ".claude/commands/opsx/apply.md": {
+    "mtime": 1777449136.088311,
+    "ast_hash": "1678894a7cfd1ea31917ed6ebeabc11b",
+    "semantic_hash": ""
+  },
+  ".claude/commands/opsx/archive.md": {
+    "mtime": 1777449136.088311,
+    "ast_hash": "622fed432675ead218192e24f3343e19",
+    "semantic_hash": ""
+  },
+  ".claude/commands/opsx/explore.md": {
+    "mtime": 1777449136.088311,
+    "ast_hash": "bca6fe1d095ba5a832abed55072b9def",
+    "semantic_hash": ""
+  },
+  ".claude/commands/opsx/propose.md": {
+    "mtime": 1777449136.0893106,
+    "ast_hash": "0997adc1ed0af0a068544bc87a177770",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-05-09-landing-refactor/.openspec.yaml": {
+    "mtime": 1778323245.9216397,
+    "ast_hash": "d2018c6774332f325369632f2a99aa05",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-05-11-di-container/.openspec.yaml": {
+    "mtime": 1778480130.8972487,
+    "ast_hash": "3563fd4670207b87258dea031723c133",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-05-11-m3-permissions/.openspec.yaml": {
+    "mtime": 1778489196.0336611,
+    "ast_hash": "3563fd4670207b87258dea031723c133",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-05-11-m4-task-workspace/.openspec.yaml": {
+    "mtime": 1778490917.5106993,
+    "ast_hash": "3563fd4670207b87258dea031723c133",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-05-11-skill-stabilization/.openspec.yaml": {
+    "mtime": 1778336467.4560397,
+    "ast_hash": "d2018c6774332f325369632f2a99aa05",
+    "semantic_hash": ""
+  },
+  "openspec/changes/demo-console/.openspec.yaml": {
+    "mtime": 1784874803.7936478,
+    "ast_hash": "8fad5d676954a753a46081fb19d66bee",
+    "semantic_hash": ""
+  },
+  "openspec/changes/demo-console/tasks.md": {
+    "mtime": 1784875453.0163484,
+    "ast_hash": "0a67c0116b1643aedb3902bc398e9ea9",
+    "semantic_hash": ""
+  },
+  "openspec/changes/demo-full-feast/.openspec.yaml": {
+    "mtime": 1784885097.170477,
+    "ast_hash": "8fad5d676954a753a46081fb19d66bee",
+    "semantic_hash": ""
+  },
+  "openspec/changes/enterprise-readiness/.openspec.yaml": {
+    "mtime": 1784902264.965568,
+    "ast_hash": "8fad5d676954a753a46081fb19d66bee",
+    "semantic_hash": ""
+  },
+  "openspec/changes/enterprise-readiness/design.md": {
+    "mtime": 1784902313.5881536,
+    "ast_hash": "266d246d20510f17305eb315da848b79",
+    "semantic_hash": ""
+  },
+  "openspec/changes/enterprise-readiness/proposal.md": {
+    "mtime": 1784902291.3643777,
+    "ast_hash": "0da9a451ae7eaf8371221bed20128d2d",
+    "semantic_hash": ""
+  },
+  "openspec/changes/enterprise-readiness/specs/api-auth/spec.md": {
+    "mtime": 1784902745.54864,
+    "ast_hash": "e8c52a481e31ba5c13427469c15c6724",
+    "semantic_hash": ""
+  },
+  "openspec/changes/enterprise-readiness/specs/docker-deploy/spec.md": {
+    "mtime": 1784902742.589058,
+    "ast_hash": "11600808f854d1836d3e070e1a9e26eb",
+    "semantic_hash": ""
+  },
+  "openspec/changes/enterprise-readiness/specs/health-checks-enhanced/spec.md": {
+    "mtime": 1784902758.2067575,
+    "ast_hash": "4d3fd6542bb243e7b512610256e820ba",
+    "semantic_hash": ""
+  },
+  "openspec/changes/enterprise-readiness/specs/kb-admin-ui/spec.md": {
+    "mtime": 1784902768.6424527,
+    "ast_hash": "c67f2ef358333c15cc5f82195160af25",
+    "semantic_hash": ""
+  },
+  "openspec/changes/enterprise-readiness/specs/llm-fallback/spec.md": {
+    "mtime": 1784902751.3833053,
+    "ast_hash": "af6d5ed21659ff46f3a25a13c2e012bc",
+    "semantic_hash": ""
+  },
+  "openspec/changes/enterprise-readiness/specs/multi-tenant/spec.md": {
+    "mtime": 1784902763.8257003,
+    "ast_hash": "2dddd6de078488a3e4e294c4fbc68fb4",
+    "semantic_hash": ""
+  },
+  "openspec/changes/enterprise-readiness/specs/performance-testing/spec.md": {
+    "mtime": 1784902771.5324044,
+    "ast_hash": "b61e86be6d88dae5a6722eca6b03fbc4",
+    "semantic_hash": ""
+  },
+  "openspec/changes/enterprise-readiness/specs/postgres-migration/spec.md": {
+    "mtime": 1784902736.1270487,
+    "ast_hash": "f76379dba095bfb0334d58eecc147661",
+    "semantic_hash": ""
+  },
+  "openspec/changes/enterprise-readiness/specs/rate-limiting/spec.md": {
+    "mtime": 1784902766.1932049,
+    "ast_hash": "6749a75f6d9dee069bc7bd6ce2a1e750",
+    "semantic_hash": ""
+  },
+  "openspec/changes/enterprise-readiness/specs/redis-queue/spec.md": {
+    "mtime": 1784902740.392105,
+    "ast_hash": "7e1d228b12d47c3fad5a796cb5dacbfb",
+    "semantic_hash": ""
+  },
+  "openspec/changes/enterprise-readiness/specs/secret-management/spec.md": {
+    "mtime": 1784902760.8235288,
+    "ast_hash": "e0a773586420c4e5e7092a7e7bd80284",
+    "semantic_hash": ""
+  },
+  "openspec/changes/enterprise-readiness/specs/structured-logging/spec.md": {
+    "mtime": 1784902748.5519178,
+    "ast_hash": "5ba0eaf576ac7ec8eda2bf4ccfe64a16",
+    "semantic_hash": ""
+  },
+  "openspec/changes/enterprise-readiness/tasks.md": {
+    "mtime": 1784904438.9730341,
+    "ast_hash": "044f07f72929ef5a6980b3d7bde565e7",
+    "semantic_hash": ""
+  },
+  "openspec/changes/stabilization-hardening/.openspec.yaml": {
+    "mtime": 1778503972.283208,
+    "ast_hash": "3563fd4670207b87258dea031723c133",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/config/registry.yaml.txt": {
+    "mtime": 1774866646.8275466,
+    "ast_hash": "07f55391ad3a1619fa59be8cc81dd589",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/config/settings.yaml.txt": {
+    "mtime": 1774866646.8275466,
+    "ast_hash": "3ff092116d1e8a09d09c2e9383bc0fc4",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/skills/commander/soul.txt": {
+    "mtime": 1774868625.3974214,
+    "ast_hash": "faecdd3e5dc3a02b6b2c4d80f2fdc73a",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/skills/context_trigger/prompts/confirm.txt": {
+    "mtime": 1774956163.2347765,
+    "ast_hash": "5e1ef3c1bc40da8fd9984130cb7f5cf6",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/skills/context_trigger/prompts/trigger.txt": {
+    "mtime": 1774952149.8082688,
+    "ast_hash": "601fa6722ed2e47759d680ba225f3336",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/skills/memory_ops/soul.txt": {
+    "mtime": 1774868625.5797188,
+    "ast_hash": "c7f568af19c63991f1e3d68b121d94c8",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/skills/persona/skill.md": {
+    "mtime": 1774868625.485245,
+    "ast_hash": "cc1329829b1fe5112c7be850410a62a9",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/skills/persona/soul.txt": {
+    "mtime": 1774868625.4672303,
+    "ast_hash": "297e31e6b0c373e812cbfa4eb2518e99",
+    "semantic_hash": ""
+  },
+  "src/memory_palace/skills/persona_extract/prompts/extract_intro.txt": {
+    "mtime": 1774956733.104753,
+    "ast_hash": "5e6239c084e2b18ea686f1404c670953",
+    "semantic_hash": ""
   }
 }
