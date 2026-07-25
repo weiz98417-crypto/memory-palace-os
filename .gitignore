@@ -29,3 +29,9 @@ Thumbs.db
 
 # ChromaDB
 chroma_db/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
