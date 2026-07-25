@@ -76,8 +76,10 @@ class MessageQueueWorker:
         concurrency: int = 5,           # 并发处理的消息数（文旅场景不需要太高）
         orchestrator: Optional[Orchestrator] = None,
         container = None,               # AppContainer (optional)
+        queue_backend = None,           # RedisStreamsQueue or None (for asyncio.Queue)
     ):
         self.queue = queue
+        self.queue_backend = queue_backend
         self.concurrency = concurrency
         self._orchestrator = orchestrator or Orchestrator()
         self._container = container
@@ -89,7 +91,8 @@ class MessageQueueWorker:
 
     async def start(self) -> None:
         """主消费循环，被 asyncio.create_task 调用"""
-        logger.info(f"🔄 队列消费者启动，并发度: {self.concurrency}")
+        backend = "Redis" if self.queue_backend else "InMemory"
+        logger.info(f"🔄 队列消费者启动 [{backend}]，并发度: {self.concurrency}")
         while self._running:
             try:
                 message = await self.queue.get()

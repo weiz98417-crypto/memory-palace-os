@@ -43,6 +43,15 @@ load_dotenv()           # 加载 .env 文件中的环境变量
 # DEMO_MODE: 跳过环境变量严格校验，允许缺失 Key 运行时降级
 if os.environ.get("DEMO_MODE", "").lower() != "true":
     validate_env()          # 内部会 sys.exit(1) + 打印缺失项
+    # Secrets validation (fail-fast on missing required secrets)
+    try:
+        from src.memory_palace.config.secrets import secrets as _secrets
+        missing = _secrets.validate(demo_mode=False)
+        if missing:
+            logger.error(f"缺少必需的密钥: {missing}")
+            sys.exit(1)
+    except Exception as e:
+        logger.warning(f"密钥校验跳过: {e}")
 else:
     logger.info("🎮 DEMO_MODE 已启用 — 跳过环境变量严格校验")
 setup_logger()          # 初始化 loguru（多文件归档、自动旋转）
@@ -108,7 +117,16 @@ async def lifespan(app: FastAPI):
 
     # —— 启动队列消费者（后台 Task）——
     set_message_queue(MESSAGE_QUEUE)
-    worker = MessageQueueWorker(queue=MESSAGE_QUEUE, container=app_container)
+    # Redis queue backend (only when not in DEMO_MODE)
+    queue_backend = None
+    if os.environ.get("DEMO_MODE", "").lower() != "true":
+        try:
+            from src.memory_palace.core.redis_queue import RedisStreamsQueue
+            queue_backend = RedisStreamsQueue()
+            logger.info("✅ Redis Streams 队列后端已初始化")
+        except Exception as e:
+            logger.warning(f"Redis 队列后端初始化失败（降级到内存队列）: {e}")
+    worker = MessageQueueWorker(queue=MESSAGE_QUEUE, container=app_container, queue_backend=queue_backend)
     consumer_task = asyncio.create_task(worker.start(), name="queue-consumer")
     logger.info("✅ 异步消息队列消费者已启动")
 
@@ -116,6 +134,30 @@ async def lifespan(app: FastAPI):
     scheduler = TaskScheduler()
     scheduler.start()
     logger.info("✅ APScheduler 定时任务调度器已启动")
+
+    # —— 注册健康检查器 ——
+    try:
+        from src.memory_palace.core.health import get_health_registry
+        registry = get_health_registry()
+        # PG check
+        if os.environ.get("DEMO_MODE", "").lower() != "true" and app_container:
+            try:
+                from src.memory_palace.core.health import DatabaseHealthChecker
+                registry.register("postgresql", DatabaseHealthChecker(
+                    lambda: app_container.db_client.fetch_one("SELECT 1")
+                ))
+            except Exception: pass
+        # Redis check
+        if queue_backend:
+            try:
+                from src.memory_palace.core.health import RedisHealthChecker
+                registry.register("redis", RedisHealthChecker(
+                    lambda: queue_backend._client.ping() if queue_backend._client else False
+                ))
+            except Exception: pass
+        logger.info("✅ 健康检查器已注册")
+    except Exception as e:
+        logger.debug(f"健康检查器注册跳过: {e}")
 
     # —— 将公共对象挂到 app.state，供路由层访问 ——
     app.state.message_queue = MESSAGE_QUEUE
@@ -176,7 +218,19 @@ app = FastAPI(
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 4. 路由挂载
+# 4. 限流（生产环境自动启用，demo 模式跳过）
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+try:
+    from src.memory_palace.api.rate_limit import create_limiter
+    limiter = create_limiter()
+    if limiter:
+        app.state.limiter = limiter
+        logger.info("✅ API 限流已启用")
+except Exception as e:
+    logger.debug(f"API 限流未启用: {e}")
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 5. 路由挂载
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # 企微 Webhook（GET 验证 + POST 接收消息）

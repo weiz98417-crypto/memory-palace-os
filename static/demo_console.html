@@ -109,6 +109,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="tab" data-tab="persona">老员工访谈</div>
   <div class="tab" data-tab="knowledge">知识库</div>
   <div class="tab" data-tab="monitor">系统监控</div>
+  <div class="tab" data-tab="kbadmin">知识库管理</div>
   <div class="tab" data-tab="admin">管理</div>
 </div>
 
@@ -167,7 +168,49 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <button class="btn btn-outline btn-sm" onclick="loadStats();loadWatcherLog()">Refresh</button>
   </div>
 
-  <!-- TAB 6: Admin -->
+  <!-- TAB 6: KB Admin -->
+  <div class="panel" id="panel-kbadmin">
+    <!-- 统计卡片 -->
+    <div class="stats-grid" id="kbStatsGrid">
+      <div class="stat-card"><div class="stat-value" id="kbTotal">-</div><div class="stat-label">Total Entries</div></div>
+      <div class="stat-card"><div class="stat-value" id="kbScenario">-</div><div class="stat-label">Current Scenario</div></div>
+    </div>
+
+    <!-- 场景切换 + 操作按钮 -->
+    <div class="card">
+      <h3>场景与操作</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select id="kbScenarioSelect" onchange="kbSwitchScenario()" style="background:#1e293b;border:1px solid #475569;color:#e2e8f0;padding:6px 10px;border-radius:5px;font-size:12px">
+          <option value="daily">Daily Operations</option>
+          <option value="emergency">Emergency Drills</option>
+        </select>
+        <button class="btn btn-sm btn-primary" onclick="kbLoadScenario()">Load Scenario</button>
+        <button class="btn btn-sm btn-outline" onclick="kbReindex()">Re-index</button>
+        <button class="btn btn-sm btn-outline" onclick="loadKBEntries()">Refresh</button>
+      </div>
+    </div>
+
+    <!-- 添加条目 -->
+    <div class="card">
+      <h3>Add Entry</h3>
+      <div class="input-row">
+        <input type="text" id="kbNewContent" placeholder="Knowledge entry content...">
+        <input type="text" id="kbNewCategory" placeholder="Category (optional)" style="max-width:150px">
+        <button class="btn btn-primary btn-sm" onclick="kbAddEntry()">Add</button>
+      </div>
+    </div>
+
+    <!-- 条目表格 -->
+    <div class="card">
+      <h3>All Entries</h3>
+      <div style="margin-bottom:8px">
+        <input type="text" id="kbSearchInput" placeholder="Search entries..." oninput="loadKBEntries()" style="background:#0f172a;border:1px solid #475569;color:#e2e8f0;padding:6px 10px;border-radius:5px;font-size:12px;width:100%">
+      </div>
+      <div id="kbEntryList"><span class="loading">Loading...</span></div>
+    </div>
+  </div>
+
+  <!-- TAB 7: Admin -->
   <div class="panel" id="panel-admin">
     <div class="card"><h3>管理后台</h3><p style="color:#94a3b8;margin-bottom:8px">查看完整的消息记录、会话管理和系统配置</p>
     <a href="/admin/admin_frontend.html" class="btn btn-primary" target="_blank">Open Admin Panel</a>
@@ -201,6 +244,7 @@ document.querySelectorAll('.tab').forEach(t => {
     document.getElementById('panel-' + t.dataset.tab).classList.add('active');
     if (t.dataset.tab === 'tasks') loadTasks();
     if (t.dataset.tab === 'monitor') { loadStats(); loadWatcherLog(); }
+    if (t.dataset.tab === 'kbadmin') loadKBEntries();
   });
 });
 
@@ -462,6 +506,71 @@ function stopAutoPlay() { autoPlayRunning = false; autoPlayPaused = false; clear
 // ── Utils ──────────────────────────────────────────────────────────────────
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── KB Admin ──────────────────────────────────────────────────────────────
+async function loadKBEntries() {
+  const el = document.getElementById('kbEntryList');
+  const search = (document.getElementById('kbSearchInput')?.value || '').toLowerCase();
+  try {
+    const res = await fetch('/demo/kb/entries?limit=200'); const d = await res.json();
+    if (d.code !== 0) { el.innerHTML = '<span class="error">'+esc(d.error)+'</span>'; return; }
+    let items = d.data || [];
+    if (search) items = items.filter(e => (e.content||'').toLowerCase().includes(search));
+    document.getElementById('kbTotal').textContent = d.total || items.length;
+    if (!items.length) { el.innerHTML = '<span class="loading">No entries. Load a scenario or add one.</span>'; return; }
+    el.innerHTML = items.map((e,i) => `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid #334155;gap:8px">
+        <div style="flex:1;font-size:12px">
+          <div style="color:#e2e8f0">${esc((e.content||'').slice(0,200))}</div>
+          ${e.metadata?.category ? '<span style="color:#38bdf8;font-size:10px">'+esc(e.metadata.category)+'</span>' : ''}
+        </div>
+        <button class="btn btn-sm btn-outline" onclick="kbDeleteEntry('+i+')" style="flex-shrink:0">Del</button>
+      </div>
+    `).join('');
+  } catch(e) { el.innerHTML = '<span class="error">'+esc(e.message)+'</span>'; }
+}
+
+async function kbAddEntry() {
+  const content = document.getElementById('kbNewContent').value.trim();
+  const category = document.getElementById('kbNewCategory').value.trim();
+  if (!content) return;
+  document.getElementById('statusBadge').innerHTML = '<span class="spinner"></span>';
+  try {
+    await fetch('/demo/kb/entries', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content,metadata:{category}})});
+    document.getElementById('kbNewContent').value = '';
+    document.getElementById('kbNewCategory').value = '';
+    loadKBEntries();
+    document.getElementById('statusBadge').innerHTML = ' Ready'; document.getElementById('statusBadge').style.background = '#059669';
+  } catch(e) {}
+}
+
+async function kbDeleteEntry(index) {
+  try { await fetch('/demo/kb/entries/'+index, {method:'DELETE'}); loadKBEntries(); } catch(e) {}
+}
+
+async function kbLoadScenario() {
+  const name = document.getElementById('kbScenarioSelect').value;
+  document.getElementById('statusBadge').innerHTML = '<span class="spinner"></span>';
+  try {
+    const res = await fetch('/demo/scenario/switch?name='+name); const d = await res.json();
+    document.getElementById('kbScenario').textContent = name;
+    loadKBEntries();
+    document.getElementById('statusBadge').innerHTML = ' Ready'; document.getElementById('statusBadge').style.background = '#059669';
+  } catch(e) {}
+}
+
+async function kbReindex() {
+  document.getElementById('statusBadge').innerHTML = '<span class="spinner"></span>';
+  try {
+    await fetch('/demo/kb/reindex', {method:'POST'});
+    loadKBEntries();
+    document.getElementById('statusBadge').innerHTML = ' Ready'; document.getElementById('statusBadge').style.background = '#059669';
+  } catch(e) {}
+}
+
+function kbSwitchScenario() {
+  document.getElementById('kbScenario').textContent = document.getElementById('kbScenarioSelect').value;
+}
 
 // ── Init ───────────────────────────────────────────────────────────────────
 loadPresetButtons();

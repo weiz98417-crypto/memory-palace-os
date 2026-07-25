@@ -139,13 +139,22 @@ class LLMClient:
         if json_mode:
             kwargs["response_format"] = {"type": "json_object"}
 
+        # LLM Fallback: try fallback chain first if configured
+        try:
+            from src.memory_palace.tools.llm_fallback import build_fallback_chain
+            chain = build_fallback_chain()
+            if chain:
+                return await chain.call(messages, actual_model, temperature, max_tokens, json_mode, trace_id)
+        except Exception as e:
+            logger.debug(f"[Trace-{trace_id}] Fallback chain unavailable: {e}")
+
         last_exception = None
 
         for attempt in range(1, self.max_retries + 1):
             try:
                 logger.debug(f"[Trace-{trace_id}] 开始请求 LLM (Attempt {attempt}/{self.max_retries}) | Model: {actual_model}")
                 start_time = time.time()
-                
+
                 ### CHANGE: 添加 await，并调用异步客户端方法
                 client = await self.get_client()
                 response = await client.chat.completions.create(**kwargs)

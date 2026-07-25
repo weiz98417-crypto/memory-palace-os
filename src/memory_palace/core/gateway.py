@@ -30,6 +30,15 @@ from loguru import logger
 # ── 指标计数器 ────────────────────────────────────────────────────────────
 _queue_full_count: int = 0
 
+async def _check_auth(request: Request) -> None:
+    """Verify admin authentication. Skips in DEMO_MODE."""
+    import os
+    if os.environ.get("DEMO_MODE", "").lower() == "true":
+        return
+    from src.memory_palace.api.auth import require_auth
+    await require_auth(request)
+
+
 # ==============================================================================
 # 配置模型
 # ==============================================================================
@@ -318,6 +327,8 @@ async def receive_wechat_message(
     """
     start_time = time.time()
     trace_id = uuid.uuid4().hex[:8]
+    from src.memory_palace.tools.trace_context import set_trace_id
+    set_trace_id(trace_id)
 
     try:
         # 1. 获取原始加密 XML
@@ -578,8 +589,9 @@ async def delete_session(session_id: str):
 # --------------------------------------------------------------------------
 
 @v1_router.get("/admin/stats")
-async def get_stats():
-    """获取系统统计信息"""
+async def get_stats(request: Request):
+    """获取系统统计信息。生产环境需 X-API-Key 或 JWT，DEMO_MODE 免认证。"""
+    await _check_auth(request)
     try:
         from src.memory_palace.knowledge.db_client import get_stats
         stats = await get_stats()
@@ -683,7 +695,16 @@ async def demo_send_message(payload: DemoMessage, request: Request):
     仅在 DEMO_MODE=true 时可用。
     """
     trace_id = uuid.uuid4().hex[:8]
+    from src.memory_palace.tools.trace_context import set_trace_id
+    set_trace_id(trace_id)
     msg_id = f"demo_{uuid.uuid4().hex[:12]}"
+
+    # Tenant context: set venue_id for multi-tenant isolation
+    try:
+        from src.memory_palace.core.tenant import set_venue_id
+        set_venue_id(f"demo_{payload.from_user}")
+    except Exception:
+        pass
 
     message = {
         "msg_id": msg_id,
@@ -970,6 +991,58 @@ async def demo_get_tasks():
         return {"code": 0, "data": tasks}
     except Exception as e:
         return {"code": 0, "data": [], "error": str(e)}
+
+
+# ── Knowledge Base Admin ───────────────────────────────────────────────────
+
+@demo_router.get("/kb/entries")
+async def demo_kb_entries(limit: int = 50, offset: int = 0):
+    """列出知识库条目"""
+    try:
+        items = [{"content": item["content"], "metadata": item.get("metadata", {})}
+                 for item in _demo_knowledge_cache]
+        return {"code": 0, "data": items[offset:offset + limit], "total": len(items)}
+    except Exception as e:
+        return {"code": 1, "error": str(e)}
+
+
+@demo_router.post("/kb/entries")
+async def demo_kb_add(request: Request):
+    """手动添加知识库条目"""
+    try:
+        body = await request.json()
+        content = body.get("content", "")
+        metadata = body.get("metadata", {})
+        if not content:
+            return {"code": 1, "error": "content is required"}
+        _demo_knowledge_cache.append({"content": content, "metadata": metadata})
+        return {"code": 0, "message": "Entry added", "total": len(_demo_knowledge_cache)}
+    except Exception as e:
+        return {"code": 1, "error": str(e)}
+
+
+@demo_router.delete("/kb/entries/{index}")
+async def demo_kb_delete(index: int):
+    """删除知识库条目"""
+    try:
+        if 0 <= index < len(_demo_knowledge_cache):
+            _demo_knowledge_cache.pop(index)
+            return {"code": 0, "message": "Deleted"}
+        return {"code": 1, "error": "Index out of range"}
+    except Exception as e:
+        return {"code": 1, "error": str(e)}
+
+
+@demo_router.post("/kb/reindex")
+async def demo_kb_reindex():
+    """重建知识库索引（重新加载当前场景）"""
+    try:
+        from scripts.seed_data import load_scenario
+        # Re-load whatever scenario was last used
+        result = await load_scenario("daily")
+        return {"code": 0, "data": result}
+    except Exception as e:
+        return {"code": 1, "error": str(e)}
 
 
 def demo_store_result(trace_id: str, result: dict) -> None:

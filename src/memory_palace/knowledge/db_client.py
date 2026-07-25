@@ -87,6 +87,9 @@ class AsyncDBClient:
 # 全局单例（供 session_state.py 使用）
 db_client = AsyncDBClient()
 
+# Alias for DI container backend switching
+SQLiteDBClient = AsyncDBClient
+
 
 # 兼容性别名（如果你其他代码用了 db_manager）
 db_manager = db_client

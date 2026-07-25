@@ -39,8 +39,13 @@ class AppContainer:
         if "db_client" in self._overrides:
             return self._overrides["db_client"]
         if "db_client" not in self._instances:
-            from src.memory_palace.knowledge.db_client import db_client
-            self._instances["db_client"] = db_client
+            import os
+            if os.environ.get("DEMO_MODE", "").lower() == "true":
+                from src.memory_palace.knowledge.db_client import db_client
+                self._instances["db_client"] = db_client
+            else:
+                from src.memory_palace.knowledge.postgres_client import PostgresDBClient
+                self._instances["db_client"] = PostgresDBClient()
         return self._instances["db_client"]
 
     # ── 向量库 ──────────────────────────────────────────────────────────────

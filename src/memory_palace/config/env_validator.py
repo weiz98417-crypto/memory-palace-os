@@ -200,6 +200,51 @@ class EnvValidator:
             validator=Validators.is_url
         ))
 
+        # 数据库配置
+        self.add_rule(EnvRule(
+            name="PostgreSQL 连接",
+            env_key="DATABASE_URL",
+            description="PostgreSQL 连接串 (生产必需，DEMO_MODE 跳过)",
+            level=ValidationLevel.WARNING,
+            required=False,
+            default="postgresql://localhost:5432/memory_palace",
+        ))
+
+        self.add_rule(EnvRule(
+            name="Redis 连接",
+            env_key="REDIS_URL",
+            description="Redis 连接串 (生产推荐，DEMO_MODE 跳过)",
+            level=ValidationLevel.WARNING,
+            required=False,
+            default="redis://localhost:6379",
+        ))
+
+        # 认证配置
+        self.add_rule(EnvRule(
+            name="API 密钥",
+            env_key="MEMORY_PALACE_API_KEYS",
+            description="逗号分隔的 API Key 列表 (生产推荐)",
+            level=ValidationLevel.WARNING,
+            required=False,
+        ))
+
+        self.add_rule(EnvRule(
+            name="JWT 密钥",
+            env_key="MEMORY_PALACE_JWT_SECRET",
+            description="JWT HS256 签名密钥 (生产推荐)",
+            level=ValidationLevel.WARNING,
+            required=False,
+        ))
+
+        # LLM Fallback
+        self.add_rule(EnvRule(
+            name="LLM 备用 API Key",
+            env_key="LLM_FALLBACK_API_KEY",
+            description="LLM 备用模型 API 密钥 (可选，主模型故障时自动切换)",
+            level=ValidationLevel.WARNING,
+            required=False,
+        ))
+
         # 企微配置
         self.add_rule(EnvRule(
             name="企微 Corp ID",

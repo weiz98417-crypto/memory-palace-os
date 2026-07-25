@@ -15,10 +15,17 @@ from loguru import logger
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 
-async def init_database():
+async def init_database(db_client=None):
     """
-    初始化 memory.db 数据库 (异步版本)
+    初始化数据库 (异步版本)。
+    db_client=None → 使用默认 SQLite（DEMO_MODE 兼容）。
+    传入 PostgresDBClient → 使用 PostgreSQL。
     """
+    if db_client is not None and hasattr(db_client, '_pool'):
+        # PostgreSQL backend — use the passed client
+        await _init_pg(db_client)
+        return
+
     db_path = _PROJECT_ROOT / "data" / "memory.db"
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -301,6 +308,93 @@ async def init_database():
             await db.rollback()
             logger.error(f"❌ 数据库初始化失败: {e}")
             raise
+
+
+async def _init_pg(db_client):
+    """PostgreSQL database initialization using the passed PostgresDBClient."""
+    from loguru import logger
+
+    tables = [
+        """CREATE TABLE IF NOT EXISTS sop_documents (
+            id SERIAL PRIMARY KEY,
+            title TEXT DEFAULT '',
+            content TEXT NOT NULL,
+            priority INTEGER DEFAULT 3,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS incident_logs (
+            id SERIAL PRIMARY KEY,
+            case_id VARCHAR(50) NOT NULL,
+            severity VARCHAR(10) DEFAULT 'P3',
+            raw_query TEXT NOT NULL,
+            dispatched_instruction TEXT DEFAULT '',
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS sessions (
+            session_id VARCHAR(50) PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            agent_name TEXT DEFAULT 'router',
+            stage TEXT NOT NULL DEFAULT 'active',
+            message_count INTEGER DEFAULT 0,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS messages (
+            id SERIAL PRIMARY KEY,
+            message_id VARCHAR(50) UNIQUE NOT NULL,
+            session_id TEXT,
+            from_user TEXT NOT NULL,
+            msg_type TEXT DEFAULT 'text',
+            content TEXT DEFAULT '',
+            priority VARCHAR(5) DEFAULT 'P3',
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            sla_response_at TIMESTAMPTZ
+        )""",
+        """CREATE TABLE IF NOT EXISTS personas (
+            id VARCHAR(50) PRIMARY KEY,
+            venue_id TEXT DEFAULT '',
+            job_title TEXT,
+            logic_entries TEXT,
+            raw_answers TEXT DEFAULT '{}',
+            description TEXT DEFAULT '',
+            created_at DOUBLE PRECISION,
+            updated_at DOUBLE PRECISION
+        )""",
+        """CREATE TABLE IF NOT EXISTS tasks (
+            id VARCHAR(50) PRIMARY KEY,
+            session_id TEXT,
+            description TEXT,
+            status VARCHAR(20) DEFAULT 'PENDING',
+            dependencies TEXT DEFAULT '[]',
+            assigned_agent TEXT,
+            created_at DOUBLE PRECISION,
+            updated_at DOUBLE PRECISION
+        )""",
+    ]
+
+    for ddl in tables:
+        try:
+            await db_client.execute(ddl)
+        except Exception as e:
+            logger.error(f"PG DDL failed: {e}")
+
+    # Create indexes
+    indexes = [
+        "CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)",
+        "CREATE INDEX IF NOT EXISTS idx_sessions_stage ON sessions(stage)",
+        "CREATE INDEX IF NOT EXISTS idx_messages_session ON messages(session_id)",
+        "CREATE INDEX IF NOT EXISTS idx_messages_from_user ON messages(from_user)",
+        "CREATE INDEX IF NOT EXISTS idx_incident_case ON incident_logs(case_id)",
+        "CREATE INDEX IF NOT EXISTS idx_personas_job ON personas(job_title)",
+    ]
+    for idx in indexes:
+        try:
+            await db_client.execute(idx)
+        except Exception as e:
+            logger.error(f"PG index failed: {e}")
+
+    logger.success("PostgreSQL 数据库初始化完成")
 
 
 def init_database_sync():
