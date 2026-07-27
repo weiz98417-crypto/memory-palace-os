@@ -3,579 +3,1332 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Memory Palace OS  Demo Console</title>
+<meta name="color-scheme" content="light">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23116b5b'/%3E%3Ctext x='16' y='21' text-anchor='middle' font-family='Arial,sans-serif' font-size='13' font-weight='700' fill='white'%3EMP%3C/text%3E%3C/svg%3E">
+<title>Memory Palace OS | 企业演示指挥中心</title>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
-.header{background:#1e293b;border-bottom:1px solid #334155;padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
-.header h1{font-size:18px;font-weight:600}
-.badge{background:#059669;color:#fff;padding:4px 12px;border-radius:4px;font-size:11px;font-weight:600}
-.scenario-switch{margin-left:16px;display:flex;gap:6px;align-items:center}
-.scenario-switch select{background:#1e293b;border:1px solid #475569;color:#e2e8f0;padding:4px 8px;border-radius:4px;font-size:12px}
-.tabs{display:flex;gap:0;background:#1e293b;border-bottom:1px solid #334155;padding:0 24px}
-.tab{padding:10px 16px;cursor:pointer;font-size:12px;font-weight:500;color:#94a3b8;border-bottom:2px solid transparent;transition:all 0.15s}
-.tab:hover{color:#e2e8f0}.tab.active{color:#38bdf8;border-bottom-color:#38bdf8}
-.content{padding:16px 24px;max-width:1400px;margin:0 auto}
-.panel{display:none}.panel.active{display:block}
-.card{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;margin-bottom:12px}
-.card h3{font-size:14px;font-weight:600;margin-bottom:10px;color:#f1f5f9}
-.btn{padding:6px 14px;border:none;border-radius:5px;font-size:12px;cursor:pointer;font-weight:500;transition:all 0.15s}
-.btn-primary{background:#2563eb;color:#fff}.btn-primary:hover{background:#1d4ed8}
-.btn-danger{background:#dc2626;color:#fff}
-.btn-outline{background:transparent;border:1px solid #475569;color:#e2e8f0}
-.btn-outline:hover{background:#334155}
-.btn-sm{padding:4px 10px;font-size:11px}
-.preset-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.input-row{display:flex;gap:8px;margin-bottom:12px}
-.input-row input,.search-row input{flex:1;padding:8px 12px;border:1px solid #475569;border-radius:5px;background:#0f172a;color:#e2e8f0;font-size:13px;outline:none}
-.input-row input:focus,.search-row input:focus{border-color:#38bdf8}
-.pipeline{display:flex;align-items:center;gap:0;margin:12px 0;flex-wrap:wrap}
-.pipe-node{padding:8px 12px;border-radius:5px;font-size:11px;font-weight:600;text-align:center;min-width:70px;transition:all 0.3s}
-.pipe-arrow{color:#475569;font-size:16px;padding:0 4px}
-.pipe-pending{background:#334155;color:#94a3b8}
-.pipe-active{background:#1e40af;color:#bfdbfe;animation:pulse 0.6s infinite alternate}
-.pipe-done{background:#065f46;color:#a7f3d0}
-.pipe-error{background:#991b1b;color:#fecaca}
-.pipe-skipped{background:#1e293b;color:#64748b;opacity:0.6}
-@keyframes pulse{from{opacity:1}to{opacity:0.5}}
-.reply-box{background:#0f172a;border:1px solid #334155;border-radius:6px;padding:12px;margin-top:8px;white-space:pre-wrap;font-size:13px;line-height:1.5;max-height:300px;overflow-y:auto}
-.meta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;font-size:11px;color:#64748b}
-.meta-item{background:#1e293b;padding:4px 10px;border-radius:4px}
-.task-card{background:#1e293b;border:1px solid #334155;border-radius:6px;padding:12px;margin-bottom:6px;margin-left:0}
-.task-card.child{margin-left:24px;border-left:2px solid #475569}
-.task-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.status-badge{padding:2px 6px;border-radius:3px;font-size:10px;font-weight:600}
-.status-PENDING{background:#334155;color:#94a3b8}
-.status-BLOCKED{background:#991b1b;color:#fecaca}
-.status-RUNNING{background:#1e40af;color:#bfdbfe}
-.status-DONE{background:#065f46;color:#a7f3d0}
-.status-FAILED{background:#dc2626;color:#fff}
-.search-row{display:flex;gap:8px;margin-bottom:12px}
-.kb-result{background:#1e293b;border:1px solid #334155;border-radius:6px;padding:10px;margin-bottom:6px}
-.kb-score{font-size:10px;color:#38bdf8}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:16px}
-.stat-card{background:#1e293b;border:1px solid #334155;border-radius:6px;padding:14px;text-align:center}
-.stat-value{font-size:24px;font-weight:700;color:#38bdf8}.stat-label{font-size:11px;color:#94a3b8;margin-top:2px}
-.loading{color:#64748b;font-style:italic}.error{color:#f87171}
-.status-bar{background:#1e293b;border-top:1px solid #334155;padding:6px 24px;font-size:10px;color:#64748b;display:flex;justify-content:space-between;align-items:center}
-.dot-green{display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;margin-right:4px}
-.spinner{display:inline-block;width:12px;height:12px;border:2px solid #475569;border-top-color:#38bdf8;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:4px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.interview-card{background:#0f172a;border:1px solid #334155;border-radius:6px;padding:14px;margin-bottom:10px}
-.interview-card .q{color:#38bdf8;font-size:12px;font-weight:600;margin-bottom:4px}
-.interview-card .a{color:#a7f3d0;font-size:13px;margin-bottom:8px}
-.entry-card{background:#1e293b;border-left:3px solid #38bdf8;border-radius:4px;padding:10px;margin:6px 0}
-.entry-card .trigger{color:#fbbf24;font-size:12px}
-.entry-card .behavior{color:#a7f3d0;font-size:12px;margin:4px 0}
-.entry-card .reason{color:#94a3b8;font-size:11px}
-.log-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #334155;font-size:12px;align-items:center}
-.log-type{width:50px;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;text-align:center}
-.log-incident{background:#7f1d1d;color:#fecaca}.log-push{background:#1e3a5f;color:#bfdbfe}
-@media print{
-  .tabs,.header,.status-bar,.btn,.preset-btns,.input-row,.search-row,.scenario-switch{display:none!important}
-  .panel{display:block!important;page-break-inside:avoid}
-  body{background:#fff;color:#000;font-size:11px}
-  .card{background:#fff;border:1px solid #ccc;box-shadow:none}
-  .reply-box{background:#f9fafb}.pipe-node{background:#fff!important;border:1px solid #ccc}
-  .status-bar{display:block!important;border-top:1px solid #000;padding:8px 0}
+:root {
+  --bg: #f1f3f5;
+  --surface: #ffffff;
+  --surface-muted: #f7f8f9;
+  --surface-strong: #eceff1;
+  --ink: #172126;
+  --ink-soft: #445158;
+  --ink-muted: #66747b;
+  --line: #d9dee1;
+  --line-strong: #bcc5ca;
+  --accent: #116b5b;
+  --accent-hover: #0d584b;
+  --accent-soft: #e4f2ee;
+  --info: #2167a6;
+  --info-soft: #e7f0f8;
+  --success: #237a4b;
+  --success-soft: #e4f3e9;
+  --warning: #9b6410;
+  --warning-soft: #fbf0da;
+  --danger: #b33a32;
+  --danger-soft: #f9e7e5;
+  --shadow-drawer: 0 18px 48px rgba(23, 33, 38, 0.18);
+  --header-height: 56px;
+  --status-height: 32px;
+  --scenario-width: 240px;
+  --evidence-width: 340px;
+  --radius: 6px;
+  --z-sticky: 20;
+  --z-backdrop: 40;
+  --z-drawer: 50;
+  --z-dialog: 70;
+  --z-toast: 80;
+  font-family: Inter, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; min-width: 320px; min-height: 100%; letter-spacing: 0; }
+
+body {
+  min-height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+button, input, select, textarea { font: inherit; letter-spacing: 0; }
+button { color: inherit; }
+
+button:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid rgba(33, 103, 166, 0.3);
+  outline-offset: 2px;
+}
+
+.app-shell {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: var(--header-height) minmax(0, 1fr) var(--status-height);
+}
+
+.app-header {
+  position: relative;
+  z-index: var(--z-sticky);
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  min-width: 258px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-mark {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.brand-copy { min-width: 0; }
+.brand-name { font-size: 14px; line-height: 1.15; font-weight: 720; white-space: nowrap; }
+.brand-edition { margin-top: 2px; color: var(--ink-muted); font-size: 10px; line-height: 1.1; }
+
+.header-context {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 16px;
+  border-left: 1px solid var(--line);
+}
+
+.context-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.status-pill, .mode-pill, .proof-tag, .claim-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.status-pill::before {
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+
+.state-IDLE { color: var(--ink-soft); background: var(--surface-strong); border-color: var(--line); }
+.state-RUNNING { color: var(--info); background: var(--info-soft); border-color: #c6dced; }
+.state-PAUSED { color: var(--warning); background: var(--warning-soft); border-color: #ecd7ad; }
+.state-COMPLETED { color: var(--success); background: var(--success-soft); border-color: #c3e1cf; }
+.state-FAILED, .state-STOPPED, .state-INTERRUPTED { color: var(--danger); background: var(--danger-soft); border-color: #ecc8c4; }
+
+.header-actions { display: flex; align-items: center; gap: 6px; }
+
+.icon-button, .control-button, .text-button {
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  background: var(--surface);
+  cursor: pointer;
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, opacity 180ms ease;
+}
+
+.icon-button:hover, .control-button:hover, .text-button:hover { background: var(--surface-strong); border-color: #98a4aa; }
+.icon-button:active, .control-button:active, .text-button:active { background: #e4e8ea; }
+.icon-button:disabled, .control-button:disabled, .text-button:disabled { cursor: not-allowed; opacity: 0.42; }
+
+.icon-button {
+  width: 34px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 34px;
+  font-size: 16px;
+}
+
+.workspace {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: var(--scenario-width) minmax(520px, 1fr) var(--evidence-width);
+  overflow: hidden;
+}
+
+.scenario-panel, .evidence-panel, .command-center { min-width: 0; min-height: 0; }
+
+.scenario-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface-muted);
+  border-right: 1px solid var(--line);
+}
+
+.panel-heading {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.scenario-list { min-height: 0; overflow: auto; padding: 8px; }
+
+.scenario-item {
+  width: 100%;
+  min-height: 78px;
+  display: block;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+
+.scenario-item + .scenario-item { margin-top: 3px; }
+.scenario-item:hover { background: var(--surface-strong); }
+.scenario-item[aria-current="true"] { background: var(--surface); border-color: var(--line-strong); }
+
+.scenario-item-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.scenario-title { min-width: 0; font-size: 12px; font-weight: 700; }
+.scenario-time { color: var(--ink-muted); font-size: 10px; white-space: nowrap; }
+.scenario-description { margin-top: 5px; color: var(--ink-soft); font-size: 11px; line-height: 1.45; }
+.scenario-progress { height: 3px; margin-top: 8px; overflow: hidden; background: #dfe4e6; border-radius: 3px; }
+.scenario-progress > span { display: block; height: 100%; background: var(--accent); transition: width 220ms ease; }
+
+.capability-section { min-height: 0; margin-top: auto; border-top: 1px solid var(--line); }
+.capability-list { max-height: 246px; overflow: auto; padding: 6px 12px 10px; }
+.capability-row { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.capability-row:last-child { border-bottom: 0; }
+.capability-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.capability-label { font-size: 11px; font-weight: 650; }
+.capability-detail { margin-top: 3px; color: var(--ink-muted); font-size: 10px; line-height: 1.4; }
+
+.claim-badge { min-height: 18px; padding: 1px 6px; font-size: 9px; }
+.claim-VERIFIED { color: var(--success); background: var(--success-soft); }
+.claim-DEMO_IMPLEMENTATION { color: var(--info); background: var(--info-soft); }
+.claim-OPTIONAL_CONNECTION { color: var(--warning); background: var(--warning-soft); }
+.claim-PRODUCTION_EXTENSION { color: var(--ink-soft); background: var(--surface-strong); }
+
+.command-center { overflow: auto; background: var(--surface); }
+
+.connection-banner {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 18px;
+  color: #762822;
+  background: var(--danger-soft);
+  border-bottom: 1px solid #ecc8c4;
+  font-size: 12px;
+}
+.connection-banner.visible { display: flex; }
+
+.overview {
+  padding: 20px 22px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.overview-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.scenario-heading { min-width: 0; }
+.scenario-heading h1 { margin: 0; font-size: 20px; line-height: 1.3; font-weight: 720; text-wrap: balance; }
+.scenario-heading p { max-width: 72ch; margin: 6px 0 0; color: var(--ink-soft); font-size: 12px; line-height: 1.55; text-wrap: pretty; }
+
+.overview-status { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; flex: 0 0 auto; }
+.overview-timing { color: var(--ink-muted); font-variant-numeric: tabular-nums; font-size: 11px; }
+
+.fixed-input {
+  margin-top: 16px;
+  padding: 11px 12px;
+  background: var(--surface-muted);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.field-label { color: var(--ink-muted); font-size: 10px; font-weight: 650; }
+.fixed-input-text { margin-top: 4px; font-size: 13px; line-height: 1.5; }
+.proof-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+.proof-tag { min-height: 20px; padding: 1px 7px; color: var(--accent); background: var(--accent-soft); border-color: #c8e2db; font-size: 10px; }
+
+.control-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 18px;
+  background: rgba(255, 255, 255, 0.97);
+  border-bottom: 1px solid var(--line);
+}
+
+.control-group, .utility-group { display: flex; align-items: center; gap: 6px; }
+.control-button, .text-button { min-height: 34px; padding: 0 11px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; font-size: 12px; font-weight: 650; }
+.control-button.primary { color: #fff; background: var(--accent); border-color: var(--accent); }
+.control-button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.control-button.danger { color: var(--danger); }
+.control-icon { width: 14px; display: inline-block; text-align: center; font-size: 14px; line-height: 1; }
+
+.progress-copy { color: var(--ink-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+
+.timeline-section { padding: 18px 22px 20px; }
+.section-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.section-header h2 { margin: 0; font-size: 13px; font-weight: 720; }
+.section-note { color: var(--ink-muted); font-size: 10px; }
+
+.timeline { border-top: 1px solid var(--line); }
+.timeline-row {
+  width: 100%;
+  min-height: 68px;
+  display: grid;
+  grid-template-columns: 34px minmax(104px, 0.7fr) minmax(180px, 1.3fr) 82px;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 8px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 180ms ease;
+}
+.timeline-row:hover { background: var(--surface-muted); }
+.timeline-row.selected { background: #f0f6f4; }
+.timeline-row:disabled { cursor: default; opacity: 0.68; }
+
+.step-marker {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  color: var(--ink-muted);
+  background: var(--surface);
+  font-size: 11px;
+  font-weight: 750;
+}
+.step-marker.SUCCESS { color: #fff; background: var(--success); border-color: var(--success); }
+.step-marker.RUNNING { color: #fff; background: var(--info); border-color: var(--info); animation: running-pulse 1.2s ease-in-out infinite; }
+.step-marker.FAILED { color: #fff; background: var(--danger); border-color: var(--danger); }
+.step-marker.DEGRADED { color: #fff; background: var(--warning); border-color: var(--warning); }
+
+@keyframes running-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(33, 103, 166, 0.15); }
+  50% { box-shadow: 0 0 0 5px rgba(33, 103, 166, 0.12); }
+}
+
+.step-identity { min-width: 0; }
+.step-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 680; }
+.step-actor { margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-muted); font-size: 10px; }
+.step-summary { min-width: 0; color: var(--ink-soft); font-size: 11px; line-height: 1.45; }
+.step-meta { text-align: right; color: var(--ink-muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+.recovery-note { display: block; margin-top: 3px; color: var(--warning); font-weight: 650; }
+
+.outcome-band {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 22px 24px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-muted);
+}
+.outcome-title { font-size: 12px; font-weight: 700; }
+.outcome-text { max-width: 72ch; margin-top: 4px; color: var(--ink-soft); font-size: 11px; line-height: 1.5; }
+.outcome-metrics { display: flex; align-items: center; gap: 16px; }
+.metric { min-width: 58px; }
+.metric-value { font-size: 14px; font-weight: 720; font-variant-numeric: tabular-nums; }
+.metric-label { margin-top: 2px; color: var(--ink-muted); font-size: 9px; }
+
+.evidence-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface-muted);
+  border-left: 1px solid var(--line);
+}
+.evidence-toolbar { display: flex; align-items: center; gap: 5px; }
+.drawer-close { display: none; }
+.evidence-content { min-height: 0; overflow: auto; padding: 14px; }
+.evidence-empty { padding: 34px 12px; color: var(--ink-muted); text-align: center; font-size: 11px; line-height: 1.6; }
+.evidence-title { margin: 0; font-size: 14px; line-height: 1.4; font-weight: 720; }
+.evidence-actor { margin-top: 4px; color: var(--ink-muted); font-size: 10px; }
+.mode-pill { min-height: 20px; margin-top: 10px; color: var(--info); background: var(--info-soft); border-color: #c6dced; font-size: 10px; }
+
+.evidence-group { padding: 13px 0; border-bottom: 1px solid var(--line); }
+.evidence-group:last-child { border-bottom: 0; }
+.evidence-group h3 { margin: 0 0 6px; color: var(--ink-muted); font-size: 10px; font-weight: 700; }
+.evidence-group p { margin: 0; font-size: 11px; line-height: 1.55; overflow-wrap: anywhere; }
+
+.citation-list, .tool-list { display: grid; gap: 7px; }
+.citation-item, .tool-item { padding: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 5px; }
+.citation-id, .tool-name { color: var(--accent); font-size: 10px; font-weight: 700; }
+.citation-title, .tool-status { margin-top: 3px; font-size: 11px; line-height: 1.4; }
+.logic-entry { margin-top: 7px; display: grid; gap: 4px; color: var(--ink-soft); font-size: 10px; line-height: 1.45; }
+.logic-entry strong { color: var(--ink); font-weight: 650; }
+.policy-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.policy-allowed { color: var(--success); font-size: 10px; font-weight: 700; }
+.policy-rule { color: var(--ink-soft); font-family: Consolas, monospace; font-size: 10px; text-align: right; overflow-wrap: anywhere; }
+.technical-data { color: var(--ink-soft); font-family: Consolas, monospace; font-size: 10px; line-height: 1.55; overflow-wrap: anywhere; }
+
+.status-bar {
+  position: relative;
+  z-index: var(--z-sticky);
+  height: var(--status-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 14px;
+  color: var(--ink-muted);
+  background: #e9edef;
+  border-top: 1px solid var(--line-strong);
+  font-size: 10px;
+}
+.status-left, .status-right { min-width: 0; display: flex; align-items: center; gap: 14px; }
+.status-item { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.connection-state { display: inline-flex; align-items: center; gap: 5px; }
+.connection-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
+.connection-state.offline .connection-dot { background: var(--danger); }
+.connection-state.reconnecting .connection-dot { background: var(--warning); }
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  color: transparent !important;
+  background: #e7ebed !important;
+  border-color: transparent !important;
+}
+.skeleton::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+  transform: translateX(-100%);
+  animation: skeleton-shift 1.2s ease-in-out infinite;
+  content: "";
+}
+@keyframes skeleton-shift { to { transform: translateX(100%); } }
+
+.backdrop { display: none; position: fixed; inset: var(--header-height) 0 var(--status-height); z-index: var(--z-backdrop); background: rgba(23, 33, 38, 0.35); }
+.backdrop.visible { display: block; }
+
+dialog {
+  width: min(430px, calc(100vw - 32px));
+  padding: 0;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  box-shadow: var(--shadow-drawer);
+}
+dialog::backdrop { background: rgba(23, 33, 38, 0.42); }
+.dialog-body { padding: 20px; }
+.dialog-body h2 { margin: 0; font-size: 16px; }
+.dialog-body p { margin: 8px 0 0; color: var(--ink-soft); font-size: 12px; line-height: 1.55; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 7px; padding: 12px 20px; background: var(--surface-muted); border-top: 1px solid var(--line); }
+
+.toast {
+  position: fixed;
+  right: 18px;
+  bottom: 48px;
+  z-index: var(--z-toast);
+  max-width: min(360px, calc(100vw - 36px));
+  padding: 10px 12px;
+  color: #fff;
+  background: #26343a;
+  border-radius: 5px;
+  box-shadow: 0 8px 24px rgba(23, 33, 38, 0.22);
+  font-size: 11px;
+  line-height: 1.45;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+.toast.visible { opacity: 1; transform: translateY(0); }
+.toast.error { background: #842f29; }
+
+.mobile-only { display: none; }
+
+@media (max-width: 1370px) {
+  :root { --scenario-width: 208px; --evidence-width: 300px; }
+  .brand { min-width: 228px; }
+  .timeline-section, .overview { padding-left: 18px; padding-right: 18px; }
+}
+
+@media (max-width: 1179px) {
+  .workspace { grid-template-columns: var(--scenario-width) minmax(0, 1fr); }
+  .evidence-panel {
+    position: fixed;
+    top: var(--header-height);
+    right: 0;
+    bottom: var(--status-height);
+    z-index: var(--z-drawer);
+    width: min(380px, calc(100vw - 32px));
+    border-left: 1px solid var(--line-strong);
+    box-shadow: var(--shadow-drawer);
+    transform: translateX(105%);
+    transition: transform 220ms cubic-bezier(.16, 1, .3, 1);
+  }
+  .evidence-panel.open { transform: translateX(0); }
+  .drawer-close, #evidenceDrawerButton { display: inline-grid; }
+  .header-context { padding-left: 10px; }
+  .brand { min-width: 205px; }
+}
+
+@media (max-width: 899px) {
+  #scenarioDrawerButton { display: inline-grid; }
+  .app-header { gap: 8px; padding: 0 10px; }
+  .brand { min-width: 0; }
+  .brand-edition { display: none; }
+  .brand-name { max-width: 165px; overflow: hidden; text-overflow: ellipsis; }
+  .header-context { border-left: 0; padding-left: 0; }
+  .context-title { display: none; }
+  .mode-pill { display: none; }
+  .workspace { display: block; }
+  .scenario-panel {
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    bottom: var(--status-height);
+    z-index: var(--z-drawer);
+    width: min(286px, calc(100vw - 42px));
+    border-right: 1px solid var(--line-strong);
+    box-shadow: var(--shadow-drawer);
+    transform: translateX(-105%);
+    transition: transform 220ms cubic-bezier(.16, 1, .3, 1);
+  }
+  .scenario-panel.open { transform: translateX(0); }
+  .command-center { width: 100%; height: 100%; }
+  .control-bar { padding-left: 10px; padding-right: 10px; }
+  .control-button .control-label { display: none; }
+  .control-button { width: 34px; padding: 0; }
+  .timeline-row { grid-template-columns: 32px minmax(98px, 0.75fr) minmax(150px, 1.25fr) 62px; }
+  .outcome-band { grid-template-columns: 1fr; gap: 12px; }
+  .outcome-metrics { justify-content: flex-start; }
+  .status-right .status-item:first-child { display: none; }
+}
+
+@media (max-width: 620px) {
+  .brand-name { max-width: 125px; }
+  .header-actions .download-action, .header-actions .fullscreen-action { display: none; }
+  .overview-top { display: block; }
+  .overview-status { margin-top: 10px; align-items: flex-start; }
+  .timeline-row { grid-template-columns: 30px minmax(0, 1fr) 54px; }
+  .step-summary { grid-column: 2 / 4; }
+  .utility-group .progress-copy { display: none; }
+  .status-left .status-item:nth-child(2) { display: none; }
+}
+
+@media print {
+  body { overflow: visible; background: #fff; }
+  .app-shell { display: block; }
+  .app-header, .scenario-panel, .control-bar, .evidence-panel, .status-bar, .connection-banner, .toast { display: none !important; }
+  .workspace { display: block; overflow: visible; }
+  .command-center { overflow: visible; }
+  .overview, .timeline-section, .outcome-band { padding-left: 0; padding-right: 0; }
+  .timeline-row { break-inside: avoid; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
 }
 </style>
 </head>
 <body>
-
-<div class="header">
-  <div style="display:flex;align-items:center;">
-    <h1>Memory Palace OS <span style="font-weight:400;color:#64748b;font-size:14px;">Demo Console</span></h1>
-    <div class="scenario-switch">
-      <select id="scenarioSelect" onchange="switchScenario()">
-        <option value="daily">日常运营</option>
-        <option value="emergency">突发事件演练</option>
-      </select>
-      <button class="btn btn-sm btn-outline" onclick="switchScenario()">切换场景</button>
+<div class="app-shell">
+  <header class="app-header">
+    <button class="icon-button mobile-only" id="scenarioDrawerButton" type="button" title="场景列表" aria-label="打开场景列表">☰</button>
+    <div class="brand" aria-label="Memory Palace OS">
+      <div class="brand-mark" aria-hidden="true">MP</div>
+      <div class="brand-copy">
+        <div class="brand-name">Memory Palace OS</div>
+        <div class="brand-edition">Enterprise Demo Command Center</div>
+      </div>
     </div>
+    <div class="header-context">
+      <div class="context-title" id="headerScenarioTitle">企业演示环境</div>
+      <span class="status-pill state-IDLE" id="headerRunStatus">待命</span>
+      <span class="mode-pill" id="headerMode">Demo Adapter</span>
+    </div>
+    <div class="header-actions">
+      <button class="icon-button download-action" id="downloadButton" type="button" title="导出运行报告" aria-label="导出运行报告" disabled>⇩</button>
+      <button class="icon-button fullscreen-action" id="fullscreenButton" type="button" title="全屏显示" aria-label="全屏显示">⛶</button>
+      <button class="icon-button" id="headerResetButton" type="button" title="重置当前场景" aria-label="重置当前场景" disabled>↻</button>
+      <button class="icon-button mobile-only" id="evidenceDrawerButton" type="button" title="执行证据" aria-label="打开执行证据">≡</button>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <aside class="scenario-panel" id="scenarioPanel" aria-label="演示场景">
+      <div class="panel-heading">
+        <span>标准演示场景</span>
+        <span id="scenarioCount">4</span>
+      </div>
+      <nav class="scenario-list" id="scenarioList">
+        <div class="scenario-item skeleton" style="height:78px"></div>
+        <div class="scenario-item skeleton" style="height:78px;margin-top:3px"></div>
+        <div class="scenario-item skeleton" style="height:78px;margin-top:3px"></div>
+      </nav>
+      <section class="capability-section" aria-label="企业能力状态">
+        <div class="panel-heading">
+          <span>企业能力状态</span>
+          <span id="environmentMode">检测中</span>
+        </div>
+        <div class="capability-list" id="capabilityList">
+          <div class="capability-row skeleton" style="height:44px"></div>
+          <div class="capability-row skeleton" style="height:44px;margin-top:5px"></div>
+        </div>
+      </section>
+    </aside>
+
+    <main class="command-center" id="commandCenter">
+      <div class="connection-banner" id="connectionBanner" role="status">
+        <span id="connectionMessage">与演示服务的连接已中断。</span>
+        <button class="text-button" id="reconnectButton" type="button">重新连接</button>
+      </div>
+
+      <section class="overview" aria-labelledby="scenarioHeading">
+        <div class="overview-top">
+          <div class="scenario-heading">
+            <h1 id="scenarioHeading">正在载入企业演示场景</h1>
+            <p id="scenarioDescription">正在读取版本化场景目录和运行环境状态。</p>
+          </div>
+          <div class="overview-status">
+            <span class="status-pill state-IDLE" id="overviewRunStatus">待命</span>
+            <span class="overview-timing" id="overviewTiming">0 / 0 步</span>
+          </div>
+        </div>
+        <div class="fixed-input">
+          <div class="field-label">固定业务输入</div>
+          <div class="fixed-input-text" id="fixedInput">载入中</div>
+        </div>
+        <div class="proof-row" id="proofPoints" aria-label="企业证明点"></div>
+      </section>
+
+      <div class="control-bar" aria-label="运行控制">
+        <div class="control-group">
+          <button class="control-button primary" id="playButton" type="button" title="自动播放" disabled><span class="control-icon" aria-hidden="true">▶</span><span class="control-label">播放</span></button>
+          <button class="control-button" id="pauseButton" type="button" title="在当前步骤后暂停" disabled><span class="control-icon" aria-hidden="true">Ⅱ</span><span class="control-label">暂停</span></button>
+          <button class="control-button" id="stepButton" type="button" title="单步执行" disabled><span class="control-icon" aria-hidden="true">»</span><span class="control-label">单步</span></button>
+          <button class="control-button danger" id="stopButton" type="button" title="停止运行" disabled><span class="control-icon" aria-hidden="true">■</span><span class="control-label">停止</span></button>
+        </div>
+        <div class="utility-group">
+          <span class="progress-copy" id="progressCopy">0 / 0</span>
+          <button class="text-button" id="inlineEvidenceButton" type="button">查看证据</button>
+        </div>
+      </div>
+
+      <section class="timeline-section" aria-labelledby="timelineHeading">
+        <div class="section-header">
+          <h2 id="timelineHeading">Agent 执行时间线</h2>
+          <span class="section-note" id="timelineNote">等待场景初始化</span>
+        </div>
+        <div class="timeline" id="timeline" aria-live="polite">
+          <div class="timeline-row" style="pointer-events:none"><span class="step-marker">1</span><span class="step-identity"><span class="step-title">载入步骤定义</span></span></div>
+        </div>
+      </section>
+
+      <section class="outcome-band" aria-label="业务结果">
+        <div>
+          <div class="outcome-title" id="outcomeTitle">目标业务结果</div>
+          <div class="outcome-text" id="outcomeText">场景完成后将在此形成可审计的业务闭环。</div>
+        </div>
+        <div class="outcome-metrics">
+          <div class="metric"><div class="metric-value" id="completedMetric">0</div><div class="metric-label">已完成步骤</div></div>
+          <div class="metric"><div class="metric-value" id="elapsedMetric">0 ms</div><div class="metric-label">业务执行耗时</div></div>
+          <div class="metric"><div class="metric-value" id="recoveryMetric">0</div><div class="metric-label">恢复次数</div></div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="evidence-panel" id="evidencePanel" aria-label="步骤证据">
+      <div class="panel-heading">
+        <span>当前步骤证据</span>
+        <div class="evidence-toolbar">
+          <button class="icon-button drawer-close" id="evidenceCloseButton" type="button" title="关闭证据面板" aria-label="关闭证据面板">×</button>
+        </div>
+      </div>
+      <div class="evidence-content" id="evidenceContent">
+        <div class="evidence-empty">尚无执行证据</div>
+      </div>
+    </aside>
   </div>
-  <div style="display:flex;gap:8px;align-items:center;">
-    <span class="badge" id="statusBadge"> Ready</span>
-    <button class="btn btn-sm btn-primary" id="btnAutoPlay" onclick="toggleAutoPlay()"> Auto Play</button>
-    <button class="btn btn-sm btn-outline" id="btnPause" style="display:none" onclick="pauseAutoPlay()"> Pause</button>
-    <button class="btn btn-sm btn-outline" id="btnStop" style="display:none" onclick="stopAutoPlay()"> Stop</button>
-    <button class="btn btn-sm btn-outline" onclick="window.print()"> Export Report</button>
-  </div>
+
+  <footer class="status-bar">
+    <div class="status-left">
+      <span class="connection-state" id="connectionState"><span class="connection-dot"></span><span id="connectionLabel">正在连接</span></span>
+      <span class="status-item" id="traceStatus">trace: -</span>
+      <span class="status-item" id="securityStatus">安全模式: -</span>
+    </div>
+    <div class="status-right">
+      <span class="status-item" id="dataVersionStatus">场景数据: -</span>
+      <span class="status-item" id="runVersionStatus">运行版本: -</span>
+    </div>
+  </footer>
 </div>
 
-<div class="tabs">
-  <div class="tab active" data-tab="pipeline">消息链路</div>
-  <div class="tab" data-tab="tasks">任务系统</div>
-  <div class="tab" data-tab="persona">老员工访谈</div>
-  <div class="tab" data-tab="knowledge">知识库</div>
-  <div class="tab" data-tab="monitor">系统监控</div>
-  <div class="tab" data-tab="kbadmin">知识库管理</div>
-  <div class="tab" data-tab="admin">管理</div>
-</div>
+<div class="backdrop" id="drawerBackdrop"></div>
 
-<div class="content">
-  <!-- TAB 1: Pipeline -->
-  <div class="panel active" id="panel-pipeline">
-    <div class="card"><h3>预设消息</h3><div class="preset-btns" id="presetBtns"></div></div>
-    <div class="card"><h3>自定义消息</h3><div class="input-row"><input type="text" id="customMsg" placeholder="输入消息..." onkeydown="if(event.key==='Enter')sendMsg(document.getElementById('customMsg').value)"><button class="btn btn-primary" onclick="sendMsg(document.getElementById('customMsg').value)">发送</button></div></div>
-    <div class="card" id="pipelineCard" style="display:none"><h3>Pipeline</h3><div class="pipeline" id="pipelineViz"></div><div class="reply-box" id="replyBox"></div><div class="meta-row" id="metaRow"></div></div>
+<dialog id="resetDialog" aria-labelledby="resetDialogTitle">
+  <div class="dialog-body">
+    <h2 id="resetDialogTitle">重置当前演示场景</h2>
+    <p id="resetDialogText">当前运行证据将被清空，并生成新的 trace。其他场景和非演示数据不会受到影响。</p>
   </div>
-
-  <!-- TAB 2: Tasks -->
-  <div class="panel" id="panel-tasks">
-    <div class="card"><h3>TaskGraph 任务列表</h3><div id="taskList"><span class="loading">Loading...</span></div>
-    <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="loadTasks()">Refresh</button></div>
+  <div class="dialog-actions">
+    <button class="text-button" id="cancelResetButton" type="button">取消</button>
+    <button class="control-button danger" id="confirmResetButton" type="button">确认重置</button>
   </div>
+</dialog>
 
-  <!-- TAB 3: Persona Interview -->
-  <div class="panel" id="panel-persona">
-    <div class="card">
-      <h3>开始访谈</h3>
-      <div class="input-row">
-        <input type="text" id="personaJobTitle" placeholder="岗位名称，如：安全巡检主管">
-        <button class="btn btn-primary" onclick="startInterview()">开始访谈</button>
-      </div>
-      <div style="margin-top:6px">
-        <button class="btn btn-sm btn-outline" onclick="autoRunInterview(0)">Auto-run: 安全巡检主管</button>
-        <button class="btn btn-sm btn-outline" onclick="autoRunInterview(1)">Auto-run: 客服主管</button>
-        <button class="btn btn-sm btn-outline" onclick="autoRunInterview(2)">Auto-run: 餐饮主管</button>
-      </div>
-    </div>
-    <div id="interviewStage" style="display:none">
-      <div class="card"><h3>访谈进行中 <span id="questionCounter"></span></h3>
-      <div id="interviewHistory"></div>
-      <div class="input-row" id="interviewInput" style="margin-top:8px">
-        <input type="text" id="interviewAnswer" placeholder="输入回答..." onkeydown="if(event.key==='Enter')continueInterview()">
-        <button class="btn btn-primary" onclick="continueInterview()">回答</button>
-      </div></div>
-    </div>
-    <div id="interviewResult" style="display:none">
-      <div class="card"><h3>提取的逻辑条目</h3><div id="logicEntries"></div></div>
-    </div>
-  </div>
-
-  <!-- TAB 4: Knowledge -->
-  <div class="panel" id="panel-knowledge">
-    <div class="card"><h3>知识库检索</h3>
-    <div class="search-row"><input type="text" id="kbQuery" placeholder="搜索景区知识..." onkeydown="if(event.key==='Enter')searchKB()"><button class="btn btn-primary" onclick="searchKB()">搜索</button></div>
-    <div id="kbResults"><span class="loading">输入关键词搜索。</span></div></div>
-  </div>
-
-  <!-- TAB 5: Monitor -->
-  <div class="panel" id="panel-monitor">
-    <div class="stats-grid" id="statsGrid"></div>
-    <div class="card"><h3>Watcher 巡检日志</h3><div id="watcherLog"><span class="loading">Loading...</span></div></div>
-    <button class="btn btn-outline btn-sm" onclick="loadStats();loadWatcherLog()">Refresh</button>
-  </div>
-
-  <!-- TAB 6: KB Admin -->
-  <div class="panel" id="panel-kbadmin">
-    <!-- 统计卡片 -->
-    <div class="stats-grid" id="kbStatsGrid">
-      <div class="stat-card"><div class="stat-value" id="kbTotal">-</div><div class="stat-label">Total Entries</div></div>
-      <div class="stat-card"><div class="stat-value" id="kbScenario">-</div><div class="stat-label">Current Scenario</div></div>
-    </div>
-
-    <!-- 场景切换 + 操作按钮 -->
-    <div class="card">
-      <h3>场景与操作</h3>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <select id="kbScenarioSelect" onchange="kbSwitchScenario()" style="background:#1e293b;border:1px solid #475569;color:#e2e8f0;padding:6px 10px;border-radius:5px;font-size:12px">
-          <option value="daily">Daily Operations</option>
-          <option value="emergency">Emergency Drills</option>
-        </select>
-        <button class="btn btn-sm btn-primary" onclick="kbLoadScenario()">Load Scenario</button>
-        <button class="btn btn-sm btn-outline" onclick="kbReindex()">Re-index</button>
-        <button class="btn btn-sm btn-outline" onclick="loadKBEntries()">Refresh</button>
-      </div>
-    </div>
-
-    <!-- 添加条目 -->
-    <div class="card">
-      <h3>Add Entry</h3>
-      <div class="input-row">
-        <input type="text" id="kbNewContent" placeholder="Knowledge entry content...">
-        <input type="text" id="kbNewCategory" placeholder="Category (optional)" style="max-width:150px">
-        <button class="btn btn-primary btn-sm" onclick="kbAddEntry()">Add</button>
-      </div>
-    </div>
-
-    <!-- 条目表格 -->
-    <div class="card">
-      <h3>All Entries</h3>
-      <div style="margin-bottom:8px">
-        <input type="text" id="kbSearchInput" placeholder="Search entries..." oninput="loadKBEntries()" style="background:#0f172a;border:1px solid #475569;color:#e2e8f0;padding:6px 10px;border-radius:5px;font-size:12px;width:100%">
-      </div>
-      <div id="kbEntryList"><span class="loading">Loading...</span></div>
-    </div>
-  </div>
-
-  <!-- TAB 7: Admin -->
-  <div class="panel" id="panel-admin">
-    <div class="card"><h3>管理后台</h3><p style="color:#94a3b8;margin-bottom:8px">查看完整的消息记录、会话管理和系统配置</p>
-    <a href="/admin/admin_frontend.html" class="btn btn-primary" target="_blank">Open Admin Panel</a>
-    <a href="/docs" class="btn btn-outline" style="margin-left:6px" target="_blank">API Docs</a></div>
-  </div>
-</div>
-
-<div class="status-bar">
-  <span id="statusLeft"><span class="dot-green"></span>System Ready</span>
-  <span id="statusRight">DEMO_MODE | DeepSeek | scenario: daily</span>
-</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
-// ── Globals ────────────────────────────────────────────────────────────────
-let currentScenario = 'daily';
-let interviewId = null;
-let currentQuestion = 1;
-let interviewAnswers = {};
-let autoPlayRunning = false;
-let autoPlayPaused = false;
-let autoPlayTimeoutId = null;
-let autoPlayStepIdx = 0;
-let autoPlayConsecutiveTimeouts = 0;
+"use strict";
 
-// ── Tabs ───────────────────────────────────────────────────────────────────
-document.querySelectorAll('.tab').forEach(t => {
-  t.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
-    t.classList.add('active');
-    document.getElementById('panel-' + t.dataset.tab).classList.add('active');
-    if (t.dataset.tab === 'tasks') loadTasks();
-    if (t.dataset.tab === 'monitor') { loadStats(); loadWatcherLog(); }
-    if (t.dataset.tab === 'kbadmin') loadKBEntries();
+const RUN_CACHE_KEY = "memory-palace-enterprise-demo-runs-v1";
+
+const state = {
+  scenarios: [],
+  runsByScenario: loadPersistedRuns(),
+  interruptedScenarios: {},
+  environment: null,
+  scenario: null,
+  run: null,
+  selectedStepId: null,
+  loading: true,
+  actionPending: false,
+  pollTimer: null,
+  connectionFailures: 0,
+  toastTimer: null,
+};
+
+const elements = Object.fromEntries([
+  "scenarioPanel", "scenarioList", "scenarioCount", "capabilityList", "environmentMode",
+  "headerScenarioTitle", "headerRunStatus", "headerMode", "overviewRunStatus", "overviewTiming",
+  "scenarioHeading", "scenarioDescription", "fixedInput", "proofPoints", "playButton", "pauseButton",
+  "stepButton", "stopButton", "headerResetButton", "downloadButton", "progressCopy", "timeline",
+  "timelineNote", "outcomeTitle", "outcomeText", "completedMetric", "elapsedMetric", "recoveryMetric",
+  "evidencePanel", "evidenceContent", "connectionBanner", "connectionMessage", "connectionState",
+  "connectionLabel", "traceStatus", "securityStatus", "dataVersionStatus", "runVersionStatus",
+  "drawerBackdrop", "resetDialog", "resetDialogText", "confirmResetButton", "toast"
+].map(id => [id, document.getElementById(id)]));
+
+const STATUS_LABELS = {
+  IDLE: "待命",
+  RUNNING: "运行中",
+  PAUSED: "已暂停",
+  COMPLETED: "已完成",
+  FAILED: "执行失败",
+  STOPPED: "已停止",
+  INTERRUPTED: "运行已中断",
+};
+
+const CLAIM_LABELS = {
+  VERIFIED: "已验证",
+  DEMO_IMPLEMENTATION: "演示实现",
+  OPTIONAL_CONNECTION: "可选连接",
+  PRODUCTION_EXTENSION: "生产扩展位",
+};
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function formatDuration(milliseconds) {
+  const value = Number(milliseconds || 0);
+  if (value < 1000) return `${value} ms`;
+  return `${(value / 1000).toFixed(value < 10000 ? 1 : 0)} s`;
+}
+
+function statusMarkup(status, id = "") {
+  const value = status || "IDLE";
+  return `<span ${id ? `id="${id}"` : ""} class="status-pill state-${escapeHtml(value)}">${escapeHtml(STATUS_LABELS[value] || value)}</span>`;
+}
+
+async function api(path, options = {}) {
+  const response = await fetch(path, {
+    ...options,
+    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
   });
-});
+  let payload = null;
+  const contentType = response.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) payload = await response.json();
+  else payload = await response.text();
+  if (!response.ok) {
+    const error = new Error(payload?.detail?.message || payload?.detail || `HTTP ${response.status}`);
+    error.status = response.status;
+    error.payload = payload;
+    throw error;
+  }
+  return payload;
+}
 
-// ── Scenario ───────────────────────────────────────────────────────────────
-async function switchScenario() {
-  const name = document.getElementById('scenarioSelect').value;
-  document.getElementById('statusBadge').innerHTML = '<span class="spinner"></span>';
+function setConnection(mode, message = "") {
+  elements.connectionState.className = `connection-state ${mode === "online" ? "" : mode}`;
+  elements.connectionLabel.textContent = mode === "online" ? "服务已连接" : mode === "reconnecting" ? "正在重连" : "连接中断";
+  elements.connectionBanner.classList.toggle("visible", mode === "offline");
+  if (message) elements.connectionMessage.textContent = message;
+}
+
+function showToast(message, type = "normal") {
+  clearTimeout(state.toastTimer);
+  elements.toast.textContent = message;
+  elements.toast.className = `toast visible${type === "error" ? " error" : ""}`;
+  state.toastTimer = setTimeout(() => { elements.toast.className = "toast"; }, 3200);
+}
+
+function closeDrawers() {
+  elements.scenarioPanel.classList.remove("open");
+  elements.evidencePanel.classList.remove("open");
+  elements.drawerBackdrop.classList.remove("visible");
+}
+
+function openDrawer(which) {
+  closeDrawers();
+  if (which === "scenarios") elements.scenarioPanel.classList.add("open");
+  else elements.evidencePanel.classList.add("open");
+  elements.drawerBackdrop.classList.add("visible");
+}
+
+function selectedEvidence() {
+  if (!state.run?.steps?.length) return null;
+  return [...state.run.steps].reverse().find(step => step.step_id === state.selectedStepId)
+    || state.run.steps[state.run.steps.length - 1];
+}
+
+function loadPersistedRuns() {
   try {
-    const res = await fetch('/demo/scenario/switch?name=' + name);
-    const data = await res.json();
-    if (data.code === 0) {
-      currentScenario = name;
-      document.getElementById('statusRight').textContent = 'DEMO_MODE | DeepSeek | scenario: ' + name;
-      loadPresetButtons();
-      document.getElementById('statusBadge').innerHTML = ' Ready';
-      document.getElementById('statusBadge').style.background = '#059669';
-    }
-  } catch(e) { document.getElementById('statusBadge').innerHTML = ' Error'; }
-}
-
-// ── Preset buttons ─────────────────────────────────────────────────────────
-function loadPresetButtons() {
-  const s = currentScenario;
-  const presets = s === 'daily'
-    ? [{l:'游客咨询餐厅',c:'景区附近有什么好吃的餐厅推荐吗'},{l:'询问景点历史',c:'这个景区有什么历史故事和主要景点'},{l:'询问门票',c:'景区门票多少钱？学生有优惠吗'},{l:'询问停车',c:'开车来景区在哪里停车？停车费多少'},{l:'游客受伤(紧急)',c:'景区西门有游客受伤了，需要紧急处理'}]
-    : [{l:'游客受伤(西门)',c:'景区西门有游客摔伤了，腿部出血需要急救'},{l:'老人走失',c:'一位70岁老人在千年古寺附近走散了，穿红色外套'},{l:'暴雨预警',c:'气象台发布了暴雨橙色预警，预计半小时后到达本区域'},{l:'询问急救物资',c:'景区里哪里能找到急救箱和AED'}];
-  document.getElementById('presetBtns').innerHTML = presets.map((p,i) =>
-    `<button class="btn ${i<3?'btn-outline':'btn-danger'} btn-sm preset-btn" data-msg="${esc(p.c)}">${esc(p.l)}</button>`
-  ).join('');
-  document.querySelectorAll('.preset-btn').forEach(b => b.addEventListener('click', () => sendMsg(b.dataset.msg)));
-}
-
-// ── Pipeline ───────────────────────────────────────────────────────────────
-async function sendMsg(content) {
-  const badge = document.getElementById('statusBadge');
-  badge.innerHTML = '<span class="spinner"></span> Processing';
-  badge.style.background = '#ca8a04';
-  const card = document.getElementById('pipelineCard');
-  const viz = document.getElementById('pipelineViz');
-  const reply = document.getElementById('replyBox');
-  const meta = document.getElementById('metaRow');
-  card.style.display = 'block';
-  viz.innerHTML = renderPipe(['pending','pending','pending','pending'], ['ContextTrigger<br>Stage1','ContextTrigger<br>Stage2','Router','Agent']);
-  reply.textContent = 'Sending...'; meta.innerHTML = '';
-
-  try {
-    const sr = await fetch('/demo/send', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content,from_user:'demo'})});
-    const sd = await sr.json();
-    if (sd.code !== 0) { reply.textContent = 'Error: '+JSON.stringify(sd); return; }
-    for (let i=0;i<15;i++) {
-      await sleep(1000);
-      const pr = await fetch('/demo/result/'+sd.trace_id);
-      const pd = await pr.json();
-      if (pd.code === 0) {
-        const states = ['done','done','done','done'];
-        const labels = ['ContextTrigger<br>Stage1','ContextTrigger<br>Stage2','Router<br>'+esc(pd.intent||'?'),esc(pd.route||'?')+'<br>replied'];
-        // Post-hoc animation
-        animatePipeline(states, labels, pd, reply, meta, viz, badge);
-        return;
-      }
-    }
-    reply.textContent = 'Timeout - pipeline may still be processing.';
-  } catch(e) { reply.textContent = 'Error: '+e.message; }
-  badge.innerHTML = ' Ready';
-  badge.style.background = '#059669';
-}
-
-function animatePipeline(states, labels, result, replyEl, metaEl, vizEl, badge) {
-  for (let i=0;i<states.length;i++) {
-    setTimeout(() => {
-      const cur = states.slice(); for (let j=0;j<=i;j++) cur[j]='done';
-      vizEl.innerHTML = renderPipe(cur, labels);
-      if (i===states.length-1) {
-        replyEl.textContent = result.reply_text || '(no reply)';
-        metaEl.innerHTML = `<span class="meta-item">Route: ${esc(result.route||'?')}</span><span class="meta-item">Intent: ${esc(result.intent||'?')}</span><span class="meta-item">Status: ${esc(result.status||'?')}</span><span class="meta-item">trace_id: ${esc(result.trace_id||'?')}</span>`;
-        badge.innerHTML = ' Ready'; badge.style.background = '#059669';
-      }
-    }, i * 300);
+    return JSON.parse(localStorage.getItem(RUN_CACHE_KEY) || "{}") || {};
+  } catch {
+    return {};
   }
 }
 
-function renderPipe(states, labels) {
-  return states.map((s,i) => `<span class="pipe-node pipe-${s}">${labels[i]}</span>`).join('<span class="pipe-arrow">→</span>');
-}
-
-// ── Tasks ──────────────────────────────────────────────────────────────────
-async function loadTasks() {
-  const el = document.getElementById('taskList');
+function persistRuns() {
   try {
-    const res = await fetch('/demo/tasks'); const data = await res.json();
-    if (!data.data||!data.data.length) { el.innerHTML = '<span class="loading">No tasks. Switch scenario or decompose a goal.</span>'; return; }
-    const tasks = data.data;
-    const byId = {}; tasks.forEach(t => byId[t.id] = t);
-    const children = new Set(); tasks.forEach(t => t.dependencies.forEach(d => children.add(d)));
-    const roots = tasks.filter(t => !t.dependencies || !t.dependencies.length);
-    function renderTree(t, level) {
-      let html = `<div class="task-card${level>0?' child':''}" style="margin-left:${level*24}px">
-        <div class="task-header"><strong>${esc(t.description)}</strong><span class="status-badge status-${t.status}">${t.status}</span></div>
-        <div style="font-size:11px;color:#64748b">${t.assigned_agent||''} ${t.id?t.id.slice(0,8):''}</div></div>`;
-      const deps = tasks.filter(d => (d.dependencies||[]).includes(t.id));
-      deps.forEach(d => html += renderTree(d, level+1));
-      return html;
-    }
-    el.innerHTML = roots.map(r => renderTree(r, 0)).join('');
-  } catch(e) { el.innerHTML = '<span class="error">'+esc(e.message)+'</span>'; }
+    localStorage.setItem(RUN_CACHE_KEY, JSON.stringify(state.runsByScenario));
+  } catch {}
 }
 
-// ── Persona Interview ──────────────────────────────────────────────────────
-async function startInterview(jobTitle) {
-  const jt = jobTitle || document.getElementById('personaJobTitle').value.trim();
-  if (!jt) return;
-  document.getElementById('statusBadge').innerHTML = '<span class="spinner"></span>';
-  try {
-    const res = await fetch('/demo/persona/interview/start', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_title:jt})});
-    const d = await res.json();
-    if (d.code!==0) { alert('Error: '+d.error); return; }
-    interviewId = d.data.interview_id; currentQuestion = 1; interviewAnswers = {};
-    document.getElementById('interviewResult').style.display = 'none';
-    document.getElementById('interviewStage').style.display = 'block';
-    document.getElementById('questionCounter').textContent = `(Question ${d.data.question_number}/4)`;
-    document.getElementById('interviewHistory').innerHTML = `<div class="interview-card"><div class="q">Q: ${esc(d.data.question)}</div></div>`;
-    document.getElementById('statusBadge').innerHTML = ' Ready'; document.getElementById('statusBadge').style.background = '#059669';
-  } catch(e) { alert(e.message); }
+function rememberRun(run) {
+  if (!run?.scenario_id || run.status === "INTERRUPTED") return;
+  const cached = state.runsByScenario[run.scenario_id];
+  if (cached?.run_id === run.run_id && Number(cached.version) > Number(run.version)) return;
+  state.runsByScenario[run.scenario_id] = run;
+  persistRuns();
 }
 
-async function continueInterview(answer) {
-  const ans = answer || document.getElementById('interviewAnswer').value.trim();
-  if (!ans || !interviewId) return;
-  document.getElementById('statusBadge').innerHTML = '<span class="spinner"></span>';
-  try {
-    const res = await fetch('/demo/persona/interview/continue', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({interview_id:interviewId, answer:ans})});
-    const d = await res.json();
-    if (d.code!==0) { alert('Error: '+d.error); return; }
-    const hist = document.getElementById('interviewHistory');
-    hist.innerHTML += `<div class="interview-card"><div class="a">A: ${esc(ans)}</div></div>`;
-    document.getElementById('interviewAnswer').value = '';
-    currentQuestion = d.data.question_number || currentQuestion+1;
-    document.getElementById('questionCounter').textContent = `(Question ${currentQuestion}/4)`;
-    if (d.data.is_complete) {
-      document.getElementById('interviewInput').style.display = 'none';
-      hist.innerHTML += `<div class="interview-card"><div class="q" style="color:#fbbf24">Interview complete. Finalizing...</div></div>`;
-      await finalizeInterview();
-    } else {
-      hist.innerHTML += `<div class="interview-card"><div class="q">Q: ${esc(d.data.question)}</div></div>`;
-    }
-    document.getElementById('statusBadge').innerHTML = ' Ready'; document.getElementById('statusBadge').style.background = '#059669';
-  } catch(e) { alert(e.message); }
+function interruptedSnapshot(run) {
+  return {
+    ...run,
+    status: "INTERRUPTED",
+    current_step_id: null,
+    error: "后端已重启，进程内运行状态已丢失。请 Reset 后重新开始。",
+  };
 }
 
-async function finalizeInterview() {
-  try {
-    const res = await fetch('/demo/persona/interview/finalize', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({interview_id:interviewId})});
-    const d = await res.json();
-    if (d.code===0 && d.data.logic_entries) {
-      document.getElementById('interviewStage').style.display = 'none';
-      document.getElementById('interviewResult').style.display = 'block';
-      document.getElementById('logicEntries').innerHTML = d.data.logic_entries.map(e => `
-        <div class="entry-card"><div class="trigger">WHEN ${esc(e.trigger)}</div><div class="behavior">THEN ${esc(e.behavior)}</div><div class="reason">WHY ${esc(e.reason)}</div></div>
-      `).join('');
-    }
-  } catch(e) {}
+function markInterrupted(run) {
+  state.interruptedScenarios[run.scenario_id] = true;
+  state.run = interruptedSnapshot(run);
+  state.selectedStepId = run.steps?.at(-1)?.step_id || null;
 }
 
-async function autoRunInterview(idx) {
-  const titles = ['安全巡检主管','客服主管','餐饮区域主管'];
-  const answers = [
-    ['每天早班第一件事就是检查所有消防设备指示灯是否正常','先把最近的人派到现场维持秩序，同时通知医务室','节假日前提早3天把全园安全查一遍'],
-    ['先让游客情绪稳定下来，倒杯水坐下慢慢说','超过30分钟排队就启动备用通道，给排队的发水','拿出多语言导览手册加上手势比划，基本都能解决'],
-    ['提前半小时把预制菜备好，所有收银全开','打电话给备用供应商，同时从隔壁店调货','立刻停灶查过敏原，提供替代菜品']
-  ];
-  await startInterview(titles[idx]);
-  for (let i=0;i<4&&i<answers[idx].length;i++) {
-    await sleep(800);
-    await continueInterview(answers[idx][i]);
-  }
+function clearInterrupted(scenarioId) {
+  delete state.interruptedScenarios[scenarioId];
 }
 
-// ── Knowledge ──────────────────────────────────────────────────────────────
-async function searchKB() {
-  const q = document.getElementById('kbQuery').value.trim();
-  const el = document.getElementById('kbResults');
-  if (!q) { el.innerHTML = '<span class="loading">Enter a search query.</span>'; return; }
-  el.innerHTML = '<span class="loading"><span class="spinner"></span>Searching...</span>';
-  try {
-    const res = await fetch('/demo/knowledge/search?q='+encodeURIComponent(q)+'&top_k=5');
-    const d = await res.json();
-    if (!d.data||!d.data.length) { el.innerHTML = '<span class="loading">No results. Switch scenario to load seed data.</span>'; return; }
-    el.innerHTML = d.data.map((r,i) => `<div class="kb-result"><div class="kb-score">#${i+1} Score: ${(r.score||0).toFixed(4)}</div><div style="margin-top:4px;font-size:13px">${esc((r.content||'').slice(0,300))}</div></div>`).join('');
-  } catch(e) { el.innerHTML = '<span class="error">'+esc(e.message)+'</span>'; }
+function acceptRunSnapshot(latest, requestedRunId) {
+  if (!state.run || state.run.run_id !== requestedRunId || latest.run_id !== requestedRunId) return false;
+  if (Number(latest.version) < Number(state.run.version)) return false;
+  clearInterrupted(latest.scenario_id);
+  state.run = latest;
+  rememberRun(latest);
+  return true;
 }
 
-// ── Stats + Watcher Log ────────────────────────────────────────────────────
-async function loadStats() {
-  const el = document.getElementById('statsGrid');
-  try {
-    const res = await fetch('/demo/stats'); const d = await res.json(); const s = d.data||{};
-    el.innerHTML = `<div class="stat-card"><div class="stat-value">${s.queue_depth??'?'}</div><div class="stat-label">Queue Depth</div></div>
-    <div class="stat-card"><div class="stat-value">${s.message_count??'?'}</div><div class="stat-label">Messages</div></div>
-    <div class="stat-card"><div class="stat-value">${s.task_count??'?'}</div><div class="stat-label">Tasks</div></div>
-    <div class="stat-card"><div class="stat-value">${s.skills_registered??'?'}</div><div class="stat-label">Skills</div></div>`;
-  } catch(e) {}
+function latestEvidenceFor(stepId) {
+  return [...(state.run?.steps || [])].reverse().find(step => step.step_id === stepId) || null;
 }
 
-async function loadWatcherLog() {
-  const el = document.getElementById('watcherLog');
-  try {
-    const res = await fetch('/demo/watcher-log'); const d = await res.json();
-    if (!d.data||!d.data.length) { el.innerHTML = '<span class="loading">No patrol logs yet.</span>'; return; }
-    el.innerHTML = d.data.map(r => `<div class="log-item"><span class="log-type log-${r.type}">${r.type.toUpperCase()}</span><span style="flex:1">${esc(r.summary||'').slice(0,120)}</span><span style="color:#64748b">${esc(r.severity||'')}</span><span style="color:#475569;font-size:10px">${(r.created_at||'').slice(0,19)}</span></div>`).join('');
-  } catch(e) { el.innerHTML = '<span class="error">'+esc(e.message)+'</span>'; }
+function renderScenarios() {
+  elements.scenarioCount.textContent = String(state.scenarios.length);
+  elements.scenarioList.innerHTML = state.scenarios.map(scenario => {
+    const selected = scenario.id === state.scenario?.id;
+    const cachedRun = state.runsByScenario[scenario.id] || (selected ? state.run : null);
+    const run = state.interruptedScenarios[scenario.id] && cachedRun
+      ? interruptedSnapshot(cachedRun)
+      : cachedRun;
+    const completed = run?.progress?.completed || 0;
+    const total = run?.progress?.total || 0;
+    const progress = total ? Math.round(completed / total * 100) : 0;
+    const status = run?.status || scenario.status || "IDLE";
+    return `
+      <button class="scenario-item" type="button" data-scenario-id="${escapeHtml(scenario.id)}" aria-current="${selected}">
+        <span class="scenario-item-top">
+          <span class="scenario-title">${escapeHtml(scenario.short_title)}</span>
+          <span class="scenario-time">约 ${Math.ceil(scenario.estimated_seconds / 60)} 分钟</span>
+        </span>
+        <span class="scenario-description">${escapeHtml(scenario.description)}</span>
+        <span class="scenario-progress" title="${escapeHtml(STATUS_LABELS[status] || status)}"><span style="width:${progress}%"></span></span>
+      </button>`;
+  }).join("");
+  elements.scenarioList.querySelectorAll("[data-scenario-id]").forEach(button => {
+    button.addEventListener("click", () => selectScenario(button.dataset.scenarioId));
+  });
 }
 
-// ── Auto Play ──────────────────────────────────────────────────────────────
-const autoPlayTimeline = [
-  {delay:1000,action:'send',content:'景区西门有游客摔伤了，腿部出血需要急救',tab:'pipeline'},
-  {delay:10000,action:'send',content:'景区附近有什么好吃的餐厅推荐吗',tab:'pipeline'},
-  {delay:15000,action:'tab',target:'tasks'},
-  {delay:2000,action:'tab',target:'persona'},
-  {delay:1000,action:'interview',personaIdx:0},
-  {delay:25000,action:'tab',target:'knowledge'},
-  {delay:1000,action:'search',query:'安全应急预案'},
-  {delay:10000,action:'tab',target:'monitor'},
-];
-
-async function toggleAutoPlay() {
-  if (autoPlayRunning) { stopAutoPlay(); return; }
-  autoPlayRunning = true; autoPlayPaused = false; autoPlayStepIdx = 0; autoPlayConsecutiveTimeouts = 0;
-  document.getElementById('btnAutoPlay').textContent = ' Running...';
-  document.getElementById('btnPause').style.display = 'inline-block';
-  document.getElementById('btnStop').style.display = 'inline-block';
-  document.getElementById('statusBadge').innerHTML = ' Auto-Play'; document.getElementById('statusBadge').style.background = '#7c3aed';
-  await runAutoPlayStep();
+function renderEnvironment() {
+  const environment = state.environment;
+  if (!environment) return;
+  elements.environmentMode.textContent = environment.demo_mode ? "DEMO" : environment.mode;
+  elements.securityStatus.textContent = `安全模式: ${environment.security_mode}`;
+  elements.dataVersionStatus.textContent = `场景数据: ${Object.entries(environment.scenario_data_version).map(([id, version]) => `${id}@${version}`).join(" · ")}`;
+  elements.capabilityList.innerHTML = environment.capabilities.map(capability => `
+    <div class="capability-row">
+      <div class="capability-top">
+        <span class="capability-label">${escapeHtml(capability.label)}</span>
+        <span class="claim-badge claim-${escapeHtml(capability.claim_level)}">${escapeHtml(CLAIM_LABELS[capability.claim_level] || capability.claim_level)}</span>
+      </div>
+      <div class="capability-detail">${escapeHtml(capability.detail)}</div>
+    </div>`).join("");
 }
 
-async function runAutoPlayStep() {
-  if (!autoPlayRunning || autoPlayPaused || autoPlayStepIdx >= autoPlayTimeline.length) {
-    if (autoPlayStepIdx >= autoPlayTimeline.length) stopAutoPlay();
+function renderHeaderAndOverview() {
+  const scenario = state.scenario;
+  const run = state.run;
+  if (!scenario || !run) return;
+  elements.headerScenarioTitle.textContent = scenario.title;
+  elements.headerRunStatus.outerHTML = statusMarkup(run.status, "headerRunStatus");
+  elements.headerRunStatus = document.getElementById("headerRunStatus");
+  elements.overviewRunStatus.outerHTML = statusMarkup(run.status, "overviewRunStatus");
+  elements.overviewRunStatus = document.getElementById("overviewRunStatus");
+  elements.scenarioHeading.textContent = scenario.title;
+  elements.scenarioDescription.textContent = scenario.description;
+  elements.fixedInput.textContent = scenario.fixed_input;
+  elements.proofPoints.innerHTML = scenario.proof_points.map(point => `<span class="proof-tag">${escapeHtml(point)}</span>`).join("");
+  elements.overviewTiming.textContent = `${run.progress.completed} / ${run.progress.total} 步 · ${formatDuration(run.elapsed_ms)}`;
+  elements.progressCopy.textContent = `${run.progress.completed} / ${run.progress.total}`;
+  elements.traceStatus.textContent = `trace: ${run.trace_id}`;
+  elements.runVersionStatus.textContent = `运行版本: ${run.version}`;
+}
+
+function stepView(definition, index) {
+  const evidence = latestEvidenceFor(definition.id);
+  const isCurrent = state.run.current_step_id === definition.id;
+  const isRunning = isCurrent && state.run.status === "RUNNING";
+  const status = evidence?.status || (isRunning ? "RUNNING" : "WAITING");
+  const summary = evidence?.output_summary
+    || (isRunning ? definition.input_summary : isCurrent && state.run.status === "IDLE" ? "等待演示开始" : "等待前置步骤完成");
+  const meta = evidence
+    ? formatDuration(evidence.duration_ms)
+    : isRunning
+      ? "处理中"
+      : isCurrent && state.run.status === "IDLE"
+        ? "待开始"
+        : "等待";
+  return { evidence, isCurrent, status, summary, meta, index };
+}
+
+function renderTimeline() {
+  if (!state.scenario || !state.run) return;
+  const views = state.scenario.steps.map(stepView);
+  elements.timeline.innerHTML = views.map(({ evidence, status, summary, meta, index }, viewIndex) => {
+    const definition = state.scenario.steps[viewIndex];
+    const selectable = Boolean(evidence);
+    const selected = selectable && evidence.step_id === selectedEvidence()?.step_id;
+    const marker = status === "SUCCESS" ? "✓" : status === "RUNNING" ? "●" : status === "FAILED" ? "!" : String(index + 1);
+    return `
+      <button class="timeline-row${selected ? " selected" : ""}" type="button" data-step-id="${escapeHtml(definition.id)}" ${selectable ? "" : "disabled"}>
+        <span class="step-marker ${escapeHtml(status)}">${escapeHtml(marker)}</span>
+        <span class="step-identity">
+          <span class="step-title">${escapeHtml(definition.title)}</span>
+          <span class="step-actor">${escapeHtml(definition.actor)}</span>
+        </span>
+        <span class="step-summary">${escapeHtml(summary)}${evidence?.recovery_summary ? `<span class="recovery-note">已恢复 · 重试 ${evidence.retry_count} 次</span>` : ""}</span>
+        <span class="step-meta">${escapeHtml(meta)}</span>
+      </button>`;
+  }).join("");
+  elements.timeline.querySelectorAll("[data-step-id]:not(:disabled)").forEach(button => {
+    button.addEventListener("click", () => {
+      state.selectedStepId = button.dataset.stepId;
+      renderTimeline();
+      renderEvidence();
+      if (window.innerWidth < 1180) openDrawer("evidence");
+    });
+  });
+  elements.timelineNote.textContent = state.run.status === "RUNNING" ? `正在执行 ${state.run.current_step_id || "收尾"}` : STATUS_LABELS[state.run.status];
+}
+
+function renderCitations(citations) {
+  if (!citations?.length) return `<p>本步骤未使用知识引用。</p>`;
+  return `<div class="citation-list">${citations.map(citation => `
+    <div class="citation-item">
+      <div class="citation-id">${escapeHtml(citation.id)} · v${escapeHtml(citation.version || "-")}</div>
+      <div class="citation-title">${escapeHtml(citation.title || "未命名来源")}</div>
+      ${citation.trigger ? `<div class="logic-entry"><span><strong>触发：</strong>${escapeHtml(citation.trigger)}</span><span><strong>行为：</strong>${escapeHtml(citation.behavior)}</span><span><strong>原因：</strong>${escapeHtml(citation.reason)}</span></div>` : ""}
+    </div>`).join("")}</div>`;
+}
+
+function renderTools(tools) {
+  if (!tools?.length) return `<p>本步骤未调用外部工具。</p>`;
+  return `<div class="tool-list">${tools.map(tool => `
+    <div class="tool-item">
+      <div class="tool-name">${escapeHtml(tool.tool || "tool")}${tool.attempt ? ` · 尝试 ${escapeHtml(tool.attempt)}` : ""}</div>
+      <div class="tool-status">${escapeHtml(tool.status || "RECORDED")} · ${escapeHtml(tool.mode || "DEMO_ADAPTER")}</div>
+      ${Array.isArray(tool.tasks) ? `<div class="logic-entry">${tool.tasks.map(task => `<span>${escapeHtml(task)}</span>`).join("")}</div>` : ""}
+    </div>`).join("")}</div>`;
+}
+
+function renderEvidence() {
+  const evidence = selectedEvidence();
+  if (!evidence) {
+    const current = state.scenario?.steps?.find(step => step.id === state.run?.current_step_id);
+    elements.evidenceContent.innerHTML = current ? `
+      <div class="evidence-empty"><strong>${escapeHtml(current.title)}</strong><br>${state.run.status === "RUNNING" ? "当前原子步骤正在执行" : "尚未生成执行证据"}</div>` : `<div class="evidence-empty">尚无执行证据</div>`;
     return;
   }
-  const step = autoPlayTimeline[autoPlayStepIdx];
-  await sleep(step.delay);
-  if (!autoPlayRunning || autoPlayPaused) return;
-  try {
-    if (step.action === 'send') { await sendMsg(step.content); autoPlayConsecutiveTimeouts = 0; }
-    else if (step.action === 'tab') { document.querySelectorAll('.tab').forEach(t => { t.classList.toggle('active', t.dataset.tab === step.target); }); document.querySelectorAll('.panel').forEach(p => { p.classList.toggle('active', p.id === 'panel-'+step.target); }); }
-    else if (step.action === 'interview') { await autoRunInterview(step.personaIdx); }
-    else if (step.action === 'search') { document.getElementById('kbQuery').value = step.query; await searchKB(); }
-  } catch(e) {
-    autoPlayConsecutiveTimeouts++;
-    if (autoPlayConsecutiveTimeouts >= 3) { stopAutoPlay(); document.getElementById('statusBadge').innerHTML = ' Auto-Play Error'; document.getElementById('statusBadge').style.background = '#dc2626'; return; }
+  elements.evidenceContent.innerHTML = `
+    <h2 class="evidence-title">${escapeHtml(evidence.title)}</h2>
+    <div class="evidence-actor">${escapeHtml(evidence.actor)} · 第 ${evidence.sequence} 步 · 尝试 ${evidence.attempt || 1} · ${formatDuration(evidence.duration_ms)}</div>
+    <span class="mode-pill">${evidence.execution_mode === "DEMO_ADAPTER" ? "演示适配器" : "真实连接"}</span>
+    <section class="evidence-group"><h3>输入摘要</h3><p>${escapeHtml(evidence.input_summary)}</p></section>
+    <section class="evidence-group"><h3>输出摘要</h3><p>${escapeHtml(evidence.output_summary)}</p>${evidence.recovery_summary ? `<p style="margin-top:7px;color:var(--warning)">${escapeHtml(evidence.recovery_summary)}</p>` : ""}</section>
+    ${evidence.route_reason ? `<section class="evidence-group"><h3>路由依据</h3><p>${escapeHtml(evidence.route_reason)}</p></section>` : ""}
+    <section class="evidence-group"><h3>知识与经验引用</h3>${renderCitations(evidence.citations)}</section>
+    <section class="evidence-group"><h3>工具调用</h3>${renderTools(evidence.tool_calls)}</section>
+    <section class="evidence-group"><h3>策略决定</h3>${evidence.policy_decision ? `<div class="policy-row"><span class="policy-allowed">${evidence.policy_decision.allowed ? "允许" : "拒绝"}</span><span class="policy-rule">${escapeHtml(evidence.policy_decision.rule || "-")}</span></div>` : `<p>本步骤无额外策略判断。</p>`}</section>
+    <section class="evidence-group"><h3>技术信息</h3><div class="technical-data">step_id: ${escapeHtml(evidence.step_id)}<br>status: ${escapeHtml(evidence.status)}<br>started_at: ${escapeHtml(evidence.started_at)}<br>execution_mode: ${escapeHtml(evidence.execution_mode)}</div></section>`;
+}
+
+function renderOutcome() {
+  if (!state.scenario || !state.run) return;
+  if (state.run.status === "INTERRUPTED") {
+    elements.outcomeTitle.textContent = "运行已中断";
+    elements.outcomeText.textContent = "服务已重启，进程内运行状态无法恢复。请点击 Reset 创建干净运行后重新开始。";
+    elements.completedMetric.textContent = String(state.run.progress.completed);
+    elements.elapsedMetric.textContent = formatDuration(state.run.elapsed_ms);
+    elements.recoveryMetric.textContent = "-";
+    return;
   }
-  autoPlayStepIdx++;
-  if (autoPlayStepIdx < autoPlayTimeline.length) autoPlayTimeoutId = setTimeout(runAutoPlayStep, 100);
+  const complete = state.run.status === "COMPLETED";
+  elements.outcomeTitle.textContent = complete ? "业务闭环已完成" : "目标业务结果";
+  elements.outcomeText.textContent = state.scenario.business_outcome;
+  elements.completedMetric.textContent = String(state.run.progress.completed);
+  elements.elapsedMetric.textContent = formatDuration(state.run.elapsed_ms);
+  const retriesByStep = new Map();
+  state.run.steps.forEach(step => {
+    retriesByStep.set(step.step_id, Math.max(retriesByStep.get(step.step_id) || 0, Number(step.retry_count || 0)));
+  });
+  elements.recoveryMetric.textContent = String([...retriesByStep.values()].reduce((total, retries) => total + retries, 0));
 }
 
-function pauseAutoPlay() { autoPlayPaused = !autoPlayPaused; document.getElementById('btnPause').textContent = autoPlayPaused ? ' Resume' : ' Pause'; if (!autoPlayPaused) runAutoPlayStep(); }
-function stopAutoPlay() { autoPlayRunning = false; autoPlayPaused = false; clearTimeout(autoPlayTimeoutId); document.getElementById('btnAutoPlay').textContent = ' Auto Play'; document.getElementById('btnPause').style.display = 'none'; document.getElementById('btnStop').style.display = 'none'; document.getElementById('statusBadge').innerHTML = ' Ready'; document.getElementById('statusBadge').style.background = '#059669'; }
+function renderControls() {
+  const status = state.run?.status;
+  const busy = state.actionPending || !state.run;
+  elements.playButton.disabled = busy || !["IDLE", "PAUSED", "FAILED"].includes(status);
+  elements.pauseButton.disabled = busy || status !== "RUNNING";
+  elements.stepButton.disabled = busy || !["IDLE", "PAUSED", "FAILED"].includes(status);
+  elements.stopButton.disabled = busy || !["RUNNING", "PAUSED", "FAILED"].includes(status);
+  elements.headerResetButton.disabled = busy;
+  elements.downloadButton.disabled = busy || !state.run?.steps?.length;
+  elements.playButton.querySelector(".control-label").textContent = status === "PAUSED" ? "继续" : status === "FAILED" ? "重试" : "播放";
+}
 
-// ── Utils ──────────────────────────────────────────────────────────────────
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function renderAll() {
+  renderScenarios();
+  renderEnvironment();
+  renderHeaderAndOverview();
+  renderTimeline();
+  renderEvidence();
+  renderOutcome();
+  renderControls();
+}
 
-// ── KB Admin ──────────────────────────────────────────────────────────────
-async function loadKBEntries() {
-  const el = document.getElementById('kbEntryList');
-  const search = (document.getElementById('kbSearchInput')?.value || '').toLowerCase();
+function schedulePoll() {
+  clearTimeout(state.pollTimer);
+  if (state.run?.status !== "RUNNING") return;
+  state.pollTimer = setTimeout(pollRun, document.hidden ? 2000 : 500);
+}
+
+async function pollRun() {
+  if (!state.run) return;
+  const requestedRunId = state.run.run_id;
   try {
-    const res = await fetch('/demo/kb/entries?limit=200'); const d = await res.json();
-    if (d.code !== 0) { el.innerHTML = '<span class="error">'+esc(d.error)+'</span>'; return; }
-    let items = d.data || [];
-    if (search) items = items.filter(e => (e.content||'').toLowerCase().includes(search));
-    document.getElementById('kbTotal').textContent = d.total || items.length;
-    if (!items.length) { el.innerHTML = '<span class="loading">No entries. Load a scenario or add one.</span>'; return; }
-    el.innerHTML = items.map((e,i) => `
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid #334155;gap:8px">
-        <div style="flex:1;font-size:12px">
-          <div style="color:#e2e8f0">${esc((e.content||'').slice(0,200))}</div>
-          ${e.metadata?.category ? '<span style="color:#38bdf8;font-size:10px">'+esc(e.metadata.category)+'</span>' : ''}
-        </div>
-        <button class="btn btn-sm btn-outline" onclick="kbDeleteEntry('+i+')" style="flex-shrink:0">Del</button>
-      </div>
-    `).join('');
-  } catch(e) { el.innerHTML = '<span class="error">'+esc(e.message)+'</span>'; }
+    const latest = await api(`/demo/runs/${encodeURIComponent(requestedRunId)}`);
+    if (!acceptRunSnapshot(latest, requestedRunId)) {
+      schedulePoll();
+      return;
+    }
+    state.connectionFailures = 0;
+    setConnection("online");
+    if (!state.selectedStepId && latest.steps.length) state.selectedStepId = latest.steps[latest.steps.length - 1].step_id;
+    if (latest.steps.length && state.selectedStepId !== latest.steps[latest.steps.length - 1].step_id && latest.status === "RUNNING") {
+      state.selectedStepId = latest.steps[latest.steps.length - 1].step_id;
+    }
+    renderAll();
+    schedulePoll();
+  } catch (error) {
+    if (state.run?.run_id !== requestedRunId) return;
+    if (error.status === 404 && state.run?.run_id === requestedRunId) {
+      markInterrupted(state.run);
+      state.connectionFailures = 0;
+      setConnection("online");
+      renderAll();
+      showToast("后端已重启：当前运行已中断，请 Reset 后重新开始。", "error");
+      return;
+    }
+    state.connectionFailures += 1;
+    if (state.connectionFailures >= 3) {
+      setConnection("offline", "连续三次无法获取运行快照，后台任务状态未被修改。");
+    } else {
+      setConnection("reconnecting");
+      schedulePoll();
+    }
+  }
 }
 
-async function kbAddEntry() {
-  const content = document.getElementById('kbNewContent').value.trim();
-  const category = document.getElementById('kbNewCategory').value.trim();
-  if (!content) return;
-  document.getElementById('statusBadge').innerHTML = '<span class="spinner"></span>';
+async function selectScenario(scenarioId) {
+  if (state.actionPending || state.scenario?.id === scenarioId) {
+    closeDrawers();
+    return;
+  }
+  clearTimeout(state.pollTimer);
+  state.actionPending = true;
+  renderControls();
   try {
-    await fetch('/demo/kb/entries', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content,metadata:{category}})});
-    document.getElementById('kbNewContent').value = '';
-    document.getElementById('kbNewCategory').value = '';
-    loadKBEntries();
-    document.getElementById('statusBadge').innerHTML = ' Ready'; document.getElementById('statusBadge').style.background = '#059669';
-  } catch(e) {}
+    rememberRun(state.run);
+    const cachedRun = state.runsByScenario[scenarioId];
+    const [scenario, run] = await Promise.all([
+      api(`/demo/scenarios/${encodeURIComponent(scenarioId)}`),
+      cachedRun
+        ? api(`/demo/runs/${encodeURIComponent(cachedRun.run_id)}`).catch(error => {
+            if (error.status !== 404) throw error;
+            return interruptedSnapshot(cachedRun);
+          })
+        : api(`/demo/scenarios/${encodeURIComponent(scenarioId)}/runs`, { method: "POST", body: "{}" }),
+    ]);
+    state.scenario = scenario;
+    state.run = run;
+    if (run.status === "INTERRUPTED") state.interruptedScenarios[scenarioId] = true;
+    else {
+      clearInterrupted(scenarioId);
+      rememberRun(run);
+    }
+    state.selectedStepId = run.steps.at(-1)?.step_id || null;
+    state.connectionFailures = 0;
+    setConnection("online");
+    renderAll();
+    schedulePoll();
+  } catch (error) {
+    setConnection("offline", `无法载入场景：${error.message}`);
+    showToast(`场景载入失败：${error.message}`, "error");
+  } finally {
+    state.actionPending = false;
+    renderControls();
+    closeDrawers();
+  }
 }
 
-async function kbDeleteEntry(index) {
-  try { await fetch('/demo/kb/entries/'+index, {method:'DELETE'}); loadKBEntries(); } catch(e) {}
-}
-
-async function kbLoadScenario() {
-  const name = document.getElementById('kbScenarioSelect').value;
-  document.getElementById('statusBadge').innerHTML = '<span class="spinner"></span>';
+async function dispatchAction(action) {
+  if (!state.run || state.actionPending) return false;
+  state.actionPending = true;
+  renderControls();
   try {
-    const res = await fetch('/demo/scenario/switch?name='+name); const d = await res.json();
-    document.getElementById('kbScenario').textContent = name;
-    loadKBEntries();
-    document.getElementById('statusBadge').innerHTML = ' Ready'; document.getElementById('statusBadge').style.background = '#059669';
-  } catch(e) {}
+    const requestedRunId = state.run.run_id;
+    const latest = state.run.status === "INTERRUPTED" && action === "reset"
+      ? await api(`/demo/scenarios/${encodeURIComponent(state.run.scenario_id)}/runs`, { method: "POST", body: "{}" })
+      : await api(`/demo/runs/${encodeURIComponent(requestedRunId)}/actions`, {
+          method: "POST",
+          body: JSON.stringify({ action, expected_version: state.run.version }),
+        });
+    if (action === "reset" && state.run.status === "INTERRUPTED") {
+      clearInterrupted(latest.scenario_id);
+      state.run = latest;
+      rememberRun(latest);
+    } else if (!acceptRunSnapshot(latest, requestedRunId)) {
+      return false;
+    }
+    if (latest.steps.length) state.selectedStepId = latest.steps[latest.steps.length - 1].step_id;
+    setConnection("online");
+    renderAll();
+    schedulePoll();
+    return true;
+  } catch (error) {
+    const latest = error.payload?.detail?.latest_run;
+    if (error.status === 409 && latest) {
+      acceptRunSnapshot(latest, latest.run_id);
+      if (latest.steps.length) state.selectedStepId = latest.steps[latest.steps.length - 1].step_id;
+      renderAll();
+      schedulePoll();
+      showToast("运行状态已刷新，请确认后继续操作。");
+    } else {
+      showToast(`操作失败：${error.message}`, "error");
+    }
+    return false;
+  } finally {
+    state.actionPending = false;
+    renderControls();
+  }
 }
 
-async function kbReindex() {
-  document.getElementById('statusBadge').innerHTML = '<span class="spinner"></span>';
+async function reconnect() {
+  if (!state.run) return initialize();
+  setConnection("reconnecting");
+  const requestedRunId = state.run.run_id;
   try {
-    await fetch('/demo/kb/reindex', {method:'POST'});
-    loadKBEntries();
-    document.getElementById('statusBadge').innerHTML = ' Ready'; document.getElementById('statusBadge').style.background = '#059669';
-  } catch(e) {}
+    const latest = await api(`/demo/runs/${encodeURIComponent(requestedRunId)}`);
+    if (!acceptRunSnapshot(latest, requestedRunId)) return;
+    state.connectionFailures = 0;
+    setConnection("online");
+    renderAll();
+    schedulePoll();
+  } catch (error) {
+    if (state.run?.run_id !== requestedRunId) return;
+    if (error.status === 404 && state.run?.run_id === requestedRunId) {
+      markInterrupted(state.run);
+      state.connectionFailures = 0;
+      setConnection("online");
+      renderAll();
+      showToast("后端已重启：当前运行已中断，请 Reset 后重新开始。", "error");
+      return;
+    }
+    setConnection("offline", `重新连接失败：${error.message}`);
+  }
 }
 
-function kbSwitchScenario() {
-  document.getElementById('kbScenario').textContent = document.getElementById('kbScenarioSelect').value;
+async function downloadReport() {
+  if (!state.run?.steps?.length) return;
+  try {
+    const report = await api(`/demo/runs/${encodeURIComponent(state.run.run_id)}/report`);
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${state.run.scenario_id}-${state.run.run_id}-report.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showToast("运行报告已导出。");
+  } catch (error) {
+    showToast(`报告导出失败：${error.message}`, "error");
+  }
 }
 
-// ── Init ───────────────────────────────────────────────────────────────────
-loadPresetButtons();
-loadStats();
-loadWatcherLog();
+async function toggleFullscreen() {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  } catch (error) {
+    showToast("当前浏览器无法进入全屏。", "error");
+  }
+}
+
+async function initialize() {
+  setConnection("reconnecting");
+  try {
+    const [scenarios, environment] = await Promise.all([
+      api("/demo/scenarios"),
+      api("/demo/environment"),
+    ]);
+    state.scenarios = scenarios;
+    state.environment = environment;
+    state.loading = false;
+    renderEnvironment();
+    renderScenarios();
+    await selectScenario(scenarios[0].id);
+  } catch (error) {
+    state.loading = false;
+    setConnection("offline", `企业演示环境载入失败：${error.message}`);
+    showToast(`初始化失败：${error.message}`, "error");
+  }
+}
+
+document.getElementById("playButton").addEventListener("click", () => dispatchAction("play"));
+document.getElementById("pauseButton").addEventListener("click", () => dispatchAction("pause"));
+document.getElementById("stepButton").addEventListener("click", () => dispatchAction("step"));
+document.getElementById("stopButton").addEventListener("click", () => dispatchAction("stop"));
+document.getElementById("inlineEvidenceButton").addEventListener("click", () => {
+  if (window.innerWidth < 1180) openDrawer("evidence");
+  else elements.evidenceContent.scrollTo({ top: 0, behavior: "smooth" });
+});
+document.getElementById("evidenceDrawerButton").addEventListener("click", () => openDrawer("evidence"));
+document.getElementById("scenarioDrawerButton").addEventListener("click", () => openDrawer("scenarios"));
+document.getElementById("evidenceCloseButton").addEventListener("click", closeDrawers);
+document.getElementById("drawerBackdrop").addEventListener("click", closeDrawers);
+document.getElementById("reconnectButton").addEventListener("click", reconnect);
+document.getElementById("downloadButton").addEventListener("click", downloadReport);
+document.getElementById("fullscreenButton").addEventListener("click", toggleFullscreen);
+
+function openResetDialog() {
+  if (!state.run) return;
+  elements.resetDialogText.textContent = `“${state.run.scenario_title}”的当前运行证据将被清空，并生成新的 trace。其他场景和非演示数据不会受到影响。`;
+  elements.resetDialog.showModal();
+}
+
+document.getElementById("headerResetButton").addEventListener("click", openResetDialog);
+document.getElementById("cancelResetButton").addEventListener("click", () => elements.resetDialog.close());
+document.getElementById("confirmResetButton").addEventListener("click", async () => {
+  elements.resetDialog.close();
+  const resetSucceeded = await dispatchAction("reset");
+  if (resetSucceeded) showToast("场景已恢复到已知初始状态。");
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (state.run?.status === "RUNNING") schedulePoll();
+});
+
+window.addEventListener("resize", () => {
+  if (window.innerWidth >= 1180) closeDrawers();
+});
+
+initialize();
 </script>
 </body>
 </html>

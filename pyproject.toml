@@ -13,8 +13,11 @@ python = "^3.10"
 # 1. Web 框架与异步网关
 fastapi = "^0.110.0"
 uvicorn = {extras = ["standard"], version = "^0.27.1"}
+gunicorn = "^23.0.0"
 starlette = "^0.36.3"
 httpx = "^0.27.0"
+slowapi = "^0.1.9"
+PyJWT = "^2.8.0"
 
 # 2. 企微安全与数据解析
 xmltodict = "^0.13.0"
@@ -103,7 +106,7 @@ disallow_incomplete_defs = false
 minversion = "8.0"
 addopts = "-ra -q --cov=src/memory_palace --cov-report=html"
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = [".", "src"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 

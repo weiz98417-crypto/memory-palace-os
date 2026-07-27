@@ -1,0 +1,220 @@
+{
+  "schema_version": "enterprise-demo-report/v1",
+  "generated_at": "2026-07-27T06:06:37.629715Z",
+  "disclaimer": "本报告中的外部模型、企微、短信和语音动作均为模拟执行。",
+  "evidence_count": 7,
+  "execution_modes": [
+    "DEMO_ADAPTER"
+  ],
+  "run": {
+    "run_id": "run_5a7580462c4642da",
+    "trace_id": "trace_f4d13a3e96f74fd1",
+    "scenario_id": "emergency-p0",
+    "scenario_version": 1,
+    "scenario_title": "P0 应急事件处置",
+    "fixed_input": "一号门有游客突然晕倒，现场围观人员很多。",
+    "business_outcome": "完成 P0 分诊、SOP 引用、三方指令和 SLA 审计。",
+    "proof_points": [
+      "SLA",
+      "权限",
+      "审计",
+      "知识引用",
+      "降级通知"
+    ],
+    "status": "COMPLETED",
+    "version": 12,
+    "current_step_id": null,
+    "started_at": "2026-07-27T06:06:32.913002Z",
+    "updated_at": "2026-07-27T06:06:37.565376Z",
+    "completed_at": "2026-07-27T06:06:37.565376Z",
+    "elapsed_ms": 4200,
+    "progress": {
+      "completed": 7,
+      "total": 7
+    },
+    "steps": [
+      {
+        "step_id": "receive-message",
+        "sequence": 1,
+        "attempt": 1,
+        "title": "接收现场上报",
+        "actor": "Gateway",
+        "status": "SUCCESS",
+        "started_at": "2026-07-27T06:06:32.913014Z",
+        "duration_ms": 449,
+        "input_summary": "一号门有游客突然晕倒，现场围观人员很多。",
+        "output_summary": "已建立事件记录并生成全链路追踪编号。",
+        "route_reason": null,
+        "citations": [],
+        "tool_calls": [],
+        "policy_decision": {
+          "allowed": true,
+          "rule": "demo-local-ingress"
+        },
+        "retry_count": 0,
+        "recovery_summary": null,
+        "execution_mode": "DEMO_ADAPTER",
+        "error": null
+      },
+      {
+        "step_id": "classify-event",
+        "sequence": 2,
+        "attempt": 1,
+        "title": "识别事件等级",
+        "actor": "Router_Agent",
+        "status": "SUCCESS",
+        "started_at": "2026-07-27T06:06:33.737504Z",
+        "duration_ms": 650,
+        "input_summary": "分析人员伤情、现场秩序和响应紧迫度。",
+        "output_summary": "判定为 emergency_dispatch，严重等级 P0。",
+        "route_reason": "命中“突然晕倒”和“围观人员很多”，需要医疗与安保协同。",
+        "citations": [],
+        "tool_calls": [],
+        "policy_decision": null,
+        "retry_count": 0,
+        "recovery_summary": null,
+        "execution_mode": "DEMO_ADAPTER",
+        "error": null
+      },
+      {
+        "step_id": "retrieve-sop",
+        "sequence": 3,
+        "attempt": 1,
+        "title": "检索应急 SOP",
+        "actor": "MemoryOps_Agent",
+        "status": "SUCCESS",
+        "started_at": "2026-07-27T06:06:34.464909Z",
+        "duration_ms": 700,
+        "input_summary": "检索游客突发疾病、现场隔离和人群疏导流程。",
+        "output_summary": "命中急救、隔离和疏导三条已批准 SOP。",
+        "route_reason": null,
+        "citations": [
+          {
+            "id": "SOP-EMG-001",
+            "title": "游客突发疾病处置",
+            "version": "1.2"
+          },
+          {
+            "id": "SOP-SEC-004",
+            "title": "现场隔离与秩序维护",
+            "version": "2.1"
+          },
+          {
+            "id": "SOP-CROWD-002",
+            "title": "高密度人群疏导",
+            "version": "1.4"
+          }
+        ],
+        "tool_calls": [],
+        "policy_decision": {
+          "allowed": true,
+          "rule": "demo-approved-knowledge"
+        },
+        "retry_count": 0,
+        "recovery_summary": null,
+        "execution_mode": "DEMO_ADAPTER",
+        "error": null
+      },
+      {
+        "step_id": "generate-orders",
+        "sequence": 4,
+        "attempt": 1,
+        "title": "生成协同指令",
+        "actor": "Commander_Agent",
+        "status": "SUCCESS",
+        "started_at": "2026-07-27T06:06:35.164811Z",
+        "duration_ms": 800,
+        "input_summary": "根据 P0 等级和三条 SOP 生成分角色行动指令。",
+        "output_summary": "已生成医务、安保和值班经理三条可执行指令。",
+        "route_reason": null,
+        "citations": [],
+        "tool_calls": [],
+        "policy_decision": null,
+        "retry_count": 0,
+        "recovery_summary": null,
+        "execution_mode": "DEMO_ADAPTER",
+        "error": null
+      },
+      {
+        "step_id": "notify-teams",
+        "sequence": 5,
+        "attempt": 1,
+        "title": "下发行动通知",
+        "actor": "Notification_Gateway",
+        "status": "SUCCESS",
+        "started_at": "2026-07-27T06:06:35.965139Z",
+        "duration_ms": 601,
+        "input_summary": "向医务、安保和值班经理同步行动指令。",
+        "output_summary": "企微、短信和语音通知已由 Demo Adapter 记录。",
+        "route_reason": null,
+        "citations": [],
+        "tool_calls": [
+          {
+            "tool": "wecom.send",
+            "mode": "DEMO_ADAPTER",
+            "status": "RECORDED"
+          },
+          {
+            "tool": "sms.send",
+            "mode": "DEMO_ADAPTER",
+            "status": "RECORDED"
+          },
+          {
+            "tool": "voice.call",
+            "mode": "DEMO_ADAPTER",
+            "status": "RECORDED"
+          }
+        ],
+        "policy_decision": {
+          "allowed": true,
+          "rule": "demo-notification-sandbox"
+        },
+        "retry_count": 0,
+        "recovery_summary": null,
+        "execution_mode": "DEMO_ADAPTER",
+        "error": null
+      },
+      {
+        "step_id": "audit-sla",
+        "sequence": 6,
+        "attempt": 1,
+        "title": "核验 P0 SLA",
+        "actor": "Watcher_Agent",
+        "status": "SUCCESS",
+        "started_at": "2026-07-27T06:06:36.565803Z",
+        "duration_ms": 550,
+        "input_summary": "检查接警、分诊和指令下发耗时。",
+        "output_summary": "首次响应和指令下发均满足 P0 演示 SLA。",
+        "route_reason": null,
+        "citations": [],
+        "tool_calls": [],
+        "policy_decision": null,
+        "retry_count": 0,
+        "recovery_summary": null,
+        "execution_mode": "DEMO_ADAPTER",
+        "error": null
+      },
+      {
+        "step_id": "close-case",
+        "sequence": 7,
+        "attempt": 1,
+        "title": "形成事件卷宗",
+        "actor": "Audit_Service",
+        "status": "SUCCESS",
+        "started_at": "2026-07-27T06:06:37.115756Z",
+        "duration_ms": 450,
+        "input_summary": "汇总事件、引用、指令、通知和 SLA 证据。",
+        "output_summary": "P0 事件卷宗已完成，可用于复盘和报告导出。",
+        "route_reason": null,
+        "citations": [],
+        "tool_calls": [],
+        "policy_decision": null,
+        "retry_count": 0,
+        "recovery_summary": null,
+        "execution_mode": "DEMO_ADAPTER",
+        "error": null
+      }
+    ],
+    "error": null
+  }
+}

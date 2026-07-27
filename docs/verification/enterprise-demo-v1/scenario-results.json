@@ -1,0 +1,77 @@
+﻿{
+    "verification_date":  "2026-07-27",
+    "generated_at":  "2026-07-27T07:22:57.5371438Z",
+    "environment":  "Docker Desktop / memory-palace-os:demo",
+    "execution_mode":  "DEMO_ADAPTER",
+    "results":  [
+                    {
+                        "scenario_id":  "emergency-p0",
+                        "run_id":  "run_75b81d5945ad4bc8",
+                        "trace_id":  "trace_7a58d6518cc64041",
+                        "status":  "COMPLETED",
+                        "completed_steps":  7,
+                        "total_steps":  7,
+                        "evidence_count":  7,
+                        "elapsed_ms":  7,
+                        "failed_attempts":  0,
+                        "retries":  0,
+                        "recovery_contract":  [
+
+                                              ]
+                    },
+                    {
+                        "scenario_id":  "knowledge-rain",
+                        "run_id":  "run_f5b5a6cda845498b",
+                        "trace_id":  "trace_f14e8e3966714b1c",
+                        "status":  "COMPLETED",
+                        "completed_steps":  5,
+                        "total_steps":  5,
+                        "evidence_count":  5,
+                        "elapsed_ms":  5,
+                        "failed_attempts":  0,
+                        "retries":  0,
+                        "recovery_contract":  [
+
+                                              ]
+                    },
+                    {
+                        "scenario_id":  "persona-mentor",
+                        "run_id":  "run_d35847dd886045ed",
+                        "trace_id":  "trace_942415c332424ba4",
+                        "status":  "COMPLETED",
+                        "completed_steps":  6,
+                        "total_steps":  6,
+                        "evidence_count":  6,
+                        "elapsed_ms":  6,
+                        "failed_attempts":  0,
+                        "retries":  0,
+                        "recovery_contract":  [
+
+                                              ]
+                    },
+                    {
+                        "scenario_id":  "weekend-night-plan",
+                        "run_id":  "run_78dc9411ee0f42c7",
+                        "trace_id":  "trace_ad3b135f92714c33",
+                        "status":  "COMPLETED",
+                        "completed_steps":  6,
+                        "total_steps":  6,
+                        "evidence_count":  7,
+                        "elapsed_ms":  7,
+                        "failed_attempts":  1,
+                        "retries":  1,
+                        "recovery_contract":  [
+                                                  {
+                                                      "step_id":  "recover-equipment-check",
+                                                      "attempt":  1,
+                                                      "status":  "FAILED"
+                                                  },
+                                                  {
+                                                      "step_id":  "recover-equipment-check",
+                                                      "attempt":  2,
+                                                      "status":  "SUCCESS"
+                                                  }
+                                              ]
+                    }
+                ]
+}

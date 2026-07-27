@@ -13,7 +13,7 @@ Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 
 import asyncio
 import os
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any, Dict, List, Optional, Union
 
 from loguru import logger
@@ -21,6 +21,7 @@ from loguru import logger
 # 尝试导入 aiofiles (异步文件操作)
 try:
     import aiofiles
+
     HAS_AIOFILES = True
 except ImportError:
     HAS_AIOFILES = False
@@ -49,9 +50,7 @@ class SafeFileOps:
     async def _get_workspace(self):
         """懒加载工作区"""
         if self._workspace is None:
-            self._workspace = await self._workspace_manager.get_workspace(
-                self.workspace_id
-            )
+            self._workspace = await self._workspace_manager.get_workspace(self.workspace_id)
         return self._workspace
 
     def _validate_path(self, relative_path: str) -> Path:
@@ -67,22 +66,23 @@ class SafeFileOps:
         Raises:
             ValueError: 如果路径包含遍历攻击
         """
+        normalized = relative_path.replace("\\", "/")
+
+        # 根相对路径可能在不同宿主系统上被解释成不同类型，统一按遍历处理。
+        if normalized.startswith("/"):
+            raise ValueError(f"路径遍历攻击检测: {relative_path}")
+
         # 规范化路径
         path = Path(relative_path)
+        windows_path = PureWindowsPath(relative_path)
 
         # 检查是否包含绝对路径
-        if path.is_absolute():
+        if path.is_absolute() or windows_path.is_absolute() or windows_path.drive:
             raise ValueError(f"禁止使用绝对路径: {relative_path}")
 
         # 检查路径遍历攻击
-        if ".." in relative_path or relative_path.startswith("/"):
+        if ".." in normalized.split("/") or is_path_traversal(relative_path):
             raise ValueError(f"路径遍历攻击检测: {relative_path}")
-
-        # 检查 Windows 路径遍历
-        if "\\" in relative_path:
-            parts = relative_path.replace("\\", "/").split("/")
-            if ".." in parts:
-                raise ValueError(f"路径遍历攻击检测: {relative_path}")
 
         return path
 
@@ -112,12 +112,7 @@ class SafeFileOps:
         else:
             return path.read_text(encoding="utf-8")
 
-    async def write(
-        self,
-        relative_path: str,
-        content: str,
-        encoding: str = "utf-8"
-    ) -> bool:
+    async def write(self, relative_path: str, content: str, encoding: str = "utf-8") -> bool:
         """
         写入文件
 
@@ -151,12 +146,7 @@ class SafeFileOps:
 
         return True
 
-    async def append(
-        self,
-        relative_path: str,
-        content: str,
-        encoding: str = "utf-8"
-    ) -> bool:
+    async def append(self, relative_path: str, content: str, encoding: str = "utf-8") -> bool:
         """
         追加写入
 
@@ -194,10 +184,7 @@ class SafeFileOps:
         except ValueError:
             return False
 
-    async def list_dir(
-        self,
-        relative_path: str = "."
-    ) -> List[str]:
+    async def list_dir(self, relative_path: str = ".") -> List[str]:
         """
         列出目录内容
 
@@ -266,6 +253,7 @@ class SafeFileOps:
 # ---------------------------------------------------------------------------
 # 工具函数
 # ---------------------------------------------------------------------------
+
 
 def get_workspace_file_ops(workspace_id: str) -> SafeFileOps:
     """

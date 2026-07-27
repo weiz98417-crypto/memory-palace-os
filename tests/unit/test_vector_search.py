@@ -5,6 +5,7 @@
 
 Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 """
+
 import uuid
 import numpy as np
 import chromadb
@@ -41,11 +42,20 @@ def _make_test_vs():
     return vs
 
 
+@pytest.fixture
+def vector_store():
+    store = _make_test_vs()
+    try:
+        yield store
+    finally:
+        store.close()
+
+
 class TestVectorStore:
 
-    def test_upsert_and_query(self):
+    def test_upsert_and_query(self, vector_store):
         """写入后 query_experience 可以召回"""
-        vs = _make_test_vs()
+        vs = vector_store
         doc_id = str(uuid.uuid4())
         vs.upsert_experience(
             content="暴雨红色预警时关闭玻璃栈道",
@@ -55,23 +65,23 @@ class TestVectorStore:
         results = vs.query_experience("暴雨天气怎么处理", top_k=3)
         assert isinstance(results, list)
 
-    def test_query_with_high_threshold_filters_noise(self):
+    def test_query_with_high_threshold_filters_noise(self, vector_store):
         """高阈值过滤低相关结果"""
-        vs = _make_test_vs()
+        vs = vector_store
         vs.upsert_experience(content="售票系统故障处理流程", metadata={}, doc_id="s1")
         # 高阈值 (0.99) 下 mock embedding 的随机向量几乎不可能通过
         results = vs.query_experience("无关查询", top_k=5, threshold=0.99)
         assert len(results) == 0
 
-    def test_empty_collection_query(self):
+    def test_empty_collection_query(self, vector_store):
         """空集合查询不崩溃，返回空列表"""
-        vs = _make_test_vs()
+        vs = vector_store
         results = vs.query_experience("any query", top_k=5)
         assert isinstance(results, list)
 
-    def test_upsert_multiple_then_query(self):
+    def test_upsert_multiple_then_query(self, vector_store):
         """批量插入后可查询"""
-        vs = _make_test_vs()
+        vs = vector_store
         for i in range(5):
             vs.upsert_experience(
                 content=f"测试文档{i}描述了一些经验",
@@ -81,9 +91,9 @@ class TestVectorStore:
         results = vs.query_experience("测试文档", top_k=3)
         assert isinstance(results, list)
 
-    def test_query_result_structure(self):
+    def test_query_result_structure(self, vector_store):
         """query_experience 返回正确的数据结构"""
-        vs = _make_test_vs()
+        vs = vector_store
         vs.upsert_experience(
             content="游客投诉处理标准流程：倾听-记录-安抚-解决",
             metadata={"type": "complaint"},

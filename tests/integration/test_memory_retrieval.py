@@ -5,6 +5,7 @@ RAG 链路集成测试 (Memory Retrieval)
 
 Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 """
+
 import uuid
 import numpy as np
 import chromadb
@@ -13,8 +14,10 @@ import pytest
 
 class MockEmbeddingFunction(chromadb.EmbeddingFunction):
     """返回确定性向量 (1536 维)"""
+
     def name(self):
         return "mock"
+
     def __call__(self, input):
         if isinstance(input, str):
             input = [input]
@@ -32,6 +35,7 @@ class TestMemoryRetrieval:
     def setup(self, monkeypatch):
         """注入测试用 vector_store 替换全局 get_vector_client"""
         from src.memory_palace.knowledge.vector_store import PalaceVectorStore
+
         self.vs = object.__new__(PalaceVectorStore)
         self.vs.emb_fn = MockEmbeddingFunction()
         self.vs._client = chromadb.EphemeralClient()
@@ -44,6 +48,8 @@ class TestMemoryRetrieval:
             "src.memory_palace.knowledge.vector_store.get_vector_client",
             lambda: self.vs,
         )
+        yield
+        self.vs.close()
 
     def test_upsert_and_query_roundtrip(self):
         """写入后可召回并验证内容一致性"""
@@ -74,6 +80,7 @@ class TestMemoryRetrieval:
     def test_get_vector_client_returns_patched_instance(self):
         """get_vector_client 返回 fixture 注入的实例"""
         from src.memory_palace.knowledge.vector_store import get_vector_client
+
         vs = get_vector_client()
         assert vs is not None
         assert vs is self.vs

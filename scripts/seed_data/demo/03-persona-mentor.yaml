@@ -1,0 +1,73 @@
+id: persona-mentor
+version: 1
+title: 老员工经验萃取与数字分身
+short_title: 经验萃取
+description: 将设备主管的隐性经验转为可复用的结构化资产。
+estimated_seconds: 180
+fixed_input: 张师傅，园区设备运营主管，15 年经验。
+business_outcome: 形成三条逻辑条目并完成一次有依据的分身回答。
+proof_points: [经验结构化, 知识归属, 数字分身, 来源追溯]
+steps:
+  - id: prepare-interview
+    title: 建立专家访谈档案
+    actor: PersonaExtract_Agent
+    input_summary: 张师傅，园区设备运营主管，15 年经验。
+    output_summary: 已建立张师傅访谈档案，并确认设备巡检与故障处置主题。
+    presentation_delay_ms: 500
+    policy_decision: {allowed: true, rule: demo-consented-profile}
+  - id: conduct-interview
+    title: 完成四轮关键访谈
+    actor: PersonaExtract_Agent
+    input_summary: 依次询问开园巡检、异响判断、雨后复查和停机升级经验。
+    output_summary: 四轮预置回答已完成，保留问题、回答和访谈批次来源。
+    presentation_delay_ms: 850
+    tool_calls:
+      - {tool: persona.interview, mode: DEMO_ADAPTER, status: FOUR_ROUNDS_RECORDED}
+  - id: extract-logic
+    title: 提取经验逻辑条目
+    actor: Experience_Extractor
+    input_summary: 将访谈回答整理为 trigger、behavior、reason 三元逻辑。
+    output_summary: 已生成三条张师傅设备运营经验，并关联原始访谈来源。
+    presentation_delay_ms: 900
+    citations:
+      - id: EXP-ZHANG-001
+        title: 开园前设备异响判断
+        version: "1.0"
+        trigger: 开园前试运行出现间歇性金属异响
+        behavior: 先空载低速运行并检查传动护罩，再决定是否开放设备
+        reason: 间歇异响常由松动件引起，带客运行会放大风险
+      - id: EXP-ZHANG-002
+        title: 连续降雨后电气复查
+        version: "1.0"
+        trigger: 连续降雨后准备恢复室外设备
+        behavior: 先测绝缘并检查排水，再执行通电试车
+        reason: 表面干燥不代表电控箱和地沟内没有积水
+      - id: EXP-ZHANG-003
+        title: 重复故障升级停机
+        version: "1.0"
+        trigger: 同一保护告警在一个班次内重复两次
+        behavior: 停止复位重启并升级给设备经理做根因检查
+        reason: 重复复位会掩盖持续性故障并扩大停机损失
+  - id: create-persona
+    title: 创建数字分身
+    actor: Persona_Profile_Service
+    input_summary: 以已确认的访谈资料和三条经验逻辑建立可调用档案。
+    output_summary: 张师傅数字分身已创建，知识归属、版本和可用范围已登记。
+    presentation_delay_ms: 550
+    policy_decision: {allowed: true, rule: demo-owned-experience}
+  - id: ask-new-question
+    title: 提出新故障问题
+    actor: Operations_User
+    input_summary: 夜游开场前，设备试运行出现间歇性金属异响，应该继续观察还是停机？
+    output_summary: 新问题已提交给张师傅数字分身，并限定只使用已萃取经验回答。
+    presentation_delay_ms: 400
+  - id: answer-as-mentor
+    title: 基于经验生成回答
+    actor: Persona_Agent
+    input_summary: 使用张师傅已萃取逻辑判断夜游开场前的设备异响。
+    output_summary: 我会先让设备空载低速运行，检查传动护罩；异响未排除前不带客开放。
+    presentation_delay_ms: 750
+    citations:
+      - {id: EXP-ZHANG-001, title: 开园前设备异响判断, version: "1.0"}
+    tool_calls:
+      - {tool: llm.persona_answer, mode: DEMO_ADAPTER, status: GENERATED_FROM_APPROVED_ENTRIES}

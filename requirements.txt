@@ -1,6 +1,7 @@
 # Core Framework
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
+gunicorn>=22.0.0,<24.0.0
 pydantic>=2.6.0
 pydantic-settings>=2.2.0
 
@@ -39,6 +40,10 @@ watchdog>=4.0.0
 
 # HTTP/2 support (httpx http2)
 h2>=4.1.0
+
+# Enterprise API middleware
+slowapi>=0.1.9
+PyJWT>=2.8.0
 
 # Testing
 pytest>=8.1.0

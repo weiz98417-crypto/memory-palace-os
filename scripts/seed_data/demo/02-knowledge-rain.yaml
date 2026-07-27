@@ -1,0 +1,50 @@
+id: knowledge-rain
+version: 1
+title: 连续降雨运营知识问答
+short_title: 知识问答
+description: 用可追溯依据回答现场运营检查问题。
+estimated_seconds: 90
+fixed_input: 连续降雨后，热门项目排队区应该先检查什么？
+business_outcome: 形成包含防滑、围挡和客流监测的行动建议。
+proof_points: [RAG, 可解释回答, 知识版本, 采纳记录]
+steps:
+  - id: classify-query
+    title: 识别运营知识请求
+    actor: Router_Agent
+    input_summary: 连续降雨后，热门项目排队区应该先检查什么？
+    output_summary: 已路由至运营知识检索，主题为雨后排队区安全检查。
+    route_reason: 请求需要基于园区已批准 SOP 给出可追溯的行动建议。
+    presentation_delay_ms: 500
+  - id: retrieve-rain-guidance
+    title: 检索雨后运营知识
+    actor: MemoryOps_Agent
+    input_summary: 检索降雨、排队区、防滑、围挡和客流相关知识。
+    output_summary: 命中地面防滑、临时围挡和客流监测三类高相关检查项。
+    presentation_delay_ms: 750
+    citations:
+      - {id: SOP-RAIN-003, title: 连续降雨后场地安全检查, version: "2.0", relevance: 0.97}
+      - {id: SOP-CROWD-006, title: 高峰排队区客流控制, version: "1.6", relevance: 0.93}
+      - {id: KB-FACILITY-014, title: 室外地面防滑巡检要点, version: "3.1", relevance: 0.91}
+    policy_decision: {allowed: true, rule: demo-approved-knowledge}
+  - id: verify-sources
+    title: 核验引用依据
+    actor: Knowledge_Evidence_Service
+    input_summary: 核对知识来源、版本、更新时间和适用场景。
+    output_summary: 三条引用均在有效期内，适用于连续降雨后的热门项目排队区。
+    presentation_delay_ms: 450
+    policy_decision: {allowed: true, rule: current-version-only}
+  - id: compose-advice
+    title: 生成现场行动建议
+    actor: Operations_Advisor_Agent
+    input_summary: 将已核验知识转为值班人员可直接执行的检查清单。
+    output_summary: 建议先处理地面防滑，再布置临时围挡，并持续开启客流监测。
+    presentation_delay_ms: 700
+    tool_calls:
+      - {tool: llm.compose_advice, mode: DEMO_ADAPTER, status: GENERATED}
+  - id: record-adoption
+    title: 记录建议采纳
+    actor: Adoption_Log
+    input_summary: 值班经理确认采用三项雨后排队区检查建议。
+    output_summary: 采纳记录已写入演示审计日志，关联全部知识引用和当前 trace。
+    presentation_delay_ms: 400
+    policy_decision: {allowed: true, rule: demo-audit-write}

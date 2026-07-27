@@ -1,7 +1,9 @@
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Stage 1: builder — 安装依赖，不污染最终镜像
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-FROM python:3.11-slim AS builder
+ARG PYTHON_BASE_IMAGE=python:3.11-slim
+
+FROM ${PYTHON_BASE_IMAGE} AS builder
 
 WORKDIR /build
 
@@ -20,7 +22,7 @@ RUN pip install --upgrade pip && \
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Stage 2: runtime — 最终运行镜像，尽可能精简
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-FROM python:3.11-slim AS runtime
+FROM ${PYTHON_BASE_IMAGE} AS runtime
 
 LABEL maintainer="memory-palace-os"
 LABEL description="文旅多智能体运营系统"
@@ -43,13 +45,14 @@ COPY --chown=appuser:appuser . .
 
 # 创建数据目录（volumes 会覆盖，但保证目录存在）
 RUN mkdir -p data/logs data/chroma && \
-    chown -R appuser:appuser data/
+    chown -R appuser:appuser /app
 
 USER appuser
 
 # 环境变量默认值（可被 docker-compose / .env 覆盖）
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app \
     APP_ENV=production \
     LOG_LEVEL=INFO
 

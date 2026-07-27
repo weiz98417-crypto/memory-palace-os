@@ -18,20 +18,17 @@ import os
 import signal
 import sys
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 # ── 内部模块 ──────────────────────────────────────────────────────────────────
-from src.memory_palace.config.env_validator import validate_env          # P0: 启动校验
-from src.memory_palace.core.gateway import router as webhook_router      # 企微 Webhook 路由
-from src.memory_palace.skills import _auto_register_skills             # Agent 注册
-from src.memory_palace.core.queue_worker import MessageQueueWorker, set_message_queue  # 异步队列消费者
-from src.memory_palace.core.scheduler import TaskScheduler               # Watcher 定时任务
-from src.memory_palace.tools.logger_config import setup_logger           # 日志初始化
-from src.memory_palace.api import v1_router, v2_router                  # API 路由层
+from src.memory_palace.config.env_validator import validate_env  # P0: 启动校验
+from src.memory_palace.tools.logger_config import setup_logger  # 日志初始化
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -39,13 +36,16 @@ from src.memory_palace.api import v1_router, v2_router                  # API �
 #    所有必需 Key 缺失时直接 sys.exit(1)，不让残缺配置的服务跑起来
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 from dotenv import load_dotenv
-load_dotenv()           # 加载 .env 文件中的环境变量
+
+load_dotenv()  # 加载 .env 文件中的环境变量
+_DEMO_MODE = os.environ.get("DEMO_MODE", "").lower() == "true"
 # DEMO_MODE: 跳过环境变量严格校验，允许缺失 Key 运行时降级
-if os.environ.get("DEMO_MODE", "").lower() != "true":
-    validate_env()          # 内部会 sys.exit(1) + 打印缺失项
+if not _DEMO_MODE:
+    validate_env()  # 内部会 sys.exit(1) + 打印缺失项
     # Secrets validation (fail-fast on missing required secrets)
     try:
         from src.memory_palace.config.secrets import secrets as _secrets
+
         missing = _secrets.validate(demo_mode=False)
         if missing:
             logger.error(f"缺少必需的密钥: {missing}")
@@ -54,7 +54,7 @@ if os.environ.get("DEMO_MODE", "").lower() != "true":
         logger.warning(f"密钥校验跳过: {e}")
 else:
     logger.info("🎮 DEMO_MODE 已启用 — 跳过环境变量严格校验")
-setup_logger()          # 初始化 loguru（多文件归档、自动旋转）
+setup_logger()  # 初始化 loguru（多文件归档、自动旋转）
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -79,6 +79,16 @@ async def lifespan(app: FastAPI):
     - Task Graph 持久化恢复
     - Permission Engine 恢复待审批请求
     """
+    if _DEMO_MODE:
+        logger.info("🎮 企业演示隔离模式已启动")
+        yield
+        logger.info("👋 企业演示隔离模式已退出")
+        return
+
+    from src.memory_palace.core.queue_worker import MessageQueueWorker, set_message_queue
+    from src.memory_palace.core.scheduler import TaskScheduler
+    from src.memory_palace.skills import _auto_register_skills
+
     logger.info("🚀 Memory Palace OS 正在启动...")
 
     # —— 注册所有 Agent（触发 @register_skill 装饰器）——
@@ -87,12 +97,14 @@ async def lifespan(app: FastAPI):
 
     # —— 确保数据库表存在（幂等，先于 Phase 恢复）——
     from src.memory_palace.knowledge.db_init import init_database
+
     await init_database()
     logger.info("✅ 数据库表初始化完成")
 
     # [Phase 3] 恢复任务图
     try:
         from src.memory_palace.core.task_graph import task_graph
+
         await task_graph.reload_from_db()
         logger.info("✅ Task Graph 已从数据库恢复")
     except Exception as e:
@@ -101,6 +113,7 @@ async def lifespan(app: FastAPI):
     # [Phase 2] 恢复权限引擎待审批请求
     try:
         from src.memory_palace.core.permissions import permission_engine
+
         await permission_engine.reload_from_db()
         logger.info("✅ Permission Engine 已恢复待审批请求")
     except Exception as e:
@@ -109,6 +122,7 @@ async def lifespan(app: FastAPI):
     # —— 初始化 DI 容器 ——
     try:
         from src.memory_palace.core.container import AppContainer
+
         app_container = AppContainer()
         logger.info("✅ DI 容器已初始化")
     except Exception as e:
@@ -122,6 +136,7 @@ async def lifespan(app: FastAPI):
     if os.environ.get("DEMO_MODE", "").lower() != "true":
         try:
             from src.memory_palace.core.redis_queue import RedisStreamsQueue
+
             queue_backend = RedisStreamsQueue()
             logger.info("✅ Redis Streams 队列后端已初始化")
         except Exception as e:
@@ -138,23 +153,29 @@ async def lifespan(app: FastAPI):
     # —— 注册健康检查器 ——
     try:
         from src.memory_palace.core.health import get_health_registry
+
         registry = get_health_registry()
         # PG check
         if os.environ.get("DEMO_MODE", "").lower() != "true" and app_container:
             try:
                 from src.memory_palace.core.health import DatabaseHealthChecker
-                registry.register("postgresql", DatabaseHealthChecker(
-                    lambda: app_container.db_client.fetch_one("SELECT 1")
-                ))
-            except Exception: pass
+
+                registry.register(
+                    "postgresql", DatabaseHealthChecker(lambda: app_container.db_client.fetch_one("SELECT 1"))
+                )
+            except Exception:
+                pass
         # Redis check
         if queue_backend:
             try:
                 from src.memory_palace.core.health import RedisHealthChecker
-                registry.register("redis", RedisHealthChecker(
-                    lambda: queue_backend._client.ping() if queue_backend._client else False
-                ))
-            except Exception: pass
+
+                registry.register(
+                    "redis",
+                    RedisHealthChecker(lambda: queue_backend._client.ping() if queue_backend._client else False),
+                )
+            except Exception:
+                pass
         logger.info("✅ 健康检查器已注册")
     except Exception as e:
         logger.debug(f"健康检查器注册跳过: {e}")
@@ -171,6 +192,7 @@ async def lifespan(app: FastAPI):
     # 关闭企微 HTTP 客户端
     try:
         from src.memory_palace.tools.wechat_client import get_wechat_client
+
         wc = get_wechat_client()
         if wc:
             await wc.close()
@@ -189,9 +211,11 @@ async def lifespan(app: FastAPI):
         logger.warning(f"⚠️  队列排空超时，剩余 {MESSAGE_QUEUE.qsize()} 条消息未处理")
 
     # 记录死信队列内容
-    if hasattr(worker, '_dead_letter_queue') and worker._dead_letter_queue:
-        logger.error(f"⚠️ 死信队列包含 {len(worker._dead_letter_queue)} 条未发送回复: "
-                     f"{[d['msg_id'] for d in worker._dead_letter_queue]}")
+    if hasattr(worker, "_dead_letter_queue") and worker._dead_letter_queue:
+        logger.error(
+            f"⚠️ 死信队列包含 {len(worker._dead_letter_queue)} 条未发送回复: "
+            f"{[d['msg_id'] for d in worker._dead_letter_queue]}"
+        )
 
     # 取消消费者 Task
     consumer_task.cancel()
@@ -199,6 +223,26 @@ async def lifespan(app: FastAPI):
         await consumer_task
     except asyncio.CancelledError:
         pass
+
+    # 关闭短信/语音线程池，避免 Gunicorn 和测试容器退出时悬挂。
+    try:
+        from src.memory_palace.tools.sms_client import sms_client
+
+        sms_client.close(wait=True)
+        logger.info("✅ 通知线程池已关闭")
+    except Exception as e:
+        logger.warning(f"通知线程池关闭异常（不影响退出）: {e}")
+
+    # 释放持久化客户端，避免 SQLite/Chroma 后台线程阻止进程退出。
+    try:
+        from src.memory_palace.knowledge.db_client import db_client
+        from src.memory_palace.knowledge.vector_store import close_vector_client
+
+        await db_client.close()
+        close_vector_client()
+        logger.info("✅ 数据客户端已关闭")
+    except Exception as e:
+        logger.warning(f"数据客户端关闭异常（不影响退出）: {e}")
 
     logger.info("👋 Memory Palace OS 已安全退出")
 
@@ -212,49 +256,56 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
     # 生产环境关闭 Swagger UI（防止泄露接口结构）
-    docs_url="/docs" if __debug__ else None,
+    docs_url="/docs" if __debug__ and not _DEMO_MODE else None,
     redoc_url=None,
+    openapi_url=None if _DEMO_MODE else "/openapi.json",
 )
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 4. 限流（生产环境自动启用，demo 模式跳过）
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-try:
-    from src.memory_palace.api.rate_limit import create_limiter
-    limiter = create_limiter()
-    if limiter:
-        app.state.limiter = limiter
-        logger.info("✅ API 限流已启用")
-except Exception as e:
-    logger.debug(f"API 限流未启用: {e}")
+if not _DEMO_MODE:
+    try:
+        from src.memory_palace.api.rate_limit import create_limiter
+
+        limiter = create_limiter()
+        if limiter:
+            app.state.limiter = limiter
+            logger.info("✅ API 限流已启用")
+    except Exception as e:
+        logger.debug(f"API 限流未启用: {e}")
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 5. 路由挂载
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# 企微 Webhook（GET 验证 + POST 接收消息）
-app.include_router(webhook_router, prefix="/webhook", tags=["企微网关"])
+if _DEMO_MODE:
+    from src.memory_palace.demo.router import router as enterprise_demo_router
 
-# API v1（管理端接口）
-app.include_router(v1_router, tags=["API v1"])
+    app.include_router(enterprise_demo_router)
 
-# API v2（扩展接口）
-app.include_router(v2_router, tags=["API v2"])
+    @app.get("/demo", include_in_schema=False)
+    async def enterprise_demo_console():
+        return FileResponse(
+            Path(__file__).resolve().parent / "static" / "demo_console.html",
+            media_type="text/html; charset=utf-8",
+        )
 
-# Demo 消息入口（仅 DEMO_MODE=true 时可用）
-if os.environ.get("DEMO_MODE", "").lower() == "true":
-    from src.memory_palace.core.gateway import demo_router
-    app.include_router(demo_router, tags=["Demo"])
-    logger.info("🎮 DEMO_MODE 已激活 — /demo/send 端点可用")
+    logger.info("🎮 DEMO_MODE 已激活 — 企业演示控制台与场景 API 可用")
+else:
+    from src.memory_palace.api import v1_router, v2_router
+    from src.memory_palace.core.gateway import router as webhook_router
 
-# 管理大屏静态文件（/admin 重定向到 /admin/index.html，避免 307）
-from fastapi.responses import RedirectResponse
-@app.get("/admin", include_in_schema=False)
-async def admin_redirect():
-    return RedirectResponse(url="/admin/index.html", status_code=302)
+    app.include_router(webhook_router, prefix="/webhook", tags=["企微网关"])
+    app.include_router(v1_router, tags=["API v1"])
+    app.include_router(v2_router, tags=["API v2"])
 
-app.mount("/admin", StaticFiles(directory="static", html=True), name="admin_static")
+    @app.get("/admin", include_in_schema=False)
+    async def admin_redirect():
+        return RedirectResponse(url="/admin/index.html", status_code=302)
+
+    app.mount("/admin", StaticFiles(directory="static", html=True), name="admin_static")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -283,9 +334,7 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=8000,
-        reload=True,          # 开发模式热重载
+        reload=True,  # 开发模式热重载
         log_level="info",
         access_log=True,
     )
-
-    

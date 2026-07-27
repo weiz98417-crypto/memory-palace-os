@@ -6,6 +6,35 @@
 
 ---
 
+## 企业演示版（推荐入口）
+
+企业演示版只支持 Docker 运行，不需要配置真实 LLM、企微、短信或企业数据库密钥。
+
+```powershell
+scripts\demo.cmd start
+```
+
+启动成功后访问 [http://localhost:8000/demo](http://localhost:8000/demo)。
+
+```powershell
+scripts\demo.cmd status  # 查看状态
+scripts\demo.cmd verify  # 健康检查 + 四场景 live API + 176 条自动化测试
+scripts\demo.cmd reset   # 重建独立 Demo 数据卷
+scripts\demo.cmd logs    # 跟随日志，Ctrl+C 退出
+scripts\demo.cmd stop    # 停止服务，保留数据卷
+```
+
+默认提供四个版本化、可重复的标准场景：P0 应急、运营知识问答、老员工经验萃取、跨部门任务拆解。页面支持 Play/Pause/Step/Stop/Reset、步骤证据、失败重试、跨场景状态保留和 JSON 报告下载。
+
+- [企业演示版交付指南](docs/enterprise-demo/README.md)
+- [企业演示版 PRD](PRD-memory-palace-enterprise-demo.md)
+- [测试与视觉验证证据](docs/verification/enterprise-demo-v1/test-results.md)
+- [能力声明矩阵](docs/verification/enterprise-demo-v1/capability-matrix.md)
+
+> 安全边界：默认模式为 `LOCAL_DEMO_SIMPLIFIED_AUTH`，服务只绑定 `127.0.0.1`。这不是生产鉴权方案，不应直接暴露到公网。
+
+---
+
 ## 核心定位
 
 当员工在企微群发"有人晕倒了"，系统 30 秒内自动完成：**P0 事件识别 → SOP 指令下发 → 责任人通知 → 全链路记录**。
@@ -180,7 +209,7 @@ src/memory_palace/
 
 ---
 
-## 快速开始
+## 旧版开发运行（非企业演示入口）
 
 ### 前置
 

@@ -29,13 +29,15 @@ class EmergencyNotifier:
 
         # 1. 独立线程池：不阻塞主业务流程，分配 5 个线程专门处理短信任物
         self.executor = ThreadPoolExecutor(max_workers=5, thread_name_prefix="SMSWorker")
+        self._closed = False
+        self._shutdown_lock = threading.Lock()
 
         # 2. 防轰炸限流记录 (Phone -> Timestamp)
         self._send_records: Dict[str, float] = {}
         self._rate_lock = threading.Lock()
-        
+
         # 同一手机号的防刷冷却时间（秒）
-        self.cooldown_seconds = 60 
+        self.cooldown_seconds = 60
 
     def _check_rate_limit(self, phone: str) -> bool:
         """检查是否触发了防轰炸限流策略"""
@@ -51,15 +53,15 @@ class EmergencyNotifier:
         """底层同步发短信逻辑（此处为云厂商 SDK 占位）"""
         try:
             logger.debug(f"[云通讯网关] 正在向 {phone} 发送短信 | 模板: {template_code} | 参数: {params}")
-            
+
             # TODO: 此处替换为真实的 Aliyun/Tencent SDK 调用
             # client = Client(config)
             # request = SendSmsRequest(phone_numbers=phone, sign_name=self.sign_name...)
             # response = client.send_sms(request)
-            
+
             # 模拟网络延迟
-            time.sleep(0.5) 
-            
+            time.sleep(0.5)
+
             logger.success(f"[云通讯网关] 🚨 告警短信已成功投递至: {phone}")
             return True
         except Exception as e:
@@ -70,10 +72,10 @@ class EmergencyNotifier:
         """底层同步打语音电话逻辑（此处为云厂商 SDK 占位）"""
         try:
             logger.warning(f"[云通讯网关] 正在对 {phone} 发起高危语音呼叫 (TTS) | 模板: {tts_code}")
-            
+
             # 模拟网络延迟
             time.sleep(1.0)
-            
+
             logger.success(f"[云通讯网关] 🚨 语音电话已成功接通: {phone}")
             return True
         except Exception as e:
@@ -90,14 +92,9 @@ class EmergencyNotifier:
             if not self._check_rate_limit(phone):
                 logger.warning(f"[限流拦截] {phone} 在 {self.cooldown_seconds}s 内已接收过短信，本次拦截。")
                 continue
-            
+
             # 提交给线程池异步执行，立刻 return，不卡死大模型流程
-            self.executor.submit(
-                self._sync_send_sms, 
-                phone, 
-                "SMS_P1_TEMPLATE", 
-                {"event": event_desc, "loc": location}
-            )
+            self.executor.submit(self._sync_send_sms, phone, "SMS_P1_TEMPLATE", {"event": event_desc, "loc": location})
 
     def send_p0_critical(self, phones: List[str], event_desc: str) -> None:
         """下发 P0 级致命事件告警（短信 + 连环语音呼叫）"""
@@ -105,20 +102,24 @@ class EmergencyNotifier:
             if not self._check_rate_limit(phone):
                 logger.warning(f"[限流拦截] {phone} 处于冷却期，不再重复拨打 P0 语音。")
                 continue
-            
+
             # 双管齐下：发短信的同时打电话
-            self.executor.submit(
-                self._sync_send_sms, 
-                phone, 
-                "SMS_P0_CRITICAL", 
-                {"event": event_desc}
-            )
-            self.executor.submit(
-                self._sync_send_voice_call, 
-                phone, 
-                "TTS_P0_WAKEUP", 
-                {"event": event_desc}
-            )
+            self.executor.submit(self._sync_send_sms, phone, "SMS_P0_CRITICAL", {"event": event_desc})
+            self.executor.submit(self._sync_send_voice_call, phone, "TTS_P0_WAKEUP", {"event": event_desc})
+
+    def close(self, wait: bool = True) -> None:
+        """Stop worker threads so application and test processes can exit cleanly."""
+        with self._shutdown_lock:
+            if self._closed:
+                return
+            self._closed = True
+            self.executor.shutdown(wait=wait, cancel_futures=True)
+
+    def __enter__(self) -> "EmergencyNotifier":
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        self.close()
 
 
 # 导出全局单例
@@ -128,6 +129,7 @@ sms_client = EmergencyNotifier()
 # ─────────────────────────────────────────────────────────────────────────────
 # 便捷告警函数
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def send_sms(phone: str, event_desc: str, severity: str = "P2") -> None:
     """发送短信告警"""
@@ -139,12 +141,7 @@ def send_sms(phone: str, event_desc: str, severity: str = "P2") -> None:
 
 def send_voice_call(phone: str, event_desc: str) -> None:
     """发起语音呼叫"""
-    sms_client.executor.submit(
-        sms_client._sync_send_voice_call,
-        phone,
-        "TTS_P0_WAKEUP",
-        {"event": event_desc}
-    )
+    sms_client.executor.submit(sms_client._sync_send_voice_call, phone, "TTS_P0_WAKEUP", {"event": event_desc})
 
 
 def send_alert(message: str, level: str = "P2", phones: Optional[list[str]] = None) -> None:

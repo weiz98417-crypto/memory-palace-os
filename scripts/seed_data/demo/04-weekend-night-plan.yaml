@@ -1,0 +1,58 @@
+id: weekend-night-plan
+version: 1
+title: 周末夜游跨部门保障计划
+short_title: 任务拆解
+description: 展示复杂目标拆解、依赖执行和可恢复失败。
+estimated_seconds: 150
+fixed_input: 为周末夜游高峰制定并执行跨部门保障计划。
+business_outcome: 五类保障任务按依赖完成，并记录一次自动恢复。
+proof_points: [任务图, 进程内状态保留, 失败恢复, 跨 Agent 协作]
+steps:
+  - id: decompose-goal
+    title: 拆解跨部门目标
+    actor: TodoWrite_Agent
+    input_summary: 为周末夜游高峰制定并执行跨部门保障计划。
+    output_summary: 已拆解客流预测、人员排班、设备检查、应急预案和复盘任务五类工作。
+    presentation_delay_ms: 750
+    tool_calls:
+      - tool: task_graph.create
+        mode: DEMO_ADAPTER
+        status: FIVE_TASKS_CREATED
+        tasks: [客流预测, 人员排班, 设备检查, 应急预案, 复盘任务]
+  - id: build-task-graph
+    title: 建立任务依赖
+    actor: TaskGraph_Service
+    input_summary: 为五类保障任务配置负责人、依赖和完成条件。
+    output_summary: 客流预测先行；人员排班与设备检查可并行；应急预案依赖前两类结果；复盘任务最后执行。
+    presentation_delay_ms: 600
+    policy_decision: {allowed: true, rule: demo-task-graph-write}
+  - id: execute-ready-tasks
+    title: 并行执行就绪任务
+    actor: Orchestrator
+    input_summary: 启动无阻塞的客流预测、人员排班和设备检查任务。
+    output_summary: 客流预测与人员排班已完成，设备检查进入照明回路验证。
+    presentation_delay_ms: 700
+  - id: recover-equipment-check
+    title: 恢复设备检查失败
+    actor: Equipment_Agent
+    input_summary: 夜游照明回路首次连通检查返回临时超时。
+    output_summary: 设备检查在固定退避后重试成功，照明回路和备用电源均通过验证。
+    presentation_delay_ms: 900
+    retry_count: 1
+    recovery_summary: Watcher 识别临时超时，等待 200 毫秒后重试一次并成功恢复。
+    tool_calls:
+      - {tool: equipment.check, mode: DEMO_ADAPTER, attempt: 1, status: TEMPORARY_TIMEOUT}
+      - {tool: equipment.check, mode: DEMO_ADAPTER, attempt: 2, status: SUCCESS}
+  - id: complete-dependent-tasks
+    title: 完成依赖任务
+    actor: Watcher_Agent
+    input_summary: 验证上游任务与恢复结果，放行应急预案和复盘任务。
+    output_summary: 应急预案已发布，复盘任务已排期；全部依赖和负责人状态一致。
+    presentation_delay_ms: 650
+    policy_decision: {allowed: true, rule: recovered-dependency-release}
+  - id: finalize-plan
+    title: 生成保障计划卷宗
+    actor: Audit_Service
+    input_summary: 汇总任务图、执行状态、一次失败恢复和跨部门责任记录。
+    output_summary: 周末夜游保障计划全部完成，五类任务和恢复证据已进入审计卷宗。
+    presentation_delay_ms: 500

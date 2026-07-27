@@ -1,0 +1,64 @@
+id: emergency-p0
+version: 1
+title: P0 应急事件处置
+short_title: P0 应急
+description: 从现场上报到指令下发与 SLA 审计的完整闭环。
+estimated_seconds: 150
+fixed_input: 一号门有游客突然晕倒，现场围观人员很多。
+business_outcome: 完成 P0 分诊、SOP 引用、三方指令和 SLA 审计。
+proof_points: [SLA, 权限, 审计, 知识引用, 降级通知]
+steps:
+  - id: receive-message
+    title: 接收现场上报
+    actor: Gateway
+    input_summary: 一号门有游客突然晕倒，现场围观人员很多。
+    output_summary: 已建立事件记录并生成全链路追踪编号。
+    presentation_delay_ms: 450
+    policy_decision: {allowed: true, rule: demo-local-ingress}
+  - id: classify-event
+    title: 识别事件等级
+    actor: Router_Agent
+    input_summary: 分析人员伤情、现场秩序和响应紧迫度。
+    output_summary: 判定为 emergency_dispatch，严重等级 P0。
+    route_reason: 命中“突然晕倒”和“围观人员很多”，需要医疗与安保协同。
+    presentation_delay_ms: 650
+  - id: retrieve-sop
+    title: 检索应急 SOP
+    actor: MemoryOps_Agent
+    input_summary: 检索游客突发疾病、现场隔离和人群疏导流程。
+    output_summary: 命中急救、隔离和疏导三条已批准 SOP。
+    presentation_delay_ms: 700
+    citations:
+      - {id: SOP-EMG-001, title: 游客突发疾病处置, version: "1.2"}
+      - {id: SOP-SEC-004, title: 现场隔离与秩序维护, version: "2.1"}
+      - {id: SOP-CROWD-002, title: 高密度人群疏导, version: "1.4"}
+    policy_decision: {allowed: true, rule: demo-approved-knowledge}
+  - id: generate-orders
+    title: 生成协同指令
+    actor: Commander_Agent
+    input_summary: 根据 P0 等级和三条 SOP 生成分角色行动指令。
+    output_summary: 已生成医务、安保和值班经理三条可执行指令。
+    presentation_delay_ms: 800
+  - id: notify-teams
+    title: 下发行动通知
+    actor: Notification_Gateway
+    input_summary: 向医务、安保和值班经理同步行动指令。
+    output_summary: 企微、短信和语音通知已由 Demo Adapter 记录。
+    presentation_delay_ms: 600
+    tool_calls:
+      - {tool: wecom.send, mode: DEMO_ADAPTER, status: RECORDED}
+      - {tool: sms.send, mode: DEMO_ADAPTER, status: RECORDED}
+      - {tool: voice.call, mode: DEMO_ADAPTER, status: RECORDED}
+    policy_decision: {allowed: true, rule: demo-notification-sandbox}
+  - id: audit-sla
+    title: 核验 P0 SLA
+    actor: Watcher_Agent
+    input_summary: 检查接警、分诊和指令下发耗时。
+    output_summary: 首次响应和指令下发均满足 P0 演示 SLA。
+    presentation_delay_ms: 550
+  - id: close-case
+    title: 形成事件卷宗
+    actor: Audit_Service
+    input_summary: 汇总事件、引用、指令、通知和 SLA 证据。
+    output_summary: P0 事件卷宗已完成，可用于复盘和报告导出。
+    presentation_delay_ms: 450

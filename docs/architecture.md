@@ -4,6 +4,25 @@
 
 ---
 
+## 0. 企业演示版运行分支
+
+企业演示版在现有应用上增加独立的 `ScenarioController` 边界。浏览器只调用 `/demo` 和 `/demo/*` 路由，场景定义来自 `scripts/seed_data/demo/*.yaml`，默认工具行为由 Demo Adapter 记录，不触发真实 LLM、企微、短信或语音外呼。
+
+```text
+/demo UI
+   -> FastAPI demo router
+   -> ScenarioController
+      -> ScenarioCatalog (versioned YAML)
+      -> deterministic Demo Adapter
+      -> run snapshot / step evidence / report
+```
+
+Controller 使用单 run 锁、`expected_version` 和明确状态机保护 Play/Pause/Step/Stop/Reset。运行中边界动作优先级为 `reset > stop > pause`；确定性失败同时保留失败 attempt 和恢复 attempt。
+
+默认 Demo Compose 固定单 worker、非 root 用户、SQLite 和进程内队列，并只把端口绑定到 `127.0.0.1`。完整信任边界见 [企业演示版架构](enterprise-demo/architecture.md)。
+
+---
+
 ## 1. 逻辑分层架构 (Layered Architecture)
 
 系统由下至上分为四层，每一层都通过标准的接口（Contract）进行通讯。
@@ -74,6 +93,20 @@
 - **Token 熔断**: 调度器限制单次交互最大 Agent 切换步数为 5 步，防止逻辑死循环。
 - **并发锁**: `wechat_client` 采用 DCL (Double-Checked Locking) 确保高并发下 Token 刷新不踩踏。
 - **降级保护**: 当 LLM 挂起或超时，系统自动回复“指挥部网络繁忙”，并同步触发短信告警通知人工介入。
+
+---
+
+## 5. 相关文档
+
+- [企业演示版交付指南](enterprise-demo/README.md)
+- [关键运行流程](enterprise-demo/flows.md)
+- [权限与访问边界](enterprise-demo/permissions.md)
+- [环境变量与密钥](enterprise-demo/variables.md)
+- [Agent 与自动化边界](enterprise-demo/automation.md)
+- [后台任务](enterprise-demo/cron.md)
+- [测试覆盖图](enterprise-demo/tests.md)
+- [故障处理手册](enterprise-demo/failure-playbook.md)
+- [验证证据](verification/enterprise-demo-v1/test-results.md)
 
 ---
 <div align="center">

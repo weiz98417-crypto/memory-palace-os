@@ -15,36 +15,30 @@ from chromadb.utils import embedding_functions
 from typing import List, Dict, Any, Optional
 from loguru import logger
 
+
 class PalaceVectorStore:
     def __init__(self):
         # 工业路径：数据持久化到 data/ 目录
         self.db_path = os.environ.get("VECTOR_DB_PATH", "data/vector_db")
-        
+
         # 1. 选用 OpenAI 工业级 Embedding 模型 (text-embedding-3-small)
         self.emb_fn = embedding_functions.OpenAIEmbeddingFunction(
-            api_key=os.environ.get("OPENAI_API_KEY"),
-            model_name="text-embedding-3-small"
+            api_key=os.environ.get("OPENAI_API_KEY"), model_name="text-embedding-3-small"
         )
 
         # 2. 建立持久化客户端
         self._client = chromadb.PersistentClient(path=self.db_path)
-        
+
         # 3. 初始化集合，指定余弦空间 (cosine)
         self.collection = self._client.get_or_create_collection(
-            name="memory_palace_vdb",
-            embedding_function=self.emb_fn,
-            metadata={"hnsw:space": "cosine"}
+            name="memory_palace_vdb", embedding_function=self.emb_fn, metadata={"hnsw:space": "cosine"}
         )
         logger.info(f"向量知识库初始化完成，挂载点: {self.db_path}")
 
     def upsert_experience(self, content: str, metadata: Dict[str, Any], doc_id: str):
         """插入或更新一条经验碎片"""
         try:
-            self.collection.upsert(
-                documents=[content],
-                metadatas=[metadata],
-                ids=[doc_id]
-            )
+            self.collection.upsert(documents=[content], metadatas=[metadata], ids=[doc_id])
             logger.debug(f"[VectorStore] 数据上云: {doc_id}")
         except Exception as e:
             logger.error(f"[VectorStore] Upsert 失败: {e}")
@@ -55,31 +49,40 @@ class PalaceVectorStore:
         """
         try:
             results = self.collection.query(
-                query_texts=[text],
-                n_results=top_k,
-                include=["documents", "metadatas", "distances"]
+                query_texts=[text], n_results=top_k, include=["documents", "metadatas", "distances"]
             )
-            
+
             clean_results = []
-            if not results or not results['documents']:
+            if not results or not results["documents"]:
                 return []
 
-            for i in range(len(results['documents'][0])):
+            for i in range(len(results["documents"][0])):
                 # Chroma 的 cosine distance = 1 - similarity
-                similarity = 1 - results['distances'][0][i]
-                
+                similarity = 1 - results["distances"][0][i]
+
                 # 工业级过滤：低于阈值的通通丢弃，宁可不给建议也不乱给建议
                 if similarity >= threshold:
-                    clean_results.append({
-                        "content": results['documents'][0][i],
-                        "metadata": results['metadatas'][0][i],
-                        "score": round(similarity, 3)
-                    })
-            
+                    clean_results.append(
+                        {
+                            "content": results["documents"][0][i],
+                            "metadata": results["metadatas"][0][i],
+                            "score": round(similarity, 3),
+                        }
+                    )
+
             return clean_results
         except Exception as e:
             logger.error(f"[VectorStore] 检索过程中断: {e}")
             return []
+
+    def close(self) -> None:
+        """Release Chroma's background runtime when the store is no longer used."""
+        client = getattr(self, "_client", None)
+        close = getattr(client, "close", None)
+        if callable(close):
+            close()
+        self._client = None
+
 
 # 单例工厂（懒加载，避免 import 时触发 ChromaDB/OpenAI 初始化）
 _vector_client = None
@@ -95,3 +98,11 @@ def get_vector_client() -> Optional[PalaceVectorStore]:
             logger.warning(f"[VectorStore] 初始化失败（将以降级模式运行）: {e}")
             _vector_client = None
     return _vector_client
+
+
+def close_vector_client() -> None:
+    """Close and clear the lazily-created process-wide vector client."""
+    global _vector_client
+    client, _vector_client = _vector_client, None
+    if client is not None:
+        client.close()
