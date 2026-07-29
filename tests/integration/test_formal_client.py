@@ -1,3 +1,5 @@
+import re
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.testclient import TestClient
@@ -18,5 +20,5 @@ def test_formal_client_exposes_the_approved_brand_and_workspace_navigation():
     assert "任务与审批" in response.text
     assert "组织记忆" in response.text
     assert "系统治理" in response.text
-    assert 'value="admin"' not in response.text
-    assert 'value="123456"' not in response.text
+    assert not re.search(r'<input[^>]*id="login-username"[^>]*\svalue=', response.text)
+    assert not re.search(r'<input[^>]*id="login-password"[^>]*\svalue=', response.text)
