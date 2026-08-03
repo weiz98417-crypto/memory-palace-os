@@ -183,18 +183,18 @@ async def test_simulator_lists_only_active_tenant_identities_and_uses_selected_e
 
 
 @pytest.mark.asyncio
-async def test_real_wecom_adapter_rejects_before_persistence_when_configuration_is_missing(
+async def test_real_wecom_adapter_rejects_before_persistence_even_when_credentials_exist(
     tmp_path,
     monkeypatch,
 ):
-    for key in (
-        "WECHAT_TOKEN",
-        "WECHAT_ENCODING_AES_KEY",
-        "WECHAT_CORP_ID",
-        "WECHAT_CORP_SECRET",
-        "WECHAT_AGENT_ID",
-    ):
-        monkeypatch.delenv(key, raising=False)
+    for key, value in {
+        "WECHAT_TOKEN": "configured-token",
+        "WECHAT_ENCODING_AES_KEY": "a" * 43,
+        "WECHAT_CORP_ID": "configured-corp",
+        "WECHAT_CORP_SECRET": "configured-secret",
+        "WECHAT_AGENT_ID": "1000002",
+    }.items():
+        monkeypatch.setenv(key, value)
     app, queue, db = await _build_app(tmp_path)
     app.state.test_principal = {
         "user_id": "api:test",
@@ -220,6 +220,7 @@ async def test_real_wecom_adapter_rejects_before_persistence_when_configuration_
 
         assert response.status_code == 503
         assert response.json()["detail"]["code"] == "INTEGRATION_DISABLED"
+        assert response.json()["detail"]["policy_mode"] == "WECOM_SIMULATOR_ONLY"
         assert queue.empty()
         assert await db.fetch_one(
             "SELECT message_id FROM message_runs WHERE external_message_id = ?",
@@ -545,7 +546,7 @@ async def test_employee_cannot_retry_another_users_or_tenants_message(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_wecom_message_requires_active_external_identity_mapping(tmp_path, monkeypatch):
+async def test_real_wecom_message_remains_disabled_after_identity_mapping(tmp_path, monkeypatch):
     for key in (
         "WECHAT_TOKEN",
         "WECHAT_ENCODING_AES_KEY",
@@ -596,14 +597,15 @@ async def test_wecom_message_requires_active_external_identity_mapping(tmp_path,
 
         assert mapped.status_code == 201
         assert mapped.json()["status"] == "ACTIVE"
-        assert accepted.status_code == 202
-        body = accepted.json()
-        assert body["channel"] == "WECOM"
-        assert body["identity"]["user_id"] == "operator-west"
-        assert body["identity"]["venue_id"] == "venue-west"
-        queued = queue.get_nowait()
-        assert queued["from_user"] == "operator-west"
-        assert queued["venue_id"] == "venue-west"
+        assert accepted.status_code == 503
+        body = accepted.json()["detail"]
+        assert body["code"] == "INTEGRATION_DISABLED"
+        assert body["policy_mode"] == "WECOM_SIMULATOR_ONLY"
+        assert queue.empty()
+        assert await db.fetch_one(
+            "SELECT message_id FROM message_runs WHERE external_message_id = ?",
+            ("wecom-message-001",),
+        ) is None
     finally:
         await db.close()
 

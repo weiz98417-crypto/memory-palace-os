@@ -453,7 +453,6 @@ async def _integration_status_rows(venue_id: str, db) -> list[dict[str, Any]]:
         )
     deepseek_verified = deepseek_evidence is not None
     in_app_evidence = None
-    wechat_evidence = None
     if db is not None:
         in_app_evidence = await db.fetch_one(
             """
@@ -465,31 +464,9 @@ async def _integration_status_rows(venue_id: str, db) -> list[dict[str, Any]]:
             """,
             (venue_id,),
         )
-        wechat_evidence = await db.fetch_one(
-            """
-            SELECT run.message_id, run.external_message_id, run.trace_id,
-                   run.delivery_status, run.delivered_at,
-                   ledger.push_id AS reply_push_id, ledger.recipient
-            FROM message_runs AS run
-            JOIN push_logs AS ledger
-              ON ledger.venue_id = run.venue_id
-             AND ledger.msg_id = run.message_id
-             AND ledger.channel = 'WECOM_REPLY'
-             AND ledger.delivery_status = 'DELIVERED'
-            WHERE run.venue_id = ? AND run.channel = 'WECOM'
-              AND run.status = 'COMPLETED'
-              AND run.delivery_status = 'DELIVERED'
-            ORDER BY run.delivered_at DESC, run.updated_at DESC
-            LIMIT 1
-            """,
-            (venue_id,),
-        )
-
     wechat_readiness = wechat_integration_readiness()
     sms_external = external_integration_readiness(("SMS_PROVIDER", "SMS_API_KEY"))
     voice_external = external_integration_readiness(("VOICE_PROVIDER", "VOICE_API_KEY"))
-    wechat_configured = bool(wechat_readiness["configured"])
-    wechat_verified = wechat_configured and wechat_evidence is not None
     sms_configured = bool(sms_external["configured"])
     voice_configured = bool(voice_external["configured"])
     sms_readiness = notification_channel_readiness("sms")
@@ -523,17 +500,33 @@ async def _integration_status_rows(venue_id: str, db) -> list[dict[str, Any]]:
             "blocked_reason": None if in_app_evidence else "需要完成一次审批后的站内告警投递。",
         },
         {
+            "id": "wecom_simulator",
+            "name": "企微模拟器",
+            "status": "SIMULATOR_READY",
+            "configured": True,
+            "safe_disabled_verified": True,
+            "live_verified": True,
+            "missing": [],
+            "evidence": {
+                "entrypoint": "/simulator/wecom/",
+                "channel": "WECOM_SIMULATOR",
+                "real_wecom_enabled": False,
+            },
+            "blocked_reason": None,
+        },
+        {
             "id": "wechat",
-            "name": "企业微信",
-            "status": (
-                "READY" if wechat_verified else str(wechat_readiness["status"])
-            ),
-            "configured": wechat_configured,
-            "safe_disabled_verified": not wechat_configured,
-            "live_verified": wechat_verified,
+            "name": "真实企业微信",
+            "status": str(wechat_readiness["status"]),
+            "configured": False,
+            "safe_disabled_verified": True,
+            "live_verified": False,
             "missing": wechat_readiness["missing"],
-            "evidence": wechat_evidence if wechat_verified else None,
-            "blocked_reason": None if wechat_verified or not wechat_configured else "需要客户沙箱回调与回复成功证据。",
+            "evidence": {
+                "policy_mode": wechat_readiness["policy_mode"],
+                "real_wecom_enabled": False,
+            },
+            "blocked_reason": wechat_readiness["blocked_reason"],
         },
         {
             "id": "sms",

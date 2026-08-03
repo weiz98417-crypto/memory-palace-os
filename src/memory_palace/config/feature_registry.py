@@ -11,7 +11,13 @@ import yaml
 
 
 REGISTRY_PATH = Path(__file__).with_name("feature_registry.yaml")
-ALLOWED_STATUSES = {"READY", "DISABLED_REQUIRES_CONFIG", "BLOCKED", "NOT_IN_MVP"}
+ALLOWED_STATUSES = {
+    "READY",
+    "DISABLED_REQUIRES_CONFIG",
+    "DISABLED_BY_POLICY",
+    "BLOCKED",
+    "NOT_IN_MVP",
+}
 REQUIRED_ITEM_FIELDS = {
     "id",
     "name",
@@ -204,7 +210,7 @@ FEATURE_REQUIREMENTS: dict[str, tuple[Requirement, ...]] = {
         ("fact", "llm_calls.event_dossier_visible", "DeepSeek 调用已同步进入事件卷宗"),
     ),
     "MVP-INTEGRATION-WECHAT": (
-        ("integration", "wechat.live_verified", "企业微信沙箱回调与回复成功证据"),
+        ("integration", "wechat.safe_disabled_verified", "真实企业微信按项目策略安全禁用"),
     ),
     "MVP-INTEGRATION-SMS": (
         ("integration", "sms.live_verified", "短信供应商沙箱发送成功证据"),
@@ -319,6 +325,11 @@ def validate_feature_registry(registry: dict[str, Any], *, enforce_prd_scope: bo
                 raise FeatureRegistryError(
                     f"DISABLED_REQUIRES_CONFIG item {item_id} must be non-interactive and name missing config"
                 )
+        elif item["status"] == "DISABLED_BY_POLICY":
+            if item["interactive"] or not item["blocked_reason"]:
+                raise FeatureRegistryError(
+                    f"DISABLED_BY_POLICY item {item_id} must be non-interactive and explain the policy"
+                )
         elif item["status"] == "BLOCKED" and not item["blocked_reason"]:
             raise FeatureRegistryError(f"BLOCKED item {item_id} must include blocked_reason")
 
@@ -431,30 +442,30 @@ def _requirement_result(
         ]
         return bool(records), [{"kind": "delivery", "key": key, "reference": record} for record in records]
     if kind == "agent_trace":
-        matching = _agent_success_rows(evidence, key)
-        return bool(matching), matching[:1]
+        matching_rows = _agent_success_rows(evidence, key)
+        return bool(matching_rows), matching_rows[:1]
     if kind == "message_agent_chain":
         completed = evidence.get("facts", {}).get("message_runs.completed")
-        completed_traces = {
-            row.get("trace_id")
+        completed_traces: set[str] = {
+            str(row["trace_id"])
             for row in _record_list(completed)
             if row.get("trace_id") and _successful_record(row)
         }
 
 
         def agent_traces(agent_id: str) -> set[str]:
-            return {row["trace_id"] for row in _agent_success_rows(evidence, agent_id)}
+            return {str(row["trace_id"]) for row in _agent_success_rows(evidence, agent_id)}
 
-        matching = (
+        matching_traces = (
             completed_traces
             & agent_traces("ContextTrigger")
             & agent_traces("Router")
             & agent_traces("Commander")
             & agent_traces("MemoryOps")
         )
-        if not matching:
+        if not matching_traces:
             return False, []
-        trace_id = sorted(matching)[0]
+        trace_id = sorted(matching_traces)[0]
         return True, [
             {
                 "kind": "message_agent_chain",
@@ -511,11 +522,22 @@ def _apply_runtime_evidence(registry: dict[str, Any], evidence: dict[str, Any]) 
             "missing": missing,
         }
         item["runtime_evidence"] = runtime_evidence
-        if not missing:
+        integration = evidence.get("integrations", {}).get(INTEGRATION_ITEM_IDS.get(item["id"], ""), {})
+        policy_disabled = (
+            item["id"] == "MVP-INTEGRATION-WECHAT"
+            and integration.get("status") == "DISABLED_BY_POLICY"
+            and integration.get("safe_disabled_verified") is True
+        )
+        if policy_disabled:
+            item["safe_disabled_verified"] = True
+            item["status"] = "DISABLED_BY_POLICY"
+            item["blocked_reason"] = integration.get("blocked_reason") or (
+                "本项目仅允许企微模拟器，真实企业微信收发已按项目策略禁用。"
+            )
+        elif not missing:
             item["status"] = "READY"
             item["blocked_reason"] = None
         elif item["id"] in INTEGRATION_ITEM_IDS:
-            integration = evidence.get("integrations", {}).get(INTEGRATION_ITEM_IDS[item["id"]], {})
             item["safe_disabled_verified"] = bool(integration.get("safe_disabled_verified"))
             if not integration.get("configured"):
                 if item["safe_disabled_verified"]:
@@ -550,7 +572,7 @@ def _apply_journey_evidence(registry: dict[str, Any]) -> None:
                 return True
             return (
                 item_id in OPTIONAL_EXTERNAL_INTEGRATION_IDS
-                and item.get("status") == "DISABLED_REQUIRES_CONFIG"
+                and item.get("status") in {"DISABLED_REQUIRES_CONFIG", "DISABLED_BY_POLICY"}
                 and item.get("safe_disabled_verified") is True
             )
         satisfied = [item_id for item_id in journey.get("covers", []) if is_satisfied(item_id)]
@@ -580,7 +602,7 @@ def _release_gate_passed(registry: dict[str, Any]) -> bool:
             return True
         return (
             item.get("id") in OPTIONAL_EXTERNAL_INTEGRATION_IDS
-            and item.get("status") == "DISABLED_REQUIRES_CONFIG"
+            and item.get("status") in {"DISABLED_REQUIRES_CONFIG", "DISABLED_BY_POLICY"}
             and item.get("safe_disabled_verified") is True
         )
 

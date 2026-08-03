@@ -53,7 +53,7 @@
 3. 实际写入消息、会话、队列、Agent、事件和审计数据。
 4. 将系统出站消息写入可查询的渠道 outbox，再由模拟器拉取并展示。
 5. 明确显示“企微模拟环境”，出站状态使用“已送达模拟器”，不得伪装成“真实企微已送达”。
-6. 真实企微 `READY` 仍需另行提供客户沙箱的 URL 验签、加密回调和真实回复证据。
+6. 真实企微不在本项目执行范围，必须保持 `DISABLED_BY_POLICY`；所有企微相关开发、演示和 UAT 进入模拟器。
 
 ### 2.3 禁止项
 
@@ -71,8 +71,8 @@
 
 ```mermaid
 flowchart LR
-    A["真实企业微信"] --> C["Canonical Ingress Service"]
-    B["企业微信模拟器"] --> C
+    A["企业微信模拟器（唯一企微入口）"] --> C["Canonical Ingress Service"]
+    X["真实企业微信（策略禁用）"] -.-> Y["不初始化 / 不入队 / 不发送"]
     C --> D["Redis Streams"]
     D --> E["Queue Worker"]
     E --> F["Orchestrator"]
@@ -82,7 +82,6 @@ flowchart LR
     G --> J["审批与工具执行"]
     J --> K["渠道 Outbox"]
     K --> A
-    K --> B
     H --> L["管理后台"]
     I --> L
 ```
@@ -93,12 +92,12 @@ flowchart LR
 - 企微模拟器：`/simulator/wecom/`
 - 模拟消息入站：`POST /api/v1/channels/wecom-simulator/messages`
 - 现有正式消息入口：`POST /api/v1/messages/`
-- 真实企微回调：`GET/POST /v1/wechat`
+- 真实企微回调与 API 入站：保留兼容路由但固定返回策略禁用，不参与业务旅程
 - 消息状态：`GET /api/v1/messages/{message_id}`
 - 会话消息：`GET /api/v1/assistant/conversations/{conversation_id}/messages`
 - 事件、任务、审批、知识和审计：沿用 `/api/v1/admin/*`
 
-模拟器 Adapter 和真实企微 Adapter 都必须调用同一个服务层，不得分别实现两套 Agent 业务流程。
+企微模拟器调用正式 Canonical Ingress 和业务服务。真实企微 Adapter 在本项目中不可达，不得初始化或调用。
 
 ## 4. 连贯业务故事
 
@@ -466,8 +465,8 @@ flowchart LR
 | UAT-F09 | 同一 Watcher 策略重复运行 | 相同来源和问题不重复生成未关闭 finding；运行记录仍分别保留 |
 | UAT-F10 | 跨场地读取会话、事件、任务、经验和 Trace | 统一拒绝并记录审计；不得通过业务编号推断其他租户数据 |
 | UAT-F11 | 普通员工直接调用审批、发布经验或技术 Trace 接口 | 服务端返回 403 并记录拒绝审计；隐藏菜单不能代替鉴权 |
-| UAT-F12 | 真实企微凭据未配置却尝试启用或发送 | 渠道保持 `DISABLED_REQUIRES_CONFIG`；页面列出缺项，不入队、不产生假发送或假成功 |
-| UAT-F13 | 真实企微外部身份未映射、已停用或无法确定租户 | 入站在业务入队前被拒绝并审计；不创建匿名会话、事件或空租户数据 |
+| UAT-F12 | 配置完整真实企微凭据、历史送达记录或 API 身份后尝试启用或发送 | 渠道仍保持 `DISABLED_BY_POLICY`；不初始化客户端、不入队、不产生真实发送或假成功 |
+| UAT-F13 | 模拟器身份无映射、已停用或无法确定租户 | 模拟入站在业务入队前被拒绝并审计；不创建匿名会话、事件或空租户数据 |
 
 失败测试可以通过受控的 UAT 故障注入执行，但不得使用 Mock Agent 或固定模型输出代替 DeepSeek。故障恢复后必须重新执行一次真实成功调用。
 

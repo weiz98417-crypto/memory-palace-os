@@ -476,14 +476,11 @@ def test_docker_runtime_provides_persistent_writable_embedding_cache():
     assert "embedding-cache" in compose["volumes"]
 
 
-def test_wechat_client_uses_standardized_deployment_environment(monkeypatch):
+def test_wechat_client_ignores_deployment_environment_by_policy(monkeypatch):
     import src.memory_palace.tools.wechat_client as wechat_module
 
-    captured = {}
-
     def fake_client(*, corpid, corpsecret, agentid):
-        captured.update({"corpid": corpid, "corpsecret": corpsecret, "agentid": agentid})
-        return object()
+        raise AssertionError("real WeCom client must not be initialized")
 
     for key in ("WX_CORPID", "WX_CORPSECRET", "WX_AGENTID"):
         monkeypatch.delenv(key, raising=False)
@@ -495,16 +492,11 @@ def test_wechat_client_uses_standardized_deployment_environment(monkeypatch):
 
     client = wechat_module.get_wechat_client()
 
-    assert client is not None
-    assert captured == {
-        "corpid": "corp-standard",
-        "corpsecret": "secret-standard",
-        "agentid": 100001,
-    }
+    assert client is None
 
 
 @pytest.mark.asyncio
-async def test_integration_status_uses_standardized_wechat_environment(monkeypatch):
+async def test_integration_status_ignores_real_wecom_environment_by_policy(monkeypatch):
     import src.memory_palace.api.v1.endpoints.management as management_module
 
     monkeypatch.setattr(management_module, "read_secret", lambda _: "")
@@ -518,9 +510,11 @@ async def test_integration_status_uses_standardized_wechat_environment(monkeypat
     rows = await management_module._integration_status_rows("venue-standard", None)
     wechat = next(row for row in rows if row["id"] == "wechat")
 
-    assert wechat["configured"] is True
-    assert wechat["status"] == "BLOCKED"
+    assert wechat["configured"] is False
+    assert wechat["status"] == "DISABLED_BY_POLICY"
     assert wechat["missing"] == []
+    assert wechat["safe_disabled_verified"] is True
+    assert wechat["evidence"]["policy_mode"] == "WECOM_SIMULATOR_ONLY"
 
 
 @pytest.mark.asyncio
@@ -549,7 +543,11 @@ async def test_integration_status_marks_missing_optional_channels_safely_disable
     rows = await management_module._integration_status_rows("venue-disabled", None)
     integrations = {row["id"]: row for row in rows}
 
-    for integration_id in ("wechat", "sms", "voice"):
+    assert integrations["wechat"]["status"] == "DISABLED_BY_POLICY"
+    assert integrations["wechat"]["safe_disabled_verified"] is True
+    assert integrations["wecom_simulator"]["status"] == "SIMULATOR_READY"
+    assert integrations["wecom_simulator"]["evidence"]["real_wecom_enabled"] is False
+    for integration_id in ("sms", "voice"):
         assert integrations[integration_id]["status"] == "DISABLED_REQUIRES_CONFIG"
         assert integrations[integration_id]["safe_disabled_verified"] is True
 

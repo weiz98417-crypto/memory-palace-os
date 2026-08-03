@@ -667,7 +667,7 @@ def test_release_gate_requires_platform_uat_and_verified_safe_disable():
             {"id": "MVP-INTEGRATION-DEEPSEEK", "status": "READY"},
             {
                 "id": "MVP-INTEGRATION-WECHAT",
-                "status": "DISABLED_REQUIRES_CONFIG",
+                "status": "DISABLED_BY_POLICY",
                 "safe_disabled_verified": True,
             },
         ],

@@ -91,10 +91,8 @@ class AppContainer:
     def wechat_client(self):
         if "wechat_client" in self._overrides:
             return self._overrides["wechat_client"]
-        if "wechat_client" not in self._instances:
-            from src.memory_palace.tools.wechat_client import get_wechat_client
-            self._instances["wechat_client"] = get_wechat_client()
-        return self._instances["wechat_client"]
+        # Real WeCom transport is intentionally unreachable in this project.
+        return None
 
     # ── 上下文压缩 (Phase 1) ────────────────────────────────────────────────
 

@@ -882,21 +882,21 @@ items:
 
   - <<: *defaults
     id: MVP-INTEGRATION-WECHAT
-    name: 企业微信
+    name: 真实企业微信安全禁用门禁
     category: integration
-    status: DISABLED_REQUIRES_CONFIG
+    status: DISABLED_BY_POLICY
     interactive: false
-    entrypoints: [admin:/integrations]
+    entrypoints: [admin:/integrations, simulator:/wecom]
     roles: [admin]
-    apis: [GET /wechat/callback, POST /wechat/callback]
-    services: [wechat-gateway, Redis Streams]
-    data_dependencies: [Redis.memory_palace:messages, PostgreSQL.push_logs]
-    audit_events: [PUSH_ADOPTION_UPDATED]
-    error_codes: [INTEGRATION_DISABLED, QUEUE_UNAVAILABLE]
-    tests: {unit: [tests/unit/test_runtime_hardening.py], integration: [tests/integration/test_message_intake_api.py::test_wechat_gateway_uses_canonical_persistent_ingress, tests/integration/test_message_intake_api.py::test_wechat_gateway_is_disabled_when_crypto_is_not_configured, tests/integration/test_message_intake_api.py::test_structured_wecom_reply_falls_back_from_markdown_to_textcard_to_text, tests/integration/test_message_intake_api.py::test_wecom_delivery_retry_reuses_saved_agent_result, tests/integration/test_message_intake_api.py::test_wecom_delivery_does_not_resend_after_send_succeeds_but_receipt_persistence_fails, tests/integration/test_message_intake_api.py::test_concurrent_wecom_workers_send_once_and_late_failure_cannot_downgrade_delivery, tests/integration/test_message_intake_api.py::test_delivered_reply_ledger_rejects_late_failure_writes, tests/integration/test_message_intake_api.py::test_recovered_wecom_delivery_reuses_result_saved_before_restart], browser: [], live: [], uat: [MVP-UAT-010]}
-    evidence: {automated: [tests/unit/test_runtime_hardening.py, tests/integration/test_message_intake_api.py::test_wechat_gateway_uses_canonical_persistent_ingress, tests/integration/test_message_intake_api.py::test_wechat_gateway_is_disabled_when_crypto_is_not_configured, tests/integration/test_message_intake_api.py::test_structured_wecom_reply_falls_back_from_markdown_to_textcard_to_text, tests/integration/test_message_intake_api.py::test_wecom_delivery_retry_reuses_saved_agent_result, tests/integration/test_message_intake_api.py::test_wecom_delivery_does_not_resend_after_send_succeeds_but_receipt_persistence_fails, tests/integration/test_message_intake_api.py::test_concurrent_wecom_workers_send_once_and_late_failure_cannot_downgrade_delivery, tests/integration/test_message_intake_api.py::test_delivered_reply_ledger_rejects_late_failure_writes, tests/integration/test_message_intake_api.py::test_recovered_wecom_delivery_reuses_result_saved_before_restart], browser: [docs/verification/mvp-uat-20260728/screenshots/integrations-02-disabled-actions-1440x900.png], live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-010-integrations.json], uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-010-integrations.json]}
-    external_config: [WECHAT_TOKEN, WECHAT_ENCODING_AES_KEY, WECHAT_CORP_ID, WECHAT_CORP_SECRET, WECHAT_AGENT_ID, customer sandbox]
-    blocked_reason: Customer WeChat sandbox credentials and callback/reply evidence are missing.
+    apis: [POST /channels/simulator/messages, "GET /channels/simulator/sessions/{session_id}/outbox"]
+    services: [canonical-ingress, wecom-simulator, Redis Streams]
+    data_dependencies: [PostgreSQL.channel_identities, PostgreSQL.channel_conversations, Redis.memory_palace:messages, PostgreSQL.push_logs]
+    audit_events: [CHANNEL_IDENTITY_UPSERTED, MESSAGE_RUN_CREATED, CONTROLLED_ACTION_EXECUTED]
+    error_codes: [INTEGRATION_DISABLED, SIMULATOR_FORBIDDEN, QUEUE_UNAVAILABLE]
+    tests: {unit: [tests/unit/test_real_wecom_policy.py, tests/unit/test_runtime_hardening.py], integration: [tests/integration/test_canonical_ingress.py::test_real_wecom_adapter_rejects_before_persistence_even_when_credentials_exist, tests/integration/test_canonical_ingress.py::test_simulator_channel_uses_server_bound_identity_and_canonical_ingress], browser: [], live: [], uat: [E2E-00, E2E-01, E2E-02, E2E-09, UAT-F12, UAT-F13]}
+    evidence: {automated: [tests/unit/test_real_wecom_policy.py, tests/integration/test_canonical_ingress.py::test_real_wecom_adapter_rejects_before_persistence_even_when_credentials_exist], browser: [], live: [], uat: []}
+    external_config: []
+    blocked_reason: 本项目仅允许企微模拟器；真实企业微信回调、入站和出站均按项目策略禁用，不存在 READY 路径。
     references: *agent_refs
 
   - <<: *defaults
@@ -966,5 +966,5 @@ uat_journeys:
   - {id: UAT-F09, name: Watcher 重复运行 finding 去重, covers: [MVP-BIZ-017, MVP-BIZ-018, Watcher], status: BLOCKED, evidence: []}
   - {id: UAT-F10, name: 跨场地全链路读取拒绝, covers: [MVP-BIZ-001, MVP-BIZ-005, MVP-BIZ-007, MVP-BIZ-008, MVP-BIZ-014, MVP-BIZ-016, MVP-BIZ-019, MVP-PLATFORM-AUTHZ], status: BLOCKED, evidence: []}
   - {id: UAT-F11, name: 普通员工越权治理接口拒绝, covers: [MVP-BIZ-009, MVP-BIZ-014, MVP-BIZ-016, MVP-PLATFORM-AUTHZ], status: BLOCKED, evidence: []}
-  - {id: UAT-F12, name: 真实企微未配置时安全禁用, covers: [MVP-BIZ-020, MVP-INTEGRATION-WECHAT, MVP-INTEGRATION-SMS, MVP-INTEGRATION-VOICE], status: BLOCKED, evidence: []}
-  - {id: UAT-F13, name: 外部身份无映射或已停用, covers: [MVP-BIZ-003, MVP-BIZ-007, MVP-BIZ-019, MVP-PLATFORM-AUTHZ, MVP-INTEGRATION-WECHAT], status: BLOCKED, evidence: []}
+  - {id: UAT-F12, name: 真实企微按项目策略安全禁用, covers: [MVP-BIZ-020, MVP-INTEGRATION-WECHAT, MVP-INTEGRATION-SMS, MVP-INTEGRATION-VOICE], status: BLOCKED, evidence: []}
+  - {id: UAT-F13, name: 模拟器身份无映射或已停用, covers: [MVP-BIZ-003, MVP-BIZ-007, MVP-BIZ-019, MVP-PLATFORM-AUTHZ, MVP-INTEGRATION-WECHAT], status: BLOCKED, evidence: []}

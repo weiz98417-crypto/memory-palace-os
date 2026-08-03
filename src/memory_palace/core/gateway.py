@@ -124,20 +124,10 @@ config = GatewayConfig()
 # ==============================================================================
 
 def get_wx_crypto():
-    """懒加载获取企微加解密实例"""
+    """Return no real crypto adapter while the project is simulator-only."""
     global wx_crypto
-    if wx_crypto is None:
-        try:
-            from src.memory_palace.tools.wechat_crypto import WXBizMsgCrypt
-            wx_crypto = WXBizMsgCrypt(
-                token=os.environ.get("WECHAT_TOKEN", ""),
-                encoding_aes_key=os.environ.get("WECHAT_ENCODING_AES_KEY", ""),
-                corp_id=os.environ.get("WECHAT_CORP_ID", "")
-            )
-            logger.info("✅ 企微加解密套件初始化成功")
-        except Exception as e:
-            logger.warning(f"⚠️ 企微加解密套件初始化失败: {e}，将以 Mock 模式运行")
-            wx_crypto = None
+    if wx_crypto is not None:
+        wx_crypto = None
     return wx_crypto
 
 
@@ -237,11 +227,10 @@ async def readiness_check(request: Request):
         checks["status"] = "degraded"
 
     # 检查企微加解密
-    crypto = get_wx_crypto()
-    is_mock = isinstance(crypto, type(create_mock_wx_crypto())) if crypto else True
     checks["dependencies"]["wechat_crypto"] = {
-        "available": crypto is not None,
-        "mode": "mock" if is_mock else "enabled"
+        "available": False,
+        "mode": "disabled_by_policy",
+        "simulator_entrypoint": "/simulator/wecom/",
     }
 
     # 检查数据库 (可选)
@@ -303,6 +292,9 @@ async def verify_wechat_url(
     """
     企微管理后台配置 Webhook 时，触发的首次 GET 验签
     """
+    readiness = wechat_integration_readiness()
+    if not readiness["configured"]:
+        return PlainTextResponse("integration disabled by project policy", status_code=503)
     crypto = get_wx_crypto()
     if not crypto:
         logger.error("企微加解密套件未初始化")

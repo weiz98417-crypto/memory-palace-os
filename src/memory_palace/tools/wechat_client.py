@@ -230,20 +230,9 @@ _wechat_client = None
 
 
 def get_wechat_client() -> Optional[WeChatWorkClient]:
-    """返回 WeChatWorkClient 单例，首次调用时初始化。配置缺失返回 None。"""
+    """Return no real transport; this project routes all WeCom work to the simulator."""
     global _wechat_client
-    if _wechat_client is None:
-        corpid = os.environ.get("WECHAT_CORP_ID") or os.environ.get("WX_CORPID")
-        corpsecret = os.environ.get("WECHAT_CORP_SECRET") or os.environ.get("WX_CORPSECRET")
-        agentid = os.environ.get("WECHAT_AGENT_ID") or os.environ.get("WX_AGENTID")
-        if corpid and corpsecret and agentid:
-            try:
-                _wechat_client = WeChatWorkClient(corpid=corpid, corpsecret=corpsecret, agentid=int(agentid))
-                logger.info("企微客户端 (WeChatWorkClient) 异步版本实例化成功。")
-            except ValueError:
-                logger.error("WX_AGENTID 必须为整数，企微客户端实例化失败。")
-                _wechat_client = None
-        else:
-            logger.warning("当前环境变量中缺少企微配置，wechat_client 未初始化。")
-            _wechat_client = None
+    if _wechat_client is not None:
+        _wechat_client = None
+    logger.info("真实企业微信客户端已按项目策略禁用；请使用企微模拟器。")
     return _wechat_client

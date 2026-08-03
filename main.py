@@ -188,17 +188,6 @@ async def lifespan(app: FastAPI):
     # ── 优雅关机 ──────────────────────────────────────────────────────────────
     logger.info("🛑 收到关机信号，开始优雅退出...")
 
-    # 关闭企微 HTTP 客户端
-    try:
-        from src.memory_palace.tools.wechat_client import get_wechat_client
-
-        wc = get_wechat_client()
-        if wc:
-            await wc.close()
-        logger.info("✅ 企微 HTTP 客户端已关闭")
-    except Exception as e:
-        logger.warning(f"企微客户端关闭异常（不影响退出）: {e}")
-
     # 停止接收新任务
     scheduler.shutdown()
 

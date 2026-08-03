@@ -310,7 +310,7 @@ async def test_management_api_enforces_roles_and_records_changes(tmp_path, monke
 
 
 @pytest.mark.asyncio
-async def test_wechat_integration_becomes_ready_only_with_real_delivered_reply_evidence(
+async def test_real_wecom_stays_policy_disabled_despite_credentials_and_legacy_delivery_evidence(
     tmp_path,
     monkeypatch,
 ):
@@ -382,12 +382,21 @@ async def test_wechat_integration_becomes_ready_only_with_real_delivered_reply_e
         wechat = next(
             item for item in response.json()["integrations"] if item["id"] == "wechat"
         )
-        assert wechat["status"] == "READY"
-        assert wechat["configured"] is True
-        assert wechat["live_verified"] is True
-        assert wechat["evidence"]["message_id"] == "wecom-live-message-001"
-        assert wechat["evidence"]["trace_id"] == "trace-wecom-live-001"
-        assert wechat["evidence"]["delivery_status"] == "DELIVERED"
+        simulator = next(
+            item for item in response.json()["integrations"] if item["id"] == "wecom_simulator"
+        )
+        assert simulator["status"] == "SIMULATOR_READY"
+        assert simulator["evidence"]["entrypoint"] == "/simulator/wecom/"
+        assert simulator["evidence"]["real_wecom_enabled"] is False
+        assert wechat["status"] == "DISABLED_BY_POLICY"
+        assert wechat["configured"] is False
+        assert wechat["live_verified"] is False
+        assert wechat["safe_disabled_verified"] is True
+        assert wechat["evidence"] == {
+            "policy_mode": "WECOM_SIMULATOR_ONLY",
+            "real_wecom_enabled": False,
+        }
+        assert "仅允许企微模拟器" in wechat["blocked_reason"]
         assert "test-corp-secret" not in response.text
     finally:
         await database.close()

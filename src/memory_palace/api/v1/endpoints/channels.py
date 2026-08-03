@@ -305,8 +305,9 @@ async def create_wecom_message(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={
                 "code": "INTEGRATION_DISABLED",
-                "message": "企业微信真实渠道尚未完成配置，消息未受理。",
+                "message": str(readiness["blocked_reason"]),
                 "missing": readiness["missing"],
+                "policy_mode": readiness["policy_mode"],
             },
         )
     queue = get_message_queue()
