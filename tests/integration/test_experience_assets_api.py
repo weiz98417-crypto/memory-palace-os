@@ -140,7 +140,7 @@ async def _build_app(tmp_path):
             INSERT INTO channel_identities (
                 id, venue_id, channel, external_tenant_id, external_user_id,
                 user_id, status, created_at, updated_at
-            ) VALUES (?, ?, 'WECOM', ?, ?, ?, 'ACTIVE', ?, ?)
+            ) VALUES (?, ?, 'WECOM_SIMULATOR', ?, ?, ?, 'ACTIVE', ?, ?)
             """,
             (
                 identity_id,

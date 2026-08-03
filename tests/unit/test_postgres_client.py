@@ -9,6 +9,7 @@ class _Connection:
         self.execute_result = execute_result
         self.executed = None
         self.transaction_context = None
+        self.transaction_options = None
 
     async def execute(self, sql, *params):
         self.executed = (sql, params)
@@ -20,7 +21,8 @@ class _Connection:
     async def fetch(self, sql, *params):
         return [{"ok": 1}, {"ok": 2}]
 
-    def transaction(self):
+    def transaction(self, **options):
+        self.transaction_options = options
         self.transaction_context = _TransactionContext()
         return self.transaction_context
 
@@ -121,3 +123,18 @@ async def test_postgres_transaction_reuses_one_connection_with_database_interfac
     assert rows == [{"ok": 1}, {"ok": 2}]
     assert connection.transaction_context.entered is True
     assert connection.transaction_context.exited_with is None
+
+
+@pytest.mark.asyncio
+async def test_postgres_read_snapshot_is_repeatable_and_read_only():
+    connection = _Connection()
+    client = PostgresDBClient("postgresql://localhost/memory_palace")
+    client._pool = _Pool(connection)
+
+    async with client.read_snapshot() as snapshot:
+        assert await snapshot.fetch_one("SELECT 1 AS ok") == {"ok": 1}
+
+    assert connection.transaction_options == {
+        "isolation": "repeatable_read",
+        "readonly": True,
+    }

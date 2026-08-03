@@ -23,10 +23,10 @@ python -m scripts.unified_agent_uat.cli complete --run docs/verification/unified
 
 The required order is `init -> bootstrap -> record -> validate -> complete`.
 
-- `init` creates one unique append-only run before any journey data exists.
-- `bootstrap` uses only formal management HTTP APIs, refuses a non-empty process baseline, and records `artifacts/uat-baseline.json` plus its SHA-256 in the manifest.
+- `init` atomically creates one unique append-only run before any journey data exists, including `api/`, `traces/`, `execution-report.md`, and the required root JSON evidence scaffolds.
+- `bootstrap` uses only formal management HTTP APIs, refuses a non-empty process baseline, and records `artifacts/uat-baseline.json` plus its SHA-256 in the manifest through a recoverable transaction.
 - `record` recursively redacts recognized secret fields, writes evidence atomically, and preserves failed steps under `failures/`.
-- `validate` checks architecture, simulator-only channel policy, checksums, baseline process counts, step references, assertions, model truthfulness, and registry evidence rules.
+- `validate` rejects runs without a pristine baseline and checks architecture, the complete evidence scaffold, simulator-only channel policy, checksums, step references, assertions, model truthfulness, and registry evidence paths. A `READY` registry item must reference the matching `steps/<journey_id>.json` inside the current run.
 - `complete` requires a recorded baseline and only passing steps before sealing the run.
 
 For the deployed MVP stack, initialize the run locally first and pass it explicitly to the operations command:
@@ -36,4 +36,4 @@ python -m scripts.unified_agent_uat.cli init
 scripts\mvp.cmd bootstrap-uat -EnvFile <path> -UatRun docs\verification\unified-agent-uat\<uat_run_id>
 ```
 
-The deployment command copies only the selected run into the app container, executes the same formal-API bootstrap command there, and copies the baseline and updated manifest back without overwriting an existing baseline. A failed or completed run is sealed; reruns require a new `uat_run_id`.
+The deployment command copies only the selected run into the app container, executes the same formal-API bootstrap command there, and stages the baseline and updated manifest under one checksummed host transaction before committing them. An interrupted copy-back is recovered on the next `bootstrap-uat` invocation. A failed or completed run is sealed; reruns require a new `uat_run_id`.

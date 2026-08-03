@@ -565,12 +565,23 @@ async def integration_statuses(
 
 @router.get("/uat-baseline")
 async def uat_baseline(
+    request: Request,
+    venue_id: Optional[str] = Query(None, min_length=2, max_length=64),
     principal: dict = Depends(require_roles("admin")),
     db=Depends(get_request_db),
 ):
     """Return the read-only master-data and empty-journey UAT baseline."""
 
-    return await collect_uat_baseline_snapshot(db, venue_id=principal["venue_id"])
+    target_venue_id = venue_id or principal["venue_id"]
+    if not await db.fetch_one("SELECT id FROM venues WHERE id = ?", (target_venue_id,)):
+        raise api_error(
+            request,
+            404,
+            "UAT_BASELINE_VENUE_NOT_FOUND",
+            "目标场地不存在，无法采集 UAT 基线。",
+            "先确认场地标识，再执行主数据初始化。",
+        )
+    return await collect_uat_baseline_snapshot(db, venue_id=target_venue_id)
 
 
 async def _collect_registry_evidence(request: Request, db, venue_id: str) -> dict[str, Any]:

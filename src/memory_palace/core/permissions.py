@@ -22,6 +22,7 @@ from typing import Any, Callable, Dict, List, Optional
 from loguru import logger
 
 from .business_ids import build_business_id
+from .controlled_action_policy import approval_tool_names
 from .event_activities import append_event_activity
 
 
@@ -171,6 +172,13 @@ class PermissionEngine:
             SensitivityLevel.APPROVAL,
             description="发起电话呼叫"
         )
+        for tool_name in approval_tool_names():
+            if tool_name not in self._tool_permissions:
+                self.register_tool(
+                    tool_name,
+                    SensitivityLevel.APPROVAL,
+                    description="高风险业务动作",
+                )
         logger.info("[PermissionEngine] 默认工具权限注册完成")
 
     def register_tool(

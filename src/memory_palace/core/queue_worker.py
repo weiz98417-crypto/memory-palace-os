@@ -79,6 +79,16 @@ class MessagePolicyFailure(MessageDeliveryFailure):
     """Terminal channel rejection that must be acknowledged without retry."""
 
 
+REAL_WECOM_DISABLED_ERROR = (
+    "真实企业微信投递已按项目策略禁用；请通过企微模拟器完成业务链路。"
+)
+
+
+def _message_channel(message: dict) -> str:
+    metadata = message.get("metadata") or {}
+    return str(message.get("channel") or metadata.get("channel") or "LEGACY").upper()
+
+
 def _saved_result_for_delivery(run: Optional[dict], *, delivery_only: bool) -> Optional[dict]:
     if not run:
         return None
@@ -296,6 +306,9 @@ class MessageQueueWorker:
         if self._container and getattr(self._container, "db_client", None):
             repository = MessageRunRepository(self._container.db_client)
 
+        if _message_channel(message) == "WECOM":
+            await self._reject_real_wecom(message, repository)
+
         # —— 去重 ——
         is_retry = int(message.get("_retries", 0)) > 0 or bool(message.get("_dead_letter_retry_id"))
         if not is_retry and _is_duplicate(msg_id):
@@ -412,6 +425,38 @@ class MessageQueueWorker:
         if self._dead_letter_queue:
             logger.debug(f"死信队列当前深度: {len(self._dead_letter_queue)}")
 
+    async def _reject_real_wecom(
+        self,
+        message: dict,
+        repository: Optional[MessageRunRepository],
+    ) -> None:
+        """Reject legacy real-WeCom queue items before any agent or tool side effect."""
+        if repository:
+            metadata = message.get("metadata") or {}
+            msg_id = str(message.get("msg_id") or "unknown")
+            trace_id = str(message.get("trace_id") or msg_id)
+            venue_id = str(message.get("venue_id") or metadata.get("venue_id") or "")
+            user_id = str(message.get("from_user") or "")
+            recipient = metadata.get("external_user_id") or message.get("external_user_id") or user_id
+            await record_reply_delivery(
+                message_id=msg_id,
+                trace_id=trace_id,
+                venue_id=venue_id,
+                user_id=user_id,
+                channel="WECOM",
+                recipient=recipient,
+                reply_text="",
+                delivery_status="DISABLED_BY_POLICY",
+                delivery_error=REAL_WECOM_DISABLED_ERROR,
+                database=self._container.db_client,
+            )
+            await repository.mark_delivery(
+                msg_id,
+                "DISABLED_BY_POLICY",
+                error=REAL_WECOM_DISABLED_ERROR,
+            )
+        raise MessagePolicyFailure(REAL_WECOM_DISABLED_ERROR, auto_retry=False)
+
     async def _deliver_result(
         self,
         message: dict,
@@ -420,7 +465,7 @@ class MessageQueueWorker:
     ) -> None:
         msg_id = message.get("msg_id", "unknown")
         metadata = message.get("metadata") or {}
-        channel = str(message.get("channel") or metadata.get("channel") or "LEGACY").upper()
+        channel = _message_channel(message)
         reply_text = _public_scalar(result.get("reply_text"))
         delivery_text = reply_text
         trace_id = str(result.get("trace_id") or message.get("trace_id") or msg_id)
@@ -452,7 +497,7 @@ class MessageQueueWorker:
             await repository.mark_delivery(msg_id, "PERSISTED")
             return
 
-        error = "真实企业微信投递已按项目策略禁用；请通过企微模拟器完成业务链路。"
+        error = REAL_WECOM_DISABLED_ERROR
         await record_reply_delivery(
             message_id=msg_id,
             trace_id=trace_id,

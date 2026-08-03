@@ -1235,6 +1235,64 @@ function Invoke-Migrate {
     }
 }
 
+function Complete-UatBootstrapEvidenceTransaction {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$RunPath
+    )
+
+    $transactionPath = Join-Path $RunPath ".uat-bootstrap.pending"
+    if (-not (Test-Path -LiteralPath $transactionPath -PathType Container)) {
+        return $false
+    }
+    $transactionItem = Get-Item -LiteralPath $transactionPath -Force -ErrorAction Stop
+    if ($transactionItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+        throw "UAT bootstrap transaction must not be a reparse point: $transactionPath"
+    }
+    $transactionRecordPath = Join-Path $transactionPath "transaction.json"
+    if (-not (Test-Path -LiteralPath $transactionRecordPath -PathType Leaf)) {
+        Remove-Item -LiteralPath $transactionPath -Recurse -Force
+        return $false
+    }
+    $transaction = Get-Content -Raw -LiteralPath $transactionRecordPath -Encoding utf8 | ConvertFrom-Json
+    $files = @(
+        [pscustomobject]@{
+            Name = "baseline"
+            Staged = (Join-Path $transactionPath "uat-baseline.json")
+            Target = (Join-Path $RunPath "artifacts\uat-baseline.json")
+            ExpectedSha256 = [string]$transaction.baseline_sha256
+        },
+        [pscustomobject]@{
+            Name = "manifest"
+            Staged = (Join-Path $transactionPath "manifest.json")
+            Target = (Join-Path $RunPath "manifest.json")
+            ExpectedSha256 = [string]$transaction.manifest_sha256
+        }
+    )
+    foreach ($file in $files) {
+        if ($file.ExpectedSha256 -notmatch '^[a-fA-F0-9]{64}$') {
+            throw "UAT bootstrap transaction has an invalid $($file.Name) checksum."
+        }
+        if (Test-Path -LiteralPath $file.Target -PathType Leaf) {
+            $targetHash = (Get-FileHash -LiteralPath $file.Target -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($targetHash -eq $file.ExpectedSha256.ToLowerInvariant()) {
+                continue
+            }
+        }
+        if (-not (Test-Path -LiteralPath $file.Staged -PathType Leaf)) {
+            throw "Cannot recover UAT bootstrap transaction; staged $($file.Name) is missing."
+        }
+        $stagedHash = (Get-FileHash -LiteralPath $file.Staged -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($stagedHash -ne $file.ExpectedSha256.ToLowerInvariant()) {
+            throw "Cannot recover UAT bootstrap transaction; staged $($file.Name) checksum mismatch."
+        }
+        Move-Item -LiteralPath $file.Staged -Destination $file.Target -Force
+    }
+    Remove-Item -LiteralPath $transactionPath -Recurse -Force
+    return $true
+}
+
 function Invoke-UatBootstrap {
     $context = Get-DeploymentContext
     if (-not $UatRun) {
@@ -1259,8 +1317,13 @@ function Invoke-UatBootstrap {
     }
     $manifestPath = Join-Path $runPath "manifest.json"
     $baselinePath = Join-Path $runPath "artifacts\uat-baseline.json"
+    $transactionPath = Join-Path $runPath ".uat-bootstrap.pending"
     if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
         throw "UatRun is missing manifest.json: $runPath"
+    }
+    if (Complete-UatBootstrapEvidenceTransaction -RunPath $runPath) {
+        Write-Host "Recovered UAT baseline transaction in $runPath"
+        return
     }
     if (Test-Path -LiteralPath $baselinePath) {
         throw "UatRun already contains a baseline and cannot be overwritten: $baselinePath"
@@ -1269,8 +1332,11 @@ function Invoke-UatBootstrap {
     $previousSecretsVolume = $env:MEMORY_PALACE_SECRETS_VOLUME
     $env:MEMORY_PALACE_SECRETS_VOLUME = $context.SecretsVolume
     $containerRun = "/tmp/memory-palace-uat-$([guid]::NewGuid().ToString('N'))"
-    $manifestDownload = Join-Path $runPath ".manifest.bootstrap.tmp"
-    $baselineDownload = Join-Path $runPath "artifacts\.uat-baseline.bootstrap.tmp"
+    $manifestDownload = Join-Path $transactionPath "manifest.json"
+    $baselineDownload = Join-Path $transactionPath "uat-baseline.json"
+    $transactionRecordPath = Join-Path $transactionPath "transaction.json"
+    $transactionRecordTemp = Join-Path $transactionPath ".transaction.json.tmp"
+    $transactionPrepared = $false
     $appContainer = $null
     try {
         if (-not (Test-DeploymentSecretAvailable -Volume $context.SecretsVolume -SecretName "uat_employee_password")) {
@@ -1287,6 +1353,7 @@ function Invoke-UatBootstrap {
             "exec", $appContainer, "python", "-m", "scripts.unified_agent_uat.cli",
             "bootstrap", "--run", $containerRun
         )
+        New-Item -ItemType Directory -Path $transactionPath -ErrorAction Stop | Out-Null
         Invoke-Docker -Arguments @(
             "cp", "${appContainer}:$containerRun/artifacts/uat-baseline.json", $baselineDownload
         )
@@ -1295,8 +1362,16 @@ function Invoke-UatBootstrap {
         )
         Get-Content -Raw -LiteralPath $baselineDownload -Encoding utf8 | ConvertFrom-Json | Out-Null
         Get-Content -Raw -LiteralPath $manifestDownload -Encoding utf8 | ConvertFrom-Json | Out-Null
-        Move-Item -LiteralPath $baselineDownload -Destination $baselinePath
-        Move-Item -LiteralPath $manifestDownload -Destination $manifestPath -Force
+        @{
+            schema_version = 1
+            baseline_sha256 = (Get-FileHash -LiteralPath $baselineDownload -Algorithm SHA256).Hash.ToLowerInvariant()
+            manifest_sha256 = (Get-FileHash -LiteralPath $manifestDownload -Algorithm SHA256).Hash.ToLowerInvariant()
+        } | ConvertTo-Json | Set-Content -LiteralPath $transactionRecordTemp -Encoding utf8
+        Move-Item -LiteralPath $transactionRecordTemp -Destination $transactionRecordPath
+        $transactionPrepared = $true
+        if (-not (Complete-UatBootstrapEvidenceTransaction -RunPath $runPath)) {
+            throw "UAT bootstrap transaction was not committed."
+        }
         Write-Host "UAT baseline recorded in $runPath"
     }
     finally {
@@ -1310,11 +1385,8 @@ function Invoke-UatBootstrap {
                 Write-Warning "Could not remove temporary UAT evidence directory '$containerRun'."
             }
         }
-        if (Test-Path -LiteralPath $manifestDownload) {
-            Remove-Item -LiteralPath $manifestDownload -Force
-        }
-        if (Test-Path -LiteralPath $baselineDownload) {
-            Remove-Item -LiteralPath $baselineDownload -Force
+        if (-not $transactionPrepared -and (Test-Path -LiteralPath $transactionPath)) {
+            Remove-Item -LiteralPath $transactionPath -Recurse -Force
         }
         if ($null -eq $previousSecretsVolume) {
             Remove-Item Env:MEMORY_PALACE_SECRETS_VOLUME -ErrorAction SilentlyContinue

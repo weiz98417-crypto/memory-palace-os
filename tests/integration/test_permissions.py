@@ -9,7 +9,9 @@ Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 import pytest
 
 from src.memory_palace.core.container import AppContainer
+from src.memory_palace.core.controlled_action_policy import controlled_action_policy_snapshot
 from src.memory_palace.core.permissions import PermissionEngine, SensitivityLevel
+from src.memory_palace.operations.uat_baseline import approval_rule_snapshot
 
 
 class TestPermissionEngine:
@@ -31,6 +33,25 @@ class TestPermissionEngine:
         engine = PermissionEngine()
         p = engine.get_tool_permission("send_sms")
         assert p is not None and p.level == SensitivityLevel.APPROVAL
+
+    def test_uat_controlled_action_rules_are_runtime_permission_rules(self):
+        engine = PermissionEngine()
+        policies = controlled_action_policy_snapshot()
+
+        assert approval_rule_snapshot() == policies
+        assert {policy["code"] for policy in policies} == {
+            "SUSPEND_PASSENGER_VEHICLE",
+            "ACTIVATE_BACKUP_VEHICLE",
+            "SEND_CRITICAL_DISPATCH_ALERT",
+        }
+        for policy in policies:
+            permission = engine.get_tool_permission(policy["tool_name"])
+            assert permission is not None
+            assert permission.level == SensitivityLevel.APPROVAL
+        dispatch_alert = next(
+            policy for policy in policies if policy["code"] == "SEND_CRITICAL_DISPATCH_ALERT"
+        )
+        assert dispatch_alert["delivery_channel"] == "WECOM_SIMULATOR_OUTBOX"
 
     @pytest.mark.asyncio
     async def test_check_free_tool_returns_ok(self):

@@ -94,6 +94,14 @@ class PostgresDBClient:
             async with conn.transaction():
                 yield _PostgresTransaction(conn)
 
+    @asynccontextmanager
+    async def read_snapshot(self):
+        """Yield one read-only repeatable-read PostgreSQL snapshot."""
+        pool = await self._ensure_pool()
+        async with pool.acquire() as conn:
+            async with conn.transaction(isolation="repeatable_read", readonly=True):
+                yield _PostgresTransaction(conn)
+
     @staticmethod
     def _translate(sql: str, params: tuple) -> tuple[str, tuple]:
         """Translate SQLite ? placeholders to PostgreSQL $1, $2, ..."""

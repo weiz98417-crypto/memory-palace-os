@@ -2,7 +2,7 @@
 Database client protocol — defines the interface both PostgresDBClient and
 SQLiteDBClient must implement. Used by the DI container to dispatch backends.
 """
-from typing import Any, Dict, Optional, Protocol, runtime_checkable
+from typing import Any, AsyncContextManager, Dict, Optional, Protocol, runtime_checkable
 
 
 @runtime_checkable
@@ -16,6 +16,9 @@ class AsyncDBClientProtocol(Protocol):
         ...
 
     async def execute(self, sql: str, parameters: tuple = ()) -> int:
+        ...
+
+    def read_snapshot(self) -> AsyncContextManager["AsyncDBClientProtocol"]:
         ...
 
     async def close(self) -> None:

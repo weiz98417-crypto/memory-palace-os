@@ -276,6 +276,50 @@ async def test_formal_event_action_persists_relationships_and_task_evidence(
 
 
 @pytest.mark.asyncio
+async def test_formal_action_code_uses_authoritative_manager_decision_policy(
+    tmp_path,
+    monkeypatch,
+):
+    app, database, _, _ = await build_app(tmp_path, monkeypatch)
+    engine = get_permission_engine()
+    monkeypatch.setattr(engine, "_pending_approvals", {})
+    monkeypatch.setattr(engine, "_cooldown_cache", {})
+    await _disable_notifications(engine)
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        admin_headers = await login(client, "mvp-admin", "Mvp-Admin-Password-2026")
+        admin = await database.fetch_one(
+            "SELECT id FROM users WHERE username = ?",
+            ("mvp-admin",),
+        )
+        await _insert_formal_action_context(database, user_id=admin["id"])
+        response = await client.post(
+            "/admin/action-requests",
+            headers={**admin_headers, "Idempotency-Key": "suspend-vehicle-action-001"},
+            json={
+                "action_code": "SUSPEND_PASSENGER_VEHICLE",
+                "session_id": "session-event-action",
+                "event_id": "event-action-001",
+                "task_id": "task-action-001",
+                "message": "12 号车今晚继续停运观察。",
+                "priority": "warning",
+            },
+        )
+
+    assert response.status_code == 202, response.text
+    approval = await database.fetch_one(
+        "SELECT tool_name, args, evidence_snapshot_json FROM approval_requests WHERE approval_id = ?",
+        (response.json()["approval_id"],),
+    )
+    assert approval["tool_name"] == "record_manager_decision"
+    assert json.loads(approval["args"])["decision"] == "SUSPEND_PASSENGER_VEHICLE"
+    evidence = json.loads(approval["evidence_snapshot_json"])
+    assert evidence["action_code"] == "SUSPEND_PASSENGER_VEHICLE"
+    await database.close()
+
+
+@pytest.mark.asyncio
 async def test_event_participant_action_freezes_readable_simulator_targets(
     tmp_path,
     monkeypatch,

@@ -2252,7 +2252,11 @@ async def test_real_wecom_delivery_is_disabled_by_policy(tmp_path):
     )
 
     class StubOrchestrator:
+        def __init__(self):
+            self.calls = 0
+
         async def dispatch(self, message):
+            self.calls += 1
             return {
                 "status": "processed",
                 "trace_id": message["trace_id"],
@@ -2262,10 +2266,11 @@ async def test_real_wecom_delivery_is_disabled_by_policy(tmp_path):
 
     queue = asyncio.Queue()
     container = SimpleNamespace(db_client=db_client, wechat_client=None)
+    orchestrator = StubOrchestrator()
     worker = MessageQueueWorker(
         queue=queue,
         concurrency=1,
-        orchestrator=StubOrchestrator(),
+        orchestrator=orchestrator,
         container=container,
     )
     worker_task = asyncio.create_task(worker.start())
@@ -2296,6 +2301,7 @@ async def test_real_wecom_delivery_is_disabled_by_policy(tmp_path):
             message_id="message-wecom-delivery-01",
             venue_id="venue-wecom-01",
         )
+        assert orchestrator.calls == 0
     finally:
         worker.stop()
         worker_task.cancel()
@@ -2323,7 +2329,11 @@ async def test_structured_real_wecom_reply_is_rejected_without_client_calls(
     )
 
     class StructuredResultOrchestrator:
+        def __init__(self):
+            self.calls = 0
+
         async def dispatch(self, message):
+            self.calls += 1
             return {
                 "status": "processed",
                 "trace_id": message["trace_id"],
@@ -2351,10 +2361,11 @@ async def test_structured_real_wecom_reply_is_rejected_without_client_calls(
         send_text=AsyncMock(return_value=True),
     )
     container = SimpleNamespace(db_client=db_client, wechat_client=wechat_client)
+    orchestrator = StructuredResultOrchestrator()
     worker = MessageQueueWorker(
         queue=queue,
         concurrency=1,
-        orchestrator=StructuredResultOrchestrator(),
+        orchestrator=orchestrator,
         container=container,
     )
     worker_task = asyncio.create_task(worker.start())
@@ -2386,6 +2397,7 @@ async def test_structured_real_wecom_reply_is_rejected_without_client_calls(
             venue_id="venue-wecom-structured-01",
             wechat_client=wechat_client,
         )
+        assert orchestrator.calls == 0
     finally:
         worker.stop()
         worker_task.cancel()
@@ -2504,10 +2516,10 @@ async def test_real_wecom_delivery_is_not_retried(tmp_path):
                 "assistant-reply:message-wecom-delivery-02",
             ),
         )
-        assert orchestrator.calls == 1
+        assert orchestrator.calls == 0
         wechat_client.send_text.assert_not_awaited()
         assert message_run["status"] == "FAILED"
-        assert message_run["attempt_count"] == 1
+        assert message_run["attempt_count"] == 0
         assert message_run["delivery_status"] == "DISABLED_BY_POLICY"
         assert len(deliveries) == 1
         assert deliveries[0]["delivery_status"] == "DISABLED_BY_POLICY"
@@ -2674,7 +2686,7 @@ async def test_wecom_delivery_does_not_resend_after_send_succeeds_but_receipt_pe
                 "assistant-reply:message-wecom-delivery-ambiguous-01",
             ),
         )
-        assert orchestrator.calls == 1
+        assert orchestrator.calls == 0
         assert wechat_client.calls == 0
         assert receipt_persistence_failed.is_set() is False
         assert message_run["status"] == "FAILED"
@@ -2966,7 +2978,7 @@ async def test_recovered_real_wecom_delivery_stays_disabled_after_restart(tmp_pa
         assert orchestrator.calls == 0
         wechat_client.send_text.assert_not_awaited()
         assert message_run["status"] == "FAILED"
-        assert message_run["attempt_count"] == 2
+        assert message_run["attempt_count"] == 1
         assert message_run["delivery_status"] == "DISABLED_BY_POLICY"
     finally:
         worker.stop()

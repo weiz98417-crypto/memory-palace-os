@@ -348,6 +348,18 @@ def test_uat_bootstrap_uses_formal_api_script_and_external_secret():
     assert "DELETE FROM" not in bootstrap_source
 
 
+def test_uat_bootstrap_copyback_uses_recoverable_transaction():
+    source = SCRIPT_PATH.read_text(encoding="utf-8")
+    bootstrap_source = source[source.index("function Invoke-UatBootstrap") : source.index("function Invoke-Verify")]
+
+    assert "function Complete-UatBootstrapEvidenceTransaction" in source
+    assert 'Join-Path $runPath ".uat-bootstrap.pending"' in bootstrap_source
+    assert 'Join-Path $transactionPath "transaction.json"' in bootstrap_source
+    assert "Get-FileHash" in bootstrap_source
+    assert "$transactionPrepared = $true" in bootstrap_source
+    assert "Complete-UatBootstrapEvidenceTransaction -RunPath $runPath" in bootstrap_source
+
+
 def test_verify_logs_and_stop_keep_runtime_operations_safe():
     source = SCRIPT_PATH.read_text(encoding="utf-8")
     verify_source = source[source.index("function Invoke-Verify") : source.index("function Protect-LogText")]

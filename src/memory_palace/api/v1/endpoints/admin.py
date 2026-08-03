@@ -75,7 +75,8 @@ class RejectRequest(BaseModel):
 
 
 class ControlledActionRequest(BaseModel):
-    tool_name: str
+    action_code: Optional[str] = None
+    tool_name: Optional[str] = None
     recipient_scope: Literal["SESSION", "EVENT_PARTICIPANTS"] = "SESSION"
     session_id: str
     event_id: str
@@ -407,10 +408,30 @@ async def request_controlled_action(
     ),
 ):
     """Submit a registered high-risk communication action for approval."""
+    from ....core.controlled_action_policy import get_controlled_action_policy
     from ....core.permissions import SensitivityLevel, get_permission_engine
     from ....tools.tool_executor import get_tool
 
-    tool_name = body.tool_name.strip()
+    action_code = str(body.action_code or "").strip().upper()
+    requested_tool_name = str(body.tool_name or "").strip()
+    action_policy = get_controlled_action_policy(action_code) if action_code else None
+    if action_code and action_policy is None:
+        raise api_error(
+            request,
+            422,
+            "ACTION_CODE_NOT_SUPPORTED",
+            "该高风险业务动作未注册。",
+            "刷新动作列表后重新选择。",
+        )
+    tool_name = action_policy.tool_name if action_policy else requested_tool_name
+    if action_policy and requested_tool_name and requested_tool_name != tool_name:
+        raise api_error(
+            request,
+            409,
+            "ACTION_POLICY_MISMATCH",
+            "业务动作与执行工具不匹配。",
+            "移除客户端工具覆盖并重试。",
+        )
     session_id = body.session_id.strip()
     event_id = body.event_id.strip()
     task_id = body.task_id.strip()
@@ -421,11 +442,15 @@ async def request_controlled_action(
     )
     message = body.message.strip()
     priority = body.priority.strip().lower()
-    recipient_scope = body.recipient_scope
+    recipient_scope = (
+        "EVENT_PARTICIPANTS"
+        if action_policy and action_policy.delivery_channel == "WECOM_SIMULATOR_OUTBOX"
+        else body.recipient_scope
+    )
     normalized_idempotency_key = (
         idempotency_key.strip() if idempotency_key is not None else None
     )
-    if tool_name not in {"send_sms", "send_alert", "send_in_app_alert"}:
+    if tool_name not in {"send_sms", "send_alert", "send_in_app_alert", "record_manager_decision"}:
         raise api_error(
             request,
             422,
@@ -489,7 +514,9 @@ async def request_controlled_action(
             "从目标事件的任务详情重新发起动作。",
         )
 
-    if tool_name == "send_sms":
+    if tool_name == "record_manager_decision":
+        args = {"decision": action_code, "message": message}
+    elif tool_name == "send_sms":
         recipient = (body.recipient or "").strip()
         if not re.fullmatch(r"\+?[0-9]{6,20}", recipient):
             raise api_error(request, 422, "RECIPIENT_INVALID", "短信收件号码格式无效。", "请输入 6 到 20 位数字，可带国家区号 +。")
@@ -497,6 +524,8 @@ async def request_controlled_action(
             raise api_error(request, 422, "ACTION_PRIORITY_INVALID", "短信优先级无效。", "请选择普通或高优先级。")
         args = {"phone": recipient, "message": message, "priority": priority}
     else:
+        if action_policy and action_policy.delivery_channel == "WECOM_SIMULATOR_OUTBOX":
+            priority = "critical"
         if priority not in {"info", "warning", "critical"}:
             raise api_error(request, 422, "ACTION_PRIORITY_INVALID", "告警级别无效。", "请选择提示、警告或严重。")
         args = {"message": message, "level": priority}
@@ -506,7 +535,7 @@ async def request_controlled_action(
     if supersedes_approval_id:
         previous = await db.fetch_one(
             """
-            SELECT approval_id, status, event_id, task_id, tool_name
+            SELECT approval_id, status, event_id, task_id, tool_name, args
             FROM approval_requests
             WHERE approval_id = ? AND venue_id = ?
             """,
@@ -540,8 +569,17 @@ async def request_controlled_action(
                 "重新提交的事件、任务或动作与原审批不一致。",
                 "从原审批详情执行重新提交。",
             )
+        previous_args = _decode_json_value(previous.get("args"), {})
+        if action_code and previous_args.get("decision") != action_code:
+            raise api_error(
+                request,
+                409,
+                "SUPERSEDED_APPROVAL_MISMATCH",
+                "重新提交的业务动作与原审批不一致。",
+                "从原审批详情执行重新提交。",
+            )
 
-    if tool_name != "send_in_app_alert":
+    if tool_name not in {"send_in_app_alert", "record_manager_decision"}:
         readiness = notification_action_readiness(tool_name, priority)
         if not readiness["available"]:
             missing = ", ".join(readiness["missing"])
@@ -570,6 +608,7 @@ async def request_controlled_action(
         "venue_id": principal["venue_id"],
         "agent_name": f"formal-client:{principal.get('username') or principal['user_id']}",
         "correlation_trace_id": trace_id,
+        "action_code": action_code or None,
     }
     result = None
     if normalized_idempotency_key:
@@ -607,6 +646,7 @@ async def request_controlled_action(
                 ) from exc
         evidence_snapshot = {
             "captured_at": time.time(),
+            "action_code": action_code or None,
             "event_business_id": event.get("business_id"),
             "task": {
                 "id": task["id"],

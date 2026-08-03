@@ -5,13 +5,22 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from hashlib import sha256
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 import yaml
 
 
-_REQUIRED_DIRECTORIES = ("artifacts", "failures", "logs", "screenshots", "steps")
+_REQUIRED_DIRECTORIES = ("api", "artifacts", "failures", "logs", "screenshots", "steps", "traces")
+_REQUIRED_FILES = (
+    "browser-console.json",
+    "chroma-retrieval.json",
+    "db-assertions.json",
+    "evidence-validation.json",
+    "execution-report.md",
+    "llm-calls.json",
+    "queue-recovery.json",
+)
 _EXPECTED_ARCHITECTURE = {
     "business_data": "PostgreSQL",
     "queue": "Redis Streams",
@@ -83,6 +92,30 @@ def _resolve_evidence_path(run_path: Path, relative_path: Any, errors: list[str]
         errors.append(f"{label} file is missing: {relative_path}")
         return None
     return candidate
+
+
+def _resolve_registry_evidence_path(
+    run_path: Path,
+    *,
+    run_id: str,
+    evidence_path: Any,
+    errors: list[str],
+    label: str,
+) -> Path | None:
+    if not isinstance(evidence_path, str) or not evidence_path.strip():
+        errors.append(f"{label} path is empty")
+        return None
+    normalized = evidence_path.replace("\\", "/")
+    parts = PurePosixPath(normalized).parts
+    if ".." in parts:
+        errors.append(f"{label} path escapes evidence run: {evidence_path}")
+        return None
+    if run_id in parts:
+        parts = parts[parts.index(run_id) + 1 :]
+    if not parts:
+        errors.append(f"{label} path does not identify a file: {evidence_path}")
+        return None
+    return _resolve_evidence_path(run_path, PurePosixPath(*parts).as_posix(), errors, label)
 
 
 def _validate_step(run_path: Path, run_id: str, entry: Any, errors: list[str]) -> None:
@@ -165,6 +198,7 @@ def _validate_step(run_path: Path, run_id: str, entry: Any, errors: list[str]) -
 def _validate_registry(
     registry_path: Path,
     *,
+    run_path: Path,
     run_id: str,
     passed_steps: set[str],
     errors: list[str],
@@ -182,11 +216,23 @@ def _validate_registry(
             continue
         journey_id = journey.get("id")
         evidence = journey.get("evidence")
+        resolved_evidence: set[Path] = set()
+        if isinstance(evidence, list):
+            for evidence_path in evidence:
+                resolved = _resolve_registry_evidence_path(
+                    run_path=run_path,
+                    run_id=run_id,
+                    evidence_path=evidence_path,
+                    errors=errors,
+                    label=f"journey {journey_id} registry evidence",
+                )
+                if resolved is not None:
+                    resolved_evidence.add(resolved)
+        expected_step = (run_path / "steps" / f"{journey_id}.json").resolve()
         has_current_evidence = (
             isinstance(journey_id, str)
             and journey_id in passed_steps
-            and isinstance(evidence, list)
-            and any(isinstance(path, str) and run_id in path for path in evidence)
+            and expected_step in resolved_evidence
         )
         if not has_current_evidence:
             errors.append(f"journey {journey_id} is READY without current-run evidence")
@@ -195,6 +241,7 @@ def _validate_registry(
 def _validate_baseline(run_path: Path, manifest: dict[str, Any], errors: list[str]) -> None:
     baseline = manifest.get("baseline")
     if baseline is None:
+        errors.append("UAT baseline is missing")
         return
     if not isinstance(baseline, dict):
         errors.append("manifest baseline must be an object")
@@ -247,6 +294,9 @@ def validate_evidence(run_directory: Path, *, registry_path: Path | None = None)
     for directory in _REQUIRED_DIRECTORIES:
         if not (run_path / directory).is_dir():
             errors.append(f"required evidence directory is missing: {directory}")
+    for filename in _REQUIRED_FILES:
+        if not (run_path / filename).is_file():
+            errors.append(f"required evidence file is missing: {filename}")
 
     manifest_path = run_path / "manifest.json"
     manifest = _load_object(manifest_path, errors) if manifest_path.is_file() else None
@@ -289,6 +339,7 @@ def validate_evidence(run_directory: Path, *, registry_path: Path | None = None)
     if registry_path is not None:
         _validate_registry(
             registry_path,
+            run_path=run_path,
             run_id=run_id,
             passed_steps=passed_steps,
             errors=errors,

@@ -3,38 +3,14 @@
 from __future__ import annotations
 
 import time
-from copy import deepcopy
 from typing import Any
 
+from ..core.controlled_action_policy import controlled_action_policy_snapshot
 
-_APPROVAL_RULES = (
-    {
-        "code": "SUSPEND_PASSENGER_VEHICLE",
-        "name": "停运载客车辆",
-        "approval_required": True,
-        "approver_roles": ["manager"],
-        "execution_mode": "MANAGER_DECISION",
-    },
-    {
-        "code": "ACTIVATE_BACKUP_VEHICLE",
-        "name": "启用备用车辆",
-        "approval_required": True,
-        "approver_roles": ["manager"],
-        "execution_mode": "MANAGER_DECISION",
-    },
-    {
-        "code": "SEND_CRITICAL_DISPATCH_ALERT",
-        "name": "向调度群发送严重告警",
-        "approval_required": True,
-        "approver_roles": ["manager"],
-        "execution_mode": "CONTROLLED_TOOL",
-        "tool_name": "send_in_app_alert",
-        "delivery_channel": "WECOM_SIMULATOR_OUTBOX",
-    },
-)
 
 _PROCESS_COUNT_QUERIES = {
     "sessions": "SELECT COUNT(*) AS count FROM sessions WHERE venue_id = ?",
+    "channel_conversations": "SELECT COUNT(*) AS count FROM channel_conversations WHERE venue_id = ?",
     "messages": """
         SELECT COUNT(*) AS count
         FROM messages message
@@ -49,6 +25,7 @@ _PROCESS_COUNT_QUERIES = {
     """,
     "message_runs": "SELECT COUNT(*) AS count FROM message_runs WHERE venue_id = ?",
     "message_attachments": "SELECT COUNT(*) AS count FROM message_attachments WHERE venue_id = ?",
+    "message_attachment_links": "SELECT COUNT(*) AS count FROM message_attachment_links WHERE venue_id = ?",
     "events": "SELECT COUNT(*) AS count FROM confirmed_events WHERE venue_id = ?",
     "event_activities": "SELECT COUNT(*) AS count FROM event_activities WHERE venue_id = ?",
     "tasks": "SELECT COUNT(*) AS count FROM tasks WHERE venue_id = ?",
@@ -56,22 +33,51 @@ _PROCESS_COUNT_QUERIES = {
     "approvals": "SELECT COUNT(*) AS count FROM approval_requests WHERE venue_id = ?",
     "push_logs": "SELECT COUNT(*) AS count FROM push_logs WHERE venue_id = ?",
     "tool_invocations": "SELECT COUNT(*) AS count FROM tool_invocation_logs WHERE venue_id = ?",
+    "personas": "SELECT COUNT(*) AS count FROM personas WHERE venue_id = ?",
+    "persona_interviews": "SELECT COUNT(*) AS count FROM persona_interviews WHERE venue_id = ?",
+    "knowledge_documents": "SELECT COUNT(*) AS count FROM knowledge_documents WHERE venue_id = ?",
+    "knowledge_retrieval_snapshots": "SELECT COUNT(*) AS count FROM knowledge_retrieval_snapshots WHERE venue_id = ?",
+    "watcher_policies": "SELECT COUNT(*) AS count FROM watcher_policies WHERE venue_id = ?",
     "watcher_runs": "SELECT COUNT(*) AS count FROM watcher_runs WHERE venue_id = ?",
     "watcher_findings": "SELECT COUNT(*) AS count FROM watcher_findings WHERE venue_id = ?",
     "experience_candidates": "SELECT COUNT(*) AS count FROM experience_candidates WHERE venue_id = ?",
+    "experience_candidate_attempts": "SELECT COUNT(*) AS count FROM experience_candidate_attempts WHERE venue_id = ?",
     "experience_interviews": "SELECT COUNT(*) AS count FROM experience_interviews WHERE venue_id = ?",
+    "experience_interview_turns": "SELECT COUNT(*) AS count FROM experience_interview_turns WHERE venue_id = ?",
+    "experience_interview_authorizations": "SELECT COUNT(*) AS count FROM experience_interview_authorizations WHERE venue_id = ?",
     "experience_cards": "SELECT COUNT(*) AS count FROM experience_cards WHERE venue_id = ?",
+    "experience_card_versions": "SELECT COUNT(*) AS count FROM experience_card_versions WHERE venue_id = ?",
+    "experience_authorizations": "SELECT COUNT(*) AS count FROM experience_authorizations WHERE venue_id = ?",
+    "experience_reviews": "SELECT COUNT(*) AS count FROM experience_reviews WHERE venue_id = ?",
+    "experience_usage_logs": "SELECT COUNT(*) AS count FROM experience_usage_logs WHERE venue_id = ?",
+    "llm_call_logs": "SELECT COUNT(*) AS count FROM llm_call_logs WHERE venue_id = ?",
+    "runtime_recovery_runs": "SELECT COUNT(*) AS count FROM runtime_recovery_runs WHERE venue_id = ?",
 }
 
 
 def approval_rule_snapshot() -> list[dict[str, Any]]:
-    """Return a caller-safe copy of the frozen UAT approval policy."""
+    """Return the same controlled-action policies consumed by runtime."""
 
-    return deepcopy(list(_APPROVAL_RULES))
+    return controlled_action_policy_snapshot()
 
 
 async def collect_uat_baseline_snapshot(db: Any, *, venue_id: str) -> dict[str, Any]:
-    """Collect a sanitized baseline using read-only database queries."""
+    """Collect one sanitized baseline from a consistent read-only snapshot."""
+
+    async with db.read_snapshot() as snapshot:
+        return await _collect_uat_baseline_snapshot(
+            snapshot,
+            venue_id=venue_id,
+            captured_at=time.time(),
+        )
+
+
+async def _collect_uat_baseline_snapshot(
+    db: Any,
+    *,
+    venue_id: str,
+    captured_at: float,
+) -> dict[str, Any]:
 
     venue = await db.fetch_one(
         "SELECT id, name, status, created_at, updated_at FROM venues WHERE id = ?",
@@ -136,7 +142,7 @@ async def collect_uat_baseline_snapshot(db: Any, *, venue_id: str) -> dict[str, 
 
     return {
         "schema_version": 1,
-        "captured_at": time.time(),
+        "captured_at": captured_at,
         "channel": {
             "mode": "WECOM_SIMULATOR_ONLY",
             "identity_channel": "WECOM_SIMULATOR",

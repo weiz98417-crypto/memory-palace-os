@@ -12,7 +12,7 @@ Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 import asyncio
 import inspect
 import json
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, cast
 
 from loguru import logger
 
@@ -135,7 +135,10 @@ async def execute_with_permission(
     from ..core.permissions import get_permission_engine
 
     engine = get_permission_engine()
-    return await engine.check_and_execute(tool_name, args, context)
+    return cast(
+        Dict[str, Any],
+        await engine.check_and_execute(tool_name, args, context),
+    )
 
 
 def get_openai_tools_format() -> list:
@@ -145,9 +148,9 @@ def get_openai_tools_format() -> list:
     Returns:
         OpenAI compatible tools list
     """
-    tools = []
+    tools: list[dict[str, Any]] = []
     for name, metadata in _tools_metadata.items():
-        tool_def = {
+        tool_def: dict[str, Any] = {
             "type": "function",
             "function": {
                 "name": metadata["name"],
@@ -167,6 +170,34 @@ def get_openai_tools_format() -> list:
 
 def _register_builtin_tools():
     """注册内置工具"""
+
+    async def record_manager_decision_tool(
+        decision: str,
+        message: str,
+        execution_context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        context = execution_context or {}
+        return {
+            "status": "RECORDED",
+            "decision": decision,
+            "message": message,
+            "event_id": context.get("event_id"),
+            "task_id": context.get("task_id"),
+        }
+
+    register_tool(
+        "record_manager_decision",
+        record_manager_decision_tool,
+        description="记录值班经理批准的高风险运营决策",
+        parameters={
+            "type": "object",
+            "properties": {
+                "decision": {"type": "string"},
+                "message": {"type": "string"},
+            },
+            "required": ["decision", "message"],
+        },
+    )
 
     # 短信工具
     async def send_sms_tool(phone: str, message: str, priority: str = "normal") -> Dict[str, Any]:
@@ -193,7 +224,7 @@ def _register_builtin_tools():
     # 告警工具
     async def send_alert_tool(message: str, level: str = "warning") -> Dict[str, Any]:
         from .sms_client import send_alert
-        return await send_alert(message, level)
+        return cast(Dict[str, Any], await send_alert(message, level))
 
     register_tool(
         "send_alert",

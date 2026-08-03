@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -13,7 +14,16 @@ from typing import Any, Mapping
 from uuid import uuid4
 
 
-_RUN_DIRECTORIES = ("artifacts", "failures", "logs", "screenshots", "steps")
+_RUN_DIRECTORIES = ("api", "artifacts", "failures", "logs", "screenshots", "steps", "traces")
+_RUN_JSON_SCAFFOLDS = (
+    "browser-console.json",
+    "chroma-retrieval.json",
+    "db-assertions.json",
+    "evidence-validation.json",
+    "llm-calls.json",
+    "queue-recovery.json",
+)
+_BASELINE_TRANSACTION_DIRECTORY = ".uat-baseline.pending"
 _RUN_ID_PATTERN = re.compile(r"^UAT-\d{8}T\d{6}Z-[A-Z0-9]{8}$")
 _STEP_ID_PATTERN = re.compile(r"^(?:E2E-\d{2}|UAT-F\d{2})$")
 _ARTIFACT_NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
@@ -90,16 +100,11 @@ class EvidenceRun:
         resolved_run_id = run_id or _new_run_id(created_at)
         if not _RUN_ID_PATTERN.fullmatch(resolved_run_id):
             raise ValueError(f"invalid uat_run_id: {resolved_run_id}")
+        output_root.mkdir(parents=True, exist_ok=True)
         run_path = output_root / resolved_run_id
-
-        try:
-            run_path.mkdir(parents=True, exist_ok=False)
-        except FileExistsError as exc:
-            raise FileExistsError(f"evidence run already exists: {resolved_run_id}") from exc
-
-        for directory in _RUN_DIRECTORIES:
-            (run_path / directory).mkdir()
-
+        if run_path.exists():
+            raise FileExistsError(f"evidence run already exists: {resolved_run_id}")
+        staging_path = output_root / f".{resolved_run_id}.{uuid4().hex}.tmp"
         manifest = {
             "schema_version": 1,
             "uat_run_id": resolved_run_id,
@@ -120,7 +125,28 @@ class EvidenceRun:
             "baseline": None,
             "steps": [],
         }
-        _write_json(run_path / "manifest.json", manifest)
+        scaffold = {
+            "schema_version": 1,
+            "uat_run_id": resolved_run_id,
+            "records": [],
+        }
+        try:
+            staging_path.mkdir(exist_ok=False)
+            for directory in _RUN_DIRECTORIES:
+                (staging_path / directory).mkdir()
+            for name in _RUN_JSON_SCAFFOLDS:
+                _write_json(staging_path / name, scaffold)
+            (staging_path / "execution-report.md").write_text(
+                f"# Unified Agent UAT Execution Report\n\n- `uat_run_id`: `{resolved_run_id}`\n"
+                "- Status: RUNNING\n",
+                encoding="utf-8",
+            )
+            _write_json(staging_path / "manifest.json", manifest)
+            staging_path.replace(run_path)
+        except Exception:
+            if staging_path.exists():
+                shutil.rmtree(staging_path)
+            raise
         return cls(path=run_path, run_id=resolved_run_id)
 
     def record_step(
@@ -136,6 +162,7 @@ class EvidenceRun:
         if status not in {"PASSED", "FAILED"}:
             raise ValueError(f"invalid UAT step status: {status}")
 
+        self._recover_baseline_transaction()
         manifest_path = self.path / "manifest.json"
         manifest = _read_json(manifest_path)
         if manifest.get("status") != "RUNNING":
@@ -211,22 +238,85 @@ class EvidenceRun:
     def record_baseline(self, snapshot: Mapping[str, Any]) -> Path:
         """Write the sanitized, immutable pre-journey master-data baseline."""
 
+        sanitized = _redact(deepcopy(dict(snapshot)))
+        recovered = self._recover_baseline_transaction()
         manifest_path = self.path / "manifest.json"
         manifest = _read_json(manifest_path)
         if manifest.get("status") != "RUNNING":
             raise RuntimeError(f"evidence run is sealed with status {manifest.get('status')}")
         baseline_path = self.path / "artifacts" / "uat-baseline.json"
         if manifest.get("baseline") is not None or baseline_path.exists():
+            if recovered and _read_json(baseline_path) == sanitized:
+                return baseline_path
             raise FileExistsError("UAT baseline already exists")
 
-        sanitized = _redact(deepcopy(dict(snapshot)))
-        _write_json(baseline_path, sanitized)
-        manifest["baseline"] = {
-            "path": baseline_path.relative_to(self.path).as_posix(),
-            "sha256": _file_sha256(baseline_path),
-        }
-        _write_json(manifest_path, manifest)
+        transaction_path = self.path / _BASELINE_TRANSACTION_DIRECTORY
+        transaction_path.mkdir(exist_ok=False)
+        prepared = False
+        try:
+            staged_baseline = transaction_path / "uat-baseline.json"
+            staged_manifest = transaction_path / "manifest.json"
+            _write_json(staged_baseline, sanitized)
+            manifest["baseline"] = {
+                "path": baseline_path.relative_to(self.path).as_posix(),
+                "sha256": _file_sha256(staged_baseline),
+            }
+            _write_json(staged_manifest, manifest)
+            _write_json(
+                transaction_path / "transaction.json",
+                {
+                    "schema_version": 1,
+                    "baseline_sha256": _file_sha256(staged_baseline),
+                    "manifest_sha256": _file_sha256(staged_manifest),
+                },
+            )
+            prepared = True
+            staged_baseline.replace(baseline_path)
+            staged_manifest.replace(manifest_path)
+            shutil.rmtree(transaction_path)
+        except Exception:
+            if not prepared and transaction_path.exists():
+                shutil.rmtree(transaction_path)
+            raise
         return baseline_path
+
+    def _recover_baseline_transaction(self) -> bool:
+        transaction_path = self.path / _BASELINE_TRANSACTION_DIRECTORY
+        if not transaction_path.exists():
+            return False
+        if not transaction_path.is_dir() or transaction_path.is_symlink():
+            raise RuntimeError("invalid UAT baseline transaction")
+        transaction_record_path = transaction_path / "transaction.json"
+        if not transaction_record_path.is_file():
+            manifest = _read_json(self.path / "manifest.json")
+            baseline_path = self.path / "artifacts" / "uat-baseline.json"
+            if manifest.get("baseline") is None and not baseline_path.exists():
+                shutil.rmtree(transaction_path)
+                return False
+            raise RuntimeError("incomplete UAT baseline transaction")
+        transaction = _read_json(transaction_record_path)
+        files = (
+            (
+                transaction_path / "uat-baseline.json",
+                self.path / "artifacts" / "uat-baseline.json",
+                transaction.get("baseline_sha256"),
+            ),
+            (
+                transaction_path / "manifest.json",
+                self.path / "manifest.json",
+                transaction.get("manifest_sha256"),
+            ),
+        )
+        for staged_path, target_path, expected_sha in files:
+            if not isinstance(expected_sha, str) or not expected_sha:
+                raise RuntimeError("invalid UAT baseline transaction checksum")
+            if target_path.is_file() and _file_sha256(target_path) == expected_sha:
+                continue
+            if not staged_path.is_file() or _file_sha256(staged_path) != expected_sha:
+                raise RuntimeError(f"cannot recover UAT baseline transaction: {target_path.name}")
+            staged_path.replace(target_path)
+        shutil.rmtree(transaction_path)
+        return True
 
     def complete(
         self,
@@ -236,6 +326,7 @@ class EvidenceRun:
     ) -> Path:
         from .validation import validate_evidence
 
+        self._recover_baseline_transaction()
         manifest_path = self.path / "manifest.json"
         manifest = _read_json(manifest_path)
         if manifest.get("status") != "RUNNING":

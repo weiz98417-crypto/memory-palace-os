@@ -210,7 +210,12 @@ async def bootstrap_uat_master_data(
     api = _FormalAPI(active_client)
     try:
         principal = await api.login(config.admin_username, config.admin_password)
-        await _ensure_venue(api)
+        venues = await _list_venues(api)
+        if any(venue.get("id") == UAT_VENUE_ID for venue in venues):
+            await _assert_pristine_baseline(
+                await _capture_baseline(api, venue_id=UAT_VENUE_ID)
+            )
+        await _ensure_venue(api, venues=venues)
         users = await _list_users(api)
         admin = _find_user(users, principal.get("id"), config.admin_username)
         admin_spec = _uat_user_specs(config.admin_username)[0]
@@ -220,7 +225,6 @@ async def bootstrap_uat_master_data(
         if principal.get("venue_id") != UAT_VENUE_ID or principal.get("role") != "admin":
             raise UATBootstrapError("UAT 管理员未进入悦山景区或不再具有管理员角色")
 
-        await _assert_pristine_baseline(await _capture_baseline(api))
         await api.request(
             "PUT",
             "/api/v1/admin/settings/organization_name",
@@ -261,7 +265,7 @@ async def bootstrap_uat_master_data(
         sop = await _ensure_published_sop(api)
         expert = await _ensure_signed_expert(api, ensured_users["zhang-jianguo"])
         await _verify_simulator_identities(api, _uat_user_specs(config.admin_username))
-        baseline_snapshot = await _capture_baseline(api)
+        baseline_snapshot = await _capture_baseline(api, venue_id=UAT_VENUE_ID)
         _validate_ready_baseline(
             baseline_snapshot,
             specs=_uat_user_specs(config.admin_username),
@@ -282,9 +286,20 @@ async def bootstrap_uat_master_data(
             await active_client.aclose()
 
 
-async def _ensure_venue(api: _FormalAPI) -> dict[str, Any]:
+async def _list_venues(api: _FormalAPI) -> list[dict[str, Any]]:
     payload = await api.request("GET", "/api/v1/admin/venues")
-    venues = payload.get("venues", [])
+    venues = payload.get("venues")
+    if not isinstance(venues, list):
+        raise UATBootstrapError("场地列表接口返回格式不正确")
+    return venues
+
+
+async def _ensure_venue(
+    api: _FormalAPI,
+    *,
+    venues: Optional[list[dict[str, Any]]] = None,
+) -> dict[str, Any]:
+    venues = await _list_venues(api) if venues is None else venues
     venue = next((item for item in venues if item.get("id") == UAT_VENUE_ID), None)
     if venue is None:
         created = await api.request(
@@ -368,8 +383,15 @@ async def _create_user(api: _FormalAPI, spec: _UATUserSpec, password: str) -> di
     return payload["user"]
 
 
-async def _capture_baseline(api: _FormalAPI) -> dict[str, Any]:
-    snapshot = await api.request("GET", "/api/v1/admin/uat-baseline")
+async def _capture_baseline(
+    api: _FormalAPI,
+    *,
+    venue_id: Optional[str] = None,
+) -> dict[str, Any]:
+    path = "/api/v1/admin/uat-baseline"
+    if venue_id:
+        path += f"?venue_id={venue_id}"
+    snapshot = await api.request("GET", path)
     if not isinstance(snapshot, dict):
         raise UATBootstrapError("UAT 基线接口返回格式不正确")
     return snapshot

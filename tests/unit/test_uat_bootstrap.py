@@ -88,6 +88,7 @@ class UATAPIState:
         self.calls.append((method, path))
         body = json.loads(request.content or b"{}")
         venue_id = self.principal_venue(request)
+        query = parse_qs(request.url.query.decode())
 
         if method == "POST" and path == "/api/v1/auth/login":
             admin = next(user for user in self.users if user["username"] == body["username"])
@@ -140,6 +141,7 @@ class UATAPIState:
             return self.ok(request, {"key": "organization_name", "value": body["value"]})
 
         if method == "GET" and path == "/api/v1/admin/uat-baseline":
+            venue_id = query.get("venue_id", [venue_id])[0]
             return self.ok(
                 request,
                 {
@@ -295,6 +297,39 @@ async def test_uat_bootstrap_is_repeatable_and_uses_formal_apis() -> None:
     assert set(first.baseline_snapshot["process_counts"].values()) == {0}
     assert ("POST", "/api/v1/channels/identities") in state.calls
     assert all(path.startswith("/api/v1/") for _, path in state.calls)
+
+
+@pytest.mark.asyncio
+async def test_uat_bootstrap_rejects_dirty_existing_venue_before_master_data_writes() -> None:
+    state = UATAPIState()
+    state.venues.append(
+        {
+            "id": "venue-yueshan",
+            "name": "待核验场地",
+            "status": "DISABLED",
+        }
+    )
+    state.process_counts["sessions"] = 1
+    transport = httpx.MockTransport(state.response)
+    config = UATBootstrapConfig(
+        base_url="http://uat",
+        admin_username="uat-admin",
+        admin_password="admin-secret-password",
+        employee_password="employee-secret-password",
+    )
+
+    async with httpx.AsyncClient(transport=transport, base_url=config.base_url) as client:
+        with pytest.raises(UATBootstrapError, match="已经存在演示旅程过程数据"):
+            await bootstrap_uat_master_data(config, client=client)
+
+    assert state.calls == [
+        ("POST", "/api/v1/auth/login"),
+        ("GET", "/api/v1/admin/venues"),
+        ("GET", "/api/v1/admin/uat-baseline"),
+    ]
+    assert state.venues[-1]["name"] == "待核验场地"
+    assert state.venues[-1]["status"] == "DISABLED"
+    assert state.password_resets == []
 
 
 def test_uat_bootstrap_config_reads_password_files_without_exposing_values(tmp_path: Path) -> None:
