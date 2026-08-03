@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from types import SimpleNamespace
 
 import httpx
 import pytest
@@ -37,6 +38,23 @@ class DiagnosticsDatabaseStub:
                 "venue_id": "venue-alpha",
                 "status": "ACTIVE",
             }
+        if "FROM llm_call_logs" in sql:
+            assert parameters[:2] == ("venue-alpha", "deepseek-v4-flash")
+            return {
+                "provider": "deepseek",
+                "model_name": "deepseek-v4-flash",
+                "status": "SUCCEEDED",
+                "is_mock": False,
+                "request_id": "latest-request",
+                "trace_id": "latest-trace",
+                "created_at": time.time(),
+            }
+        if "active_user_count" in sql:
+            assert parameters == ("venue-alpha", "venue-alpha")
+            return {
+                "active_user_count": 8,
+                "mapped_active_user_count": 8,
+            }
         if "SELECT 1 AS ok" in sql:
             return {"ok": 1}
         return None
@@ -66,6 +84,88 @@ class DiagnosticsDatabaseStub:
 
 class SQLiteDiagnosticsDatabaseStub(DiagnosticsDatabaseStub):
     backend_name = "sqlite"
+
+
+class ProbeOnlyDiagnosticsDatabaseStub(DiagnosticsDatabaseStub):
+    async def fetch_one(self, sql: str, parameters: tuple = ()):
+        if "FROM llm_call_logs" in sql:
+            return {
+                "provider": "deepseek",
+                "model_name": "deepseek-v4-flash",
+                "status": "SUCCEEDED",
+                "is_mock": False,
+                "request_id": "probe-request",
+                "trace_id": "probe-trace",
+                "created_at": time.time(),
+            }
+        if "active_user_count" in sql:
+            return {
+                "active_user_count": 2,
+                "mapped_active_user_count": 2,
+            }
+        return await super().fetch_one(sql, parameters)
+
+    async def fetch_all(self, sql: str, parameters: tuple = ()):
+        if "FROM llm_call_logs" in sql:
+            return []
+        return await super().fetch_all(sql, parameters)
+
+
+class MissingSimulatorIdentityDatabaseStub(DiagnosticsDatabaseStub):
+    async def fetch_one(self, sql: str, parameters: tuple = ()):
+        if "FROM llm_call_logs" in sql:
+            return {
+                "provider": "deepseek",
+                "model_name": "deepseek-v4-flash",
+                "status": "SUCCEEDED",
+                "is_mock": False,
+                "request_id": "probe-request",
+                "trace_id": "probe-trace",
+                "created_at": time.time(),
+            }
+        if "active_user_count" in sql:
+            return {
+                "active_user_count": 2,
+                "mapped_active_user_count": 1,
+            }
+        return await super().fetch_one(sql, parameters)
+
+
+class BrokenAgentEvidenceDatabaseStub(ProbeOnlyDiagnosticsDatabaseStub):
+    async def fetch_all(self, sql: str, parameters: tuple = ()):
+        if "FROM llm_call_logs" in sql:
+            raise ConnectionError("postgresql://diagnostics-secret@database.internal")
+        return await super().fetch_all(sql, parameters)
+
+
+class DeepSeekProbeClientStub:
+    def __init__(self):
+        self.kwargs = None
+
+    async def ask(self, **kwargs):
+        self.kwargs = kwargs
+        return SimpleNamespace(
+            content="private-probe-output-must-not-leak",
+            model_name="deepseek-v4-flash",
+            is_mock=False,
+            request_id="probe-request",
+            latency_seconds=0.125,
+        )
+
+
+class MockDeepSeekProbeClientStub(DeepSeekProbeClientStub):
+    async def ask(self, **kwargs):
+        response = await super().ask(**kwargs)
+        response.is_mock = True
+        return response
+
+
+class ProbeEndpointDatabaseStub(DiagnosticsDatabaseStub):
+    def __init__(self):
+        self.executed: list[tuple[str, tuple]] = []
+
+    async def execute(self, sql: str, parameters: tuple = ()):
+        self.executed.append((sql, parameters))
 
 
 class QueueStub:
@@ -189,10 +289,32 @@ async def test_runtime_diagnostics_reports_unified_safe_operational_status(monke
         "configured": True,
         "mock_enabled": False,
         "live_verified": True,
+        "max_evidence_age_seconds": 900,
+        "evidence_collection": {"status": "healthy"},
+        "evidence": {
+            "provider": "deepseek",
+            "model_name": "deepseek-v4-flash",
+            "status": "SUCCEEDED",
+            "is_mock": False,
+            "request_id": "latest-request",
+            "trace_id": "latest-trace",
+            "created_at": payload["deepseek"]["evidence"]["created_at"],
+        },
+    }
+    assert payload["agent_coverage"] == {
+        "status": "healthy",
+        "registered_agent_count": 8,
         "verified_agent_count": 8,
         "required_agent_count": 8,
+        "complete": True,
     }
-    assert payload["channels"]["wecom_simulator"]["status"] == "SIMULATOR_READY"
+    assert payload["channels"]["wecom_simulator"] == {
+        "status": "SIMULATOR_READY",
+        "entrypoint": "/simulator/wecom/",
+        "active_user_count": 8,
+        "mapped_active_user_count": 8,
+        "unmapped_active_user_count": 0,
+    }
     assert payload["channels"]["real_wecom"] == {
         "status": "DISABLED_BY_POLICY",
         "policy_mode": "WECOM_SIMULATOR_ONLY",
@@ -217,6 +339,165 @@ async def test_runtime_diagnostics_reports_unified_safe_operational_status(monke
 
 
 @pytest.mark.asyncio
+async def test_deepseek_readiness_is_independent_from_eight_agent_call_coverage(monkeypatch):
+    monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "diagnostic-deepseek-secret")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    monkeypatch.delenv("MOCK_LLM", raising=False)
+    _auto_register_skills()
+
+    app = FastAPI(version="1.2.3")
+    app.state.db_client = ProbeOnlyDiagnosticsDatabaseStub()
+    app.state.message_queue = QueueStub()
+    app.state.message_worker = WorkerStub()
+    app.state.vector_store = VectorStoreStub()
+    app.state.runtime_instance_id = "app-instance-uat"
+    app.include_router(management_router, prefix="/admin")
+
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/admin/diagnostics", headers=_access_header(role="admin"))
+
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["status"] == "healthy"
+    assert payload["deepseek"]["status"] == "READY"
+    assert payload["deepseek"]["live_verified"] is True
+    assert payload["agent_coverage"] == {
+        "status": "healthy",
+        "registered_agent_count": 8,
+        "verified_agent_count": 0,
+        "required_agent_count": 8,
+        "complete": False,
+    }
+    assert all(agent["status"] == "REGISTERED_UNVERIFIED" for agent in payload["agents"])
+
+
+@pytest.mark.asyncio
+async def test_wecom_simulator_blocks_when_active_users_lack_active_identity_mapping(monkeypatch):
+    monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "diagnostic-deepseek-secret")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    monkeypatch.delenv("MOCK_LLM", raising=False)
+    _auto_register_skills()
+
+    app = FastAPI(version="1.2.3")
+    app.state.db_client = MissingSimulatorIdentityDatabaseStub()
+    app.state.message_queue = QueueStub()
+    app.state.message_worker = WorkerStub()
+    app.state.vector_store = VectorStoreStub()
+    app.state.runtime_instance_id = "app-instance-uat"
+    app.include_router(management_router, prefix="/admin")
+
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/admin/diagnostics", headers=_access_header(role="admin"))
+
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["status"] == "degraded"
+    assert payload["channels"]["wecom_simulator"] == {
+        "status": "BLOCKED",
+        "entrypoint": "/simulator/wecom/",
+        "active_user_count": 2,
+        "mapped_active_user_count": 1,
+        "unmapped_active_user_count": 1,
+    }
+    assert payload["channels"]["real_wecom"]["status"] == "DISABLED_BY_POLICY"
+
+
+@pytest.mark.asyncio
+async def test_agent_evidence_collection_failure_is_sanitized_and_degrades_diagnostics(monkeypatch):
+    monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "diagnostic-deepseek-secret")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    monkeypatch.delenv("MOCK_LLM", raising=False)
+    _auto_register_skills()
+
+    app = FastAPI(version="1.2.3")
+    app.state.db_client = BrokenAgentEvidenceDatabaseStub()
+    app.state.message_queue = QueueStub()
+    app.state.message_worker = WorkerStub()
+    app.state.vector_store = VectorStoreStub()
+    app.state.runtime_instance_id = "app-instance-uat"
+    app.include_router(management_router, prefix="/admin")
+
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/admin/diagnostics", headers=_access_header(role="admin"))
+
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["status"] == "degraded"
+    assert payload["agent_coverage"] == {
+        "status": "unhealthy",
+        "error_type": "ConnectionError",
+        "registered_agent_count": 8,
+        "verified_agent_count": 0,
+        "required_agent_count": 8,
+        "complete": False,
+    }
+    assert all(agent["status"] == "REGISTERED_UNVERIFIED" for agent in payload["agents"])
+    assert "diagnostics-secret" not in response.text
+    assert "database.internal" not in response.text
+
+
+@pytest.mark.asyncio
+async def test_admin_can_run_a_sanitized_real_deepseek_probe(monkeypatch):
+    monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
+    database = ProbeEndpointDatabaseStub()
+    llm_client = DeepSeekProbeClientStub()
+    app = FastAPI(version="1.2.3")
+    app.state.db_client = database
+    app.state.container = SimpleNamespace(llm_client=llm_client)
+    app.include_router(management_router, prefix="/admin")
+
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/admin/diagnostics/deepseek-probe",
+            headers={**_access_header(role="admin"), "X-Trace-ID": "probe-trace"},
+        )
+
+    assert response.status_code == 200, response.text
+    assert response.json() == {
+        "status": "READY",
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "is_mock": False,
+        "request_id": "probe-request",
+        "trace_id": "probe-trace",
+        "latency_seconds": 0.125,
+    }
+    assert llm_client.kwargs["venue_id"] == "venue-alpha"
+    assert llm_client.kwargs["agent_id"] == "RuntimeDiagnostics"
+    assert llm_client.kwargs["model"] == "deepseek-v4-flash"
+    assert database.executed
+    assert "private-probe-output-must-not-leak" not in response.text
+
+
+@pytest.mark.asyncio
+async def test_deepseek_probe_rejects_mock_evidence(monkeypatch):
+    monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
+    database = ProbeEndpointDatabaseStub()
+    app = FastAPI(version="1.2.3")
+    app.state.db_client = database
+    app.state.container = SimpleNamespace(llm_client=MockDeepSeekProbeClientStub())
+    app.include_router(management_router, prefix="/admin")
+
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/admin/diagnostics/deepseek-probe",
+            headers=_access_header(role="admin"),
+        )
+
+    assert response.status_code == 503
+    assert response.json()["detail"]["code"] == "DEEPSEEK_PROBE_FAILED"
+    assert "private-probe-output-must-not-leak" not in response.text
+
+
+@pytest.mark.asyncio
 async def test_runtime_diagnostics_is_admin_only(monkeypatch):
     monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
     app = FastAPI()
@@ -226,8 +507,13 @@ async def test_runtime_diagnostics_is_admin_only(monkeypatch):
     transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/admin/diagnostics", headers=_access_header(role="manager"))
+        probe_response = await client.post(
+            "/admin/diagnostics/deepseek-probe",
+            headers=_access_header(role="manager"),
+        )
 
     assert response.status_code == 403
+    assert probe_response.status_code == 403
 
 
 @pytest.mark.asyncio

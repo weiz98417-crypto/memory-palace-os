@@ -129,7 +129,7 @@ Graphify 证明当前代码图谱已经刷新，不代表目标旅程已经通�
 
 ### W1：统一入口、消息和事件
 
-状态：`UA-100` 已完成代码与自动化验证。统一诊断现可读取 App、PostgreSQL、Redis、ChromaDB、Worker、8 Agent 与 DeepSeek 的脱敏状态；管理端运维诊断页已接入该统一门禁；企微模拟器与真实企微状态分离，真实企微固定为 `DISABLED_BY_POLICY`。该状态不代表 `E2E-00` 已完成正式 UAT，注册表状态和 evidence 保持不变。
+状态：`UA-100` 已完成代码与自动化验证。统一诊断现可读取 App、PostgreSQL、Redis、ChromaDB、Worker、8 Agent 与 DeepSeek 的脱敏状态；DeepSeek 近期真实探针与 8 Agent 历史调用覆盖分别判定，管理员可通过正式诊断接口生成不含 Prompt/输出的真实探针证据；Agent 证据采集异常会显式降级。企微模拟器仅在当前场地全部 ACTIVE 用户具有 ACTIVE `WECOM_SIMULATOR` 身份映射时就绪，真实企微固定为 `DISABLED_BY_POLICY`，保持零初始化、零入队、零投递。App 诊断实例 ID 与启动恢复审计使用同一个值。该状态不代表 `E2E-00` 已完成正式 UAT，注册表状态和 evidence 保持不变。
 
 | 任务 ID | 任务 | 依赖 | 主要影响文件 | 交付与验收 | 对应旅程 |
 |---|---|---|---|---|---|

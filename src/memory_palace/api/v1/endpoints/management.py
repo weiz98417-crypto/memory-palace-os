@@ -30,7 +30,7 @@ from ....operations.uat_baseline import (
     collect_uat_baseline_snapshot,
     collect_uat_pristine_snapshot,
 )
-from ....operations.runtime_diagnostics import collect_runtime_diagnostics
+from ....operations.runtime_diagnostics import collect_runtime_diagnostics, run_deepseek_probe
 from ....tools.sms_client import notification_channel_readiness
 
 
@@ -580,6 +580,63 @@ async def runtime_diagnostics(
         db,
         venue_id=principal["venue_id"],
     )
+
+
+@router.post("/diagnostics/deepseek-probe")
+async def deepseek_diagnostics_probe(
+    request: Request,
+    principal: dict = Depends(require_roles("admin")),
+    db=Depends(get_request_db),
+):
+    """Run one real DeepSeek probe without exposing prompts or model output."""
+
+    trace_id = request_trace_id(request)
+    container = getattr(request.app.state, "container", None)
+    llm_client = getattr(container, "llm_client", None)
+    if llm_client is None or not callable(getattr(llm_client, "ask", None)):
+        raise api_error(
+            request,
+            503,
+            "DEEPSEEK_PROBE_UNAVAILABLE",
+            "DeepSeek 探针当前不可用。",
+            "检查正式运行时容器和模型配置后重试。",
+        )
+    try:
+        result = await run_deepseek_probe(
+            llm_client,
+            venue_id=principal["venue_id"],
+            trace_id=trace_id,
+        )
+    except Exception as exc:
+        await write_audit(
+            db,
+            principal=principal,
+            action="DEEPSEEK_PROBE_RUN",
+            resource_type="runtime_diagnostics",
+            resource_id=trace_id,
+            outcome="FAILED",
+            trace_id=trace_id,
+            metadata={"error_type": type(exc).__name__},
+        )
+        raise api_error(
+            request,
+            503,
+            "DEEPSEEK_PROBE_FAILED",
+            "DeepSeek 真实探针未通过。",
+            "检查模型配置与服务可用性后重试。",
+        ) from exc
+
+    await write_audit(
+        db,
+        principal=principal,
+        action="DEEPSEEK_PROBE_RUN",
+        resource_type="runtime_diagnostics",
+        resource_id=trace_id,
+        outcome="SUCCEEDED",
+        trace_id=trace_id,
+        metadata={"provider": result["provider"], "model": result["model"], "is_mock": False},
+    )
+    return result
 
 
 @router.get("/uat-baseline")

@@ -89,6 +89,7 @@ async def lifespan(app: FastAPI):
     from src.memory_palace.core.scheduler import TaskScheduler
     from src.memory_palace.skills import _auto_register_skills
 
+    runtime_instance_id = uuid.uuid4().hex
     logger.info("🚀 Memory Palace OS 正在启动...")
 
     # —— 注册所有 Agent（触发 @register_skill 装饰器）——
@@ -120,6 +121,7 @@ async def lifespan(app: FastAPI):
         task_graph=app_container.task_graph,
         permission_engine=app_container.permission_engine,
         runtime_queue=runtime_queue,
+        instance_id=runtime_instance_id,
         app_version=app.version,
     )
     logger.info(
@@ -184,7 +186,7 @@ async def lifespan(app: FastAPI):
     app.state.vector_store = vector_store
     app.state.container = app_container
     app.state.scheduler = scheduler
-    app.state.runtime_instance_id = uuid.uuid4().hex
+    app.state.runtime_instance_id = runtime_instance_id
 
     yield  # ← FastAPI 在此处理请求
 

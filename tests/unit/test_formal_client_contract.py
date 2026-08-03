@@ -510,6 +510,9 @@ def test_diagnostics_renders_unified_runtime_agents_and_channel_policy():
     assert "diagnostics.runtime" in html
     assert "diagnostics.deepseek" in html
     assert "diagnostics.agents" in html
+    assert "diagnostics.agent_coverage" in html
     assert "diagnostics.channels" in html
+    assert 'data-action="deepseek-probe"' in html
+    assert 'api("/admin/diagnostics/deepseek-probe",{method:"POST"})' in html
     assert "真实企业微信" in html
     assert "DISABLED_BY_POLICY" in html
