@@ -501,3 +501,15 @@ def test_diagnostics_renders_persisted_startup_and_recovery_runs():
     assert "task_graph_recovered_count" in html
     assert "redis_claimed_count" in html
     assert "instance_id" in html
+
+
+def test_diagnostics_renders_unified_runtime_agents_and_channel_policy():
+    html = CLIENT_PATH.read_text(encoding="utf-8")
+
+    assert 'api("/admin/diagnostics")' in html
+    assert "diagnostics.runtime" in html
+    assert "diagnostics.deepseek" in html
+    assert "diagnostics.agents" in html
+    assert "diagnostics.channels" in html
+    assert "真实企业微信" in html
+    assert "DISABLED_BY_POLICY" in html

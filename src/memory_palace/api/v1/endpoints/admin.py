@@ -432,6 +432,14 @@ async def request_controlled_action(
             "业务动作与执行工具不匹配。",
             "移除客户端工具覆盖并重试。",
         )
+    if tool_name == "record_manager_decision" and action_policy is None:
+        raise api_error(
+            request,
+            422,
+            "ACTION_CODE_REQUIRED",
+            "管理决策必须使用已注册的高风险业务动作。",
+            "提交动作列表中的 action_code，不要直接指定执行工具。",
+        )
     session_id = body.session_id.strip()
     event_id = body.event_id.strip()
     task_id = body.task_id.strip()

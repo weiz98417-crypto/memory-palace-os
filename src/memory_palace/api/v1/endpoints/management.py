@@ -26,7 +26,11 @@ from ....core.sensitive_output import (
     sanitize_public_value,
 )
 from ....core.trace_timeline import build_trace_timeline
-from ....operations.uat_baseline import collect_uat_baseline_snapshot
+from ....operations.uat_baseline import (
+    collect_uat_baseline_snapshot,
+    collect_uat_pristine_snapshot,
+)
+from ....operations.runtime_diagnostics import collect_runtime_diagnostics
 from ....tools.sms_client import notification_channel_readiness
 
 
@@ -563,17 +567,45 @@ async def integration_statuses(
     return {"integrations": await _integration_status_rows(principal["venue_id"], db)}
 
 
+@router.get("/diagnostics")
+async def runtime_diagnostics(
+    request: Request,
+    principal: dict = Depends(require_roles("admin")),
+    db=Depends(get_request_db),
+):
+    """Return a sanitized unified-agent production readiness snapshot."""
+
+    return await collect_runtime_diagnostics(
+        request,
+        db,
+        venue_id=principal["venue_id"],
+    )
+
+
 @router.get("/uat-baseline")
 async def uat_baseline(
     request: Request,
-    venue_id: Optional[str] = Query(None, min_length=2, max_length=64),
     principal: dict = Depends(require_roles("admin")),
     db=Depends(get_request_db),
 ):
     """Return the read-only master-data and empty-journey UAT baseline."""
 
-    target_venue_id = venue_id or principal["venue_id"]
-    if not await db.fetch_one("SELECT id FROM venues WHERE id = ?", (target_venue_id,)):
+    _require_uat_snapshot_database(request, db)
+    return await collect_uat_baseline_snapshot(db, venue_id=principal["venue_id"])
+
+
+@router.get("/uat-pristine/{venue_id}")
+async def uat_pristine(
+    request: Request,
+    venue_id: str = Path(..., min_length=2, max_length=64),
+    _principal: dict = Depends(require_roles("admin")),
+    db=Depends(get_request_db),
+):
+    """Return only cross-venue process counts needed by the UAT bootstrap."""
+
+    _require_uat_snapshot_database(request, db)
+    snapshot = await collect_uat_pristine_snapshot(db, venue_id=venue_id)
+    if snapshot is None:
         raise api_error(
             request,
             404,
@@ -581,7 +613,19 @@ async def uat_baseline(
             "目标场地不存在，无法采集 UAT 基线。",
             "先确认场地标识，再执行主数据初始化。",
         )
-    return await collect_uat_baseline_snapshot(db, venue_id=target_venue_id)
+    return snapshot
+
+
+def _require_uat_snapshot_database(request: Request, db: Any) -> None:
+    if callable(getattr(db, "read_snapshot", None)):
+        return
+    raise api_error(
+        request,
+        503,
+        "UAT_POSTGRESQL_REQUIRED",
+        "正式 UAT 基线只能从 PostgreSQL 一致性快照采集。",
+        "在正式 PostgreSQL 运行环境中重试。",
+    )
 
 
 async def _collect_registry_evidence(request: Request, db, venue_id: str) -> dict[str, Any]:

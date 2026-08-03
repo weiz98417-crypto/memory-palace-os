@@ -76,6 +76,7 @@ async def test_postgres_password_with_url_reserved_characters_stays_out_of_dsn(m
     row = await client.fetch_one("SELECT 1 AS ok")
 
     assert row == {"ok": 1}
+    assert client.backend_name == "postgresql"
     assert captured["dsn"] == "postgresql://mp_user@postgres:5432/memory_palace"
     assert captured["password"] == password
 

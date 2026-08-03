@@ -81,12 +81,6 @@ class AsyncDBClient:
                 await conn.rollback()
                 raise
 
-    @asynccontextmanager
-    async def read_snapshot(self):
-        """Yield one consistent read transaction for adapter-compatible tests."""
-        async with self.transaction() as transaction:
-            yield transaction
-
     async def execute(self, sql: str, parameters: tuple = ()) -> int:
         """
         执行 INSERT/UPDATE/DELETE

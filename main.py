@@ -17,6 +17,7 @@ import asyncio
 import os
 import signal
 import sys
+import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -178,10 +179,12 @@ async def lifespan(app: FastAPI):
 
     # —— 将公共对象挂到 app.state，供路由层访问 ——
     app.state.message_queue = runtime_queue
+    app.state.message_worker = worker
     app.state.db_client = app_container.db_client
     app.state.vector_store = vector_store
     app.state.container = app_container
     app.state.scheduler = scheduler
+    app.state.runtime_instance_id = uuid.uuid4().hex
 
     yield  # ← FastAPI 在此处理请求
 

@@ -35,6 +35,8 @@ def _decode_redis_text(value: Any) -> Any:
 class RedisStreamsQueue:
     """Redis Streams-based queue with consumer group and dead letter support."""
 
+    backend_name = "redis_streams"
+
     def __init__(self, url: str = ""):
         self.url = url or os.environ.get("REDIS_URL", "redis://localhost:6379")
         self.pending_idle_ms = max(

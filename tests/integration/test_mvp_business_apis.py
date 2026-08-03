@@ -451,7 +451,7 @@ async def test_user_master_data_preserves_department_and_job_title(tmp_path, mon
 
 
 @pytest.mark.asyncio
-async def test_uat_baseline_is_read_only_sanitized_and_simulator_only(tmp_path, monkeypatch):
+async def test_uat_baseline_rejects_sqlite_test_backend(tmp_path, monkeypatch):
     app, database, _, _ = await build_app(tmp_path, monkeypatch)
     transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
 
@@ -476,17 +476,8 @@ async def test_uat_baseline_is_read_only_sanitized_and_simulator_only(tmp_path, 
         assert mapped.status_code == 201, mapped.text
         snapshot = await client.get("/admin/uat-baseline", headers=admin_headers)
 
-    assert snapshot.status_code == 200, snapshot.text
-    payload = snapshot.json()
-    assert payload["channel"] == {
-        "mode": "WECOM_SIMULATOR_ONLY",
-        "identity_channel": "WECOM_SIMULATOR",
-        "real_wecom_enabled": False,
-    }
-    assert {identity["channel"] for identity in payload["master_data"]["simulator_identities"]} == {
-        "WECOM_SIMULATOR"
-    }
-    assert payload["process_counts"] and set(payload["process_counts"].values()) == {0}
+    assert snapshot.status_code == 503, snapshot.text
+    assert snapshot.json()["detail"]["code"] == "UAT_POSTGRESQL_REQUIRED"
     assert "password_hash" not in snapshot.text
     assert "Mvp-Admin-Password-2026" not in snapshot.text
     await database.close()

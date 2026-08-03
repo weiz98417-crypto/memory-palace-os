@@ -155,7 +155,8 @@ class MessageQueueWorker:
         self._orchestrator = orchestrator or Orchestrator(container=container)
         self._container = container
         self._semaphore = asyncio.Semaphore(concurrency)
-        self._running = True
+        self._running = False
+        self._started_at: Optional[float] = None
         self._inflight_tasks: set[asyncio.Task] = set()
         self._dead_letter_queue: list[dict] = []   # 死信队列 stub
 
@@ -165,23 +166,43 @@ class MessageQueueWorker:
         """主消费循环，被 asyncio.create_task 调用"""
         backend = "Redis" if self.queue_backend else "InMemory"
         logger.info(f"🔄 队列消费者启动 [{backend}]，并发度: {self.concurrency}")
-        while self._running:
-            try:
-                message = await self.queue.get()
-                # 每条消息独立 Task，不阻塞主循环
-                task = asyncio.create_task(self._handle_with_semaphore(message))
-                self._inflight_tasks.add(task)
-                task.add_done_callback(self._inflight_tasks.discard)
-            except asyncio.CancelledError:
-                logger.info("🛑 队列消费者收到取消信号，退出消费循环")
-                break
-            except Exception as e:
-                logger.error(f"❌ 队列消费循环异常: {e}")
-                await asyncio.sleep(1)   # 短暂等待，避免异常快速重试
+        self._running = True
+        self._started_at = time.time()
+        try:
+            while self._running:
+                try:
+                    message = await self.queue.get()
+                    # 每条消息独立 Task，不阻塞主循环
+                    task = asyncio.create_task(self._handle_with_semaphore(message))
+                    self._inflight_tasks.add(task)
+                    task.add_done_callback(self._inflight_tasks.discard)
+                except asyncio.CancelledError:
+                    logger.info("🛑 队列消费者收到取消信号，退出消费循环")
+                    break
+                except Exception as e:
+                    logger.error(f"❌ 队列消费循环异常: {e}")
+                    await asyncio.sleep(1)   # 短暂等待，避免异常快速重试
+        finally:
+            self._running = False
 
     def stop(self) -> None:
         """外部停止信号（优雅关机时调用）"""
         self._running = False
+
+    def diagnostics(self) -> dict[str, object]:
+        """Return a stable worker state without exposing queued message data."""
+
+        backend = "in_memory"
+        if self.queue_backend is not None:
+            backend = str(getattr(self.queue_backend, "backend_name", "unknown"))
+        return {
+            "status": "RUNNING" if self._running else "STOPPED",
+            "running": self._running,
+            "backend": backend,
+            "concurrency": self.concurrency,
+            "inflight": sum(not task.done() for task in self._inflight_tasks),
+            "started_at": self._started_at,
+        }
 
     async def drain(self, timeout: float = 30.0) -> bool:
         """等待已领取消息完成；超时任务取消后由 Redis pending 在重启时回收。"""

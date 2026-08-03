@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from typing import Any
+from typing import Any, cast
 
 from ..core.controlled_action_policy import controlled_action_policy_snapshot
 
@@ -62,7 +62,7 @@ _PROCESS_COUNT_QUERIES = {
 def approval_rule_snapshot() -> list[dict[str, Any]]:
     """Return the same controlled-action policies consumed by runtime."""
 
-    return controlled_action_policy_snapshot()
+    return cast(list[dict[str, Any]], controlled_action_policy_snapshot())
 
 
 async def collect_uat_baseline_snapshot(db: Any, *, venue_id: str) -> dict[str, Any]:
@@ -140,9 +140,7 @@ async def _collect_uat_baseline_snapshot(
     )
 
     process_counts: dict[str, int] = {}
-    for name, sql in _PROCESS_COUNT_QUERIES.items():
-        row = await db.fetch_one(sql, (venue_id,)) or {}
-        process_counts[name] = int(row.get("count") or 0)
+    process_counts.update(await _collect_process_counts(db, venue_id=venue_id))
 
     return {
         "schema_version": 1,
@@ -166,3 +164,33 @@ async def _collect_uat_baseline_snapshot(
         },
         "process_counts": process_counts,
     }
+
+
+async def collect_uat_pristine_snapshot(
+    db: Any,
+    *,
+    venue_id: str,
+) -> dict[str, Any] | None:
+    """Collect venue existence and journey counts from one PostgreSQL snapshot."""
+
+    async with db.read_snapshot() as snapshot:
+        venue = await snapshot.fetch_one(
+            "SELECT id FROM venues WHERE id = ?",
+            (venue_id,),
+        )
+        if venue is None:
+            return None
+        process_counts = await _collect_process_counts(snapshot, venue_id=venue_id)
+        return {
+            "venue_id": venue_id,
+            "pristine": not any(process_counts.values()),
+            "process_counts": process_counts,
+        }
+
+
+async def _collect_process_counts(db: Any, *, venue_id: str) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for name, sql in _PROCESS_COUNT_QUERIES.items():
+        row = await db.fetch_one(sql, (venue_id,)) or {}
+        counts[name] = int(row.get("count") or 0)
+    return counts

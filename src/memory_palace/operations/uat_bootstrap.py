@@ -213,7 +213,7 @@ async def bootstrap_uat_master_data(
         venues = await _list_venues(api)
         if any(venue.get("id") == UAT_VENUE_ID for venue in venues):
             await _assert_pristine_baseline(
-                await _capture_baseline(api, venue_id=UAT_VENUE_ID)
+                await _capture_pristine_state(api, venue_id=UAT_VENUE_ID)
             )
         await _ensure_venue(api, venues=venues)
         users = await _list_users(api)
@@ -265,7 +265,7 @@ async def bootstrap_uat_master_data(
         sop = await _ensure_published_sop(api)
         expert = await _ensure_signed_expert(api, ensured_users["zhang-jianguo"])
         await _verify_simulator_identities(api, _uat_user_specs(config.admin_username))
-        baseline_snapshot = await _capture_baseline(api, venue_id=UAT_VENUE_ID)
+        baseline_snapshot = await _capture_baseline(api)
         _validate_ready_baseline(
             baseline_snapshot,
             specs=_uat_user_specs(config.admin_username),
@@ -385,15 +385,21 @@ async def _create_user(api: _FormalAPI, spec: _UATUserSpec, password: str) -> di
 
 async def _capture_baseline(
     api: _FormalAPI,
-    *,
-    venue_id: Optional[str] = None,
 ) -> dict[str, Any]:
-    path = "/api/v1/admin/uat-baseline"
-    if venue_id:
-        path += f"?venue_id={venue_id}"
-    snapshot = await api.request("GET", path)
+    snapshot = await api.request("GET", "/api/v1/admin/uat-baseline")
     if not isinstance(snapshot, dict):
         raise UATBootstrapError("UAT 基线接口返回格式不正确")
+    return snapshot
+
+
+async def _capture_pristine_state(
+    api: _FormalAPI,
+    *,
+    venue_id: str,
+) -> dict[str, Any]:
+    snapshot = await api.request("GET", f"/api/v1/admin/uat-pristine/{venue_id}")
+    if not isinstance(snapshot, dict) or snapshot.get("venue_id") != venue_id:
+        raise UATBootstrapError("UAT 场地前检接口返回格式不正确")
     return snapshot
 
 

@@ -140,8 +140,19 @@ class UATAPIState:
             self.settings[(venue_id, "organization_name")] = body["value"]
             return self.ok(request, {"key": "organization_name", "value": body["value"]})
 
+        if method == "GET" and path.startswith("/api/v1/admin/uat-pristine/"):
+            target_venue_id = path.rsplit("/", 1)[-1]
+            return self.ok(
+                request,
+                {
+                    "venue_id": target_venue_id,
+                    "pristine": not any(self.process_counts.values()),
+                    "process_counts": self.process_counts,
+                },
+            )
+
         if method == "GET" and path == "/api/v1/admin/uat-baseline":
-            venue_id = query.get("venue_id", [venue_id])[0]
+            assert not query
             return self.ok(
                 request,
                 {
@@ -325,7 +336,7 @@ async def test_uat_bootstrap_rejects_dirty_existing_venue_before_master_data_wri
     assert state.calls == [
         ("POST", "/api/v1/auth/login"),
         ("GET", "/api/v1/admin/venues"),
-        ("GET", "/api/v1/admin/uat-baseline"),
+        ("GET", "/api/v1/admin/uat-pristine/venue-yueshan"),
     ]
     assert state.venues[-1]["name"] == "待核验场地"
     assert state.venues[-1]["status"] == "DISABLED"

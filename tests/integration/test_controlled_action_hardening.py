@@ -320,6 +320,48 @@ async def test_formal_action_code_uses_authoritative_manager_decision_policy(
 
 
 @pytest.mark.asyncio
+async def test_manager_decision_tool_requires_registered_action_code(
+    tmp_path,
+    monkeypatch,
+):
+    app, database, _, _ = await build_app(tmp_path, monkeypatch)
+    engine = get_permission_engine()
+    monkeypatch.setattr(engine, "_pending_approvals", {})
+    monkeypatch.setattr(engine, "_cooldown_cache", {})
+    await _disable_notifications(engine)
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        admin_headers = await login(client, "mvp-admin", "Mvp-Admin-Password-2026")
+        admin = await database.fetch_one(
+            "SELECT id FROM users WHERE username = ?",
+            ("mvp-admin",),
+        )
+        await _insert_formal_action_context(database, user_id=admin["id"])
+        response = await client.post(
+            "/admin/action-requests",
+            headers={**admin_headers, "Idempotency-Key": "manager-decision-without-code"},
+            json={
+                "tool_name": "record_manager_decision",
+                "session_id": "session-event-action",
+                "event_id": "event-action-001",
+                "task_id": "task-action-001",
+                "message": "继续停运并等待进一步检查。",
+                "priority": "warning",
+            },
+        )
+
+    assert response.status_code == 422, response.text
+    assert response.json()["detail"]["code"] == "ACTION_CODE_REQUIRED"
+    approvals = await database.fetch_one(
+        "SELECT COUNT(*) AS count FROM approval_requests WHERE venue_id = ?",
+        ("venue-alpha",),
+    )
+    assert approvals["count"] == 0
+    await database.close()
+
+
+@pytest.mark.asyncio
 async def test_event_participant_action_freezes_readable_simulator_targets(
     tmp_path,
     monkeypatch,

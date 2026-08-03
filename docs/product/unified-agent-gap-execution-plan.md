@@ -1,6 +1,6 @@
 # Memory Palace OS 统一员工助手差距执行计划
 
-> 文档状态：执行中（W0 已完成，连续 E2E 尚未开始）
+> 文档状态：执行中（W0、UA-100 已完成，连续 E2E 尚未开始）
 > 制定日期：2026-08-03  
 > 适用范围：统一员工助手、企微模拟器、管理后台、经验资产闭环及正式 UAT  
 > 验收基线：[统一员工助手与经验资产企业 MVP PRD](../../PRD-memory-palace-unified-agent-experience-mvp.md)、[页面地图](./unified-agent-page-map.md)、[完整演示旅程与可执行 UAT](./unified-agent-demo-journey.md)  
@@ -128,6 +128,8 @@ Graphify 证明当前代码图谱已经刷新，不代表目标旅程已经通�
 | UA-003 | 准备主数据并保存基线快照 | UA-001 | 正式管理 API、UAT 配置说明 | 仅创建组织、场地、7 名角色、身份映射、SOP 和审批规则；证明业务过程数据不存在 | E2E 起始条件 |
 
 ### W1：统一入口、消息和事件
+
+状态：`UA-100` 已完成代码与自动化验证。统一诊断现可读取 App、PostgreSQL、Redis、ChromaDB、Worker、8 Agent 与 DeepSeek 的脱敏状态；管理端运维诊断页已接入该统一门禁；企微模拟器与真实企微状态分离，真实企微固定为 `DISABLED_BY_POLICY`。该状态不代表 `E2E-00` 已完成正式 UAT，注册表状态和 evidence 保持不变。
 
 | 任务 ID | 任务 | 依赖 | 主要影响文件 | 交付与验收 | 对应旅程 |
 |---|---|---|---|---|---|
