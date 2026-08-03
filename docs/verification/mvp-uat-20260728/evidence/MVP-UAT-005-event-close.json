@@ -1,0 +1,56 @@
+{
+  "uat_id": "MVP-UAT-005",
+  "operation": "Close live event with resolution",
+  "event_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+  "resolution": "现场医护到达后完成血糖检测与补糖处置，游客意识恢复并由家属陪同离场；急救通道恢复，值班经理复核记录与时间戳齐全。",
+  "response_status": 200,
+  "response": {
+    "closed": true,
+    "event_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+    "trace_id": "0a1e4f9bfe364aee9af0f02374f2f04f"
+  },
+  "event": {
+    "id": 14,
+    "event_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+    "push_id": "6609c0c4-236b-45d3-b5bb-9073c3084329",
+    "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+    "raw_text": "UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+    "event_type": "人员安全",
+    "severity": "P1",
+    "context_trigger_data": "{\"stage\": \"stage2\", \"should_trigger\": true, \"event_type\": \"人员安全\", \"severity\": \"P0\", \"confidence\": 0.95, \"stage1_keywords\": []}",
+    "memory_content": "[P1] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+    "vector_doc_id": "evt_40726799-e5b8-446e-94ae-f5d4306a7eb9",
+    "created_at": null,
+    "confirmed_at": 1785311638.8202968,
+    "venue_id": "venue-uat",
+    "source_type": "LIVE",
+    "status": "CLOSED",
+    "assigned_to": null,
+    "resolution": "现场医护到达后完成血糖检测与补糖处置，游客意识恢复并由家属陪同离场；急救通道恢复，值班经理复核记录与时间戳齐全。",
+    "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+    "closed_at": 1785312127.4942865,
+    "updated_at": 1785312127.4942865
+  },
+  "audits": [
+    {
+      "id": 431,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "EVENT_CLOSED",
+      "resource_type": "event",
+      "resource_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+      "outcome": "SUCCEEDED",
+      "trace_id": "0a1e4f9bfe364aee9af0f02374f2f04f",
+      "created_at": 1785312127.4970665,
+      "metadata": {
+        "resolution_length": 56
+      }
+    }
+  ],
+  "runtime": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

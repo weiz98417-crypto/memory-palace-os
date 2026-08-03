@@ -1,0 +1,38 @@
+{
+  "uat_id": "MVP-UAT-004",
+  "operation": "Create controlled in-app alert requests",
+  "approve_request": {
+    "url": "http://localhost:8082/api/v1/admin/action-requests",
+    "status": 202,
+    "payload": {
+      "status": "pending_approval",
+      "approval_id": "5396bc1c-0fb4-4854-a41d-e3440a2c7f16",
+      "tool_name": "send_in_app_alert",
+      "message": "等待管理员审批: send_in_app_alert",
+      "trace_id": "6bcabdab693646c1ad5eba99938f73eb"
+    },
+    "session_id": "uat-golden-1785230678",
+    "priority": "warning",
+    "message": "UAT 站内告警批准链 ms5on9um：暑期高峰联合检查已完成，请值班经理确认闭环报告并采纳。"
+  },
+  "reject_request": {
+    "url": "http://localhost:8082/api/v1/admin/action-requests",
+    "status": 202,
+    "payload": {
+      "status": "pending_approval",
+      "approval_id": "69d7251d-f6e0-4ef7-8bf1-50a24cd59efe",
+      "tool_name": "send_in_app_alert",
+      "message": "等待管理员审批: send_in_app_alert",
+      "trace_id": "f059c41d478d460292f4851aeea3f27f"
+    },
+    "session_id": "uat-golden-1785230678",
+    "priority": "info",
+    "message": "UAT 站内告警拒绝链 ms5on9um：该通知缺少现场复核附件，应拒绝并退回补充。"
+  },
+  "runtime": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

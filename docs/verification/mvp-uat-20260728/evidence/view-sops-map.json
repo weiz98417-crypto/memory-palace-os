@@ -1,0 +1,77 @@
+{
+  "heading": "SOP 中心",
+  "text": "SOP 中心\n\n从草稿、编辑、提交审核、批准发布到驳回修改，保留版本与来源事件。\n\n创建 SOP 草稿\n全部状态\nDRAFT\nIN_REVIEW\nPUBLISHED\nREJECTED\nSOP 资产\n2 条\n更新时间\tSOP\t分类 / 优先级\t版本\t状态\t来源事件\t操作\n07/28 22:12\t\n北门低血糖游客应急处置 SOP（UAT）\n1. 识别疑似低血糖与意识状态；2. 保持患者平卧并呼叫医护；3. 疏散围观并保持急救通道；4. 连续记录处置时间线；5. 医护到场后完成交接。 6. 记录血糖检测、补糖、意识恢复与离场信息；7. 值\n\t人员安全 / P1\t1.1\t\nPUBLISHED\tb250f04f-0be9-4a61-acc8-824424c1474d\t\n详情\n\n07/28 02:23\t\n闸机断电应急处置 SOP\n1. 隔离故障回路；2. 开启人工通道分流；3. 复位控制器；4. 连续三轮通行复检；5. 登记事件与处置人；6. 值班经理复核后恢复开放。\n\t设施故障 / P1\t1.1\t\nPUBLISHED\t0585fa3d-5663-46f0-8a80-92a1c95da5f1\t\n详情",
+  "buttons": [
+    {
+      "text": "创建 SOP 草稿",
+      "disabled": false,
+      "action": "new-sop",
+      "onclick": null
+    },
+    {
+      "text": "详情",
+      "disabled": false,
+      "action": null,
+      "onclick": "App.openSop(2)"
+    },
+    {
+      "text": "详情",
+      "disabled": false,
+      "action": null,
+      "onclick": "App.openSop(1)"
+    }
+  ],
+  "fields": [
+    {
+      "id": "sop-filter",
+      "name": "",
+      "type": "select-one",
+      "value": "",
+      "required": false,
+      "options": [
+        {
+          "value": "",
+          "text": "全部状态"
+        },
+        {
+          "value": "DRAFT",
+          "text": "DRAFT"
+        },
+        {
+          "value": "IN_REVIEW",
+          "text": "IN_REVIEW"
+        },
+        {
+          "value": "PUBLISHED",
+          "text": "PUBLISHED"
+        },
+        {
+          "value": "REJECTED",
+          "text": "REJECTED"
+        }
+      ]
+    },
+    {
+      "id": "sop-search",
+      "name": "",
+      "type": "text",
+      "placeholder": "搜索标题、分类或正文",
+      "value": "",
+      "required": false,
+      "options": []
+    }
+  ],
+  "rows": [
+    "更新时间\tSOP\t分类 / 优先级\t版本\t状态\t来源事件\t操作",
+    "07/28 22:12\t\n北门低血糖游客应急处置 SOP（UAT）\n1. 识别疑似低血糖与意识状态；2. 保持患者平卧并呼叫医护；3. 疏散围观并保持急救通道；4. 连续记录处置时间线；5. 医护到场后完成交接。 6. 记录血糖检测、补糖、意识恢复与离场信息；7. 值\n\t人员安全 / P1\t1.1\t\nPUBLISHED\tb250f04f-0be9-4a61-acc8-824424c1474d\t\n详情",
+    "07/28 02:23\t\n闸机断电应急处置 SOP\n1. 隔离故障回路；2. 开启人工通道分流；3. 复位控制器；4. 连续三轮通行复检；5. 登记事件与处置人；6. 值班经理复核后恢复开放。\n\t设施故障 / P1\t1.1\t\nPUBLISHED\t0585fa3d-5663-46f0-8a80-92a1c95da5f1\t\n详情"
+  ],
+  "runtime": {
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

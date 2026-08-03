@@ -1,0 +1,442 @@
+{
+  "uat_id": "MVP-UAT-002",
+  "operation": "Formal client session create, list, detail, close, persistence, audit and tenant boundary",
+  "input": {
+    "content": "UAT 会话生命周期 ms5vb41v-d373d36e：请基于既有运营经验，给出闭馆前巡检交接应重点核对的三项内容。"
+  },
+  "intake": {
+    "response_status": 202,
+    "response": {
+      "message_id": "317720a0-d67a-4fcb-b021-58e27bbe65cb",
+      "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+      "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606",
+      "status": "QUEUED",
+      "created_at": "2026-07-29T09:13:53.710904Z"
+    }
+  },
+  "run": {
+    "status": "COMPLETED",
+    "message_id": "317720a0-d67a-4fcb-b021-58e27bbe65cb",
+    "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+    "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606",
+    "agent": "memory_ops",
+    "result": "抱歉，记忆宫殿知识库中暂未检索到与您描述高度相关的历史处置案例。为确保合规，建议您直接请示当班值班经理。"
+  },
+  "identity": {
+    "id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+    "username": "uat-admin",
+    "display_name": "UAT 系统管理员",
+    "role": "admin",
+    "venue_id": "venue-uat"
+  },
+  "message": {
+    "before": {
+      "message_id": "317720a0-d67a-4fcb-b021-58e27bbe65cb",
+      "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+      "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "venue_id": "venue-uat",
+      "content": "UAT 会话生命周期 ms5vb41v-d373d36e：请基于既有运营经验，给出闭馆前巡检交接应重点核对的三项内容。",
+      "status": "COMPLETED",
+      "target_agent": "memory_ops",
+      "reply_text": "抱歉，记忆宫殿知识库中暂未检索到与您描述高度相关的历史处置案例。为确保合规，建议您直接请示当班值班经理。",
+      "result": {
+        "status": "processed",
+        "route": {
+          "status": "routed",
+          "intent": "emergency_advice",
+          "severity": "P3",
+          "priority": "P3",
+          "target_agent": "memory_ops",
+          "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "content": "UAT 会话生命周期 ms5vb41v-d373d36e：请基于既有运营经验，给出闭馆前巡检交接应重点核对的三项内容。",
+          "msg_id": "317720a0-d67a-4fcb-b021-58e27bbe65cb",
+          "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+          "venue_id": "venue-uat",
+          "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606",
+          "context_trigger_data": null,
+          "agent_trace": [
+            {
+              "agent_id": "ContextTrigger",
+              "agent_name": "context_trigger",
+              "status": "SUCCEEDED",
+              "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+              "venue_id": "venue-uat",
+              "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606"
+            },
+            {
+              "agent_id": "Router",
+              "agent_name": "router",
+              "status": "SUCCEEDED",
+              "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+              "venue_id": "venue-uat",
+              "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606"
+            },
+            {
+              "agent_id": "MemoryOps",
+              "agent_name": "memory_ops",
+              "status": "SUCCEEDED",
+              "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+              "venue_id": "venue-uat",
+              "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606"
+            }
+          ],
+          "router_confidence": 0.95
+        },
+        "agent_result": {
+          "success": true,
+          "reply_text": "抱歉，记忆宫殿知识库中暂未检索到与您描述高度相关的历史处置案例。为确保合规，建议您直接请示当班值班经理。",
+          "structured_data": {
+            "retrieved_count": 0,
+            "reference_cases": [],
+            "action_taken": "rag_experience_advice"
+          },
+          "action_taken": "rag_experience_advice",
+          "error_msg": null,
+          "latency_ms": 1957,
+          "tokens_used": 779
+        },
+        "reply_text": "抱歉，记忆宫殿知识库中暂未检索到与您描述高度相关的历史处置案例。为确保合规，建议您直接请示当班值班经理。",
+        "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+        "agent_trace": [
+          {
+            "agent_id": "ContextTrigger",
+            "agent_name": "context_trigger",
+            "status": "SUCCEEDED",
+            "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+            "venue_id": "venue-uat",
+            "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606"
+          },
+          {
+            "agent_id": "Router",
+            "agent_name": "router",
+            "status": "SUCCEEDED",
+            "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+            "venue_id": "venue-uat",
+            "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606"
+          },
+          {
+            "agent_id": "MemoryOps",
+            "agent_name": "memory_ops",
+            "status": "SUCCEEDED",
+            "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+            "venue_id": "venue-uat",
+            "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606"
+          }
+        ],
+        "event_id": "dcbd581b-f01f-4c76-8bdb-16dde37ec76b"
+      },
+      "error": null,
+      "created_at": 1785316433.7109444,
+      "updated_at": 1785316437.8873355,
+      "processed_at": 1785316437.8873355
+    },
+    "after_refresh": {
+      "message_id": "317720a0-d67a-4fcb-b021-58e27bbe65cb",
+      "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+      "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "venue_id": "venue-uat",
+      "content": "UAT 会话生命周期 ms5vb41v-d373d36e：请基于既有运营经验，给出闭馆前巡检交接应重点核对的三项内容。",
+      "status": "COMPLETED",
+      "target_agent": "memory_ops",
+      "reply_text": "抱歉，记忆宫殿知识库中暂未检索到与您描述高度相关的历史处置案例。为确保合规，建议您直接请示当班值班经理。",
+      "result": {
+        "status": "processed",
+        "route": {
+          "status": "routed",
+          "intent": "emergency_advice",
+          "severity": "P3",
+          "priority": "P3",
+          "target_agent": "memory_ops",
+          "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "content": "UAT 会话生命周期 ms5vb41v-d373d36e：请基于既有运营经验，给出闭馆前巡检交接应重点核对的三项内容。",
+          "msg_id": "317720a0-d67a-4fcb-b021-58e27bbe65cb",
+          "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+          "venue_id": "venue-uat",
+          "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606",
+          "context_trigger_data": null,
+          "agent_trace": [
+            {
+              "agent_id": "ContextTrigger",
+              "agent_name": "context_trigger",
+              "status": "SUCCEEDED",
+              "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+              "venue_id": "venue-uat",
+              "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606"
+            },
+            {
+              "agent_id": "Router",
+              "agent_name": "router",
+              "status": "SUCCEEDED",
+              "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+              "venue_id": "venue-uat",
+              "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606"
+            },
+            {
+              "agent_id": "MemoryOps",
+              "agent_name": "memory_ops",
+              "status": "SUCCEEDED",
+              "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+              "venue_id": "venue-uat",
+              "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606"
+            }
+          ],
+          "router_confidence": 0.95
+        },
+        "agent_result": {
+          "success": true,
+          "reply_text": "抱歉，记忆宫殿知识库中暂未检索到与您描述高度相关的历史处置案例。为确保合规，建议您直接请示当班值班经理。",
+          "structured_data": {
+            "retrieved_count": 0,
+            "reference_cases": [],
+            "action_taken": "rag_experience_advice"
+          },
+          "action_taken": "rag_experience_advice",
+          "error_msg": null,
+          "latency_ms": 1957,
+          "tokens_used": 779
+        },
+        "reply_text": "抱歉，记忆宫殿知识库中暂未检索到与您描述高度相关的历史处置案例。为确保合规，建议您直接请示当班值班经理。",
+        "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+        "agent_trace": [
+          {
+            "agent_id": "ContextTrigger",
+            "agent_name": "context_trigger",
+            "status": "SUCCEEDED",
+            "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+            "venue_id": "venue-uat",
+            "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606"
+          },
+          {
+            "agent_id": "Router",
+            "agent_name": "router",
+            "status": "SUCCEEDED",
+            "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+            "venue_id": "venue-uat",
+            "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606"
+          },
+          {
+            "agent_id": "MemoryOps",
+            "agent_name": "memory_ops",
+            "status": "SUCCEEDED",
+            "trace_id": "489806f58d8243d39234dd2e8058ca2f",
+            "venue_id": "venue-uat",
+            "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606"
+          }
+        ],
+        "event_id": "dcbd581b-f01f-4c76-8bdb-16dde37ec76b"
+      },
+      "error": null,
+      "created_at": 1785316433.7109444,
+      "updated_at": 1785316437.8873355,
+      "processed_at": 1785316437.8873355
+    }
+  },
+  "session": {
+    "id": "b502fbc0-21fc-4cb7-9066-28f8ff520606",
+    "list_before": {
+      "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "stage": "active",
+      "active_agent": null,
+      "current_intent": null,
+      "current_severity": null,
+      "created_at": 1785316433.719911,
+      "updated_at": 1785316433.719911,
+      "history_summary": "",
+      "agent_name": "router",
+      "message_count": 1,
+      "status": "active"
+    },
+    "detail_before": {
+      "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "stage": "active",
+      "active_agent": null,
+      "current_intent": null,
+      "current_severity": null,
+      "created_at": 1785316433.719911,
+      "updated_at": 1785316433.719911,
+      "history_summary": "",
+      "agent_name": "router",
+      "message_count": 1,
+      "status": "active"
+    },
+    "row_before": "07/29 17:13\t\nb502fbc0-21fc-4cb7-9066-28f8ff520606\n暂无摘要\n\t9e5bfb15b8b54f96aa0ccc7a7ea11d36\t\nactive\trouter\t- / -\t关闭",
+    "detail_after_boundary_denial": {
+      "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "stage": "active",
+      "active_agent": null,
+      "current_intent": null,
+      "current_severity": null,
+      "created_at": 1785316433.719911,
+      "updated_at": 1785316433.719911,
+      "history_summary": "",
+      "agent_name": "router",
+      "message_count": 1,
+      "status": "active"
+    },
+    "close": {
+      "response_status": 200,
+      "response": {
+        "status": "ok",
+        "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606",
+        "trace_id": "4b7ce5663cdf403cb29ea3e742a6f3cb"
+      }
+    },
+    "list_after_refresh": {
+      "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "stage": "CLOSED",
+      "active_agent": null,
+      "current_intent": null,
+      "current_severity": null,
+      "created_at": 1785316433.719911,
+      "updated_at": 1785316440.7246075,
+      "history_summary": "",
+      "agent_name": "router",
+      "message_count": 1,
+      "status": "active"
+    },
+    "detail_after_refresh": {
+      "session_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "stage": "CLOSED",
+      "active_agent": null,
+      "current_intent": null,
+      "current_severity": null,
+      "created_at": 1785316433.719911,
+      "updated_at": 1785316440.7246075,
+      "history_summary": "",
+      "agent_name": "router",
+      "message_count": 1,
+      "status": "active"
+    },
+    "row_after_refresh": "07/29 17:14\t\nb502fbc0-21fc-4cb7-9066-28f8ff520606\n暂无摘要\n\t9e5bfb15b8b54f96aa0ccc7a7ea11d36\t\nCLOSED\trouter\t- / -\t-"
+  },
+  "audits": {
+    "closed": {
+      "id": 483,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "SESSION_CLOSED",
+      "resource_type": "session",
+      "resource_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606",
+      "outcome": "SUCCEEDED",
+      "trace_id": "4b7ce5663cdf403cb29ea3e742a6f3cb",
+      "created_at": 1785316440.7260435,
+      "metadata": {
+        "previous_stage": "active"
+      }
+    },
+    "cross_tenant_denied": {
+      "id": 482,
+      "venue_id": "uat-session-boundary-ms5vb41v-d373d36e",
+      "user_id": "18991363d060445fa524aac18fcb59c9",
+      "action": "SESSION_CLOSE_DENIED",
+      "resource_type": "session",
+      "resource_id": "b502fbc0-21fc-4cb7-9066-28f8ff520606",
+      "outcome": "DENIED",
+      "trace_id": "f1c1467042e14100894f8f925eecadc6",
+      "created_at": 1785316440.5500917,
+      "metadata": {
+        "reason": "not_found_or_not_visible"
+      }
+    }
+  },
+  "tenant_boundary": {
+    "fixture": {
+      "venue": {
+        "id": "uat-session-boundary-ms5vb41v-d373d36e",
+        "name": "会话租户边界 ms5vb41v-d373d36e",
+        "status": "ACTIVE",
+        "created_at": 1785316439.1554632,
+        "updated_at": 1785316439.1554632
+      },
+      "user": {
+        "id": "18991363d060445fa524aac18fcb59c9",
+        "username": "uat-session-manager-ms5vb41v-d373d36e",
+        "display_name": "会话边界经理 ms5vb41v-d373d36e",
+        "role": "manager",
+        "venue_id": "uat-session-boundary-ms5vb41v-d373d36e",
+        "status": "ACTIVE",
+        "created_at": 1785316439.1662016,
+        "updated_at": 1785316439.1662016,
+        "last_login_at": null
+      }
+    },
+    "identity": {
+      "id": "18991363d060445fa524aac18fcb59c9",
+      "username": "uat-session-manager-ms5vb41v-d373d36e",
+      "display_name": "会话边界经理 ms5vb41v-d373d36e",
+      "role": "manager",
+      "venue_id": "uat-session-boundary-ms5vb41v-d373d36e"
+    },
+    "list_excludes_target": true,
+    "client_excludes_target": true,
+    "read": {
+      "status": 404,
+      "payload": {
+        "detail": {
+          "code": "HTTP_404",
+          "message": "Session not found",
+          "trace_id": "f8f6a3f6e05d4688b2897f3fced27747",
+          "retryable": false,
+          "action": "检查请求和当前权限后重试。"
+        }
+      }
+    },
+    "close": {
+      "status": 404,
+      "payload": {
+        "detail": {
+          "code": "SESSION_NOT_FOUND",
+          "message": "会话不存在。",
+          "trace_id": "f1c1467042e14100894f8f925eecadc6",
+          "retryable": false,
+          "action": "刷新会话列表后重试。"
+        }
+      }
+    },
+    "target_stage_unchanged": true,
+    "cleanup": {
+      "passed": true,
+      "user_status": 200,
+      "venue_status": 200,
+      "user": {
+        "id": "18991363d060445fa524aac18fcb59c9",
+        "username": "uat-session-manager-ms5vb41v-d373d36e",
+        "display_name": "会话边界经理 ms5vb41v-d373d36e",
+        "role": "manager",
+        "venue_id": "uat-session-boundary-ms5vb41v-d373d36e",
+        "status": "DISABLED",
+        "created_at": 1785316439.1662016,
+        "updated_at": 1785316444.21424,
+        "last_login_at": 1785316439.8601189
+      },
+      "venue": {
+        "id": "uat-session-boundary-ms5vb41v-d373d36e",
+        "name": "会话租户边界 ms5vb41v-d373d36e",
+        "status": "DISABLED",
+        "created_at": 1785316439.1554632,
+        "updated_at": 1785316444.2263246
+      }
+    }
+  },
+  "screenshots": [
+    "session-01-before-create-1440x900.png",
+    "session-02-list-and-detail-1440x900.png",
+    "session-03-tenant-boundary-1440x900.png",
+    "session-04-close-confirmation-1440x900.png",
+    "session-05-closed-1440x900.png",
+    "session-06-closed-after-refresh-1440x900.png"
+  ],
+  "runtime": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

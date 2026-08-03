@@ -1,0 +1,287 @@
+{
+  "schema_version": "1.0",
+  "run_id": "20260729092756",
+  "generated_at": "2026-07-29T09:36:49.775Z",
+  "target": "http://localhost:8082/admin/",
+  "authentication": {
+    "source": "running Docker app container environment",
+    "credentials_recorded": false,
+    "result": "PASS"
+  },
+  "browser": {
+    "engine": "Chromium via installed Google Chrome",
+    "desktop_viewport": { "width": 1440, "height": 900 },
+    "mobile_viewport": { "width": 375, "height": 812 }
+  },
+  "views": [
+    {
+      "view": "dashboard",
+      "heading": "运营工作台",
+      "result": "PASS",
+      "navigation_ms": 1006,
+      "buttons_visible": 0,
+      "fields": [],
+      "tables": [{ "headers": ["时间", "事件", "级别", "状态", "负责人"], "row_count": 10 }],
+      "loading_indicators_after_wait": 0,
+      "pending_requests_after_wait": 0,
+      "body_horizontal_overflow": false,
+      "screenshot": "docs/verification/mvp-uat-20260728/screenshots/final-qa-20260729092756-dashboard-1440x900.png",
+      "runtime_error_count": 0
+    },
+    {
+      "view": "events",
+      "heading": "现场事件",
+      "result": "PASS",
+      "navigation_ms": 1007,
+      "buttons_visible": 18,
+      "fields": ["event-content", "event-search", "event-filter-type", "event-filter-status"],
+      "tables": [{ "headers": ["时间", "事件", "类型", "级别", "状态", "负责人", "操作"], "row_count": 15 }],
+      "loading_indicators_after_wait": 0,
+      "pending_requests_after_wait": 0,
+      "body_horizontal_overflow": false,
+      "screenshot": "docs/verification/mvp-uat-20260728/screenshots/final-qa-20260729092756-events-1440x900.png",
+      "runtime_error_count": 0
+    },
+    {
+      "view": "sessions",
+      "heading": "消息与会话",
+      "result": "PASS",
+      "navigation_ms": 1016,
+      "buttons_visible": 14,
+      "fields": [],
+      "tables": [{ "headers": ["更新时间", "会话", "用户", "阶段", "Agent", "意图 / 级别", "操作"], "row_count": 16 }],
+      "loading_indicators_after_wait": 0,
+      "pending_requests_after_wait": 0,
+      "body_horizontal_overflow": false,
+      "screenshot": "docs/verification/mvp-uat-20260728/screenshots/final-qa-20260729092756-sessions-1440x900.png",
+      "runtime_error_count": 0
+    },
+    {
+      "view": "tasks",
+      "heading": "任务中心",
+      "result": "PASS",
+      "navigation_ms": 1025,
+      "buttons_visible": 30,
+      "fields": ["task-filter", "task-search"],
+      "tables": [{ "headers": ["任务", "状态", "负责人", "执行方式", "依赖", "尝试", "操作"], "row_count": 28 }],
+      "loading_indicators_after_wait": 0,
+      "pending_requests_after_wait": 0,
+      "body_horizontal_overflow": false,
+      "screenshot": "docs/verification/mvp-uat-20260728/screenshots/final-qa-20260729092756-tasks-1440x900.png",
+      "runtime_error_count": 0
+    },
+    {
+      "view": "approvals",
+      "heading": "审批中心",
+      "result": "PASS",
+      "navigation_ms": 1007,
+      "buttons_visible": 13,
+      "fields": ["approval-filter"],
+      "tables": [{ "headers": ["申请时间", "工具", "会话 / 申请人", "状态", "参数摘要", "操作"], "row_count": 12 }],
+      "loading_indicators_after_wait": 0,
+      "pending_requests_after_wait": 0,
+      "body_horizontal_overflow": false,
+      "screenshot": "docs/verification/mvp-uat-20260728/screenshots/final-qa-20260729092756-approvals-1440x900.png",
+      "runtime_error_count": 0
+    },
+    {
+      "view": "actions",
+      "heading": "推送与动作日志",
+      "result": "PASS",
+      "navigation_ms": 1035,
+      "buttons_visible": 17,
+      "fields": ["push-filter", "push-search"],
+      "tables": [
+        { "headers": ["申请时间", "动作", "关联会话", "审批状态", "执行状态", "操作"], "row_count": 12 },
+        { "headers": ["时间", "渠道 / 收件人", "发送人", "事件", "级别", "投递状态", "采纳状态", "操作"], "row_count": 6 }
+      ],
+      "loading_indicators_after_wait": 0,
+      "pending_requests_after_wait": 0,
+      "body_horizontal_overflow": false,
+      "screenshot": "docs/verification/mvp-uat-20260728/screenshots/final-qa-20260729092756-actions-1440x900.png",
+      "runtime_error_count": 0
+    },
+    {
+      "view": "knowledge",
+      "heading": "知识库",
+      "result": "PASS",
+      "navigation_ms": 1020,
+      "buttons_visible": 20,
+      "fields": ["knowledge-vector-query", "knowledge-filter"],
+      "tables": [{ "headers": ["更新时间", "标题", "分类", "来源", "版本", "标签", "操作"], "row_count": 8 }],
+      "loading_indicators_after_wait": 0,
+      "pending_requests_after_wait": 0,
+      "body_horizontal_overflow": false,
+      "screenshot": "docs/verification/mvp-uat-20260728/screenshots/final-qa-20260729092756-knowledge-1440x900.png",
+      "runtime_error_count": 0
+    },
+    {
+      "view": "persona",
+      "heading": "数字分身",
+      "result": "PASS",
+      "navigation_ms": 1001,
+      "buttons_visible": 15,
+      "fields": ["persona-search"],
+      "tables": [],
+      "loading_indicators_after_wait": 0,
+      "pending_requests_after_wait": 0,
+      "body_horizontal_overflow": false,
+      "screenshot": "docs/verification/mvp-uat-20260728/screenshots/final-qa-20260729092756-persona-1440x900.png",
+      "runtime_error_count": 0
+    },
+    {
+      "view": "watcher",
+      "heading": "鹰眼巡检",
+      "result": "PASS",
+      "navigation_ms": 1005,
+      "buttons_visible": 30,
+      "fields": [],
+      "tables": [
+        { "headers": ["发现", "级别", "状态", "负责人", "操作"], "row_count": 200 },
+        { "headers": ["时间", "来源", "状态", "发现", "Trace"], "row_count": 50 }
+      ],
+      "loading_indicators_after_wait": 0,
+      "pending_requests_after_wait": 0,
+      "body_horizontal_overflow": false,
+      "screenshot": "docs/verification/mvp-uat-20260728/screenshots/final-qa-20260729092756-watcher-1440x900.png",
+      "runtime_error_count": 0
+    },
+    {
+      "view": "sops",
+      "heading": "SOP 中心",
+      "result": "PASS",
+      "navigation_ms": 1025,
+      "buttons_visible": 5,
+      "fields": ["sop-filter", "sop-search"],
+      "tables": [{ "headers": ["更新时间", "SOP", "分类 / 优先级", "版本", "状态", "来源事件", "操作"], "row_count": 4 }],
+      "loading_indicators_after_wait": 0,
+      "pending_requests_after_wait": 0,
+      "body_horizontal_overflow": false,
+      "screenshot": "docs/verification/mvp-uat-20260728/screenshots/final-qa-20260729092756-sops-1440x900.png",
+      "runtime_error_count": 0
+    },
+    {
+      "view": "management",
+      "heading": "用户、角色与场地",
+      "result": "PASS",
+      "navigation_ms": 1016,
+      "buttons_visible": 30,
+      "fields": [],
+      "tables": [
+        { "headers": ["用户", "角色", "场地", "状态", "操作"], "row_count": 17 },
+        { "headers": ["场地", "标识", "状态", "操作"], "row_count": 9 }
+      ],
+      "loading_indicators_after_wait": 0,
+      "pending_requests_after_wait": 0,
+      "body_horizontal_overflow": false,
+      "screenshot": "docs/verification/mvp-uat-20260728/screenshots/final-qa-20260729092756-management-1440x900.png",
+      "runtime_error_count": 0
+    },
+    {
+      "view": "settings",
+      "heading": "系统设置",
+      "result": "PASS",
+      "navigation_ms": 1008,
+      "buttons_visible": 7,
+      "fields": [],
+      "tables": [{ "headers": ["功能 / 责任域", "状态", "验收证据", "Trace"], "row_count": 37 }],
+      "loading_indicators_after_wait": 0,
+      "pending_requests_after_wait": 0,
+      "body_horizontal_overflow": false,
+      "screenshot": "docs/verification/mvp-uat-20260728/screenshots/final-qa-20260729092756-settings-1440x900.png",
+      "runtime_error_count": 0
+    },
+    {
+      "view": "diagnostics",
+      "heading": "运维诊断",
+      "result": "PASS",
+      "navigation_ms": 1040,
+      "buttons_visible": 10,
+      "fields": ["trace-search-input"],
+      "tables": [
+        { "headers": ["时间", "模型", "状态", "Mock", "Trace"], "row_count": 50 },
+        { "headers": ["时间", "动作", "结果", "资源", "Trace"], "row_count": 50 }
+      ],
+      "loading_indicators_after_wait": 0,
+      "pending_requests_after_wait": 0,
+      "body_horizontal_overflow": false,
+      "screenshot": "docs/verification/mvp-uat-20260728/screenshots/final-qa-20260729092756-diagnostics-1440x900.png",
+      "runtime_error_count": 0
+    }
+  ],
+  "safe_interactions": {
+    "search_filter_dialog_detail_checks": { "total": 25, "passed": 25, "failed": 0 },
+    "primary_buttons": [
+      { "action": "dashboard-refresh", "result": "PASS", "runtime_error_count": 0 },
+      { "action": "events-mode-toggle", "result": "PASS", "runtime_error_count": 0 },
+      { "action": "settings-modify-dialog", "result": "PASS", "runtime_error_count": 0 }
+    ],
+    "destructive_actions_executed": false
+  },
+  "responsive": {
+    "result": "PASS_WITH_ISSUE",
+    "dashboard_result": "PASS",
+    "tasks_result": "PASS_WITH_ISSUE",
+    "screenshots": [
+      "docs/verification/mvp-uat-20260728/screenshots/final-qa-20260729092756-dashboard-375x812.png",
+      "docs/verification/mvp-uat-20260728/screenshots/final-qa-20260729092756-tasks-375x812.png"
+    ],
+    "runtime_error_count": 0
+  },
+  "task_wait_recovery": {
+    "method": "Playwright route hold; request did not reach backend",
+    "result": "PASS",
+    "waiting_state": {
+      "dialog_visible": true,
+      "submit_disabled": true,
+      "submit_text": "TodoWrite 拆解中…",
+      "cancel_visible": true,
+      "cancel_disabled": false,
+      "cancel_text": "停止等待"
+    },
+    "cancelled_state": {
+      "dialog_visible": false,
+      "recover_visible": true,
+      "recover_disabled": false,
+      "task_view_visible": true
+    },
+    "expected_failed_request": {
+      "url": "http://localhost:8082/api/v1/admin/tasks/decompose",
+      "error": "net::ERR_ABORTED"
+    },
+    "screenshots": [
+      "docs/verification/mvp-uat-20260728/screenshots/final-qa-20260729092756-task-wait-cancellable-1440x900.png",
+      "docs/verification/mvp-uat-20260728/screenshots/final-qa-20260729092756-task-wait-cancelled-1440x900.png"
+    ]
+  },
+  "issues": [
+    {
+      "id": "QA-RESP-001",
+      "severity": "MEDIUM",
+      "category": "Responsive UX",
+      "view": "tasks",
+      "title": "375px task table collapses rows into near-vertical text",
+      "reproducible": true,
+      "impact": "Core task descriptions and identifiers become nearly unreadable on a phone-width viewport.",
+      "metrics": {
+        "viewport_width": 375,
+        "container_width": 345,
+        "table_width": 410,
+        "first_task_cell_width": 49,
+        "first_task_cell_height": 602,
+        "first_task_text_length": 99
+      },
+      "screenshot": "docs/verification/mvp-uat-20260728/screenshots/issue-mobile-task-table-collapsed-20260729092756-375x812.png"
+    }
+  ],
+  "runtime_summary": {
+    "unexpected_console_errors": 0,
+    "unexpected_page_errors": 0,
+    "unexpected_failed_requests": 0,
+    "unexpected_http_responses_gte_400": 0,
+    "total_unexpected_runtime_errors": 0,
+    "expected_fault_injection_aborted_requests": 1,
+    "total_observed_including_expected_fault_injection": 1
+  },
+  "overall_result": "PASS_WITH_ISSUE"
+}

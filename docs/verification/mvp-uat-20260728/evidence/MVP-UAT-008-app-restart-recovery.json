@@ -1,0 +1,120 @@
+{
+  "uat_id": "MVP-UAT-008",
+  "operation": "Persistent TodoWrite PROCESSING operation interrupted by a real App restart and recovered through the formal client",
+  "fault_injection": {
+    "app_container": "memory-palace-uat-app-1",
+    "egress_network": "memory-palace-uat_egress",
+    "reason": "Hold the persisted PROCESSING window deterministically before restarting App",
+    "started_at_before": "2026-07-29T08:07:09.003314875Z",
+    "restarted_app": {
+      "container": "memory-palace-uat-app-1",
+      "started_at": "2026-07-29T08:08:01.651268445Z",
+      "status": "running",
+      "health": "healthy",
+      "networks": [
+        "memory-palace-uat_data-plane",
+        "memory-palace-uat_egress"
+      ]
+    },
+    "egress_restored": true
+  },
+  "client_operation": {
+    "goal": "UAT App restart recovery 271ea588-b649-4320-b8f7-644603e98826: 制定景区闭园前设备巡检、异常升级与复核任务图。",
+    "original_trace_id": "0e11c78e-0677-4a02-984c-63fd11c4a8c7",
+    "recovery_trace_id": "restart-b646bf3bec434c9e91237c349e6c08c5",
+    "idempotency_key": "b2d15e59-f3d6-4cbe-953a-616e2b791da5",
+    "decomposition_id": "f16afb54b2bb47fdb0b483d9ddb887b7"
+  },
+  "before_restart": {
+    "decomposition_id": "f16afb54b2bb47fdb0b483d9ddb887b7",
+    "venue_id": "venue-uat",
+    "requested_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+    "idempotency_key": "b2d15e59-f3d6-4cbe-953a-616e2b791da5",
+    "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+    "trace_id": "0e11c78e-0677-4a02-984c-63fd11c4a8c7",
+    "status": "PROCESSING",
+    "task_ids": "[]",
+    "error": null,
+    "created_at": 1785312479.6705937,
+    "updated_at": 1785312479.6705937
+  },
+  "after_restart": {
+    "decomposition_id": "f16afb54b2bb47fdb0b483d9ddb887b7",
+    "venue_id": "venue-uat",
+    "requested_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+    "idempotency_key": "b2d15e59-f3d6-4cbe-953a-616e2b791da5",
+    "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+    "trace_id": "restart-b646bf3bec434c9e91237c349e6c08c5",
+    "status": "FAILED",
+    "task_ids": "[]",
+    "error": "processing_interrupted_by_restart",
+    "created_at": 1785312479.6705937,
+    "updated_at": 1785312483.9364717
+  },
+  "status_http": 200,
+  "status_payload": {
+    "status": "FAILED",
+    "decomposition_id": "f16afb54b2bb47fdb0b483d9ddb887b7",
+    "idempotency_key": "b2d15e59-f3d6-4cbe-953a-616e2b791da5",
+    "trace_id": "restart-b646bf3bec434c9e91237c349e6c08c5",
+    "retryable": true,
+    "result": null,
+    "error": "processing_interrupted_by_restart"
+  },
+  "client_before_query": {
+    "app_status": "CHECK_REQUIRED",
+    "stored_status": "CHECK_REQUIRED",
+    "idempotency_key": "b2d15e59-f3d6-4cbe-953a-616e2b791da5",
+    "trace_id": "0e11c78e-0677-4a02-984c-63fd11c4a8c7",
+    "decomposition_id": null,
+    "tasks_created": null,
+    "note": "页面刷新中断了本地等待，服务端结果尚未确认。请先核对结果，不要重复提交。",
+    "status_text": "结果待确认",
+    "recovery_visible": true,
+    "recovery_text": "核对结果",
+    "submit_disabled": true
+  },
+  "client_after_query": {
+    "app_status": "RETRYABLE",
+    "stored_status": "RETRYABLE",
+    "idempotency_key": "b2d15e59-f3d6-4cbe-953a-616e2b791da5",
+    "trace_id": "restart-b646bf3bec434c9e91237c349e6c08c5",
+    "decomposition_id": "f16afb54b2bb47fdb0b483d9ddb887b7",
+    "tasks_created": null,
+    "note": "processing_interrupted_by_restart",
+    "status_text": "可安全继续",
+    "recovery_visible": true,
+    "recovery_text": "继续原请求",
+    "submit_disabled": true
+  },
+  "duplicate_guards": {
+    "decomposition_post_count": 1,
+    "decomposition_row_count": 1,
+    "task_row_count": 0,
+    "llm_call_count": 0,
+    "status_recovery_method": "GET"
+  },
+  "llm_calls": [],
+  "side_effects": {
+    "approvals": [],
+    "pushes": [],
+    "tool_invocations": [],
+    "audits": []
+  },
+  "screenshots": [
+    "app-restart-01-check-required-1440x900.png",
+    "app-restart-02-retryable-1440x900.png"
+  ],
+  "interruption_runtime": {
+    "console_errors": [],
+    "page_errors": [],
+    "failed_requests": [],
+    "http_errors": []
+  },
+  "recovery_runtime": {
+    "console_errors": [],
+    "page_errors": [],
+    "failed_requests": [],
+    "http_errors": []
+  }
+}

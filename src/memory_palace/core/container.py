@@ -59,6 +59,21 @@ class AppContainer:
             self._instances["vector_store"] = get_vector_client()
         return self._instances["vector_store"]
 
+    @property
+    def knowledge_retriever(self):
+        if "knowledge_retriever" in self._overrides:
+            return self._overrides["knowledge_retriever"]
+        if "knowledge_retriever" not in self._instances:
+            from src.memory_palace.knowledge.evidence_backed_retrieval import (
+                EvidenceBackedKnowledgeRetriever,
+            )
+
+            self._instances["knowledge_retriever"] = EvidenceBackedKnowledgeRetriever(
+                database=self.db_client,
+                vector_store=self.vector_store,
+            )
+        return self._instances["knowledge_retriever"]
+
     # ── LLM 客户端 ───────────────────────────────────────────────────────────
 
     @property
@@ -111,6 +126,7 @@ class AppContainer:
             return self._overrides["permission_engine"]
         if "permission_engine" not in self._instances:
             from src.memory_palace.core.permissions import permission_engine
+            permission_engine.set_database(self.db_client)
             self._instances["permission_engine"] = permission_engine
         return self._instances["permission_engine"]
 
@@ -133,6 +149,7 @@ class AppContainer:
             return self._overrides["task_graph"]
         if "task_graph" not in self._instances:
             from src.memory_palace.core.task_graph import task_graph
+            task_graph.set_database(self.db_client)
             self._instances["task_graph"] = task_graph
         return self._instances["task_graph"]
 

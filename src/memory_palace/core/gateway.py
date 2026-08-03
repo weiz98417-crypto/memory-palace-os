@@ -3,7 +3,7 @@ gateway.py · 企微 Webhook 接入网关 + API 版本路由
 ================================================================
 职责：
   1. 承接企业微信高频 Webhook，执行严格的 AES-256-CBC 验签与解密。
-  2. 极速响应：提取 MsgId 后立刻推入 asyncio.Queue，绝不阻塞等待大模型。
+  2. 极速响应：提取 MsgId 后通过统一消息队列协议入队，绝不等待大模型。
   3. 全局防御：解密失败或队列溢出时，永远返回 200 "success"，防止黑客探测。
   4. API 版本路由：支持 /v1/ /v2/ 版本共存，便于平滑升级。
   5. 健康检查：/health, /ready, /metrics 端点。
@@ -26,6 +26,13 @@ from fastapi.responses import PlainTextResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from loguru import logger
+
+from src.memory_palace.config.integration_readiness import wechat_integration_readiness
+from src.memory_palace.core.canonical_ingress import (
+    CanonicalIngressError,
+    CanonicalMessageIngress,
+    IngressMessage,
+)
 
 # ── 指标计数器 ────────────────────────────────────────────────────────────
 _queue_full_count: int = 0
@@ -331,6 +338,11 @@ async def receive_wechat_message(
     set_trace_id(trace_id)
 
     try:
+        readiness = wechat_integration_readiness()
+        if not readiness["configured"]:
+            logger.warning(f"[Trace-{trace_id}] 企微真实渠道配置不完整，拒绝接收回调")
+            return PlainTextResponse("integration disabled", status_code=503)
+
         # 1. 获取原始加密 XML
         raw_xml = await request.body()
         logger.debug(f"[Trace-{trace_id}] 收到企微推送消息，大小: {len(raw_xml)} bytes")
@@ -347,7 +359,11 @@ async def receive_wechat_message(
                 logger.error(f"[Trace-{trace_id}] 解密异常: {e}")
                 return PlainTextResponse("success")  # 防探测
         else:
-            # Mock 模式：尝试 UTF-8 解码，失败则尝试系统默认编码
+            allow_plaintext = os.environ.get("WECHAT_ALLOW_PLAINTEXT", "false").lower() == "true"
+            app_env = os.environ.get("APP_ENV", "dev").lower()
+            if not allow_plaintext or app_env in {"prod", "production"}:
+                logger.warning(f"[Trace-{trace_id}] 企微集成未配置，拒绝明文回调")
+                return PlainTextResponse("integration disabled", status_code=503)
             try:
                 decrypted_xml = raw_xml.decode("utf-8")
             except UnicodeDecodeError:
@@ -376,46 +392,99 @@ async def receive_wechat_message(
                 logger.debug(f"[Trace-{trace_id}] 拦截无效事件: {event}")
                 return PlainTextResponse("success")
 
-        # 5. 组装 Payload
-        payload = {
-            "msg_id": msg_id,
-            "from_user": from_user,
-            "msg_type": msg_type,
-            "content": xml_tree.findtext("Content", default=""),
-            "event": xml_tree.findtext("Event", default=""),
-            "timestamp": time.time(),
-            "raw_xml": decrypted_xml,
-            "trace_id": trace_id,
-            "api_version": "v1"
-        }
+        external_tenant_id = xml_tree.findtext("ToUserName", default="").strip()
+        configured_corp_id = os.environ.get("WECHAT_CORP_ID", "").strip()
+        if not external_tenant_id:
+            external_tenant_id = configured_corp_id
+        if external_tenant_id != configured_corp_id:
+            logger.warning(f"[Trace-{trace_id}] 企微回调租户与当前应用配置不一致")
+            return PlainTextResponse("identity unavailable", status_code=403)
 
-        # 6. 安全推入队列
+        queue = getattr(request.app.state, "message_queue", None)
+        db_client = getattr(request.app.state, "db_client", None)
+        if queue is None or db_client is None:
+            logger.error(f"[Trace-{trace_id}] 统一消息入口依赖未初始化")
+            return PlainTextResponse("queue unavailable", status_code=503)
+
+        identity_rows = await db_client.fetch_all(
+            """
+            SELECT DISTINCT venue_id
+            FROM channel_identities
+            WHERE channel = 'WECOM' AND external_tenant_id = ?
+              AND external_user_id = ? AND status = 'ACTIVE'
+            """,
+            (external_tenant_id, from_user),
+        )
+        if len(identity_rows) != 1:
+            logger.warning(f"[Trace-{trace_id}] 企微外部身份未映射或映射不唯一")
+            return PlainTextResponse("identity unavailable", status_code=403)
+
+        event = xml_tree.findtext("Event", default="").strip()
+        content = xml_tree.findtext("Content", default="").strip()
+        if not content:
+            content = f"企微消息：{event or msg_type}"
+        external_conversation_id = (
+            xml_tree.findtext("ChatId", default="").strip()
+            or xml_tree.findtext("ConversationId", default="").strip()
+            or f"{external_tenant_id}:{from_user}"
+        )
+        metadata = {
+            "source": "wechat_webhook",
+            "message_type": msg_type,
+            "event": event,
+        }
+        for xml_field, metadata_key in (
+            ("MediaId", "external_media_id"),
+            ("PicUrl", "external_picture_url"),
+            ("Format", "media_format"),
+            ("Recognition", "voice_recognition"),
+        ):
+            value = xml_tree.findtext(xml_field, default="").strip()
+            if value:
+                metadata[metadata_key] = value
+
         try:
-            queue: asyncio.Queue = request.app.state.message_queue
-            try:
-                queue.put_nowait(payload)
-                latency_ms = (time.time() - start_time) * 1000
-                logger.info(
-                    f"[Trace-{trace_id}] 📥 消息已成功入队 "
-                    f"[MsgId={msg_id}, Type={msg_type}] | "
-                    f"网关耗时: {latency_ms:.1f}ms"
-                )
-            except asyncio.QueueFull:
-                global _queue_full_count
-                _queue_full_count += 1
-                logger.error(
-                    f"[Trace-{trace_id}] 🚨 严重告警：系统消息队列已满！(累计 {_queue_full_count} 次)"
-                )
-                # 发送告警通知 (可选)
-                try:
-                    from src.memory_palace.tools.sms_client import send_alert
-                    send_alert(f"[Memory Palace] 队列已满，消息丢失: {msg_id}", level="P0")
-                except:
-                    pass
-                return PlainTextResponse("success")
-        except AttributeError:
-            logger.error(f"[Trace-{trace_id}] 消息队列未初始化")
-            return PlainTextResponse("success", status_code=500)
+            accepted = await CanonicalMessageIngress(db_client, queue).accept(
+                IngressMessage(
+                    channel="WECOM",
+                    content=content,
+                    external_message_id=msg_id,
+                    external_conversation_id=external_conversation_id,
+                    external_tenant_id=external_tenant_id,
+                    external_user_id=from_user,
+                    metadata=metadata,
+                ),
+                actor={
+                    "user_id": "wechat-gateway",
+                    "username": "wechat-gateway",
+                    "role": "api",
+                    "venue_id": identity_rows[0]["venue_id"],
+                    "auth_type": "wechat_callback",
+                },
+            )
+        except CanonicalIngressError as ingress_exc:
+            global _queue_full_count
+            _queue_full_count += 1
+            logger.error(
+                f"[Trace-{trace_id}] 企微消息统一受理失败 "
+                f"[MsgId={msg_id}, Code={ingress_exc.code}, Count={_queue_full_count}]"
+            )
+            if ingress_exc.code.startswith("CHANNEL_IDENTITY"):
+                return PlainTextResponse("identity unavailable", status_code=ingress_exc.status_code)
+            return PlainTextResponse("queue unavailable", status_code=503)
+
+        latency_ms = (time.time() - start_time) * 1000
+        if not accepted.duplicate:
+            logger.info(
+                f"[Trace-{trace_id}] 📥 消息已通过统一入口受理 "
+                f"[MsgId={msg_id}, Type={msg_type}] | "
+                f"网关耗时: {latency_ms:.1f}ms"
+            )
+        else:
+            logger.info(
+                f"[Trace-{trace_id}] 企微重复消息已幂等接收 "
+                f"[MsgId={msg_id}] | 网关耗时: {latency_ms:.1f}ms"
+            )
 
     except Exception as e:
         logger.error(
@@ -719,8 +788,10 @@ async def demo_send_message(payload: DemoMessage, request: Request):
     }
 
     try:
-        queue: asyncio.Queue = request.app.state.message_queue
-        queue.put_nowait(message)
+        queue = request.app.state.message_queue
+        accepted = await asyncio.wait_for(queue.put(message), timeout=1.0)
+        if not accepted:
+            raise HTTPException(status_code=409, detail="Duplicate message")
         logger.info(
             f"[Trace-{trace_id}] 📥 [Demo] 消息已入队 "
             f"[MsgId={msg_id}] content={payload.content[:50]}"
@@ -731,7 +802,7 @@ async def demo_send_message(payload: DemoMessage, request: Request):
             "msg_id": msg_id,
             "message": "Message enqueued. GET /demo/result/{trace_id} to get the reply.",
         }
-    except asyncio.QueueFull:
+    except asyncio.TimeoutError:
         global _queue_full_count
         _queue_full_count += 1
         logger.error(f"[Trace-{trace_id}] 🚨 Demo 消息入队失败：队列已满")
@@ -845,15 +916,17 @@ async def demo_todo_decompose(payload: DemoTodoDecompose, request: Request):
         "api_version": "v1",
     }
     try:
-        queue: asyncio.Queue = request.app.state.message_queue
-        queue.put_nowait(message)
+        queue = request.app.state.message_queue
+        accepted = await asyncio.wait_for(queue.put(message), timeout=1.0)
+        if not accepted:
+            raise HTTPException(status_code=409, detail="Duplicate message")
         logger.info(f"[Trace-{trace_id}] Todo 分解已入队: {payload.goal[:50]}")
         return {
             "code": 0,
             "trace_id": trace_id,
             "message": f"Decomposition queued. Poll GET /demo/result/{trace_id}, then GET /demo/tasks.",
         }
-    except asyncio.QueueFull:
+    except asyncio.TimeoutError:
         raise HTTPException(status_code=503, detail="Queue full")
     except AttributeError:
         raise HTTPException(status_code=500, detail="Queue not initialized")

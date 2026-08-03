@@ -9,8 +9,9 @@ class InMemoryQueue:
     def __init__(self, maxsize: int = 10000):
         self._queue: asyncio.Queue = asyncio.Queue(maxsize=maxsize)
 
-    async def put(self, message: Dict[str, Any]) -> None:
+    async def put(self, message: Dict[str, Any]) -> bool:
         await self._queue.put(message)
+        return True
 
     async def get(self) -> Dict[str, Any]:
         return await self._queue.get()

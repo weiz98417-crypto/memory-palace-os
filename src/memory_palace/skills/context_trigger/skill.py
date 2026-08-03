@@ -16,15 +16,9 @@ from typing import Any, Dict, List, Optional
 from loguru import logger
 
 from ...core.skill_base import BaseAgentSkill, SkillOutput, SkillValidationError
+from ...tools.llm_wrapper import llm_client
 from .. import register_skill
 from .keywords import KeywordMatcher
-
-
-try:
-    from ...tools.llm_wrapper import llm_client
-except ImportError:
-    logger.warning("llm_client 尚未实现，ContextTrigger 将以关键词模式运行")
-    llm_client = None
 
 
 @register_skill("context_trigger")
@@ -49,7 +43,7 @@ class ContextTriggerSkill(BaseAgentSkill):
 
         super().__init__(
             skill_name=self.config.get("agent_metadata", {}).get("name", "ContextTrigger_Skill"),
-            model_name=self.config.get("stage2_config", {}).get("llm_config", {}).get("model", "gpt-4o-mini")
+            model_name=self.config.get("stage2_config", {}).get("llm_config", {}).get("model", "deepseek-v4-flash")
         )
 
     def _load_config(self) -> Dict[str, Any]:
@@ -165,19 +159,25 @@ class ContextTriggerSkill(BaseAgentSkill):
         # 调用 LLM 进行语义判断
         return await self._do_stage2_judgment(
             raw_text=raw_text,
+            msg_id=context.get("msg_id", ""),
             stage1_result=stage1_result,
             from_user=from_user,
             timestamp=timestamp,
-            trace_id=trace_id
+            trace_id=trace_id,
+            venue_id=context.get("venue_id", ""),
+            database=context.get("_database"),
         )
 
     async def _do_stage2_judgment(
         self,
         raw_text: str,
+        msg_id: str,
         stage1_result: Dict[str, Any],
         from_user: str,
         timestamp: float,
-        trace_id: str
+        trace_id: str,
+        venue_id: str,
+        database: Any = None,
     ) -> SkillOutput:
         """执行 Stage2 LLM 判断"""
         logger.debug(f"[Trace-{trace_id}] Stage2 启动：调用 LLM 进行语义判断...")
@@ -191,40 +191,7 @@ class ContextTriggerSkill(BaseAgentSkill):
             pass
 
         if not llm_client:
-            # 无 LLM 客户端时的兜底逻辑
-            should_trigger = stage1_result["triggered"]
-            event_type = "其他"
-            severity = "P3/P4"
-            confidence = 0.5
-
-            # 写入推送日志
-            if push_logger:
-                await self._safe_push_log(
-                    push_logger, None, from_user, raw_text,
-                    event_type, severity, stage1_result, False, confidence, trace_id
-                )
-
-            # 触发推送 + 确认卡片
-            if should_trigger:
-                await self._trigger_wechat_push(from_user, raw_text, event_type, severity, trace_id)
-
-            return SkillOutput(
-                success=True,
-                reply_text=None,
-                structured_data={
-                    "stage": "stage2_mock",
-                    "stage1_result": stage1_result,
-                    "should_trigger": should_trigger,
-                    "stage2_result": {
-                        "trigger": should_trigger,
-                        "confidence": confidence,
-                        "reason": "mock_mode_no_llm",
-                        "event_type": event_type,
-                        "severity": severity
-                    }
-                },
-                action_taken="stage2_mock"
-            )
+            raise RuntimeError("ContextTrigger LLM 客户端未初始化，不能执行 Stage2 判断")
 
         try:
             # 组装 Prompt
@@ -259,10 +226,16 @@ class ContextTriggerSkill(BaseAgentSkill):
                 temperature=llm_params.get("temperature", 0.0),
                 max_tokens=llm_params.get("max_tokens", 500),
                 json_mode=True,
-                trace_id=trace_id
+                trace_id=trace_id,
+                venue_id=venue_id,
+                agent_id="ContextTrigger",
+                agent_name=self.skill_name,
             )
 
             stage2_result = await llm_client.parse_json(llm_res.content, trace_id=trace_id)
+            required_fields = {"trigger", "confidence", "reason", "event_type", "severity"}
+            if not isinstance(stage2_result, dict) or not required_fields.issubset(stage2_result):
+                raise ValueError("ContextTrigger LLM 返回结果缺少必需字段")
 
             # 消毒 stage2_result
             from ...tools.llm_wrapper import sanitize_llm_output, ALLOWED_SEVERITIES
@@ -286,15 +259,19 @@ class ContextTriggerSkill(BaseAgentSkill):
             )
 
             # 写入推送日志
-            if push_logger:
+            push_sent = False
+            if should_trigger:
+                push_sent = await self._trigger_wechat_push(
+                    from_user, raw_text, event_type, severity, trace_id
+                )
+            if push_logger and push_sent:
                 await self._safe_push_log(
-                    push_logger, None, from_user, raw_text,
-                    event_type, severity, stage1_result, True, confidence, trace_id
+                    push_logger, msg_id, from_user, raw_text,
+                    event_type, severity, stage1_result, True, confidence, trace_id,
+                    database=database, venue_id=venue_id,
                 )
 
             # 触发 WeChat 推送 + 延迟确认卡片
-            if should_trigger:
-                await self._trigger_wechat_push(from_user, raw_text, event_type, severity, trace_id)
 
             return SkillOutput(
                 success=True,
@@ -339,6 +316,8 @@ class ContextTriggerSkill(BaseAgentSkill):
         stage2_triggered: bool,
         llm_confidence: float,
         trace_id: str,
+        database: Any = None,
+        venue_id: str = "",
     ) -> None:
         """安全写入推送日志（异常不阻断主流程）"""
         try:
@@ -353,6 +332,8 @@ class ContextTriggerSkill(BaseAgentSkill):
                 stage2_triggered=stage2_triggered,
                 llm_confidence=llm_confidence,
                 trace_id=trace_id,
+                database=database,
+                venue_id=venue_id,
             )
         except Exception as e:
             logger.warning(f"[Trace-{trace_id}] 推送日志写入失败: {e}")
@@ -364,7 +345,7 @@ class ContextTriggerSkill(BaseAgentSkill):
         event_type: str,
         severity: str,
         trace_id: str,
-    ) -> None:
+    ) -> bool:
         """
         触发 WeChat 推送 + 延迟确认卡片
 
@@ -376,12 +357,12 @@ class ContextTriggerSkill(BaseAgentSkill):
             from ...tools.wechat_client import get_wechat_client
         except ImportError:
             logger.warning("wechat_client 未导入，跳过 WeChat 推送")
-            return
+            return False
 
         wc = get_wechat_client()
         if not wc:
             logger.warning("wechat_client 未初始化，跳过 WeChat 推送")
-            return
+            return False
 
         confirm_card_cfg = self.config.get("confirm_card", {})
         confirm_delay = self.config.get("confirm_delay_seconds", 180)
@@ -405,7 +386,7 @@ class ContextTriggerSkill(BaseAgentSkill):
             logger.warning(f"[Trace-{trace_id}] 事件推送卡片发送失败: to={from_user}")
 
         # 2. 延迟发送确认卡片（asyncio task，不阻塞）
-        if confirm_card_cfg.get("enabled", True):
+        if push_ok and confirm_card_cfg.get("enabled", True):
             import asyncio
             asyncio.create_task(
                 self._send_delayed_confirm_card(
@@ -417,6 +398,8 @@ class ContextTriggerSkill(BaseAgentSkill):
                     trace_id=trace_id,
                 )
             )
+
+        return bool(push_ok)
 
     async def _send_delayed_confirm_card(
         self,

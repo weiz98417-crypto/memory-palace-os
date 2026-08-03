@@ -43,7 +43,7 @@ class TestCorePipeline:
             return m
 
         with patch("src.memory_palace.knowledge.db_client.save_message", side_effect=mock_save):
-            with patch("src.memory_palace.knowledge.db_client.create_or_update_session", side_effect=AsyncMock()):
+            with patch.object(Orchestrator, "_save_message", side_effect=mock_save):
                 with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
                     orch = Orchestrator()
                     worker = MessageQueueWorker(queue=queue, concurrency=1, orchestrator=orch)
@@ -93,7 +93,7 @@ class TestCorePipeline:
             return m
 
         with patch("src.memory_palace.knowledge.db_client.save_message", side_effect=AsyncMock()):
-            with patch("src.memory_palace.knowledge.db_client.create_or_update_session", side_effect=AsyncMock()):
+            with patch.object(Orchestrator, "_save_message", new_callable=AsyncMock):
                 with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
                     orch = Orchestrator()
                     result = await orch.process(payload)

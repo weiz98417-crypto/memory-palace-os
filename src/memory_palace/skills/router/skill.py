@@ -17,13 +17,8 @@ from typing import Any, Dict, List
 from loguru import logger
 
 from ...core.skill_base import BaseAgentSkill, SkillOutput, SkillValidationError
+from ...tools.llm_wrapper import llm_client
 from .. import register_skill
-
-try:
-    from ...tools.llm_wrapper import llm_client
-except ImportError:
-    logger.warning("llm_client 尚未实现，Router 将以模拟模式运行")
-    llm_client = None
 
 
 @register_skill("router")
@@ -38,7 +33,7 @@ class RouterSkill(BaseAgentSkill):
 
         super().__init__(
             skill_name=self.config.get("agent_name", "Router_Agent"),
-            model_name=self.config.get("llm_config", {}).get("model", "gpt-3.5-turbo")
+            model_name=self.config.get("llm_config", {}).get("model", "deepseek-v4-flash")
         )
 
         self.chitchat_patterns = [
@@ -51,7 +46,7 @@ class RouterSkill(BaseAgentSkill):
         config_path = self.base_path / "config.yaml"
         if not config_path.exists():
             logger.warning(f"Router config 缺失，使用硬编码默认配置。")
-            return {"agent_name": "Router_Agent", "llm_config": {"model": "gpt-3.5-turbo"}}
+            return {"agent_name": "Router_Agent", "llm_config": {"model": "deepseek-v4-flash"}}
 
         with open(config_path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f)
@@ -95,39 +90,35 @@ class RouterSkill(BaseAgentSkill):
         try:
             system_prompt = self._load_system_prompt()
 
-            if llm_client:
-                llm_params = self.config.get("llm_config", {})
+            if not llm_client:
+                raise RuntimeError("Router LLM 客户端未初始化，不能执行语义分诊")
 
-                ### CHANGE: 添加 await 调用异步 LLM
-                llm_res = await llm_client.ask(
-                    system_prompt=system_prompt,
-                    user_prompt=raw_text,
-                    model=self.model_name,
-                    temperature=llm_params.get("temperature", 0.1),
-                    json_mode=True,
-                    trace_id=trace_id
-                )
+            llm_params = self.config.get("llm_config", {})
 
-                ### CHANGE: 添加 await 调用异步解析
-                intent_data = await llm_client.parse_json(llm_res.content, trace_id=trace_id)
+            llm_res = await llm_client.ask(
+                system_prompt=system_prompt,
+                user_prompt=raw_text,
+                model=self.model_name,
+                temperature=llm_params.get("temperature", 0.1),
+                json_mode=True,
+                trace_id=trace_id,
+                venue_id=context.get("venue_id", ""),
+                agent_id="Router",
+                agent_name=self.skill_name,
+            )
 
-                if not intent_data:
-                    intent_data = {"intent": "other", "severity": "P3", "summary": "未知意图"}
+            intent_data = await llm_client.parse_json(llm_res.content, trace_id=trace_id)
+            required_fields = {"intent", "severity", "summary", "is_critical", "confidence"}
+            if not isinstance(intent_data, dict) or not required_fields.issubset(intent_data):
+                raise ValueError("Router LLM 返回结果缺少必需字段")
 
-                return SkillOutput(
-                    success=True,
-                    reply_text=None,
-                    structured_data=intent_data,
-                    action_taken="llm_semantic_analysis",
-                    tokens_used=llm_res.tokens_used
-                )
-            else:
-                return SkillOutput(
-                    success=True,
-                    reply_text=None,
-                    structured_data={"intent": "other", "severity": "P3", "summary": "模拟模式"},
-                    action_taken="mock_analysis"
-                )
+            return SkillOutput(
+                success=True,
+                reply_text=None,
+                structured_data=intent_data,
+                action_taken="llm_semantic_analysis",
+                tokens_used=llm_res.tokens_used
+            )
 
         except Exception as e:
             logger.error(f"[Trace-{trace_id}] Router L2 执行异常: {e}")

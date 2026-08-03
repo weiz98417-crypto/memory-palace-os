@@ -133,7 +133,7 @@ class ConfigManager:
         应用环境变量覆盖
 
         支持的格式：
-            MEMORY_PALACE_LLM_DEFAULT_MODEL=gpt-4o
+            MEMORY_PALACE_LLM_DEFAULT_MODEL=deepseek-v4-flash
             MEMORY_PALACE_LLM__TIMEOUT=60  (双下划线表示嵌套)
             MEMORY_PALACE_SYSTEM__LOG_LEVEL=DEBUG
         """
@@ -155,7 +155,27 @@ class ConfigManager:
             # 设置配置
             self._set_nested(key, typed_value)
 
-            logger.debug(f"🔄 环境变量覆盖: {key} = {typed_value}")
+            safe_value = self._format_override_value(key, typed_value)
+            logger.debug(f"🔄 环境变量覆盖: {key} = {safe_value}")
+
+    @staticmethod
+    def _format_override_value(key: str, value: Any) -> Any:
+        normalized = key.lower().replace("-", ".").replace("_", ".")
+        segments = set(normalized.split("."))
+        sensitive_segments = {
+            "secret",
+            "password",
+            "passwd",
+            "token",
+            "credential",
+            "credentials",
+            "apikey",
+            "jwt",
+        }
+        sensitive_paths = ("api.key", "private.key", "access.key")
+        if segments & sensitive_segments or any(path in normalized for path in sensitive_paths):
+            return "<redacted>"
+        return value
 
     def _parse_env_value(self, value: str) -> Any:
         """尝试将环境变量值转换为合适类型"""
@@ -236,7 +256,7 @@ class ConfigManager:
         设置配置值
 
         用法：
-            config.set('llm.default_model', 'gpt-4')
+            config.set('llm.default_model', 'deepseek-v4-flash')
         """
         self._set_nested(key, value)
 

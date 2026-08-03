@@ -1,0 +1,119 @@
+{
+  "title": "Memory Palace OS · 企业运营工作台",
+  "visibleView": "view-dashboard",
+  "navigation": [
+    {
+      "view": "dashboard",
+      "text": "总运营工作台",
+      "tag": "BUTTON"
+    },
+    {
+      "view": "events",
+      "text": "事现场事件",
+      "tag": "BUTTON"
+    },
+    {
+      "view": "sessions",
+      "text": "会消息与会话",
+      "tag": "BUTTON"
+    },
+    {
+      "view": "tasks",
+      "text": "任任务中心",
+      "tag": "BUTTON"
+    },
+    {
+      "view": "approvals",
+      "text": "审审批中心",
+      "tag": "BUTTON"
+    },
+    {
+      "view": "actions",
+      "text": "动推送与动作日志",
+      "tag": "BUTTON"
+    },
+    {
+      "view": "knowledge",
+      "text": "知知识库",
+      "tag": "BUTTON"
+    },
+    {
+      "view": "persona",
+      "text": "分数字分身",
+      "tag": "BUTTON"
+    },
+    {
+      "view": "watcher",
+      "text": "巡鹰眼巡检",
+      "tag": "BUTTON"
+    },
+    {
+      "view": "sops",
+      "text": "SOPSOP 中心",
+      "tag": "BUTTON"
+    },
+    {
+      "view": "management",
+      "text": "管用户与场地",
+      "tag": "BUTTON"
+    },
+    {
+      "view": "settings",
+      "text": "设系统设置",
+      "tag": "BUTTON"
+    },
+    {
+      "view": "diagnostics",
+      "text": "诊运维诊断",
+      "tag": "BUTTON"
+    }
+  ],
+  "dialogs": [
+    {
+      "id": "task-dialog",
+      "title": "创建任务"
+    },
+    {
+      "id": "task-decompose-dialog",
+      "title": "AI 拆解任务"
+    },
+    {
+      "id": "knowledge-dialog",
+      "title": "新增知识"
+    },
+    {
+      "id": "persona-dialog",
+      "title": "创建数字分身"
+    },
+    {
+      "id": "persona-chat-dialog",
+      "title": "数字分身"
+    },
+    {
+      "id": "policy-dialog",
+      "title": "巡检策略"
+    },
+    {
+      "id": "sop-dialog",
+      "title": "创建 SOP 草稿"
+    },
+    {
+      "id": "user-dialog",
+      "title": "新增用户"
+    },
+    {
+      "id": "venue-dialog",
+      "title": "新增场地"
+    },
+    {
+      "id": "action-dialog",
+      "title": "确认操作"
+    }
+  ],
+  "runtime": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

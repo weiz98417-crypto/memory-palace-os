@@ -4,6 +4,7 @@
 # Runtime data
 data/
 !data/.gitkeep
+backups/
 
 # Python
 __pycache__/

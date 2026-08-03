@@ -57,23 +57,26 @@ class TestMemoryRetrieval:
         test_content = "2024年曾发生同类票务纠纷，处理方案是核实身份后通过补差价升舱解决。"
         self.vs.upsert_experience(
             content=test_content,
-            metadata={"case_id": "HIST_999", "date": "2024-05"},
+            metadata={"case_id": "HIST_999", "date": "2024-05", "venue_id": "venue-a"},
             doc_id=doc_id,
         )
-        results = self.vs.query_experience("票价纠纷", top_k=3, threshold=0.0)
+        results = self.vs.query_experience(
+            "票价纠纷", top_k=3, threshold=0.0, venue_id="venue-a"
+        )
         assert isinstance(results, list)
 
     def test_irrelevant_query_filtered_by_threshold(self):
         """高阈值下无关查询被过滤"""
         self.vs.upsert_experience(
             content="售票系统故障处理流程",
-            metadata={"type": "ticketing"},
+            metadata={"type": "ticketing", "venue_id": "venue-a"},
             doc_id="irrel_1",
         )
         results = self.vs.query_experience(
             "xyzzygibberish unrelated garbage query",
             top_k=3,
             threshold=0.99,
+            venue_id="venue-a",
         )
         assert len(results) == 0
 

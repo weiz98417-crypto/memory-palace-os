@@ -1,0 +1,204 @@
+{
+  "uat_id": "MVP-UAT-003",
+  "operation": "Historical event import and semantic retrieval",
+  "input": {
+    "content": "UAT 历史补录：2026 年 7 月 12 日东区配电间温控告警，值班员更换散热风扇并连续观察三十分钟，设备温度恢复正常。",
+    "event_type": "设施故障",
+    "severity": "P2"
+  },
+  "import_status": 200,
+  "imported": {
+    "event_id": "d5a8a1c8-97bf-4fc8-824d-47564281971f",
+    "status": "created",
+    "trace_id": "9c8f87c69e0343ceb18f03a8a395a702"
+  },
+  "events": [
+    {
+      "id": 12,
+      "event_id": "d5a8a1c8-97bf-4fc8-824d-47564281971f",
+      "push_id": "manual",
+      "from_user": "UAT 系统管理员",
+      "raw_text": "UAT 历史补录：2026 年 7 月 12 日东区配电间温控告警，值班员更换散热风扇并连续观察三十分钟，设备温度恢复正常。",
+      "event_type": "设施故障",
+      "severity": "P2",
+      "context_trigger_data": "{\"source\": \"manual_entry\"}",
+      "memory_content": "[P2] 设施故障事件：UAT 历史补录：2026 年 7 月 12 日东区配电间温控告警，值班员更换散热风扇并连续观察三十分钟，设备温度恢复正常。",
+      "vector_doc_id": "evt_d5a8a1c8-97bf-4fc8-824d-47564281971f",
+      "created_at": null,
+      "confirmed_at": 1785247671.5406964,
+      "venue_id": "venue-uat",
+      "source_type": "HISTORY",
+      "status": "OPEN",
+      "assigned_to": null,
+      "resolution": null,
+      "trace_id": "",
+      "closed_at": null,
+      "updated_at": null
+    }
+  ],
+  "llm_calls": [],
+  "audits": [
+    {
+      "id": 196,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "EVENT_CREATED",
+      "resource_type": "event",
+      "resource_id": "d5a8a1c8-97bf-4fc8-824d-47564281971f",
+      "outcome": "SUCCEEDED",
+      "trace_id": "9c8f87c69e0343ceb18f03a8a395a702",
+      "created_at": 1785247671.5811183,
+      "metadata": {
+        "event_type": "设施故障",
+        "severity": "P2"
+      }
+    }
+  ],
+  "search_status": 200,
+  "search": {
+    "results": [
+      {
+        "id": "knowledge:venue-uat:0fc30035a6c34b2f94c9990013873ccd",
+        "content": "发现东区闸机控制器异常断电时，先隔离故障回路，开启人工通道分流，完成控制器复位后进行三轮通行复检，并在十分钟内登记事件与处置人。",
+        "metadata": {
+          "category": "设施运维",
+          "knowledge_id": "0fc30035a6c34b2f94c9990013873ccd",
+          "source_type": "MANUAL",
+          "title": "东区闸机断电处置基线",
+          "venue_id": "venue-uat",
+          "version": 2
+        },
+        "score": 0.722
+      },
+      {
+        "id": "evt_0585fa3d-5663-46f0-8a80-92a1c95da5f1",
+        "content": "[P1] 设施故障事件：UAT 来源回归 2026-07-28：东区闸机控制器异常断电，现场完成隔离、分流、复位与复检。",
+        "metadata": {
+          "event_id": "0585fa3d-5663-46f0-8a80-92a1c95da5f1",
+          "event_type": "设施故障",
+          "from_user": "UAT 现场操作员",
+          "severity": "P1",
+          "venue_id": "venue-uat"
+        },
+        "score": 0.639
+      },
+      {
+        "id": "evt_5dd09a09-65e3-4f50-8bc3-c9f147b2c813",
+        "content": "[P0] 人员安全事件：UAT 实时链路降级：北门游客突发晕倒，现场人员已呼叫急救并建立隔离区，请生成处置建议。",
+        "metadata": {
+          "event_id": "5dd09a09-65e3-4f50-8bc3-c9f147b2c813",
+          "event_type": "人员安全",
+          "from_user": "fc92c2d360e14e6cb7783df3eab35d61",
+          "severity": "P0",
+          "venue_id": "venue-uat"
+        },
+        "score": 0.602
+      },
+      {
+        "id": "evt_fd277484-8878-4f12-9700-c852698f828a",
+        "content": "[P2] 设施故障事件：UAT 历史补录 2026-07-27：南门扶梯控制柜过热停运，现场已完成断电、游客分流、复位复检与恢复开放。",
+        "metadata": {
+          "event_id": "fd277484-8878-4f12-9700-c852698f828a",
+          "event_type": "设施故障",
+          "from_user": "UAT 现场操作员",
+          "severity": "P2",
+          "venue_id": "venue-uat"
+        },
+        "score": 0.555
+      },
+      {
+        "id": "evt_d5a8a1c8-97bf-4fc8-824d-47564281971f",
+        "content": "[P2] 设施故障事件：UAT 历史补录：2026 年 7 月 12 日东区配电间温控告警，值班员更换散热风扇并连续观察三十分钟，设备温度恢复正常。",
+        "metadata": {
+          "event_id": "d5a8a1c8-97bf-4fc8-824d-47564281971f",
+          "event_type": "设施故障",
+          "from_user": "UAT 系统管理员",
+          "severity": "P2",
+          "source_id": "d5a8a1c8-97bf-4fc8-824d-47564281971f",
+          "source_type": "HISTORY",
+          "title": "设施故障事件",
+          "venue_id": "venue-uat",
+          "version": 1
+        },
+        "score": 0.546
+      },
+      {
+        "id": "evt_8c318a41-c666-44ec-8a0d-7f5fbe72a802",
+        "content": "[P1] 设施故障事件：UAT：西侧扶梯突然停运并有焦糊味，现场已设置警戒线并引导游客绕行。",
+        "metadata": {
+          "event_id": "8c318a41-c666-44ec-8a0d-7f5fbe72a802",
+          "event_type": "设施故障",
+          "from_user": "fc92c2d360e14e6cb7783df3eab35d61",
+          "severity": "P1",
+          "venue_id": "venue-uat"
+        },
+        "score": 0.519
+      },
+      {
+        "id": "evt_ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6",
+        "content": "[P1] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+        "metadata": {
+          "event_id": "ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6",
+          "event_type": "人员安全",
+          "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "severity": "P1",
+          "source_id": "ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6",
+          "source_type": "LIVE",
+          "title": "人员安全事件",
+          "venue_id": "venue-uat",
+          "version": 1
+        },
+        "score": 0.505
+      },
+      {
+        "id": "evt_b250f04f-0be9-4a61-acc8-824424c1474d",
+        "content": "[P0] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+        "metadata": {
+          "event_id": "b250f04f-0be9-4a61-acc8-824424c1474d",
+          "event_type": "人员安全",
+          "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "severity": "P0",
+          "source_id": "b250f04f-0be9-4a61-acc8-824424c1474d",
+          "source_type": "LIVE",
+          "title": "人员安全事件",
+          "venue_id": "venue-uat",
+          "version": 1
+        },
+        "score": 0.503
+      },
+      {
+        "id": "evt_3c5d6030-3be0-4115-ada7-3f1f4218b8d5",
+        "content": "[P2] 人员安全事件：UAT 真实链路：东门检票区客流快速聚集，一名游客摔倒但意识清醒。现场已设置隔离带，请生成分级处置建议并记录事件。",
+        "metadata": {
+          "event_id": "3c5d6030-3be0-4115-ada7-3f1f4218b8d5",
+          "event_type": "人员安全",
+          "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "severity": "P2",
+          "venue_id": "venue-uat"
+        },
+        "score": 0.48
+      },
+      {
+        "id": "evt_cd29ed00-e90f-46f3-8855-6e1707abc340",
+        "content": "[P2] 设施故障事件：UAT：北门闸机网络中断，现场已开启人工检票并记录排队人数。",
+        "metadata": {
+          "event_id": "cd29ed00-e90f-46f3-8855-6e1707abc340",
+          "event_type": "设施故障",
+          "from_user": "fc92c2d360e14e6cb7783df3eab35d61",
+          "severity": "P2",
+          "venue_id": "venue-uat"
+        },
+        "score": 0.474
+      }
+    ],
+    "query": "东区配电间温控告警更换散热风扇"
+  },
+  "runtime": {
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

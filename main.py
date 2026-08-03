@@ -21,10 +21,13 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import uvicorn
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
+
+load_dotenv()
 
 # ── 内部模块 ──────────────────────────────────────────────────────────────────
 from src.memory_palace.config.env_validator import validate_env  # P0: 启动校验
@@ -35,9 +38,6 @@ from src.memory_palace.tools.logger_config import setup_logger  # 日志初始�
 # 0. 启动前：加载 .env + Fail-Fast 环境变量校验
 #    所有必需 Key 缺失时直接 sys.exit(1)，不让残缺配置的服务跑起来
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-from dotenv import load_dotenv
-
-load_dotenv()  # 加载 .env 文件中的环境变量
 _DEMO_MODE = os.environ.get("DEMO_MODE", "").lower() == "true"
 # DEMO_MODE: 跳过环境变量严格校验，允许缺失 Key 运行时降级
 if not _DEMO_MODE:
@@ -58,12 +58,11 @@ setup_logger()  # 初始化 loguru（多文件归档、自动旋转）
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 1. 全局共享队列（asyncio.Queue）
-#    gateway.py 只负责把消息 put 进来，queue_worker 消费并派发给 Orchestrator
-#    maxsize 从环境变量 MEMORY_PALACE_QUEUE_MAXSIZE 读取，默认 10000
+# 1. Demo 专用内存队列
+#    正式模式在 lifespan 中创建并验证 Redis Streams 队列。
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 _QUEUE_MAXSIZE = int(os.environ.get("MEMORY_PALACE_QUEUE_MAXSIZE", 10000))
-MESSAGE_QUEUE: asyncio.Queue = asyncio.Queue(maxsize=_QUEUE_MAXSIZE)
+IN_MEMORY_QUEUE: asyncio.Queue = asyncio.Queue(maxsize=_QUEUE_MAXSIZE)
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -95,59 +94,56 @@ async def lifespan(app: FastAPI):
     _auto_register_skills()
     logger.info("✅ Agent 技能注册完成")
 
+    # —— 初始化正式依赖注入容器与 PostgreSQL（失败即阻止启动）——
+    from src.memory_palace.core.container import AppContainer
+
+    app_container = AppContainer()
+
     # —— 确保数据库表存在（幂等，先于 Phase 恢复）——
     from src.memory_palace.knowledge.db_init import init_database
 
-    await init_database()
+    await init_database(app_container.db_client)
+    from src.memory_palace.api.v1.endpoints.auth import bootstrap_identity_store
+
+    await bootstrap_identity_store(app_container.db_client)
+    app_container.llm_client.set_database(app_container.db_client)
     logger.info("✅ 数据库表初始化完成")
 
-    # [Phase 3] 恢复任务图
-    try:
-        from src.memory_palace.core.task_graph import task_graph
+    # —— 正式模式只使用 Redis Streams，不允许静默降级 ——
+    from src.memory_palace.core.redis_queue import RedisStreamsQueue
+    from src.memory_palace.core.runtime_recovery import recover_application_runtime
 
-        await task_graph.reload_from_db()
-        logger.info("✅ Task Graph 已从数据库恢复")
-    except Exception as e:
-        logger.warning(f"Task Graph 恢复失败（不影响启动）: {e}")
+    runtime_queue = RedisStreamsQueue()
+    recovery_run = await recover_application_runtime(
+        app_container.db_client,
+        task_graph=app_container.task_graph,
+        permission_engine=app_container.permission_engine,
+        runtime_queue=runtime_queue,
+        app_version=app.version,
+    )
+    logger.info(
+        "✅ 持久化启动恢复完成 [run_id={}] [trace_id={}]",
+        recovery_run["id"],
+        recovery_run["trace_id"],
+    )
+    logger.info("✅ DI 容器已初始化")
 
-    # [Phase 2] 恢复权限引擎待审批请求
-    try:
-        from src.memory_palace.core.permissions import permission_engine
+    set_message_queue(runtime_queue)
+    logger.info("✅ Redis Streams 队列后端已连接")
 
-        await permission_engine.reload_from_db()
-        logger.info("✅ Permission Engine 已恢复待审批请求")
-    except Exception as e:
-        logger.warning(f"Permission Engine 恢复失败（不影响启动）: {e}")
+    vector_store = app_container.vector_store
+    vector_health = vector_store.health() if vector_store else {"status": "unhealthy"}
+    if vector_health.get("status") != "healthy":
+        raise RuntimeError("ChromaDB 未通过启动健康检查")
+    logger.info("✅ ChromaDB 向量知识库已连接")
 
-    # —— 初始化 DI 容器 ——
-    try:
-        from src.memory_palace.core.container import AppContainer
-
-        app_container = AppContainer()
-        logger.info("✅ DI 容器已初始化")
-    except Exception as e:
-        logger.warning(f"DI 容器初始化失败（降级运行）: {e}")
-        app_container = None
-
-    # —— 启动队列消费者（后台 Task）——
-    set_message_queue(MESSAGE_QUEUE)
-    # Redis queue backend (only when not in DEMO_MODE)
-    queue_backend = None
-    if os.environ.get("DEMO_MODE", "").lower() != "true":
-        try:
-            from src.memory_palace.core.redis_queue import RedisStreamsQueue
-
-            queue_backend = RedisStreamsQueue()
-            logger.info("✅ Redis Streams 队列后端已初始化")
-        except Exception as e:
-            logger.warning(f"Redis 队列后端初始化失败（降级到内存队列）: {e}")
-    worker = MessageQueueWorker(queue=MESSAGE_QUEUE, container=app_container, queue_backend=queue_backend)
+    worker = MessageQueueWorker(queue=runtime_queue, container=app_container, queue_backend=runtime_queue)
     consumer_task = asyncio.create_task(worker.start(), name="queue-consumer")
     logger.info("✅ 异步消息队列消费者已启动")
 
     # —— 启动定时任务调度器（Watcher 鹰眼巡检）——
-    scheduler = TaskScheduler()
-    scheduler.start()
+    scheduler = TaskScheduler(container=app_container)
+    await scheduler.start()
     logger.info("✅ APScheduler 定时任务调度器已启动")
 
     # —— 注册健康检查器 ——
@@ -156,7 +152,7 @@ async def lifespan(app: FastAPI):
 
         registry = get_health_registry()
         # PG check
-        if os.environ.get("DEMO_MODE", "").lower() != "true" and app_container:
+        if app_container:
             try:
                 from src.memory_palace.core.health import DatabaseHealthChecker
 
@@ -166,13 +162,13 @@ async def lifespan(app: FastAPI):
             except Exception:
                 pass
         # Redis check
-        if queue_backend:
+        if runtime_queue:
             try:
                 from src.memory_palace.core.health import RedisHealthChecker
 
                 registry.register(
                     "redis",
-                    RedisHealthChecker(lambda: queue_backend._client.ping() if queue_backend._client else False),
+                    RedisHealthChecker(lambda: runtime_queue._client.ping() if runtime_queue._client else False),
                 )
             except Exception:
                 pass
@@ -181,7 +177,10 @@ async def lifespan(app: FastAPI):
         logger.debug(f"健康检查器注册跳过: {e}")
 
     # —— 将公共对象挂到 app.state，供路由层访问 ——
-    app.state.message_queue = MESSAGE_QUEUE
+    app.state.message_queue = runtime_queue
+    app.state.db_client = app_container.db_client
+    app.state.vector_store = vector_store
+    app.state.container = app_container
     app.state.scheduler = scheduler
 
     yield  # ← FastAPI 在此处理请求
@@ -203,13 +202,6 @@ async def lifespan(app: FastAPI):
     # 停止接收新任务
     scheduler.shutdown()
 
-    # 等待队列排空（最多 30 秒）
-    try:
-        await asyncio.wait_for(MESSAGE_QUEUE.join(), timeout=30.0)
-        logger.info("✅ 消息队列已排空")
-    except asyncio.TimeoutError:
-        logger.warning(f"⚠️  队列排空超时，剩余 {MESSAGE_QUEUE.qsize()} 条消息未处理")
-
     # 记录死信队列内容
     if hasattr(worker, "_dead_letter_queue") and worker._dead_letter_queue:
         logger.error(
@@ -217,12 +209,21 @@ async def lifespan(app: FastAPI):
             f"{[d['msg_id'] for d in worker._dead_letter_queue]}"
         )
 
-    # 取消消费者 Task
+    # 停止领取新消息并取消阻塞中的消费循环。
+    worker.stop()
     consumer_task.cancel()
     try:
         await consumer_task
     except asyncio.CancelledError:
         pass
+
+    # 已领取消息继续执行；超时取消时不 ACK，由 Redis pending 在重启后回收。
+    drain_timeout = float(os.environ.get("MEMORY_PALACE_WORKER_DRAIN_TIMEOUT", "30"))
+    drained = await worker.drain(timeout=drain_timeout)
+    if drained:
+        logger.info("✅ 已领取消息已全部处理完成")
+    else:
+        logger.warning("⚠️ 消息排空超时，未完成任务将由 Redis pending 恢复")
 
     # 关闭短信/语音线程池，避免 Gunicorn 和测试容器退出时悬挂。
     try:
@@ -233,12 +234,12 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"通知线程池关闭异常（不影响退出）: {e}")
 
-    # 释放持久化客户端，避免 SQLite/Chroma 后台线程阻止进程退出。
+    # 释放正式持久化客户端与 Redis 连接。
     try:
-        from src.memory_palace.knowledge.db_client import db_client
         from src.memory_palace.knowledge.vector_store import close_vector_client
 
-        await db_client.close()
+        await runtime_queue.close()
+        await app_container.db_client.close()
         close_vector_client()
         logger.info("✅ 数据客户端已关闭")
     except Exception as e:
@@ -260,6 +261,9 @@ app = FastAPI(
     redoc_url=None,
     openapi_url=None if _DEMO_MODE else "/openapi.json",
 )
+from src.memory_palace.api.errors import install_error_handlers
+
+install_error_handlers(app)
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -301,10 +305,73 @@ else:
     app.include_router(v1_router, tags=["API v1"])
     app.include_router(v2_router, tags=["API v2"])
 
+    @app.get("/", include_in_schema=False)
+    async def root_redirect():
+        return RedirectResponse(url="/admin/", status_code=302)
+
     @app.get("/admin", include_in_schema=False)
     async def admin_redirect():
         return RedirectResponse(url="/admin/index.html", status_code=302)
 
+    @app.get("/admin/events", include_in_schema=False)
+    @app.get("/admin/tasks", include_in_schema=False)
+    @app.get("/admin/approvals", include_in_schema=False)
+    async def admin_business_collection():
+        return FileResponse(
+            Path(__file__).resolve().parent / "static" / "index.html",
+            media_type="text/html; charset=utf-8",
+        )
+
+    @app.get("/admin/events/{event_id}", include_in_schema=False)
+    async def admin_event_resource(event_id: str):
+        return FileResponse(
+            Path(__file__).resolve().parent / "static" / "index.html",
+            media_type="text/html; charset=utf-8",
+        )
+
+    @app.get("/admin/tasks/{task_id}", include_in_schema=False)
+    async def admin_task_resource(task_id: str):
+        return FileResponse(
+            Path(__file__).resolve().parent / "static" / "index.html",
+            media_type="text/html; charset=utf-8",
+        )
+
+    @app.get("/admin/approvals/{approval_id}", include_in_schema=False)
+    async def admin_approval_resource(approval_id: str):
+        return FileResponse(
+            Path(__file__).resolve().parent / "static" / "index.html",
+            media_type="text/html; charset=utf-8",
+        )
+
+    @app.get("/assistant", include_in_schema=False)
+    async def assistant_redirect():
+        return RedirectResponse(url="/assistant/", status_code=302)
+
+    @app.get("/assistant/work/{resource_type}/{resource_id}", include_in_schema=False)
+    async def assistant_work_resource(resource_type: str, resource_id: str):
+        return FileResponse(
+            Path(__file__).resolve().parent / "static" / "assistant" / "index.html",
+            media_type="text/html; charset=utf-8",
+        )
+
+    @app.get("/assistant/knowledge/sop/{sop_id}", include_in_schema=False)
+    async def assistant_sop_resource(sop_id: int):
+        return FileResponse(
+            Path(__file__).resolve().parent / "static" / "assistant" / "index.html",
+            media_type="text/html; charset=utf-8",
+        )
+
+    @app.get("/simulator/wecom", include_in_schema=False)
+    async def wecom_simulator_redirect():
+        return RedirectResponse(url="/simulator/wecom/", status_code=302)
+
+    app.mount("/assistant", StaticFiles(directory="static/assistant", html=True), name="assistant_static")
+    app.mount(
+        "/simulator/wecom",
+        StaticFiles(directory="static/simulator/wecom", html=True),
+        name="wecom_simulator_static",
+    )
+    app.mount("/shared", StaticFiles(directory="static/shared"), name="client_shared_static")
     app.mount("/admin", StaticFiles(directory="static", html=True), name="admin_static")
 
 
@@ -317,12 +384,16 @@ async def health_check():
     Kubernetes / Docker 健康探针端点。
     返回队列积压深度，便于运维监控。
     """
-    queue_size = MESSAGE_QUEUE.qsize()
+    runtime_queue = getattr(app.state, "message_queue", IN_MEMORY_QUEUE)
+    if hasattr(runtime_queue, "get_depth"):
+        queue_size = await runtime_queue.get_depth()
+    else:
+        queue_size = runtime_queue.qsize()
     status = "degraded" if queue_size > 500 else "ok"
     return {
         "status": status,
         "queue_depth": queue_size,
-        "queue_capacity": MESSAGE_QUEUE.maxsize,
+        "queue_capacity": getattr(runtime_queue, "maxsize", None),
     }
 
 

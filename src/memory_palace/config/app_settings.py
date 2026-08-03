@@ -28,6 +28,7 @@ from loguru import logger
 
 # 导入基础配置
 from . import config
+from .secrets import read_secret
 
 
 # ==============================================================================
@@ -53,11 +54,11 @@ class SystemSettings(BaseModel):
 
 class LLMSettings(BaseModel):
     """LLM 配置"""
-    default_model: str = Field(default="gpt-4o", description="默认模型")
+    default_model: str = Field(default="deepseek-v4-flash", description="默认模型")
     timeout: float = Field(default=30.0, ge=1.0, le=300.0, description="超时时间(秒)")
     max_retries: int = Field(default=3, ge=0, le=10, description="最大重试次数")
     base_url: str = Field(
-        default="https://api.openai.com/v1",
+        default="https://api.deepseek.com/v1",
         description="API 地址"
     )
     api_key: Optional[str] = Field(default=None, description="API Key (从环境变量读取)")
@@ -67,7 +68,7 @@ class LLMSettings(BaseModel):
         """获取有效的 API Key"""
         if self.api_key:
             return self.api_key
-        return os.environ.get("OPENAI_API_KEY", "")
+        return read_secret("DEEPSEEK_API_KEY")
 
 
 class StorageSettings(BaseModel):
@@ -198,11 +199,11 @@ class SettingsSync:
                 data_dir=c.get("system.data_dir", "./data"),
             ),
             llm=LLMSettings(
-                default_model=c.get("llm.default_model", "gpt-4o"),
+                default_model=c.get("llm.default_model", "deepseek-v4-flash"),
                 timeout=c.get("llm.timeout", 30.0),
                 max_retries=c.get("llm.max_retries", 3),
-                base_url=c.get("llm.base_url", "https://api.openai.com/v1"),
-                api_key=os.environ.get("OPENAI_API_KEY"),
+                base_url=c.get("llm.base_url", "https://api.deepseek.com/v1"),
+                api_key=read_secret("DEEPSEEK_API_KEY") or None,
             ),
             storage=StorageSettings(
                 sqlite_path=c.get("storage.sqlite_path", "data/memory.db"),
@@ -301,5 +302,3 @@ __all__ = [
     "settings",
     "reload_settings",
 ]
-
-    

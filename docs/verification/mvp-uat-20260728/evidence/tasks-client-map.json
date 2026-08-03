@@ -1,0 +1,134 @@
+{
+  "sessions": [
+    {
+      "value": "3591e950-de94-408c-81ad-d49f8f398867",
+      "text": "3591e950-de94-408c-81ad-d49f8f398867 · active"
+    },
+    {
+      "value": "fa64dba6-dec5-4745-a3d1-008a10f41141",
+      "text": "fa64dba6-dec5-4745-a3d1-008a10f41141 · active"
+    },
+    {
+      "value": "cb4cc5fb-1bfd-40bc-8191-00410c2ace3b",
+      "text": "cb4cc5fb-1bfd-40bc-8191-00410c2ace3b · active"
+    },
+    {
+      "value": "774aa9ef-a77e-480e-9c22-68e7df0246cc",
+      "text": "774aa9ef-a77e-480e-9c22-68e7df0246cc · CLOSED"
+    },
+    {
+      "value": "a77ee8dd-88c4-41ae-b7b1-e260c2d8132d",
+      "text": "a77ee8dd-88c4-41ae-b7b1-e260c2d8132d · active"
+    },
+    {
+      "value": "uat-golden-1785230678",
+      "text": "uat-golden-1785230678 · active"
+    },
+    {
+      "value": "86def3cd-96a2-4502-bfaf-e221b9a8358b",
+      "text": "86def3cd-96a2-4502-bfaf-e221b9a8358b · active"
+    },
+    {
+      "value": "3dd06d87-fcdf-4446-ba13-1b4a100fec42",
+      "text": "3dd06d87-fcdf-4446-ba13-1b4a100fec42 · active"
+    }
+  ],
+  "assignees": [
+    {
+      "value": "",
+      "text": "暂不分配"
+    },
+    {
+      "value": "813c0d14d40742c68bcd32d0f50aeb9d",
+      "text": "UAT 值班经理 · 值班经理"
+    },
+    {
+      "value": "fc92c2d360e14e6cb7783df3eab35d61",
+      "text": "UAT 现场操作员 · 现场操作员"
+    }
+  ],
+  "taskRows": [
+    "提交闭环报告至景区安全管理负责人\n3a35ce20-8af7-4b57-afc1-a9d9108349fc · uat-golden-1785230678\n\t\nBLOCKED\tUAT 值班经理\t人工执行\t53efec61-ee5c-4cd8-9eb4-b73dd8b5b724\t0 / 3\t\n分配",
+    "撰写闭环报告，包含问题、整改及复核情况\n53efec61-ee5c-4cd8-9eb4-b73dd8b5b724 · uat-golden-1785230678\n\t\nBLOCKED\tUAT 值班经理\t人工执行\t918b88ac-9489-46a8-b90d-1003dd72f0db\t0 / 3\t\n分配",
+    "进行问题整改复核并记录结果\n918b88ac-9489-46a8-b90d-1003dd72f0db · uat-golden-1785230678\n\t\nBLOCKED\tUAT 值班经理\t人工执行\tc2c69770-5cf4-4f2a-afd2-1cf55842b485\t0 / 3\t\n分配",
+    "安排问题整改复核责任人及时间\nc2c69770-5cf4-4f2a-afd2-1cf55842b485 · uat-golden-1785230678\n\t\nBLOCKED\tUAT 值班经理\t人工执行\t9db16e8d-485e-4e97-b7fd-453de4ef15cb\t0 / 3\t\n分配",
+    "整理问题清单并分类\n9db16e8d-485e-4e97-b7fd-453de4ef15cb · uat-golden-1785230678\n\t\nBLOCKED\tUAT 值班经理\t人工执行\t27c37e8b-e4d7-4edc-bb77-d246ce10bce9\t0 / 3\t\n分配",
+    "记录所有检查中发现的问题\n27c37e8b-e4d7-4edc-bb77-d246ce10bce9 · uat-golden-1785230678\n\t\nBLOCKED\tUAT 值班经理\t人工执行\t4bd2d084-f03f-44d1-aa9b-eb1dd382d19f, 687aeca5-a931-49f6-a7f2-3f9dba6291b7, 2fd53770-c562-4a8e-8f71-4c9c355e3df3\t0 / 3\t\n分配",
+    "核验游客中心消防器材的配备、有效期及可用性\n2fd53770-c562-4a8e-8f71-4c9c355e3df3 · uat-golden-1785230678\n\t\nBLOCKED\tUAT 值班经理\t人工执行\t3bb3be69-49df-4b0f-a767-707fa01b5584\t0 / 3\t\n分配",
+    "核验东区配电间的设备运行、安全警示及防护\n687aeca5-a931-49f6-a7f2-3f9dba6291b7 · uat-golden-1785230678\n\t\nBLOCKED\tUAT 值班经理\t人工执行\t3bb3be69-49df-4b0f-a767-707fa01b5584\t0 / 3\t\n分配",
+    "核验北门急救通道的畅通性、标识及设备\n4bd2d084-f03f-44d1-aa9b-eb1dd382d19f · uat-golden-1785230678\n\t\nBLOCKED\tUAT 值班经理\t人工执行\t3bb3be69-49df-4b0f-a767-707fa01b5584\t0 / 3\t\n分配",
+    "制定检查计划与问题清单模板\n3bb3be69-49df-4b0f-a767-707fa01b5584 · uat-golden-1785230678\n\t\nPENDING\tUAT 值班经理\t人工执行\t无\t0 / 3\t\n开始\n分配",
+    "UAT 异常恢复：夜间巡检发现东区配电间温控告警，要求首次处置失败后由值班经理重试并重新分配现场复核。\n9690a5c6-c0d5-4462-9fc7-2b623e024752 · cb4cc5fb-1bfd-40bc-8191-00410c2ace3b\n\t\nDONE\tUAT 值班经理\t人工执行\t无\t4 / 4\t\n分配",
+    "UAT 任务闭环：复核北门急救通道、记录现场处置结果并回传值班经理\n0347b992-5c56-4bab-b2e0-736224af8494 · cb4cc5fb-1bfd-40bc-8191-00410c2ace3b\n\t\nDONE\tUAT 现场操作员\t人工执行\t无\t1 / 3\t\n分配"
+  ],
+  "taskButtons": [
+    {
+      "text": "AI 拆解任务",
+      "disabled": false
+    },
+    {
+      "text": "创建单项任务",
+      "disabled": false
+    },
+    {
+      "text": "分配",
+      "disabled": false
+    },
+    {
+      "text": "分配",
+      "disabled": false
+    },
+    {
+      "text": "分配",
+      "disabled": false
+    },
+    {
+      "text": "分配",
+      "disabled": false
+    },
+    {
+      "text": "分配",
+      "disabled": false
+    },
+    {
+      "text": "分配",
+      "disabled": false
+    },
+    {
+      "text": "分配",
+      "disabled": false
+    },
+    {
+      "text": "分配",
+      "disabled": false
+    },
+    {
+      "text": "分配",
+      "disabled": false
+    },
+    {
+      "text": "开始",
+      "disabled": false
+    },
+    {
+      "text": "分配",
+      "disabled": false
+    },
+    {
+      "text": "分配",
+      "disabled": false
+    },
+    {
+      "text": "分配",
+      "disabled": false
+    }
+  ],
+  "runtime": {
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

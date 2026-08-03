@@ -15,13 +15,8 @@ from typing import Any, Dict, List
 from loguru import logger
 
 from ...core.skill_base import BaseAgentSkill, SkillOutput, SkillValidationError
+from ...tools.llm_wrapper import llm_client
 from .. import register_skill
-
-try:
-    from ...tools.llm_wrapper import llm_client
-except ImportError:
-    logger.warning("llm_client 尚未实现，Watcher 将以模拟模式运行")
-    llm_client = None
 
 
 @register_skill("watcher")
@@ -36,7 +31,7 @@ class WatcherSkill(BaseAgentSkill):
 
         super().__init__(
             skill_name=self.config.get("agent_name", "Watcher_Audit_Agent"),
-            model_name=self.config.get("llm_config", {}).get("model", "gpt-4-turbo")
+            model_name=self.config.get("llm_config", {}).get("model", "deepseek-v4-flash")
         )
 
     def _load_config(self) -> Dict[str, Any]:
@@ -46,7 +41,7 @@ class WatcherSkill(BaseAgentSkill):
             logger.warning("Watcher config 缺失，采用默认审计参数。")
             return {
                 "agent_name": "Watcher_Audit_Agent",
-                "llm_config": {"model": "gpt-4-turbo", "temperature": 0.1}
+                "llm_config": {"model": "deepseek-v4-flash", "temperature": 0.1}
             }
 
         with open(config_path, "r", encoding="utf-8") as f:
@@ -119,16 +114,33 @@ class WatcherSkill(BaseAgentSkill):
                     model=self.model_name,
                     temperature=llm_params.get("temperature", 0.1),
                     json_mode=True,
-                    trace_id=trace_id
+                    trace_id=trace_id,
+                    venue_id=context.get("venue_id", ""),
+                    agent_id="Watcher",
+                    agent_name=self.skill_name,
                 )
 
                 # 4. 解析审计报告
                 ### CHANGE: 添加 await 调用异步解析
                 audit_report = await llm_client.parse_json(llm_res.content, trace_id=trace_id)
+                required_fields = {
+                    "is_violation_found",
+                    "escalated_cases",
+                    "audit_score",
+                    "summary_message",
+                }
+                if not isinstance(audit_report, dict) or not required_fields.issubset(audit_report):
+                    raise ValueError("Watcher LLM 返回结果缺少必需字段")
+                if not isinstance(audit_report["escalated_cases"], list):
+                    raise ValueError("Watcher LLM 返回的 escalated_cases 必须是列表")
+                if not str(audit_report["summary_message"]).strip():
+                    raise ValueError("Watcher LLM 返回了空审计摘要")
 
                 # 提取是否需要触发警报 (Escalation)
-                escalations = audit_report.get("escalated_cases", [])
+                escalations = audit_report["escalated_cases"]
                 is_violation_found = len(escalations) > 0
+                if bool(audit_report["is_violation_found"]) != is_violation_found:
+                    raise ValueError("Watcher LLM 返回的违规标记与升级案件不一致")
 
                 if is_violation_found:
                     logger.warning(f"[Trace-{trace_id}] Watcher 发现 {len(escalations)} 起违规/超时未闭环事件！")
@@ -139,24 +151,14 @@ class WatcherSkill(BaseAgentSkill):
                     structured_data={
                         "is_violation_found": is_violation_found,
                         "escalated_cases": escalations,
-                        "audit_score": audit_report.get("audit_score", 100),
+                        "audit_score": audit_report["audit_score"],
                         "action_taken": "sop_compliance_audit"
                     },
                     action_taken="sop_compliance_audit",
                     tokens_used=llm_res.tokens_used
                 )
             else:
-                return SkillOutput(
-                    success=True,
-                    reply_text="鹰眼巡检暂时离线，请稍后再试。",
-                    structured_data={
-                        "is_violation_found": False,
-                        "escalated_cases": [],
-                        "audit_score": 100,
-                        "action_taken": "mock_sop_audit"
-                    },
-                    action_taken="mock_sop_audit"
-                )
+                raise RuntimeError("Watcher LLM 客户端未初始化，不能生成巡检结果。")
 
         except Exception as e:
             logger.error(f"[Trace-{trace_id}] Watcher 审计引擎执行异常: {e}")

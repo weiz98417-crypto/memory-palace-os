@@ -1,0 +1,53 @@
+{
+  "uat_id": "MVP-UAT-008",
+  "operation": "Audited runtime configuration and Watcher Agent reload through the formal diagnostics client",
+  "config_reload": {
+    "status": 200,
+    "response": {
+      "status": "ok",
+      "message": "Configuration reloaded",
+      "trace_id": "0da28ad1bd534a07b17da2601f9641b5"
+    },
+    "audit": {
+      "id": 451,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "CONFIG_RELOADED",
+      "resource_type": "configuration",
+      "resource_id": "runtime",
+      "outcome": "SUCCEEDED",
+      "trace_id": "0da28ad1bd534a07b17da2601f9641b5",
+      "created_at": 1785312682.1808777,
+      "metadata": {}
+    }
+  },
+  "watcher_reload": {
+    "status": 200,
+    "response": {
+      "status": "ok",
+      "skill_name": "watcher",
+      "trace_id": "333fc6c0ba9648a4a67775c7d737c3bb"
+    },
+    "audit": {
+      "id": 452,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "SKILL_RELOADED",
+      "resource_type": "skill",
+      "resource_id": "watcher",
+      "outcome": "SUCCEEDED",
+      "trace_id": "333fc6c0ba9648a4a67775c7d737c3bb",
+      "created_at": 1785312682.3295712,
+      "metadata": {}
+    }
+  },
+  "screenshots": [
+    "runtime-reload-01-config-watcher-1440x900.png"
+  ],
+  "runtime": {
+    "console_errors": [],
+    "page_errors": [],
+    "failed_requests": [],
+    "http_errors": []
+  }
+}

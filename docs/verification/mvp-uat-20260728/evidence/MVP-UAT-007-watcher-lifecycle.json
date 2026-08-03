@@ -1,0 +1,1046 @@
+{
+  "uat_id": "MVP-UAT-007",
+  "operation": "Watcher policy, manual and scheduled DeepSeek runs, finding assignment/closure, edit and disable lifecycle",
+  "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+  "run_id": "74360497c682477989d216d4820f772c",
+  "scheduled_run_id": "ba270e3dbae6423c9fb635ae5b5a1494",
+  "finding_id": "68475a5bd8e84b6e8616a354ae50f1cc",
+  "policy": {
+    "created": {
+      "policy": {
+        "id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "name": "UAT 鹰眼闭环 ms5s3ja8-802dac97",
+        "description": "验证正式客户端的 Watcher 策略、真实模型巡检、发现分配与关闭闭环。",
+        "schedule_cron": "*/15 * * * *",
+        "enabled": true,
+        "version": 1,
+        "created_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "last_run_at": null,
+        "created_at": 1785311041.5678012,
+        "updated_at": 1785311041.5678012,
+        "check_types": [
+          "SLA",
+          "TASK",
+          "SOP"
+        ],
+        "config": {
+          "max_targets": 200
+        }
+      },
+      "trace_id": "e2e29bd1a8304570a01ec4585d4bca39"
+    },
+    "updated": {
+      "policy": {
+        "id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "name": "UAT 鹰眼闭环 ms5s3ja8-802dac97 已复核",
+        "description": "验证正式客户端的 Watcher 策略、真实模型巡检、发现分配与关闭闭环。 已完成责任人和处理结果复核。",
+        "schedule_cron": "* * * * *",
+        "enabled": true,
+        "version": 2,
+        "created_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "last_run_at": 1785311054.6147277,
+        "created_at": 1785311041.5678012,
+        "updated_at": 1785311056.4290385,
+        "check_types": [
+          "SLA",
+          "TASK"
+        ],
+        "config": {
+          "max_targets": 200
+        }
+      },
+      "trace_id": "66357944b4fa413ba364be70486fff73"
+    },
+    "disabled": {
+      "policy": {
+        "id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "name": "UAT 鹰眼闭环 ms5s3ja8-802dac97 已复核",
+        "description": "验证正式客户端的 Watcher 策略、真实模型巡检、发现分配与关闭闭环。 已完成责任人和处理结果复核。",
+        "schedule_cron": "* * * * *",
+        "enabled": false,
+        "version": 3,
+        "created_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "last_run_at": 1785311110.7123425,
+        "created_at": 1785311041.5678012,
+        "updated_at": 1785311113.0308652,
+        "check_types": [
+          "SLA",
+          "TASK"
+        ],
+        "config": {
+          "max_targets": 200
+        }
+      },
+      "trace_id": "c96592e323d14e03b1b8396bfdd2c526"
+    },
+    "record": {
+      "id": "809097f9c92c4abeaa5385e0a9e48f49",
+      "venue_id": "venue-uat",
+      "name": "UAT 鹰眼闭环 ms5s3ja8-802dac97 已复核",
+      "description": "验证正式客户端的 Watcher 策略、真实模型巡检、发现分配与关闭闭环。 已完成责任人和处理结果复核。",
+      "schedule_cron": "* * * * *",
+      "enabled": false,
+      "version": 3,
+      "created_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "last_run_at": 1785311110.7123425,
+      "created_at": 1785311041.5678012,
+      "updated_at": 1785311113.0308652,
+      "check_types": [
+        "SLA",
+        "TASK"
+      ],
+      "config": {
+        "max_targets": 200
+      }
+    }
+  },
+  "run": {
+    "response": {
+      "run_id": "74360497c682477989d216d4820f772c",
+      "trace_id": "0993537fdf6e4c3aabdd62de9870c4de",
+      "status": "SUCCEEDED",
+      "target_count": 9,
+      "finding_count": 9,
+      "summary": "本次巡检9条记录，发现9起SLA超时违规，审计得分0分。",
+      "findings": [
+        {
+          "id": "68475a5bd8e84b6e8616a354ae50f1cc",
+          "run_id": "74360497c682477989d216d4820f772c",
+          "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+          "venue_id": "venue-uat",
+          "finding_type": "COMPLIANCE",
+          "severity": "P2",
+          "title": "巡检异常",
+          "description": "P2级事件，耗时2368分钟，超过30分钟SLA，且员工未反馈。",
+          "source_type": "event",
+          "source_id": "fd277484-8878-4f12-9700-c852698f828a"
+        },
+        {
+          "id": "6c066c2d60184f77b1a994e1b2dc91fb",
+          "run_id": "74360497c682477989d216d4820f772c",
+          "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+          "venue_id": "venue-uat",
+          "finding_type": "COMPLIANCE",
+          "severity": "P2",
+          "title": "巡检异常",
+          "description": "P2级事件，耗时1416分钟，超过30分钟SLA，且员工未反馈。",
+          "source_type": "event",
+          "source_id": "3c5d6030-3be0-4115-ada7-3f1f4218b8d5"
+        },
+        {
+          "id": "e4eb34359f924009922d820ca021583a",
+          "run_id": "74360497c682477989d216d4820f772c",
+          "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+          "venue_id": "venue-uat",
+          "finding_type": "COMPLIANCE",
+          "severity": "P0",
+          "title": "巡检异常",
+          "description": "P0级事件，耗时1229分钟，超过3分钟SLA，且员工未反馈。",
+          "source_type": "event",
+          "source_id": "d3037216-eab4-48ae-b4fa-93374984a22d"
+        },
+        {
+          "id": "7c142266b4d743b5862ef55373d7416f",
+          "run_id": "74360497c682477989d216d4820f772c",
+          "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+          "venue_id": "venue-uat",
+          "finding_type": "COMPLIANCE",
+          "severity": "P0",
+          "title": "巡检异常",
+          "description": "P0级事件，耗时1177分钟，超过3分钟SLA，且员工未反馈。",
+          "source_type": "event",
+          "source_id": "5dd09a09-65e3-4f50-8bc3-c9f147b2c813"
+        },
+        {
+          "id": "11cee6347cbb45c48ee1fa3922b8e9ce",
+          "run_id": "74360497c682477989d216d4820f772c",
+          "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+          "venue_id": "venue-uat",
+          "finding_type": "COMPLIANCE",
+          "severity": "P1",
+          "title": "巡检异常",
+          "description": "P1级事件，耗时1177分钟，超过10分钟SLA，且员工未反馈。",
+          "source_type": "event",
+          "source_id": "8c318a41-c666-44ec-8a0d-7f5fbe72a802"
+        },
+        {
+          "id": "e9450960b71c42ed9ee22ea8a88d3a28",
+          "run_id": "74360497c682477989d216d4820f772c",
+          "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+          "venue_id": "venue-uat",
+          "finding_type": "COMPLIANCE",
+          "severity": "P2",
+          "title": "巡检异常",
+          "description": "P2级事件，耗时1177分钟，超过30分钟SLA，且员工未反馈。",
+          "source_type": "event",
+          "source_id": "cd29ed00-e90f-46f3-8855-6e1707abc340"
+        },
+        {
+          "id": "6e39ddd916ce4ca9b48e22324ffcc530",
+          "run_id": "74360497c682477989d216d4820f772c",
+          "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+          "venue_id": "venue-uat",
+          "finding_type": "COMPLIANCE",
+          "severity": "P2",
+          "title": "巡检异常",
+          "description": "P2级事件，耗时1155分钟，超过30分钟SLA，且员工未反馈。",
+          "source_type": "event",
+          "source_id": "d792935a-ce54-42f1-be53-de6d165a5cf9"
+        },
+        {
+          "id": "444e56361dbe49bea290d288fb5a4608",
+          "run_id": "74360497c682477989d216d4820f772c",
+          "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+          "venue_id": "venue-uat",
+          "finding_type": "COMPLIANCE",
+          "severity": "P1",
+          "title": "巡检异常",
+          "description": "P1级事件，耗时1057分钟，超过10分钟SLA，且员工未反馈。",
+          "source_type": "event",
+          "source_id": "ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6"
+        },
+        {
+          "id": "d279403464c249c5b68e9b931f6ccea2",
+          "run_id": "74360497c682477989d216d4820f772c",
+          "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+          "venue_id": "venue-uat",
+          "finding_type": "COMPLIANCE",
+          "severity": "P2",
+          "title": "巡检异常",
+          "description": "P2级事件，耗时1056分钟，超过30分钟SLA，且员工未反馈。",
+          "source_type": "event",
+          "source_id": "d5a8a1c8-97bf-4fc8-824d-47564281971f"
+        }
+      ],
+      "model": "deepseek-v4-flash"
+    },
+    "record": {
+      "id": "74360497c682477989d216d4820f772c",
+      "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+      "venue_id": "venue-uat",
+      "trigger_source": "MANUAL",
+      "status": "SUCCEEDED",
+      "trace_id": "0993537fdf6e4c3aabdd62de9870c4de",
+      "target_count": 9,
+      "finding_count": 9,
+      "summary": "本次巡检9条记录，发现9起SLA超时违规，审计得分0分。",
+      "error": null,
+      "started_at": 1785311041.9737654,
+      "completed_at": 1785311054.6147277,
+      "result": {
+        "is_violation_found": true,
+        "escalated_cases": [
+          {
+            "case_id": "fd277484-8878-4f12-9700-c852698f828a",
+            "violation_reason": "P2级事件，耗时2368分钟，超过30分钟SLA，且员工未反馈。",
+            "severity_level": "P2"
+          },
+          {
+            "case_id": "3c5d6030-3be0-4115-ada7-3f1f4218b8d5",
+            "violation_reason": "P2级事件，耗时1416分钟，超过30分钟SLA，且员工未反馈。",
+            "severity_level": "P2"
+          },
+          {
+            "case_id": "d3037216-eab4-48ae-b4fa-93374984a22d",
+            "violation_reason": "P0级事件，耗时1229分钟，超过3分钟SLA，且员工未反馈。",
+            "severity_level": "P0"
+          },
+          {
+            "case_id": "5dd09a09-65e3-4f50-8bc3-c9f147b2c813",
+            "violation_reason": "P0级事件，耗时1177分钟，超过3分钟SLA，且员工未反馈。",
+            "severity_level": "P0"
+          },
+          {
+            "case_id": "8c318a41-c666-44ec-8a0d-7f5fbe72a802",
+            "violation_reason": "P1级事件，耗时1177分钟，超过10分钟SLA，且员工未反馈。",
+            "severity_level": "P1"
+          },
+          {
+            "case_id": "cd29ed00-e90f-46f3-8855-6e1707abc340",
+            "violation_reason": "P2级事件，耗时1177分钟，超过30分钟SLA，且员工未反馈。",
+            "severity_level": "P2"
+          },
+          {
+            "case_id": "d792935a-ce54-42f1-be53-de6d165a5cf9",
+            "violation_reason": "P2级事件，耗时1155分钟，超过30分钟SLA，且员工未反馈。",
+            "severity_level": "P2"
+          },
+          {
+            "case_id": "ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6",
+            "violation_reason": "P1级事件，耗时1057分钟，超过10分钟SLA，且员工未反馈。",
+            "severity_level": "P1"
+          },
+          {
+            "case_id": "d5a8a1c8-97bf-4fc8-824d-47564281971f",
+            "violation_reason": "P2级事件，耗时1056分钟，超过30分钟SLA，且员工未反馈。",
+            "severity_level": "P2"
+          }
+        ],
+        "audit_score": 0,
+        "action_taken": "sop_compliance_audit"
+      }
+    },
+    "scheduled": {
+      "record": {
+        "id": "ba270e3dbae6423c9fb635ae5b5a1494",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "trigger_source": "SCHEDULED",
+        "status": "SUCCEEDED",
+        "trace_id": "ad4a500bf7cd4a6d9ced3ad923bfb881",
+        "target_count": 9,
+        "finding_count": 9,
+        "summary": "本次巡检9条记录，发现9起SLA超时违规，审计得分0分。",
+        "error": null,
+        "started_at": 1785311100.005502,
+        "completed_at": 1785311110.7123425,
+        "result": {
+          "is_violation_found": true,
+          "escalated_cases": [
+            {
+              "case_id": "fd277484-8878-4f12-9700-c852698f828a",
+              "violation_reason": "P2级工单耗时2369分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+              "severity_level": "P2"
+            },
+            {
+              "case_id": "3c5d6030-3be0-4115-ada7-3f1f4218b8d5",
+              "violation_reason": "P2级工单耗时1417分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+              "severity_level": "P2"
+            },
+            {
+              "case_id": "d3037216-eab4-48ae-b4fa-93374984a22d",
+              "violation_reason": "P0级工单耗时1230分钟，超过SLA阈值3分钟，且一线员工未反馈任何实质动作结果。",
+              "severity_level": "P0"
+            },
+            {
+              "case_id": "5dd09a09-65e3-4f50-8bc3-c9f147b2c813",
+              "violation_reason": "P0级工单耗时1178分钟，超过SLA阈值3分钟，且一线员工未反馈任何实质动作结果。",
+              "severity_level": "P0"
+            },
+            {
+              "case_id": "8c318a41-c666-44ec-8a0d-7f5fbe72a802",
+              "violation_reason": "P1级工单耗时1178分钟，超过SLA阈值10分钟，且一线员工未反馈任何实质动作结果。",
+              "severity_level": "P1"
+            },
+            {
+              "case_id": "cd29ed00-e90f-46f3-8855-6e1707abc340",
+              "violation_reason": "P2级工单耗时1178分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+              "severity_level": "P2"
+            },
+            {
+              "case_id": "d792935a-ce54-42f1-be53-de6d165a5cf9",
+              "violation_reason": "P2级工单耗时1156分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+              "severity_level": "P2"
+            },
+            {
+              "case_id": "ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6",
+              "violation_reason": "P1级工单耗时1058分钟，超过SLA阈值10分钟，且一线员工未反馈任何实质动作结果。",
+              "severity_level": "P1"
+            },
+            {
+              "case_id": "d5a8a1c8-97bf-4fc8-824d-47564281971f",
+              "violation_reason": "P2级工单耗时1057分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+              "severity_level": "P2"
+            }
+          ],
+          "audit_score": 0,
+          "action_taken": "sop_compliance_audit"
+        }
+      }
+    },
+    "field_mapping": {
+      "manual": [
+        {
+          "case_id": "fd277484-8878-4f12-9700-c852698f828a",
+          "violation_reason": "P2级事件，耗时2368分钟，超过30分钟SLA，且员工未反馈。",
+          "severity_level": "P2",
+          "finding_id": "68475a5bd8e84b6e8616a354ae50f1cc",
+          "persisted_description": "P2级事件，耗时2368分钟，超过30分钟SLA，且员工未反馈。",
+          "persisted_severity": "P2"
+        },
+        {
+          "case_id": "3c5d6030-3be0-4115-ada7-3f1f4218b8d5",
+          "violation_reason": "P2级事件，耗时1416分钟，超过30分钟SLA，且员工未反馈。",
+          "severity_level": "P2",
+          "finding_id": "6c066c2d60184f77b1a994e1b2dc91fb",
+          "persisted_description": "P2级事件，耗时1416分钟，超过30分钟SLA，且员工未反馈。",
+          "persisted_severity": "P2"
+        },
+        {
+          "case_id": "d3037216-eab4-48ae-b4fa-93374984a22d",
+          "violation_reason": "P0级事件，耗时1229分钟，超过3分钟SLA，且员工未反馈。",
+          "severity_level": "P0",
+          "finding_id": "e4eb34359f924009922d820ca021583a",
+          "persisted_description": "P0级事件，耗时1229分钟，超过3分钟SLA，且员工未反馈。",
+          "persisted_severity": "P0"
+        },
+        {
+          "case_id": "5dd09a09-65e3-4f50-8bc3-c9f147b2c813",
+          "violation_reason": "P0级事件，耗时1177分钟，超过3分钟SLA，且员工未反馈。",
+          "severity_level": "P0",
+          "finding_id": "7c142266b4d743b5862ef55373d7416f",
+          "persisted_description": "P0级事件，耗时1177分钟，超过3分钟SLA，且员工未反馈。",
+          "persisted_severity": "P0"
+        },
+        {
+          "case_id": "8c318a41-c666-44ec-8a0d-7f5fbe72a802",
+          "violation_reason": "P1级事件，耗时1177分钟，超过10分钟SLA，且员工未反馈。",
+          "severity_level": "P1",
+          "finding_id": "11cee6347cbb45c48ee1fa3922b8e9ce",
+          "persisted_description": "P1级事件，耗时1177分钟，超过10分钟SLA，且员工未反馈。",
+          "persisted_severity": "P1"
+        },
+        {
+          "case_id": "cd29ed00-e90f-46f3-8855-6e1707abc340",
+          "violation_reason": "P2级事件，耗时1177分钟，超过30分钟SLA，且员工未反馈。",
+          "severity_level": "P2",
+          "finding_id": "e9450960b71c42ed9ee22ea8a88d3a28",
+          "persisted_description": "P2级事件，耗时1177分钟，超过30分钟SLA，且员工未反馈。",
+          "persisted_severity": "P2"
+        },
+        {
+          "case_id": "d792935a-ce54-42f1-be53-de6d165a5cf9",
+          "violation_reason": "P2级事件，耗时1155分钟，超过30分钟SLA，且员工未反馈。",
+          "severity_level": "P2",
+          "finding_id": "6e39ddd916ce4ca9b48e22324ffcc530",
+          "persisted_description": "P2级事件，耗时1155分钟，超过30分钟SLA，且员工未反馈。",
+          "persisted_severity": "P2"
+        },
+        {
+          "case_id": "ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6",
+          "violation_reason": "P1级事件，耗时1057分钟，超过10分钟SLA，且员工未反馈。",
+          "severity_level": "P1",
+          "finding_id": "444e56361dbe49bea290d288fb5a4608",
+          "persisted_description": "P1级事件，耗时1057分钟，超过10分钟SLA，且员工未反馈。",
+          "persisted_severity": "P1"
+        },
+        {
+          "case_id": "d5a8a1c8-97bf-4fc8-824d-47564281971f",
+          "violation_reason": "P2级事件，耗时1056分钟，超过30分钟SLA，且员工未反馈。",
+          "severity_level": "P2",
+          "finding_id": "d279403464c249c5b68e9b931f6ccea2",
+          "persisted_description": "P2级事件，耗时1056分钟，超过30分钟SLA，且员工未反馈。",
+          "persisted_severity": "P2"
+        }
+      ],
+      "scheduled": [
+        {
+          "case_id": "fd277484-8878-4f12-9700-c852698f828a",
+          "violation_reason": "P2级工单耗时2369分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+          "severity_level": "P2",
+          "finding_id": "0c0903deabe646d39a571ce7436ba9df",
+          "persisted_description": "P2级工单耗时2369分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+          "persisted_severity": "P2"
+        },
+        {
+          "case_id": "3c5d6030-3be0-4115-ada7-3f1f4218b8d5",
+          "violation_reason": "P2级工单耗时1417分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+          "severity_level": "P2",
+          "finding_id": "695c21b7b78d426aa9d545f013373c10",
+          "persisted_description": "P2级工单耗时1417分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+          "persisted_severity": "P2"
+        },
+        {
+          "case_id": "d3037216-eab4-48ae-b4fa-93374984a22d",
+          "violation_reason": "P0级工单耗时1230分钟，超过SLA阈值3分钟，且一线员工未反馈任何实质动作结果。",
+          "severity_level": "P0",
+          "finding_id": "e8fc3d81d42643819a42890b897c1256",
+          "persisted_description": "P0级工单耗时1230分钟，超过SLA阈值3分钟，且一线员工未反馈任何实质动作结果。",
+          "persisted_severity": "P0"
+        },
+        {
+          "case_id": "5dd09a09-65e3-4f50-8bc3-c9f147b2c813",
+          "violation_reason": "P0级工单耗时1178分钟，超过SLA阈值3分钟，且一线员工未反馈任何实质动作结果。",
+          "severity_level": "P0",
+          "finding_id": "bbe934b98fc545ac9780ea69a9d50a5e",
+          "persisted_description": "P0级工单耗时1178分钟，超过SLA阈值3分钟，且一线员工未反馈任何实质动作结果。",
+          "persisted_severity": "P0"
+        },
+        {
+          "case_id": "8c318a41-c666-44ec-8a0d-7f5fbe72a802",
+          "violation_reason": "P1级工单耗时1178分钟，超过SLA阈值10分钟，且一线员工未反馈任何实质动作结果。",
+          "severity_level": "P1",
+          "finding_id": "a192ae211fae41c298bb54e413ca7059",
+          "persisted_description": "P1级工单耗时1178分钟，超过SLA阈值10分钟，且一线员工未反馈任何实质动作结果。",
+          "persisted_severity": "P1"
+        },
+        {
+          "case_id": "cd29ed00-e90f-46f3-8855-6e1707abc340",
+          "violation_reason": "P2级工单耗时1178分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+          "severity_level": "P2",
+          "finding_id": "0be288e38a3a419bbd4c23b47b3be42e",
+          "persisted_description": "P2级工单耗时1178分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+          "persisted_severity": "P2"
+        },
+        {
+          "case_id": "d792935a-ce54-42f1-be53-de6d165a5cf9",
+          "violation_reason": "P2级工单耗时1156分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+          "severity_level": "P2",
+          "finding_id": "d125ad943faf46e5b7d1073f186fce88",
+          "persisted_description": "P2级工单耗时1156分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+          "persisted_severity": "P2"
+        },
+        {
+          "case_id": "ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6",
+          "violation_reason": "P1级工单耗时1058分钟，超过SLA阈值10分钟，且一线员工未反馈任何实质动作结果。",
+          "severity_level": "P1",
+          "finding_id": "3da0330d0c1a4a11acaac920ca913c8d",
+          "persisted_description": "P1级工单耗时1058分钟，超过SLA阈值10分钟，且一线员工未反馈任何实质动作结果。",
+          "persisted_severity": "P1"
+        },
+        {
+          "case_id": "d5a8a1c8-97bf-4fc8-824d-47564281971f",
+          "violation_reason": "P2级工单耗时1057分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+          "severity_level": "P2",
+          "finding_id": "ae8f82d9f2504725a973030ddfad713b",
+          "persisted_description": "P2级工单耗时1057分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+          "persisted_severity": "P2"
+        }
+      ]
+    }
+  },
+  "run_findings": {
+    "manual": [
+      {
+        "id": "6c066c2d60184f77b1a994e1b2dc91fb",
+        "run_id": "74360497c682477989d216d4820f772c",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P2",
+        "title": "巡检异常",
+        "description": "P2级事件，耗时1416分钟，超过30分钟SLA，且员工未反馈。",
+        "source_type": "event",
+        "source_id": "3c5d6030-3be0-4115-ada7-3f1f4218b8d5",
+        "status": "OPEN",
+        "assigned_to": null,
+        "resolution": null,
+        "created_at": 1785311054.6147277,
+        "updated_at": 1785311054.6147277,
+        "closed_at": null
+      },
+      {
+        "id": "11cee6347cbb45c48ee1fa3922b8e9ce",
+        "run_id": "74360497c682477989d216d4820f772c",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P1",
+        "title": "巡检异常",
+        "description": "P1级事件，耗时1177分钟，超过10分钟SLA，且员工未反馈。",
+        "source_type": "event",
+        "source_id": "8c318a41-c666-44ec-8a0d-7f5fbe72a802",
+        "status": "OPEN",
+        "assigned_to": null,
+        "resolution": null,
+        "created_at": 1785311054.6147277,
+        "updated_at": 1785311054.6147277,
+        "closed_at": null
+      },
+      {
+        "id": "6e39ddd916ce4ca9b48e22324ffcc530",
+        "run_id": "74360497c682477989d216d4820f772c",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P2",
+        "title": "巡检异常",
+        "description": "P2级事件，耗时1155分钟，超过30分钟SLA，且员工未反馈。",
+        "source_type": "event",
+        "source_id": "d792935a-ce54-42f1-be53-de6d165a5cf9",
+        "status": "OPEN",
+        "assigned_to": null,
+        "resolution": null,
+        "created_at": 1785311054.6147277,
+        "updated_at": 1785311054.6147277,
+        "closed_at": null
+      },
+      {
+        "id": "68475a5bd8e84b6e8616a354ae50f1cc",
+        "run_id": "74360497c682477989d216d4820f772c",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P2",
+        "title": "巡检异常",
+        "description": "P2级事件，耗时2368分钟，超过30分钟SLA，且员工未反馈。",
+        "source_type": "event",
+        "source_id": "fd277484-8878-4f12-9700-c852698f828a",
+        "status": "CLOSED",
+        "assigned_to": "813c0d14d40742c68bcd32d0f50aeb9d",
+        "resolution": "UAT ms5s3ja8-802dac97：值班人员已核对来源记录、补充处理结果并完成闭环复核。",
+        "created_at": 1785311054.6147277,
+        "updated_at": 1785311055.9137878,
+        "closed_at": 1785311055.9137878
+      },
+      {
+        "id": "e4eb34359f924009922d820ca021583a",
+        "run_id": "74360497c682477989d216d4820f772c",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P0",
+        "title": "巡检异常",
+        "description": "P0级事件，耗时1229分钟，超过3分钟SLA，且员工未反馈。",
+        "source_type": "event",
+        "source_id": "d3037216-eab4-48ae-b4fa-93374984a22d",
+        "status": "OPEN",
+        "assigned_to": null,
+        "resolution": null,
+        "created_at": 1785311054.6147277,
+        "updated_at": 1785311054.6147277,
+        "closed_at": null
+      },
+      {
+        "id": "444e56361dbe49bea290d288fb5a4608",
+        "run_id": "74360497c682477989d216d4820f772c",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P1",
+        "title": "巡检异常",
+        "description": "P1级事件，耗时1057分钟，超过10分钟SLA，且员工未反馈。",
+        "source_type": "event",
+        "source_id": "ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6",
+        "status": "OPEN",
+        "assigned_to": null,
+        "resolution": null,
+        "created_at": 1785311054.6147277,
+        "updated_at": 1785311054.6147277,
+        "closed_at": null
+      },
+      {
+        "id": "7c142266b4d743b5862ef55373d7416f",
+        "run_id": "74360497c682477989d216d4820f772c",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P0",
+        "title": "巡检异常",
+        "description": "P0级事件，耗时1177分钟，超过3分钟SLA，且员工未反馈。",
+        "source_type": "event",
+        "source_id": "5dd09a09-65e3-4f50-8bc3-c9f147b2c813",
+        "status": "OPEN",
+        "assigned_to": null,
+        "resolution": null,
+        "created_at": 1785311054.6147277,
+        "updated_at": 1785311054.6147277,
+        "closed_at": null
+      },
+      {
+        "id": "e9450960b71c42ed9ee22ea8a88d3a28",
+        "run_id": "74360497c682477989d216d4820f772c",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P2",
+        "title": "巡检异常",
+        "description": "P2级事件，耗时1177分钟，超过30分钟SLA，且员工未反馈。",
+        "source_type": "event",
+        "source_id": "cd29ed00-e90f-46f3-8855-6e1707abc340",
+        "status": "OPEN",
+        "assigned_to": null,
+        "resolution": null,
+        "created_at": 1785311054.6147277,
+        "updated_at": 1785311054.6147277,
+        "closed_at": null
+      },
+      {
+        "id": "d279403464c249c5b68e9b931f6ccea2",
+        "run_id": "74360497c682477989d216d4820f772c",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P2",
+        "title": "巡检异常",
+        "description": "P2级事件，耗时1056分钟，超过30分钟SLA，且员工未反馈。",
+        "source_type": "event",
+        "source_id": "d5a8a1c8-97bf-4fc8-824d-47564281971f",
+        "status": "OPEN",
+        "assigned_to": null,
+        "resolution": null,
+        "created_at": 1785311054.6147277,
+        "updated_at": 1785311054.6147277,
+        "closed_at": null
+      }
+    ],
+    "scheduled": [
+      {
+        "id": "0c0903deabe646d39a571ce7436ba9df",
+        "run_id": "ba270e3dbae6423c9fb635ae5b5a1494",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P2",
+        "title": "巡检异常",
+        "description": "P2级工单耗时2369分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+        "source_type": "event",
+        "source_id": "fd277484-8878-4f12-9700-c852698f828a",
+        "status": "OPEN",
+        "assigned_to": null,
+        "resolution": null,
+        "created_at": 1785311110.7123425,
+        "updated_at": 1785311110.7123425,
+        "closed_at": null
+      },
+      {
+        "id": "e8fc3d81d42643819a42890b897c1256",
+        "run_id": "ba270e3dbae6423c9fb635ae5b5a1494",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P0",
+        "title": "巡检异常",
+        "description": "P0级工单耗时1230分钟，超过SLA阈值3分钟，且一线员工未反馈任何实质动作结果。",
+        "source_type": "event",
+        "source_id": "d3037216-eab4-48ae-b4fa-93374984a22d",
+        "status": "OPEN",
+        "assigned_to": null,
+        "resolution": null,
+        "created_at": 1785311110.7123425,
+        "updated_at": 1785311110.7123425,
+        "closed_at": null
+      },
+      {
+        "id": "695c21b7b78d426aa9d545f013373c10",
+        "run_id": "ba270e3dbae6423c9fb635ae5b5a1494",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P2",
+        "title": "巡检异常",
+        "description": "P2级工单耗时1417分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+        "source_type": "event",
+        "source_id": "3c5d6030-3be0-4115-ada7-3f1f4218b8d5",
+        "status": "OPEN",
+        "assigned_to": null,
+        "resolution": null,
+        "created_at": 1785311110.7123425,
+        "updated_at": 1785311110.7123425,
+        "closed_at": null
+      },
+      {
+        "id": "a192ae211fae41c298bb54e413ca7059",
+        "run_id": "ba270e3dbae6423c9fb635ae5b5a1494",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P1",
+        "title": "巡检异常",
+        "description": "P1级工单耗时1178分钟，超过SLA阈值10分钟，且一线员工未反馈任何实质动作结果。",
+        "source_type": "event",
+        "source_id": "8c318a41-c666-44ec-8a0d-7f5fbe72a802",
+        "status": "OPEN",
+        "assigned_to": null,
+        "resolution": null,
+        "created_at": 1785311110.7123425,
+        "updated_at": 1785311110.7123425,
+        "closed_at": null
+      },
+      {
+        "id": "0be288e38a3a419bbd4c23b47b3be42e",
+        "run_id": "ba270e3dbae6423c9fb635ae5b5a1494",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P2",
+        "title": "巡检异常",
+        "description": "P2级工单耗时1178分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+        "source_type": "event",
+        "source_id": "cd29ed00-e90f-46f3-8855-6e1707abc340",
+        "status": "OPEN",
+        "assigned_to": null,
+        "resolution": null,
+        "created_at": 1785311110.7123425,
+        "updated_at": 1785311110.7123425,
+        "closed_at": null
+      },
+      {
+        "id": "3da0330d0c1a4a11acaac920ca913c8d",
+        "run_id": "ba270e3dbae6423c9fb635ae5b5a1494",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P1",
+        "title": "巡检异常",
+        "description": "P1级工单耗时1058分钟，超过SLA阈值10分钟，且一线员工未反馈任何实质动作结果。",
+        "source_type": "event",
+        "source_id": "ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6",
+        "status": "OPEN",
+        "assigned_to": null,
+        "resolution": null,
+        "created_at": 1785311110.7123425,
+        "updated_at": 1785311110.7123425,
+        "closed_at": null
+      },
+      {
+        "id": "d125ad943faf46e5b7d1073f186fce88",
+        "run_id": "ba270e3dbae6423c9fb635ae5b5a1494",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P2",
+        "title": "巡检异常",
+        "description": "P2级工单耗时1156分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+        "source_type": "event",
+        "source_id": "d792935a-ce54-42f1-be53-de6d165a5cf9",
+        "status": "OPEN",
+        "assigned_to": null,
+        "resolution": null,
+        "created_at": 1785311110.7123425,
+        "updated_at": 1785311110.7123425,
+        "closed_at": null
+      },
+      {
+        "id": "bbe934b98fc545ac9780ea69a9d50a5e",
+        "run_id": "ba270e3dbae6423c9fb635ae5b5a1494",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P0",
+        "title": "巡检异常",
+        "description": "P0级工单耗时1178分钟，超过SLA阈值3分钟，且一线员工未反馈任何实质动作结果。",
+        "source_type": "event",
+        "source_id": "5dd09a09-65e3-4f50-8bc3-c9f147b2c813",
+        "status": "OPEN",
+        "assigned_to": null,
+        "resolution": null,
+        "created_at": 1785311110.7123425,
+        "updated_at": 1785311110.7123425,
+        "closed_at": null
+      },
+      {
+        "id": "ae8f82d9f2504725a973030ddfad713b",
+        "run_id": "ba270e3dbae6423c9fb635ae5b5a1494",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P2",
+        "title": "巡检异常",
+        "description": "P2级工单耗时1057分钟，超过SLA阈值30分钟，且一线员工未反馈任何实质动作结果。",
+        "source_type": "event",
+        "source_id": "d5a8a1c8-97bf-4fc8-824d-47564281971f",
+        "status": "OPEN",
+        "assigned_to": null,
+        "resolution": null,
+        "created_at": 1785311110.7123425,
+        "updated_at": 1785311110.7123425,
+        "closed_at": null
+      }
+    ]
+  },
+  "finding": {
+    "assigned": {
+      "finding": {
+        "id": "68475a5bd8e84b6e8616a354ae50f1cc",
+        "run_id": "74360497c682477989d216d4820f772c",
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "venue_id": "venue-uat",
+        "finding_type": "COMPLIANCE",
+        "severity": "P2",
+        "title": "巡检异常",
+        "description": "P2级事件，耗时2368分钟，超过30分钟SLA，且员工未反馈。",
+        "source_type": "event",
+        "source_id": "fd277484-8878-4f12-9700-c852698f828a",
+        "status": "IN_PROGRESS",
+        "assigned_to": "813c0d14d40742c68bcd32d0f50aeb9d",
+        "resolution": null,
+        "created_at": 1785311054.6147277,
+        "updated_at": 1785311055.4481828,
+        "closed_at": null
+      },
+      "trace_id": "fe1d782517294b9db7c2eba4d80a209a"
+    },
+    "closed": {
+      "closed": true,
+      "finding_id": "68475a5bd8e84b6e8616a354ae50f1cc",
+      "trace_id": "6db21df9cb6c4e979b3c39e8cb188337"
+    },
+    "record": {
+      "id": "68475a5bd8e84b6e8616a354ae50f1cc",
+      "run_id": "74360497c682477989d216d4820f772c",
+      "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+      "venue_id": "venue-uat",
+      "finding_type": "COMPLIANCE",
+      "severity": "P2",
+      "title": "巡检异常",
+      "description": "P2级事件，耗时2368分钟，超过30分钟SLA，且员工未反馈。",
+      "source_type": "event",
+      "source_id": "fd277484-8878-4f12-9700-c852698f828a",
+      "status": "CLOSED",
+      "assigned_to": "813c0d14d40742c68bcd32d0f50aeb9d",
+      "resolution": "UAT ms5s3ja8-802dac97：值班人员已核对来源记录、补充处理结果并完成闭环复核。",
+      "created_at": 1785311054.6147277,
+      "updated_at": 1785311055.9137878,
+      "closed_at": 1785311055.9137878
+    }
+  },
+  "assignee": {
+    "id": "813c0d14d40742c68bcd32d0f50aeb9d",
+    "username": "uat-manager",
+    "display_name": "UAT 值班经理",
+    "role": "manager",
+    "venue_id": "venue-uat",
+    "eligibility": "active current-venue user returned by the formal assignee API"
+  },
+  "llm_calls": [
+    {
+      "id": "65b30d5839d44318b73b194250be8b42",
+      "venue_id": "venue-uat",
+      "trace_id": "0993537fdf6e4c3aabdd62de9870c4de",
+      "provider": "deepseek",
+      "model_name": "deepseek-v4-flash",
+      "status": "SUCCEEDED",
+      "attempt_count": 1,
+      "latency_seconds": 12.627397298812866,
+      "prompt_tokens": 1681,
+      "completion_tokens": 1128,
+      "total_tokens": 2809,
+      "request_id": "87573edb-7059-4607-800a-10aa24e13d03",
+      "error_type": null,
+      "error_message": null,
+      "is_mock": false,
+      "created_at": 1785311054.6103637,
+      "agent_id": "Watcher",
+      "agent_name": "Watcher_Audit_Agent"
+    },
+    {
+      "id": "89c18a1750114c8b92e451ac270ffbcb",
+      "venue_id": "venue-uat",
+      "trace_id": "ad4a500bf7cd4a6d9ced3ad923bfb881",
+      "provider": "deepseek",
+      "model_name": "deepseek-v4-flash",
+      "status": "SUCCEEDED",
+      "attempt_count": 1,
+      "latency_seconds": 10.694003582000732,
+      "prompt_tokens": 1681,
+      "completion_tokens": 1376,
+      "total_tokens": 3057,
+      "request_id": "a822b34a-da18-495b-8173-23f6dd4c71dc",
+      "error_type": null,
+      "error_message": null,
+      "is_mock": false,
+      "created_at": 1785311110.7093608,
+      "agent_id": "Watcher",
+      "agent_name": "Watcher_Audit_Agent"
+    }
+  ],
+  "audits": [
+    {
+      "id": 392,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "WATCHER_POLICY_UPDATED",
+      "resource_type": "watcher_policy",
+      "resource_id": "809097f9c92c4abeaa5385e0a9e48f49",
+      "outcome": "SUCCEEDED",
+      "trace_id": "c96592e323d14e03b1b8396bfdd2c526",
+      "created_at": 1785311113.0330179,
+      "metadata": {
+        "changed_fields": [
+          "enabled"
+        ]
+      }
+    },
+    {
+      "id": 391,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "WATCHER_POLICY_UPDATED",
+      "resource_type": "watcher_policy",
+      "resource_id": "809097f9c92c4abeaa5385e0a9e48f49",
+      "outcome": "SUCCEEDED",
+      "trace_id": "66357944b4fa413ba364be70486fff73",
+      "created_at": 1785311056.432477,
+      "metadata": {
+        "changed_fields": [
+          "check_types_json",
+          "config_json",
+          "description",
+          "enabled",
+          "name",
+          "schedule_cron"
+        ]
+      }
+    },
+    {
+      "id": 390,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "WATCHER_FINDING_CLOSED",
+      "resource_type": "watcher_finding",
+      "resource_id": "68475a5bd8e84b6e8616a354ae50f1cc",
+      "outcome": "SUCCEEDED",
+      "trace_id": "6db21df9cb6c4e979b3c39e8cb188337",
+      "created_at": 1785311055.916882,
+      "metadata": {}
+    },
+    {
+      "id": 389,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "WATCHER_FINDING_UPDATED",
+      "resource_type": "watcher_finding",
+      "resource_id": "68475a5bd8e84b6e8616a354ae50f1cc",
+      "outcome": "SUCCEEDED",
+      "trace_id": "fe1d782517294b9db7c2eba4d80a209a",
+      "created_at": 1785311055.449758,
+      "metadata": {
+        "changed_fields": [
+          "assigned_to",
+          "status"
+        ]
+      }
+    },
+    {
+      "id": 388,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "WATCHER_RUN",
+      "resource_type": "watcher_run",
+      "resource_id": "74360497c682477989d216d4820f772c",
+      "outcome": "SUCCEEDED",
+      "trace_id": "0993537fdf6e4c3aabdd62de9870c4de",
+      "created_at": 1785311054.6304595,
+      "metadata": {
+        "policy_id": "809097f9c92c4abeaa5385e0a9e48f49",
+        "finding_count": 9
+      }
+    },
+    {
+      "id": 387,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "WATCHER_POLICY_CREATED",
+      "resource_type": "watcher_policy",
+      "resource_id": "809097f9c92c4abeaa5385e0a9e48f49",
+      "outcome": "SUCCEEDED",
+      "trace_id": "e2e29bd1a8304570a01ec4585d4bca39",
+      "created_at": 1785311041.5728984,
+      "metadata": {
+        "schedule_cron": "*/15 * * * *",
+        "enabled": true
+      }
+    }
+  ],
+  "screenshots": [
+    "watcher-01-policy-create-1440x900.png",
+    "watcher-02-policy-created-1440x900.png",
+    "watcher-03-run-completed-1440x900.png",
+    "watcher-04-finding-created-1440x900.png",
+    "watcher-05-finding-assigned-1440x900.png",
+    "watcher-06-finding-closed-1440x900.png",
+    "watcher-07-policy-edited-1440x900.png",
+    "watcher-08-scheduled-run-1440x900.png",
+    "watcher-09-policy-disabled-1440x900.png"
+  ],
+  "runtime": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

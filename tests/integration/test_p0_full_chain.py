@@ -114,8 +114,8 @@ class TestP0FullChain:
             with patch("src.memory_palace.tools.wechat_client.get_wechat_client", return_value=MagicMock(send_text=mock_wechat_send)):
                 with patch("src.memory_palace.tools.sms_client.EmergencyNotifier._sync_send_sms", side_effect=mock_sms):
                     with patch("src.memory_palace.tools.sms_client.EmergencyNotifier._sync_send_voice_call", side_effect=mock_voice):
-                        with patch("src.memory_palace.knowledge.db_client.save_message", side_effect=mock_save_message):
-                            with patch("src.memory_palace.knowledge.db_client.update_sla_response", side_effect=mock_update_sla):
+                        with patch.object(Orchestrator, "_save_message", side_effect=mock_save_message):
+                            with patch.object(Orchestrator, "_update_sla_response", side_effect=mock_update_sla):
                                 with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
                                     orch = Orchestrator()
                                     result = await orch.process(p0_payload)
@@ -139,34 +139,30 @@ class TestP0FullChain:
         P0 告警：短信和语音电话应并行发出（不串行阻塞），
         验证 sms_client 的 ThreadPoolExecutor 机制
         """
-        notifier = EmergencyNotifier()
         call_times = {"sms": None, "voice": None}
 
-        def mock_sync_sms(phone, template, params):
+        def sandbox_sms(phone, template, params):
             import time
             time.sleep(0.1)  # 模拟网络延迟
             call_times["sms"] = time.time()
+            return {"request_id": "sms-sandbox-1"}
 
-        def mock_sync_voice(phone, template, params):
+        def sandbox_voice(phone, template, params):
             import time
             time.sleep(0.1)
             call_times["voice"] = time.time()
+            return {"request_id": "voice-sandbox-1"}
 
-        with patch.object(notifier, "_sync_send_sms", side_effect=mock_sync_sms):
-            with patch.object(notifier, "_sync_send_voice_call", side_effect=mock_sync_voice):
-                import time
-                start = time.time()
-
-                # 模拟 P0 通知：短信 + 语音并行
-                notifier.send_p0_critical(
-                    phones=["13800138000"],
-                    event_desc="B区游客晕倒",
-                )
-
-                # 等待线程池执行（短信0.1s + 语音0.1s，串行需要0.2s，并行只需0.1s）
-                time.sleep(0.25)
-
-                total = time.time() - start
+        notifier = EmergencyNotifier(sms_sender=sandbox_sms, voice_sender=sandbox_voice)
+        try:
+            futures = notifier.send_p0_critical(
+                phones=["13800138000"],
+                event_desc="B区游客晕倒",
+            )
+            for future in futures:
+                future.result(timeout=1)
+        finally:
+            notifier.close()
 
         # 并行：总耗时 ≈ 0.1s，串行 ≈ 0.2s
         # 允许一定误差
@@ -186,26 +182,29 @@ class TestP0RateLimit:
         """
         防轰炸测试：同一手机号 60 秒内多次 P0 告警，第2次起应被拦截
         """
-        notifier = EmergencyNotifier()
         send_count = {"n": 0}
-
-        original_sync = notifier._sync_send_sms
 
         def tracked_sms(phone, template, params):
             send_count["n"] += 1
-            return original_sync(phone, template, params)
+            return {"request_id": f"sms-sandbox-{send_count['n']}"}
 
-        with patch.object(notifier, "_sync_send_sms", side_effect=tracked_sms):
-            # 第1次：应发送
-            notifier.send_p0_critical(
+        notifier = EmergencyNotifier(sms_sender=tracked_sms, voice_sender=lambda phone, template, params: True)
+        try:
+            first = notifier.send_p0_critical(
                 phones=["13900001111"],
                 event_desc="第一次P0告警",
             )
-            # 第2次：60秒内同一手机号，应被限流拦截
-            result2 = notifier._check_rate_limit("13900001111")
-            assert result2 is False, "60秒内同一手机号应被限流拦截"
+            for future in first:
+                future.result(timeout=1)
+            second = notifier.send_p0_critical(
+                phones=["13900001111"],
+                event_desc="第二次P0告警",
+            )
+        finally:
+            notifier.close()
 
-            assert send_count["n"] == 1, "第1次发送成功"
+        assert second == [], "60秒内同一手机号应被限流拦截"
+        assert send_count["n"] == 1, "第1次发送成功"
 
 
 class TestP0KeywordDetection:
@@ -241,8 +240,8 @@ class TestP0KeywordDetection:
             m.run = AsyncMock(return_value=router_output)
             mock_get.return_value = m
 
-            with patch("src.memory_palace.knowledge.db_client.save_message", new_callable=AsyncMock):
-                with patch("src.memory_palace.knowledge.db_client.update_sla_response", new_callable=AsyncMock) as mock_sla:
+            with patch.object(Orchestrator, "_save_message", new_callable=AsyncMock):
+                with patch.object(Orchestrator, "_update_sla_response", new_callable=AsyncMock) as mock_sla:
                     orch = Orchestrator()
                     result = await orch.process(fire_payload)
 

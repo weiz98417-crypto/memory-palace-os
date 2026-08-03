@@ -6,7 +6,7 @@ from typing import Any, Dict, Protocol, runtime_checkable
 class MessageQueueProtocol(Protocol):
     """Async message queue interface (put, get, task_done, qsize, empty)."""
 
-    async def put(self, message: Dict[str, Any]) -> None:
+    async def put(self, message: Dict[str, Any]) -> bool:
         ...
 
     async def get(self) -> Dict[str, Any]:

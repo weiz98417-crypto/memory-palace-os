@@ -1,0 +1,712 @@
+{
+  "uat_id": "MVP-UAT-005",
+  "operation": "Knowledge and SOP version, review, publish and reuse",
+  "event_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+  "knowledge": {
+    "id": "c613484437cc44a58378be587622f493",
+    "created": {
+      "knowledge": {
+        "id": "c613484437cc44a58378be587622f493",
+        "venue_id": "venue-uat",
+        "title": "北门低血糖应急处置基线（UAT ms5sqvxm）",
+        "content": "发现游客疑似低血糖并出现意识障碍时，现场人员应保持患者平卧、立即呼叫医护并疏散围观人员，确保急救通道持续畅通，同时记录处置时间线。",
+        "category": "人员安全",
+        "source_type": "MANUAL",
+        "source_id": null,
+        "version": 1,
+        "status": "ACTIVE",
+        "vector_doc_id": "knowledge:venue-uat:c613484437cc44a58378be587622f493",
+        "import_batch_id": null,
+        "created_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "updated_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "created_at": 1785312130.8892696,
+        "updated_at": 1785312130.8892696,
+        "tags": [
+          "低血糖",
+          "急救通道",
+          "UAT"
+        ]
+      },
+      "trace_id": "e218baf9ce5c4736a133ae36c25bbae8"
+    },
+    "updated": {
+      "knowledge": {
+        "id": "c613484437cc44a58378be587622f493",
+        "venue_id": "venue-uat",
+        "title": "北门低血糖应急处置基线（UAT ms5sqvxm）",
+        "content": "发现游客疑似低血糖并出现意识障碍时，现场人员应保持患者平卧、立即呼叫医护并疏散围观人员，确保急救通道持续畅通，同时记录处置时间线。 医护到场后补充记录血糖检测、补糖处置、意识恢复时间和离场交接人，由值班经理复核。",
+        "category": "人员安全",
+        "source_type": "MANUAL",
+        "source_id": null,
+        "version": 2,
+        "status": "ACTIVE",
+        "vector_doc_id": "knowledge:venue-uat:c613484437cc44a58378be587622f493",
+        "import_batch_id": null,
+        "created_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "updated_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "created_at": 1785312130.8892696,
+        "updated_at": 1785312131.959339,
+        "tags": [
+          "低血糖",
+          "急救通道",
+          "UAT"
+        ]
+      },
+      "trace_id": "f7d254cfef914cf793664b7ffcfa88cc"
+    },
+    "rebuilt": {
+      "rebuilt": 7,
+      "trace_id": "3f02ad0441c6461c9ed34d54f2cddd28"
+    },
+    "search": {
+      "results": [
+        {
+          "id": "evt_5dd09a09-65e3-4f50-8bc3-c9f147b2c813",
+          "content": "[P0] 人员安全事件：UAT 实时链路降级：北门游客突发晕倒，现场人员已呼叫急救并建立隔离区，请生成处置建议。",
+          "metadata": {
+            "event_id": "5dd09a09-65e3-4f50-8bc3-c9f147b2c813",
+            "event_type": "人员安全",
+            "from_user": "fc92c2d360e14e6cb7783df3eab35d61",
+            "severity": "P0",
+            "venue_id": "venue-uat"
+          },
+          "score": 0.617
+        },
+        {
+          "id": "evt_ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6",
+          "content": "[P1] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+          "metadata": {
+            "event_id": "ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6",
+            "event_type": "人员安全",
+            "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+            "severity": "P1",
+            "source_id": "ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6",
+            "source_type": "LIVE",
+            "title": "人员安全事件",
+            "venue_id": "venue-uat",
+            "version": 1
+          },
+          "score": 0.609
+        },
+        {
+          "id": "evt_7c2d96e6-8a8c-4e5a-b4fb-bbe69c7f8eb0",
+          "content": "[P1] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+          "metadata": {
+            "event_id": "7c2d96e6-8a8c-4e5a-b4fb-bbe69c7f8eb0",
+            "event_type": "人员安全",
+            "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+            "severity": "P1",
+            "source_id": "7c2d96e6-8a8c-4e5a-b4fb-bbe69c7f8eb0",
+            "source_type": "LIVE",
+            "title": "人员安全事件",
+            "venue_id": "venue-uat",
+            "version": 1
+          },
+          "score": 0.609
+        },
+        {
+          "id": "evt_40726799-e5b8-446e-94ae-f5d4306a7eb9",
+          "content": "[P1] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+          "metadata": {
+            "event_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+            "event_type": "人员安全",
+            "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+            "severity": "P1",
+            "source_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+            "source_type": "LIVE",
+            "title": "人员安全事件",
+            "venue_id": "venue-uat",
+            "version": 1
+          },
+          "score": 0.609
+        },
+        {
+          "id": "evt_b250f04f-0be9-4a61-acc8-824424c1474d",
+          "content": "[P0] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+          "metadata": {
+            "event_id": "b250f04f-0be9-4a61-acc8-824424c1474d",
+            "event_type": "人员安全",
+            "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+            "severity": "P0",
+            "source_id": "b250f04f-0be9-4a61-acc8-824424c1474d",
+            "source_type": "LIVE",
+            "title": "人员安全事件",
+            "venue_id": "venue-uat",
+            "version": 1
+          },
+          "score": 0.601
+        },
+        {
+          "id": "evt_cd29ed00-e90f-46f3-8855-6e1707abc340",
+          "content": "[P2] 设施故障事件：UAT：北门闸机网络中断，现场已开启人工检票并记录排队人数。",
+          "metadata": {
+            "event_id": "cd29ed00-e90f-46f3-8855-6e1707abc340",
+            "event_type": "设施故障",
+            "from_user": "fc92c2d360e14e6cb7783df3eab35d61",
+            "severity": "P2",
+            "venue_id": "venue-uat"
+          },
+          "score": 0.59
+        },
+        {
+          "id": "evt_fd277484-8878-4f12-9700-c852698f828a",
+          "content": "[P2] 设施故障事件：UAT 历史补录 2026-07-27：南门扶梯控制柜过热停运，现场已完成断电、游客分流、复位复检与恢复开放。",
+          "metadata": {
+            "event_id": "fd277484-8878-4f12-9700-c852698f828a",
+            "event_type": "设施故障",
+            "from_user": "UAT 现场操作员",
+            "severity": "P2",
+            "venue_id": "venue-uat"
+          },
+          "score": 0.562
+        },
+        {
+          "id": "knowledge:venue-uat:0fc30035a6c34b2f94c9990013873ccd",
+          "content": "发现东区闸机控制器异常断电时，先隔离故障回路，开启人工通道分流，完成控制器复位后进行三轮通行复检，并在十分钟内登记事件与处置人。",
+          "metadata": {
+            "category": "设施运维",
+            "knowledge_id": "0fc30035a6c34b2f94c9990013873ccd",
+            "source_type": "MANUAL",
+            "title": "东区闸机断电处置基线",
+            "venue_id": "venue-uat",
+            "version": 2
+          },
+          "score": 0.544
+        },
+        {
+          "id": "evt_d792935a-ce54-42f1-be53-de6d165a5cf9",
+          "content": "[P2] 其他事件：以前遇到过游客在缆车上恐高发作的情况吗？该怎么安抚？请检索历史处置案例并给出流程建议。",
+          "metadata": {
+            "event_id": "d792935a-ce54-42f1-be53-de6d165a5cf9",
+            "event_type": "其他",
+            "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+            "severity": "P2",
+            "venue_id": "venue-uat"
+          },
+          "score": 0.519
+        },
+        {
+          "id": "evt_0585fa3d-5663-46f0-8a80-92a1c95da5f1",
+          "content": "[P1] 设施故障事件：UAT 来源回归 2026-07-28：东区闸机控制器异常断电，现场完成隔离、分流、复位与复检。",
+          "metadata": {
+            "event_id": "0585fa3d-5663-46f0-8a80-92a1c95da5f1",
+            "event_type": "设施故障",
+            "from_user": "UAT 现场操作员",
+            "severity": "P1",
+            "venue_id": "venue-uat"
+          },
+          "score": 0.506
+        }
+      ],
+      "query": "北门低血糖游客意识恢复和值班经理复核"
+    }
+  },
+  "sop": {
+    "id": "4",
+    "created": {
+      "sop": {
+        "id": 4,
+        "venue_id": "venue-uat",
+        "category": "人员安全",
+        "title": "北门低血糖游客应急处置 SOP（UAT ms5sqvxm）",
+        "content": "1. 识别疑似低血糖与意识状态；2. 保持患者平卧并呼叫医护；3. 疏散围观并保持急救通道；4. 连续记录处置时间线；5. 医护到场后完成交接。",
+        "priority": 1,
+        "version": "1.0",
+        "status": "DRAFT",
+        "source_event_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+        "created_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "reviewed_by": null,
+        "published_at": null,
+        "created_at": "2026-07-29T08:02:14.120211+00:00",
+        "updated_at": "2026-07-29T08:02:14.120211+00:00"
+      },
+      "trace_id": "958abebc92584cf0a207ff80ff730a53"
+    },
+    "updated": {
+      "sop": {
+        "id": 4,
+        "venue_id": "venue-uat",
+        "category": "人员安全",
+        "title": "北门低血糖游客应急处置 SOP（UAT ms5sqvxm）",
+        "content": "1. 识别疑似低血糖与意识状态；2. 保持患者平卧并呼叫医护；3. 疏散围观并保持急救通道；4. 连续记录处置时间线；5. 医护到场后完成交接。\n6. 记录血糖检测、补糖、意识恢复与离场信息；7. 值班经理复核并关闭事件。",
+        "priority": 1,
+        "version": "1.1",
+        "status": "DRAFT",
+        "source_event_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+        "created_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "reviewed_by": null,
+        "published_at": null,
+        "created_at": "2026-07-29T08:02:14.120211+00:00",
+        "updated_at": "2026-07-29T08:02:14.659532+00:00"
+      },
+      "trace_id": "912ae2bc95a949f4951e1eb9496677ed"
+    },
+    "submitted": {
+      "sop": {
+        "id": 4,
+        "venue_id": "venue-uat",
+        "category": "人员安全",
+        "title": "北门低血糖游客应急处置 SOP（UAT ms5sqvxm）",
+        "content": "1. 识别疑似低血糖与意识状态；2. 保持患者平卧并呼叫医护；3. 疏散围观并保持急救通道；4. 连续记录处置时间线；5. 医护到场后完成交接。\n6. 记录血糖检测、补糖、意识恢复与离场信息；7. 值班经理复核并关闭事件。",
+        "priority": 1,
+        "version": "1.1",
+        "status": "IN_REVIEW",
+        "source_event_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+        "created_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "reviewed_by": null,
+        "published_at": null,
+        "created_at": "2026-07-29T08:02:14.120211+00:00",
+        "updated_at": "2026-07-29T08:02:15.119003+00:00"
+      },
+      "trace_id": "73903b3b177440f5b1e4fe25bffd2053"
+    },
+    "rejected": {
+      "sop": {
+        "id": 4,
+        "venue_id": "venue-uat",
+        "category": "人员安全",
+        "title": "北门低血糖游客应急处置 SOP（UAT ms5sqvxm）",
+        "content": "1. 识别疑似低血糖与意识状态；2. 保持患者平卧并呼叫医护；3. 疏散围观并保持急救通道；4. 连续记录处置时间线；5. 医护到场后完成交接。\n6. 记录血糖检测、补糖、意识恢复与离场信息；7. 值班经理复核并关闭事件。",
+        "priority": 1,
+        "version": "1.1",
+        "status": "REJECTED",
+        "source_event_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+        "created_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "reviewed_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "published_at": null,
+        "created_at": "2026-07-29T08:02:14.120211+00:00",
+        "updated_at": "2026-07-29T08:02:15.695541+00:00"
+      },
+      "trace_id": "44303989e74946a1bda6c576eb72b5e2"
+    },
+    "revised": {
+      "sop": {
+        "id": 4,
+        "venue_id": "venue-uat",
+        "category": "人员安全",
+        "title": "北门低血糖游客应急处置 SOP（UAT ms5sqvxm）",
+        "content": "1. 识别疑似低血糖与意识状态；2. 保持患者平卧并呼叫医护；3. 疏散围观并保持急救通道；4. 连续记录处置时间线；5. 医护到场后完成交接。\n6. 记录血糖检测、补糖、意识恢复与离场信息；7. 值班经理复核并关闭事件。\n8. 发布前由值班经理核对来源事件、责任人和时间戳，驳回意见必须逐项关闭。",
+        "priority": 1,
+        "version": "1.2",
+        "status": "DRAFT",
+        "source_event_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+        "created_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "reviewed_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "published_at": null,
+        "created_at": "2026-07-29T08:02:14.120211+00:00",
+        "updated_at": "2026-07-29T08:02:16.341598+00:00"
+      },
+      "trace_id": "468948c7199c487d896a45fd2e55d273"
+    },
+    "resubmitted": {
+      "sop": {
+        "id": 4,
+        "venue_id": "venue-uat",
+        "category": "人员安全",
+        "title": "北门低血糖游客应急处置 SOP（UAT ms5sqvxm）",
+        "content": "1. 识别疑似低血糖与意识状态；2. 保持患者平卧并呼叫医护；3. 疏散围观并保持急救通道；4. 连续记录处置时间线；5. 医护到场后完成交接。\n6. 记录血糖检测、补糖、意识恢复与离场信息；7. 值班经理复核并关闭事件。\n8. 发布前由值班经理核对来源事件、责任人和时间戳，驳回意见必须逐项关闭。",
+        "priority": 1,
+        "version": "1.2",
+        "status": "IN_REVIEW",
+        "source_event_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+        "created_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "reviewed_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "published_at": null,
+        "created_at": "2026-07-29T08:02:14.120211+00:00",
+        "updated_at": "2026-07-29T08:02:16.777729+00:00"
+      },
+      "trace_id": "9911198d2a5043b4aa9f5aeec25c7131"
+    },
+    "published": {
+      "sop": {
+        "id": 4,
+        "venue_id": "venue-uat",
+        "category": "人员安全",
+        "title": "北门低血糖游客应急处置 SOP（UAT ms5sqvxm）",
+        "content": "1. 识别疑似低血糖与意识状态；2. 保持患者平卧并呼叫医护；3. 疏散围观并保持急救通道；4. 连续记录处置时间线；5. 医护到场后完成交接。\n6. 记录血糖检测、补糖、意识恢复与离场信息；7. 值班经理复核并关闭事件。\n8. 发布前由值班经理核对来源事件、责任人和时间戳，驳回意见必须逐项关闭。",
+        "priority": 1,
+        "version": "1.2",
+        "status": "PUBLISHED",
+        "source_event_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+        "created_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "reviewed_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "published_at": 1785312137.3391051,
+        "created_at": "2026-07-29T08:02:14.120211+00:00",
+        "updated_at": "2026-07-29T08:02:17.339365+00:00"
+      },
+      "trace_id": "ee17ebdf913649608a595fa191ff53ca"
+    },
+    "search": {
+      "results": [
+        {
+          "id": "knowledge:venue-uat:0fc30035a6c34b2f94c9990013873ccd",
+          "content": "发现东区闸机控制器异常断电时，先隔离故障回路，开启人工通道分流，完成控制器复位后进行三轮通行复检，并在十分钟内登记事件与处置人。",
+          "metadata": {
+            "category": "设施运维",
+            "knowledge_id": "0fc30035a6c34b2f94c9990013873ccd",
+            "source_type": "MANUAL",
+            "title": "东区闸机断电处置基线",
+            "venue_id": "venue-uat",
+            "version": 2
+          },
+          "score": 0.562
+        },
+        {
+          "id": "evt_d3037216-eab4-48ae-b4fa-93374984a22d",
+          "content": "[P0] 人员安全事件：索道在雷暴后突然停运，12名游客滞留空中，请立即启动应急处置并记录事件。",
+          "metadata": {
+            "event_id": "d3037216-eab4-48ae-b4fa-93374984a22d",
+            "event_type": "人员安全",
+            "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+            "severity": "P0",
+            "venue_id": "venue-uat"
+          },
+          "score": 0.511
+        },
+        {
+          "id": "evt_cd245972-0c6d-4d89-8aab-63c2ed72cd06",
+          "content": "[P2] 其他事件：这是历史经验咨询，不是正在发生的事件。请查询记忆库：以前东区配电间出现温控告警时怎么处理？请基于已有案例给出处置流程和避坑建议。",
+          "metadata": {
+            "event_id": "cd245972-0c6d-4d89-8aab-63c2ed72cd06",
+            "event_type": "其他",
+            "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+            "severity": "P2",
+            "source_id": "cd245972-0c6d-4d89-8aab-63c2ed72cd06",
+            "source_type": "LIVE",
+            "title": "其他事件",
+            "venue_id": "venue-uat",
+            "version": 1
+          },
+          "score": 0.497
+        },
+        {
+          "id": "evt_b250f04f-0be9-4a61-acc8-824424c1474d",
+          "content": "[P0] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+          "metadata": {
+            "event_id": "b250f04f-0be9-4a61-acc8-824424c1474d",
+            "event_type": "人员安全",
+            "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+            "severity": "P0",
+            "source_id": "b250f04f-0be9-4a61-acc8-824424c1474d",
+            "source_type": "LIVE",
+            "title": "人员安全事件",
+            "venue_id": "venue-uat",
+            "version": 1
+          },
+          "score": 0.495
+        },
+        {
+          "id": "knowledge:venue-uat:bf8da10bf36b4272806c12cb6060bc25",
+          "content": "发现游客疑似低血糖并出现意识障碍时，现场人员应保持患者平卧、立即呼叫医护并疏散围观人员，确保急救通道持续畅通，同时记录处置时间线。 医护到场后补充记录血糖检测、补糖处置、意识恢复时间和离场交接人，由值班经理复核。",
+          "metadata": {
+            "category": "人员安全",
+            "knowledge_id": "bf8da10bf36b4272806c12cb6060bc25",
+            "source_type": "MANUAL",
+            "title": "北门低血糖应急处置基线（UAT）",
+            "venue_id": "venue-uat",
+            "version": 2
+          },
+          "score": 0.486
+        },
+        {
+          "id": "knowledge:venue-uat:c613484437cc44a58378be587622f493",
+          "content": "发现游客疑似低血糖并出现意识障碍时，现场人员应保持患者平卧、立即呼叫医护并疏散围观人员，确保急救通道持续畅通，同时记录处置时间线。 医护到场后补充记录血糖检测、补糖处置、意识恢复时间和离场交接人，由值班经理复核。",
+          "metadata": {
+            "category": "人员安全",
+            "knowledge_id": "c613484437cc44a58378be587622f493",
+            "source_type": "MANUAL",
+            "title": "北门低血糖应急处置基线（UAT ms5sqvxm）",
+            "venue_id": "venue-uat",
+            "version": 2
+          },
+          "score": 0.486
+        },
+        {
+          "id": "knowledge:venue-uat:6dde458f99fb40a98f6b4f7483a33465",
+          "content": "发现游客疑似低血糖并出现意识障碍时，现场人员应保持患者平卧、立即呼叫医护并疏散围观人员，确保急救通道持续畅通，同时记录处置时间线。 医护到场后补充记录血糖检测、补糖处置、意识恢复时间和离场交接人，由值班经理复核。",
+          "metadata": {
+            "category": "人员安全",
+            "knowledge_id": "6dde458f99fb40a98f6b4f7483a33465",
+            "source_type": "MANUAL",
+            "title": "北门低血糖应急处置基线（UAT ms5omj6k）",
+            "venue_id": "venue-uat",
+            "version": 2
+          },
+          "score": 0.486
+        },
+        {
+          "id": "evt_ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6",
+          "content": "[P1] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+          "metadata": {
+            "event_id": "ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6",
+            "event_type": "人员安全",
+            "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+            "severity": "P1",
+            "source_id": "ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6",
+            "source_type": "LIVE",
+            "title": "人员安全事件",
+            "venue_id": "venue-uat",
+            "version": 1
+          },
+          "score": 0.477
+        },
+        {
+          "id": "evt_7c2d96e6-8a8c-4e5a-b4fb-bbe69c7f8eb0",
+          "content": "[P1] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+          "metadata": {
+            "event_id": "7c2d96e6-8a8c-4e5a-b4fb-bbe69c7f8eb0",
+            "event_type": "人员安全",
+            "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+            "severity": "P1",
+            "source_id": "7c2d96e6-8a8c-4e5a-b4fb-bbe69c7f8eb0",
+            "source_type": "LIVE",
+            "title": "人员安全事件",
+            "venue_id": "venue-uat",
+            "version": 1
+          },
+          "score": 0.477
+        },
+        {
+          "id": "evt_40726799-e5b8-446e-94ae-f5d4306a7eb9",
+          "content": "[P1] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+          "metadata": {
+            "event_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+            "event_type": "人员安全",
+            "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+            "severity": "P1",
+            "source_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+            "source_type": "LIVE",
+            "title": "人员安全事件",
+            "venue_id": "venue-uat",
+            "version": 1
+          },
+          "score": 0.477
+        }
+      ],
+      "query": "低血糖游客急救通道和值班经理复核 SOP"
+    }
+  },
+  "knowledge_records": [
+    {
+      "id": "sop-4",
+      "venue_id": "venue-uat",
+      "title": "北门低血糖游客应急处置 SOP（UAT ms5sqvxm）",
+      "content": "1. 识别疑似低血糖与意识状态；2. 保持患者平卧并呼叫医护；3. 疏散围观并保持急救通道；4. 连续记录处置时间线；5. 医护到场后完成交接。\n6. 记录血糖检测、补糖、意识恢复与离场信息；7. 值班经理复核并关闭事件。\n8. 发布前由值班经理核对来源事件、责任人和时间戳，驳回意见必须逐项关闭。",
+      "category": "人员安全",
+      "source_type": "SOP",
+      "source_id": "4",
+      "version": 1,
+      "status": "ACTIVE",
+      "vector_doc_id": "sop:venue-uat:4",
+      "import_batch_id": null,
+      "created_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "updated_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "created_at": 1785312137.3391051,
+      "updated_at": 1785312137.3391051,
+      "tags": []
+    },
+    {
+      "id": "c613484437cc44a58378be587622f493",
+      "venue_id": "venue-uat",
+      "title": "北门低血糖应急处置基线（UAT ms5sqvxm）",
+      "content": "发现游客疑似低血糖并出现意识障碍时，现场人员应保持患者平卧、立即呼叫医护并疏散围观人员，确保急救通道持续畅通，同时记录处置时间线。 医护到场后补充记录血糖检测、补糖处置、意识恢复时间和离场交接人，由值班经理复核。",
+      "category": "人员安全",
+      "source_type": "MANUAL",
+      "source_id": null,
+      "version": 2,
+      "status": "ACTIVE",
+      "vector_doc_id": "knowledge:venue-uat:c613484437cc44a58378be587622f493",
+      "import_batch_id": null,
+      "created_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "updated_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "created_at": 1785312130.8892696,
+      "updated_at": 1785312131.959339,
+      "tags": [
+        "低血糖",
+        "急救通道",
+        "UAT"
+      ]
+    }
+  ],
+  "sop_records": [
+    {
+      "id": 4,
+      "venue_id": "venue-uat",
+      "category": "人员安全",
+      "title": "北门低血糖游客应急处置 SOP（UAT ms5sqvxm）",
+      "content": "1. 识别疑似低血糖与意识状态；2. 保持患者平卧并呼叫医护；3. 疏散围观并保持急救通道；4. 连续记录处置时间线；5. 医护到场后完成交接。\n6. 记录血糖检测、补糖、意识恢复与离场信息；7. 值班经理复核并关闭事件。\n8. 发布前由值班经理核对来源事件、责任人和时间戳，驳回意见必须逐项关闭。",
+      "priority": 1,
+      "version": "1.2",
+      "status": "PUBLISHED",
+      "source_event_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+      "created_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "reviewed_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "published_at": 1785312137.3391051,
+      "created_at": "2026-07-29T08:02:14.120211+00:00",
+      "updated_at": "2026-07-29T08:02:17.339365+00:00"
+    }
+  ],
+  "audits": [
+    {
+      "id": 442,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "SOP_PUBLISHED",
+      "resource_type": "sop",
+      "resource_id": "4",
+      "outcome": "SUCCEEDED",
+      "trace_id": "ee17ebdf913649608a595fa191ff53ca",
+      "created_at": 1785312137.3445363,
+      "metadata": {
+        "version": "1.2"
+      }
+    },
+    {
+      "id": 441,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "SOP_SUBMITTED",
+      "resource_type": "sop",
+      "resource_id": "4",
+      "outcome": "SUCCEEDED",
+      "trace_id": "9911198d2a5043b4aa9f5aeec25c7131",
+      "created_at": 1785312136.7820933,
+      "metadata": {}
+    },
+    {
+      "id": 440,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "SOP_UPDATED",
+      "resource_type": "sop",
+      "resource_id": "4",
+      "outcome": "SUCCEEDED",
+      "trace_id": "468948c7199c487d896a45fd2e55d273",
+      "created_at": 1785312136.345382,
+      "metadata": {
+        "version": "1.2",
+        "changed_fields": [
+          "category",
+          "content",
+          "priority",
+          "title"
+        ]
+      }
+    },
+    {
+      "id": 439,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "SOP_REJECTED",
+      "resource_type": "sop",
+      "resource_id": "4",
+      "outcome": "SUCCEEDED",
+      "trace_id": "44303989e74946a1bda6c576eb72b5e2",
+      "created_at": 1785312135.7096145,
+      "metadata": {
+        "comment": "UAT 驳回：补充发布前的来源事件、责任人和时间戳复核步骤"
+      }
+    },
+    {
+      "id": 438,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "SOP_SUBMITTED",
+      "resource_type": "sop",
+      "resource_id": "4",
+      "outcome": "SUCCEEDED",
+      "trace_id": "73903b3b177440f5b1e4fe25bffd2053",
+      "created_at": 1785312135.1279747,
+      "metadata": {}
+    },
+    {
+      "id": 437,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "SOP_UPDATED",
+      "resource_type": "sop",
+      "resource_id": "4",
+      "outcome": "SUCCEEDED",
+      "trace_id": "912ae2bc95a949f4951e1eb9496677ed",
+      "created_at": 1785312134.6666236,
+      "metadata": {
+        "version": "1.1",
+        "changed_fields": [
+          "category",
+          "content",
+          "priority",
+          "title"
+        ]
+      }
+    },
+    {
+      "id": 436,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "SOP_CREATED",
+      "resource_type": "sop",
+      "resource_id": "4",
+      "outcome": "SUCCEEDED",
+      "trace_id": "958abebc92584cf0a207ff80ff730a53",
+      "created_at": 1785312134.1267476,
+      "metadata": {
+        "source_event_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9"
+      }
+    },
+    {
+      "id": 435,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "KNOWLEDGE_INDEX_REBUILT",
+      "resource_type": "knowledge_index",
+      "resource_id": "venue-uat",
+      "outcome": "SUCCEEDED",
+      "trace_id": "3f02ad0441c6461c9ed34d54f2cddd28",
+      "created_at": 1785312132.8355563,
+      "metadata": {
+        "count": 7
+      }
+    },
+    {
+      "id": 434,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "KNOWLEDGE_UPDATED",
+      "resource_type": "knowledge",
+      "resource_id": "c613484437cc44a58378be587622f493",
+      "outcome": "SUCCEEDED",
+      "trace_id": "f7d254cfef914cf793664b7ffcfa88cc",
+      "created_at": 1785312131.9624834,
+      "metadata": {
+        "version": 2,
+        "changed_fields": [
+          "category",
+          "content",
+          "tags",
+          "title"
+        ]
+      }
+    },
+    {
+      "id": 433,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "KNOWLEDGE_CREATED",
+      "resource_type": "knowledge",
+      "resource_id": "c613484437cc44a58378be587622f493",
+      "outcome": "SUCCEEDED",
+      "trace_id": "e218baf9ce5c4736a133ae36c25bbae8",
+      "created_at": 1785312131.3251264,
+      "metadata": {
+        "source_type": "MANUAL",
+        "source_id": null
+      }
+    }
+  ],
+  "runtime": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

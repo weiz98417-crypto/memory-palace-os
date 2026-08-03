@@ -194,6 +194,7 @@ tbody tr:hover td{background:rgba(79,140,255,.035)}
 tbody tr:last-child td{border-bottom:0}
 .cell-title{color:var(--text);font-weight:680;max-width:420px}
 .cell-sub{color:var(--subtle);font-size:10px;margin-top:2px;max-width:520px}
+.task-block-reason{color:#ffbec2;margin-top:5px;white-space:normal}
 .mono{font-family:"SFMono-Regular",Consolas,monospace;font-size:11px;overflow-wrap:anywhere}
 .trace-cell{max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .trace-panel{margin-bottom:14px}
@@ -259,11 +260,46 @@ tbody tr:last-child td{border-bottom:0}
   display:flex;flex-direction:column;
 }
 .details.open{transform:translateX(0)}
+.details.wide{width:min(860px,100%)}
 .details-head{height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid var(--line-soft)}
 .details-head h2{font-size:15px;margin:0}
 .details-body{padding:16px;overflow:auto;flex:1}
 .detail-list{display:grid;grid-template-columns:120px minmax(0,1fr);gap:8px 12px}
 .detail-list dt{color:var(--subtle);font-size:11px}.detail-list dd{margin:0;color:var(--text);overflow-wrap:anywhere}
+.dossier{display:flex;flex-direction:column;gap:14px}
+.dossier-hero{border:1px solid #315181;border-radius:12px;padding:16px;background:linear-gradient(135deg,#142848,#101b31)}
+.dossier-hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:12px}
+.dossier-kicker{color:#91b7ff;font-size:11px;font-weight:760;margin-bottom:5px}
+.dossier-hero h3{font-size:18px;line-height:1.45;margin:0;max-width:680px}
+.dossier-next{border-left:3px solid var(--accent);background:rgba(79,140,255,.08);padding:10px 12px;color:var(--text);font-size:12px;line-height:1.55}
+.dossier-meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.dossier-meta-item{border:1px solid var(--line-soft);border-radius:8px;background:rgba(8,16,31,.42);padding:9px 10px;min-width:0}
+.dossier-meta-item span{display:block;color:var(--subtle);font-size:10px;margin-bottom:4px}
+.dossier-meta-item strong{display:block;color:var(--text);font-size:12px;overflow-wrap:anywhere}
+.dossier-section{border:1px solid var(--line-soft);border-radius:10px;background:var(--surface);overflow:hidden}
+.dossier-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border-bottom:1px solid var(--line-soft)}
+.dossier-section-head h3{font-size:13px;margin:0}.dossier-section-head span{color:var(--subtle);font-size:10px}
+.dossier-section-body{padding:12px}
+.dossier-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.dossier-card{border:1px solid var(--line-soft);border-radius:9px;padding:11px;background:#0d172a;min-width:0}
+.dossier-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:9px;margin-bottom:7px}
+.dossier-card h4{font-size:12px;margin:0;color:var(--text)}
+.dossier-card p{font-size:11px;line-height:1.55;color:var(--muted);margin:5px 0;white-space:pre-wrap}
+.dossier-card-meta{color:var(--subtle);font-size:10px;line-height:1.55}
+.dossier-fields{display:grid;grid-template-columns:110px minmax(0,1fr);gap:5px 9px;margin:8px 0 0}
+.dossier-fields dt{font-size:10px;color:var(--subtle)}.dossier-fields dd{margin:0;color:var(--text);font-size:11px;overflow-wrap:anywhere}
+.dossier-timeline{display:flex;flex-direction:column}
+.dossier-timeline-item{position:relative;padding:10px 10px 11px 26px;border-bottom:1px solid var(--line-soft)}
+.dossier-timeline-item:last-child{border-bottom:0}
+.dossier-timeline-item:before{content:"";position:absolute;left:7px;top:16px;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(79,140,255,.12)}
+.dossier-timeline-item:after{content:"";position:absolute;left:10px;top:27px;bottom:-11px;width:1px;background:var(--line)}
+.dossier-timeline-item:last-child:after{display:none}
+.dossier-timeline-item strong{display:block;font-size:12px}.dossier-timeline-item p{margin:3px 0;color:var(--muted);font-size:11px}
+.dossier-empty{color:var(--muted);font-size:11px;padding:14px;text-align:center}
+.technical-details{border:1px dashed var(--line);border-radius:9px;background:#0b1427}
+.technical-details summary{cursor:pointer;color:var(--muted);font-size:11px;padding:11px 12px}
+.technical-details[open] summary{border-bottom:1px solid var(--line-soft)}
+.technical-details .detail-list{padding:12px}
 dialog{
   color:var(--text);background:var(--surface);border:1px solid var(--line);
   border-radius:12px;padding:0;width:min(620px,calc(100% - 28px));box-shadow:var(--shadow);
@@ -301,6 +337,7 @@ dialog::backdrop{background:rgba(3,7,17,.78)}
   .trace-search{width:100%;min-width:0}
   .actions{justify-content:flex-start}
   .form-grid{grid-template-columns:1fr}.form-grid .span-2{grid-column:auto}
+  .dossier-meta{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:560px){
   .metric-grid{grid-template-columns:1fr}
@@ -310,6 +347,8 @@ dialog::backdrop{background:rgba(3,7,17,.78)}
   .topbar{padding:0 12px}.topbar-right .btn span{display:none}
   .toolbar .control,.toolbar .grow{width:100%;min-width:0}
   .task-table{min-width:880px}
+  .dossier-grid,.dossier-meta{grid-template-columns:1fr}
+  .dossier-hero-top{flex-direction:column}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}
@@ -320,15 +359,15 @@ dialog::backdrop{background:rgba(3,7,17,.78)}
 <body>
 <section id="brand-intro" class="brand-intro hidden" aria-label="品牌开场">
   <video id="brand-intro-video" class="brand-intro-video" muted playsinline preload="metadata">
-    <source src="brand/brand-intro.mp4" type="video/mp4">
+    <source src="/admin/brand/brand-intro.mp4" type="video/mp4">
   </video>
-  <div class="brand-intro-content"><img src="brand/logo-primary.svg" alt="记忆宫殿标志"><span>记忆宫殿 · Memory Palace OS</span></div>
+  <div class="brand-intro-content"><img src="/admin/brand/logo-primary.svg" alt="记忆宫殿标志"><span>记忆宫殿 · Memory Palace OS</span></div>
   <button id="brand-intro-skip" class="btn ghost small brand-intro-skip" type="button">跳过开场</button>
 </section>
 <section id="login-screen" class="screen login active" aria-label="登录">
   <div class="login-panel">
     <div class="login-brand">
-      <div class="brand-mark brand-logo"><img src="brand/logo-primary.svg" alt=""></div>
+      <div class="brand-mark brand-logo"><img src="/admin/brand/logo-primary.svg" alt=""></div>
       <div>
         <h1>记忆宫殿 · Memory Palace OS</h1>
         <p>登录您的工作空间</p>
@@ -353,21 +392,21 @@ dialog::backdrop{background:rgba(3,7,17,.78)}
   <div class="shell">
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-head">
-        <div class="brand-mark brand-logo"><img src="brand/logo-primary.svg" alt=""></div>
+        <div class="brand-mark brand-logo"><img src="/admin/brand/logo-primary.svg" alt=""></div>
         <div class="sidebar-title">记忆宫殿<small>MEMORY PALACE OS</small></div>
       </div>
       <nav class="nav" aria-label="主导航">
         <div class="nav-group">运营总览</div>
-        <button class="nav-item active" data-view="dashboard" data-roles="admin,manager,operator"><span class="nav-icon">总</span>指挥中心</button>
-        <button class="nav-item" data-view="events" data-roles="admin,manager,operator"><span class="nav-icon">事</span>事件处置</button>
-        <button class="nav-item" data-view="sessions" data-roles="admin,manager,operator"><span class="nav-icon">会</span>消息与会话</button>
+        <button class="nav-item active" data-view="dashboard" data-roles="admin,manager"><span class="nav-icon">总</span>指挥中心</button>
+        <button class="nav-item" data-view="events" data-roles="admin,manager"><span class="nav-icon">事</span>事件处置</button>
+        <button class="nav-item" data-view="sessions" data-roles="admin,manager"><span class="nav-icon">会</span>消息与会话</button>
         <div class="nav-group">协同处置</div>
-        <button class="nav-item" data-view="tasks" data-roles="admin,manager,operator"><span class="nav-icon">任</span>任务与审批</button>
+        <button class="nav-item" data-view="tasks" data-roles="admin,manager"><span class="nav-icon">任</span>任务与审批</button>
         <button class="nav-item" data-view="approvals" data-roles="admin,manager"><span class="nav-icon">审</span>审批中心</button>
         <button class="nav-item" data-view="actions" data-roles="admin,manager"><span class="nav-icon">动</span>推送与动作日志</button>
         <div class="nav-group">组织知识</div>
         <button class="nav-item" data-view="knowledge" data-roles="admin,manager"><span class="nav-icon">知</span>组织记忆</button>
-        <button class="nav-item" data-view="persona" data-roles="admin,manager"><span class="nav-icon">分</span>数字分身</button>
+        <button class="nav-item" data-view="experience" data-roles="admin,manager"><span class="nav-icon">经</span>专家经验</button>
         <button class="nav-item" data-view="watcher" data-roles="admin,manager"><span class="nav-icon">巡</span>鹰眼巡检</button>
         <button class="nav-item" data-view="sops" data-roles="admin,manager"><span class="nav-icon">SOP</span>SOP 中心</button>
         <div class="nav-group">系统治理</div>
@@ -485,7 +524,7 @@ dialog::backdrop{background:rgba(3,7,17,.78)}
         </section>
 
         <section id="view-actions" class="view">
-          <div class="page-head"><div><h2>推送与动作日志</h2><p>站内告警可完成审批、投递与采纳闭环；未配置的外部渠道保持禁用，不显示假回执。</p></div><div class="actions"><button class="btn primary" type="button" data-action="new-action-request">发起受控动作</button></div></div>
+          <div class="page-head"><div><h2>推送与动作日志</h2><p>企微模拟器通知可完成审批、投递与采纳闭环；未配置的外部渠道保持禁用，不显示假回执。</p></div><div class="actions"><button class="btn primary" type="button" data-action="new-action-request">发起受控动作</button></div></div>
           <div id="integration-strip" class="cards"></div>
           <div class="panel"><div class="panel-head"><h3>受控动作记录</h3><span id="controlled-action-count">0 条</span></div><div class="table-wrap"><table><thead><tr><th>申请时间</th><th>动作</th><th>关联会话</th><th>审批状态</th><th>执行状态</th><th>操作</th></tr></thead><tbody id="controlled-actions-table"></tbody></table></div></div>
           <div class="toolbar"><select id="push-filter" class="control"><option value="">全部采纳状态</option><option value="pending">待确认</option><option value="adopted">已采纳</option><option value="rejected">已拒绝</option></select><input id="push-search" class="control grow" placeholder="搜索发送人、类型、关键词"></div>
@@ -501,10 +540,12 @@ dialog::backdrop{background:rgba(3,7,17,.78)}
           <div class="panel"><div class="panel-head"><h3>知识条目</h3><span id="knowledge-count">0 条</span></div><div class="table-wrap"><table><thead><tr><th>更新时间</th><th>标题</th><th>分类</th><th>来源</th><th>版本</th><th>标签</th><th>操作</th></tr></thead><tbody id="knowledge-table"></tbody></table></div></div>
         </section>
 
-        <section id="view-persona" class="view">
-          <div class="page-head"><div><h2>数字分身</h2><p>创建岗位分身，完成多轮访谈萃取，再使用已授权经验向 DeepSeek 提问并查看来源。</p></div><div class="actions"><button class="btn primary" type="button" data-action="new-persona">创建数字分身</button></div></div>
-          <div class="toolbar"><input id="persona-search" class="control grow" placeholder="搜索岗位或分身名称"></div>
-          <div id="persona-cards" class="cards"></div>
+        <section id="view-experience" class="view">
+          <div class="page-head"><div><h2>专家经验</h2><p>维护专家档案、发起经验访谈，并将专家确认的经验审核后发布给当前场地员工使用。</p></div><div class="actions"><button class="btn" type="button" data-action="new-interview">发起访谈</button><button class="btn primary" type="button" data-action="new-expert">新增专家</button></div></div>
+          <div class="toolbar"><select id="experience-card-filter" class="control"><option value="">全部经验状态</option><option value="DRAFT">待专家完善</option><option value="EXPERT_CONFIRMED">专家已确认</option><option value="IN_REVIEW">审核中</option><option value="PUBLISHED">已发布</option><option value="DEPRECATED">已停用</option></select><input id="experience-search" class="control grow" placeholder="搜索专家姓名、岗位、访谈主题或经验摘要"></div>
+          <div class="panel"><div class="panel-head"><h3>专家名录</h3><span id="expert-count">0 位</span></div><div class="table-wrap"><table><thead><tr><th>专家</th><th>部门 / 岗位</th><th>从业经验</th><th>擅长领域</th><th>状态</th><th>操作</th></tr></thead><tbody id="experts-table"></tbody></table></div></div>
+          <div class="panel"><div class="panel-head"><h3>经验访谈</h3><span id="interview-count">0 场</span></div><div class="table-wrap"><table><thead><tr><th>更新时间</th><th>访谈主题</th><th>专家</th><th>进度</th><th>状态</th><th>操作</th></tr></thead><tbody id="interviews-table"></tbody></table></div></div>
+          <div class="panel"><div class="panel-head"><h3>经验资产</h3><span id="experience-card-count">0 条</span></div><div class="table-wrap"><table><thead><tr><th>更新时间</th><th>经验主题 / 摘要</th><th>专家</th><th>版本</th><th>状态</th><th>操作</th></tr></thead><tbody id="experience-cards-table"></tbody></table></div></div>
         </section>
 
         <section id="view-watcher" class="view">
@@ -542,6 +583,10 @@ dialog::backdrop{background:rgba(3,7,17,.78)}
         <section id="view-diagnostics" class="view">
           <div class="page-head"><div><h2>运维诊断</h2><p>查看健康、队列、死信、模型调用、审计和 Agent 注册；运行时操作均使用正式 API。</p></div><div class="actions"><button class="btn" type="button" data-action="reload-config">重载配置</button></div></div>
           <div id="health-metrics" class="metric-grid"></div>
+          <div class="panel">
+            <div class="panel-head"><div><h3>App 启动与恢复</h3><span>真实启动记录、任务图恢复和 Redis pending 回收结果</span></div><span>最近 20 次</span></div>
+            <div id="recovery-run-list" class="panel-body feed"><div class="empty"><strong>正在读取恢复记录</strong>诊断页只展示持久化的安全计数和 Trace。</div></div>
+          </div>
           <div class="panel trace-panel">
             <div class="panel-head">
               <div><h3>Trace 证据链</h3><span>按租户聚合消息、模型、Agent、事件、任务、审批、工具与推送证据</span></div>
@@ -577,10 +622,11 @@ dialog::backdrop{background:rgba(3,7,17,.78)}
     <div class="dialog-head"><h2>创建任务</h2><button class="btn ghost small" type="button" data-close="task-dialog">关闭</button></div>
     <div class="dialog-body form-grid">
       <div class="field span-2"><label for="task-description">任务描述</label><textarea id="task-description" class="control" required></textarea></div>
+      <div class="field"><label for="task-event">关联事件</label><select id="task-event" class="control" required></select></div>
       <div class="field"><label for="task-session">关联会话</label><select id="task-session" class="control" required></select></div>
       <div class="field"><label for="task-assignee">负责人</label><select id="task-assignee" class="control"><option value="">暂不分配</option></select></div>
       <div class="field"><label for="task-attempts">最大尝试次数</label><input id="task-attempts" class="control" type="number" min="1" max="10" value="3"></div>
-      <div class="field span-2"><label for="task-dependencies">依赖任务 ID</label><input id="task-dependencies" class="control" placeholder="多个 ID 用逗号分隔"></div>
+      <div class="field span-2"><label for="task-dependencies">前置任务内部 ID</label><input id="task-dependencies" class="control" placeholder="可选；从任务技术信息复制，多个 ID 用逗号分隔"><small>业务页面默认展示任务编号；只有建立依赖时才使用内部 ID。</small></div>
     </div>
     <div class="dialog-foot"><button class="btn" type="button" data-close="task-dialog">取消</button><button class="btn primary" type="submit">创建任务</button></div>
   </form>
@@ -591,6 +637,7 @@ dialog::backdrop{background:rgba(3,7,17,.78)}
     <div class="dialog-head"><h2>AI 拆解任务</h2><button class="btn ghost small" type="button" data-close="task-decompose-dialog">关闭</button></div>
     <div class="dialog-body form-grid">
       <div class="field span-2"><label for="task-decompose-goal">复杂目标或处置方案</label><textarea id="task-decompose-goal" class="control" required minlength="2" maxlength="4000" placeholder="例如：完成景区节假日前安全检查，并形成可执行的联合检查清单"></textarea><small>TodoWrite 将真实调用 DeepSeek，生成任务及其依赖关系；模型失败时不会创建部分任务。</small></div>
+      <div class="field"><label for="task-decompose-event">关联事件</label><select id="task-decompose-event" class="control" required></select></div>
       <div class="field"><label for="task-decompose-session">关联会话</label><select id="task-decompose-session" class="control" required></select></div>
       <div class="field"><label for="task-decompose-assignee">负责人</label><select id="task-decompose-assignee" class="control"><option value="">暂不分配</option></select></div>
       <div class="field"><label for="task-decompose-attempts">最大尝试次数</label><input id="task-decompose-attempts" class="control" type="number" min="1" max="10" value="3"></div>
@@ -611,26 +658,6 @@ dialog::backdrop{background:rgba(3,7,17,.78)}
     </div>
     <div class="dialog-foot"><button class="btn" type="button" data-close="knowledge-dialog">取消</button><button class="btn primary" type="submit">保存</button></div>
   </form>
-</dialog>
-
-<dialog id="persona-dialog">
-  <form id="persona-form">
-    <div class="dialog-head"><h2>创建数字分身</h2><button class="btn ghost small" type="button" data-close="persona-dialog">关闭</button></div>
-    <div class="dialog-body">
-      <div class="field"><label for="persona-title">岗位 / 专家名称</label><input id="persona-title" class="control" required placeholder="例如：西区安保值班长"></div>
-      <div class="field"><label for="persona-description">经验范围</label><textarea id="persona-description" class="control" placeholder="描述岗位职责、年限和擅长领域"></textarea></div>
-    </div>
-    <div class="dialog-foot"><button class="btn" type="button" data-close="persona-dialog">取消</button><button class="btn primary" type="submit">创建并开始访谈</button></div>
-  </form>
-</dialog>
-
-<dialog id="persona-chat-dialog">
-  <div class="dialog-head"><h2 id="persona-chat-title">数字分身</h2><button class="btn ghost small" type="button" data-close="persona-chat-dialog">关闭</button></div>
-  <div class="dialog-body">
-    <div id="persona-chat" class="chat"></div>
-    <div id="persona-chat-note" class="cell-sub"></div>
-    <form id="persona-chat-form" class="chat-compose"><input id="persona-chat-input" class="control" required placeholder="输入回答或问题"><button class="btn primary" type="submit">发送</button><button id="persona-finalize" class="btn hidden" type="button" data-action="finalize-persona">结束萃取</button></form>
-  </div>
 </dialog>
 
 <dialog id="policy-dialog">
@@ -709,9 +736,13 @@ var API_BASE = "/api/v1";
 var TODO_DECOMPOSE_TIMEOUT_MS=120000;
 var TODO_DECOMPOSE_STORAGE_KEY="mp_todo_decomposition";
 var roleNames = {admin:"系统管理员",manager:"值班经理",operator:"现场操作员",api:"API 客户端"};
+var taskStatusLabels={BLOCKED:"已阻塞",PENDING:"待执行",RUNNING:"执行中",DONE:"已完成",FAILED:"执行失败"};
+var approvalStatusLabels={PENDING:"待审批",APPROVED:"已批准",REJECTED:"已拒绝"};
+var toolLabels={send_in_app_alert:"发送企微模拟器通知",send_sms:"发送短信通知",send_alert:"发送外部告警广播",send_wechat_message:"发送企微通知"};
+var experienceStatusLabels={ACTIVE:"在岗",INACTIVE:"已停用",PENDING:"待签署授权",SIGNED:"已签署授权",INVITED:"待专家接受",ACCEPTED:"专家已接受",IN_PROGRESS:"访谈进行中",PAUSED:"已暂停",COMPLETED:"已完成",DRAFT:"待专家完善",EXPERT_CONFIRMED:"专家已确认",IN_REVIEW:"审核中",PUBLISHED:"已发布",DEPRECATED:"已停用"};
 var viewTitles = {
   dashboard:"运营工作台",events:"现场事件",sessions:"消息与会话",tasks:"任务中心",
-  approvals:"审批中心",actions:"推送与动作日志",knowledge:"知识库",persona:"数字分身",
+  approvals:"审批中心",actions:"推送与动作日志",knowledge:"知识库",experience:"专家经验",
   watcher:"鹰眼巡检",sops:"SOP 中心",management:"用户与场地",settings:"系统设置",diagnostics:"运维诊断"
 };
 
@@ -744,6 +775,42 @@ function emptyRow(columns,title,detail){
 function jsonPreview(value){
   try{return JSON.stringify(value||{},null,2)}catch(error){return String(value||"")}
 }
+var eventStatusLabels={OPEN:"处理中",CLOSED:"已闭环"};
+var conversationStatusLabels={OPEN:"进行中",ACTIVE:"进行中",PENDING:"等待处理",COMPLETED:"已完成",CLOSED:"已结束",FAILED:"处理失败"};
+var channelLabels={WECOM_SIMULATOR:"企微模拟器",WECOM_SIMULATOR_OUTBOX:"企微模拟器通知",WECOM:"企业微信",WECHAT_WORK:"企业微信",IN_APP:"站内"};
+var activitySummaryLabels={DELIVERED:"通知已送达",SUCCEEDED:"处理已完成",COMPLETED:"处理已完成",FAILED:"处理失败"};
+function humanizeActivitySummary(value){
+  var summary=String(value||"暂无补充说明");
+  Object.keys(activitySummaryLabels).forEach(function(status){
+    summary=summary.replace(new RegExp("\\b"+status+"\\b","gi"),activitySummaryLabels[status]);
+  });
+  return summary;
+}
+var businessFieldLabels={
+  summary:"结果摘要",result:"处置结果",temperature:"温度",temperature_c:"温度（℃）",rounds:"试车轮次",
+  trial_runs:"试车轮次",delivery_status:"送达状态",recipient:"接收人",message:"通知内容",note:"补充说明",
+  completed_at:"完成时间",operator:"执行人",evidence:"现场证据",attachments:"附件",
+  shield_clearance_mm:"护板间隙（毫米）",brake_pad_thickness_mm:"制动片厚度（毫米）",
+  wheel_end_temperature_c:"轮端温度（℃）",test_runs:"试车轮次",abnormal_noise:"是否存在异响",
+  brake_pull:"是否制动跑偏",recommendation:"处置建议"
+};
+function businessFieldLabel(key){return businessFieldLabels[key]||String(key||"业务字段").replace(/_/g," ")}
+function businessValue(value){
+  if(value===null||value===undefined||value==="")return "暂无";
+  if(Array.isArray(value))return value.length?value.map(businessValue).join("、"):"暂无";
+  if(typeof value==="object")return Object.keys(value).map(function(key){return businessFieldLabel(key)+"："+businessValue(value[key])}).join("；")||"暂无";
+  if(typeof value==="boolean")return value?"是":"否";
+  return String(value);
+}
+function renderBusinessResult(result){
+  result=result||{};
+  if(result.kind==="fields"){
+    var fields=result.fields||{};
+    return '<dl class="dossier-fields">'+Object.keys(fields).map(function(key){return '<dt>'+escapeHtml(businessFieldLabel(key))+'</dt><dd>'+escapeHtml(businessValue(fields[key]))+'</dd>'}).join("")+'</dl>';
+  }
+  if(result.kind==="items")return '<p>'+escapeHtml(businessValue(result.items))+'</p>';
+  return '<p>'+escapeHtml(result.text||"尚未提交结果")+'</p>';
+}
 function notify(message,type){
   var region=byId("toast-region");
   while(region.children.length>=3)region.firstElementChild.remove();
@@ -753,6 +820,17 @@ function notify(message,type){
   region.appendChild(toast);
   setTimeout(function(){toast.remove()},4200);
 }
+function controlledActionErrorMessage(error){
+  if(!error||error.code!=="SIMULATOR_RECIPIENTS_NOT_READY")return error&&error.message||"受控动作创建失败";
+  var missing=error.details&&Array.isArray(error.details.missing_recipients)?error.details.missing_recipients:[];
+  var readable=missing.map(function(item){
+    var context=[item.job_title].concat(item.source_role_labels||[]).filter(Boolean).join(" / ");
+    return (item.display_name||"未识别员工")+(context?"（"+context+"）":"")+"："+(item.reason||"企微模拟器会话尚未就绪");
+  });
+  return error.message+(readable.length?" 缺失人员："+readable.join("；"):"")+(error.action?" "+error.action:"");
+}
+function experienceBadge(value){return badge(value,experienceStatusLabels[String(value||"").toUpperCase()]||"状态待确认")}
+function taskBadge(value){return badge(value,taskStatusLabels[String(value||"").toUpperCase()]||"状态待确认")}
 function newRequestId(){return crypto.randomUUID()}
 function readTodoDecomposition(){
   try{return JSON.parse(sessionStorage.getItem(TODO_DECOMPOSE_STORAGE_KEY)||"null")}catch(error){return null}
@@ -863,7 +941,7 @@ async function api(path,options,retry){
     var detail=payload&&payload.detail?payload.detail:payload;
     var message=typeof detail==="string"?detail:(detail&&detail.message)||payload.message||("请求失败 ("+response.status+")");
     var error=new Error(message);
-    error.code=detail&&detail.code;error.traceId=detail&&detail.trace_id;error.action=detail&&detail.action;error.retryable=Boolean(detail&&detail.retryable);error.status=response.status;
+    error.code=detail&&detail.code;error.traceId=detail&&detail.trace_id;error.action=detail&&detail.action;error.retryable=Boolean(detail&&detail.retryable);error.status=response.status;error.details=detail;
     throw error;
   }
   return payload;
@@ -872,10 +950,9 @@ async function api(path,options,retry){
 var App={
   currentView:"dashboard",
   state:{
-    dashboard:{},events:[],sessions:[],tasks:[],approvals:[],pushLogs:[],knowledge:[],personas:[],
+    dashboard:{},events:[],sessions:[],tasks:[],approvals:[],pushLogs:[],knowledge:[],experts:[],interviews:[],experienceCards:[],
     policies:[],findings:[],runs:[],sops:[],users:[],venues:[],assignees:[],skills:[],integrations:[],controlledActions:[]
   },
-  personaFlow:null,
   todoDecomposition:null,
   todoDecompositionController:null,
   todoDecompositionTimer:null,
@@ -896,18 +973,20 @@ var App={
     byId("knowledge-filter").addEventListener("input",this.renderKnowledge.bind(this));
     byId("knowledge-search-form").addEventListener("submit",this.searchKnowledge.bind(this));
     byId("trace-search-form").addEventListener("submit",this.searchTrace.bind(this));
-    byId("persona-search").addEventListener("input",this.renderPersonas.bind(this));
+    byId("experience-search").addEventListener("input",this.renderExperience.bind(this));
+    byId("experience-card-filter").addEventListener("change",this.renderExperience.bind(this));
     byId("sop-filter").addEventListener("change",this.renderSops.bind(this));
     byId("sop-search").addEventListener("input",this.renderSops.bind(this));
     byId("task-form").addEventListener("submit",this.createTask.bind(this));
     byId("task-decompose-form").addEventListener("submit",this.decomposeTasks.bind(this));
+    byId("task-event").addEventListener("change",this.syncTaskSession.bind(this,"task-event","task-session"));
+    byId("task-decompose-event").addEventListener("change",this.syncTaskSession.bind(this,"task-decompose-event","task-decompose-session"));
     byId("knowledge-form").addEventListener("submit",this.saveKnowledge.bind(this));
-    byId("persona-form").addEventListener("submit",this.createPersona.bind(this));
-    byId("persona-chat-form").addEventListener("submit",this.sendPersonaMessage.bind(this));
     byId("policy-form").addEventListener("submit",this.savePolicy.bind(this));
     byId("sop-form").addEventListener("submit",this.saveSop.bind(this));
     byId("user-form").addEventListener("submit",this.createUser.bind(this));
     byId("venue-form").addEventListener("submit",this.createVenue.bind(this));
+    window.addEventListener("popstate",this.restoreBusinessLocation.bind(this));
     if(Auth.accessToken)this.restore();else this.showLogin();
   },
   handleClick:function(event){
@@ -917,12 +996,17 @@ var App={
     if(!actionTarget)return;
     var action=actionTarget.getAttribute("data-action");
     var id=actionTarget.getAttribute("data-id");
-    var idHandlers={"close-session":this.closeSession};
+    var idHandlers={
+      "close-session":this.closeSession,"view-task":this.openTask,"unblock-task":this.unblockTask,"new-interview":this.newInterview,
+      "view-experience-interview":this.viewExperienceInterview,"view-experience-card":this.viewExperienceCard,
+      "submit-experience-card":this.submitExperienceCard,"reject-experience-card":this.rejectExperienceCard,
+      "publish-experience-card":this.publishExperienceCard,"deprecate-experience-card":this.deprecateExperienceCard
+    };
     var handlers={
       logout:this.logout,menu:this.toggleMenu,refresh:this.refreshCurrent,
       "event-mode":this.setEventMode,"new-task":this.openTaskDialog,"decompose-task":this.openTaskDecomposeDialog,"new-action-request":this.requestControlledAction,
       "new-knowledge":this.newKnowledge,"knowledge-import":this.importKnowledge,"knowledge-rebuild":this.rebuildKnowledge,
-      "new-persona":this.newPersona,"finalize-persona":this.finalizePersona,
+      "new-expert":this.newExpert,
       "new-policy":this.newPolicy,"new-sop":this.newSop,"new-user":this.newUser,"new-venue":this.newVenue,
       "reload-config":this.reloadConfig,"close-details":this.closeDetails,
       "cancel-task-decomposition":this.cancelTaskDecomposition,"recover-task-decomposition":this.recoverTaskDecomposition
@@ -934,7 +1018,8 @@ var App={
     try{
       Auth.user=await api("/auth/me");
       sessionStorage.setItem("mp_user",JSON.stringify(Auth.user));
-      this.restoreTaskDecomposition();this.showApp();await this.navigate("dashboard");
+      if(Auth.user.role==="operator"){window.location.replace("/assistant/");return}
+      this.restoreTaskDecomposition();this.showApp();await this.navigate("dashboard",true);await this.restoreBusinessLocation();
     }catch(error){this.showLogin()}
   },
   login:async function(event){
@@ -942,7 +1027,7 @@ var App={
     button.disabled=true;button.textContent="正在验证…";errorBox.textContent="";
     try{
       var payload=await api("/auth/login",{method:"POST",body:{username:byId("login-username").value.trim(),password:byId("login-password").value}},false);
-      Auth.save(payload);this.restoreTaskDecomposition();this.showApp();await this.navigate("dashboard");notify("登录成功","success");
+      Auth.save(payload);if(Auth.user.role==="operator"){window.location.replace("/assistant/");return}this.restoreTaskDecomposition();this.showApp();await this.navigate("dashboard",true);await this.restoreBusinessLocation();notify("登录成功","success");
     }catch(error){errorBox.textContent=error.message}
     finally{button.disabled=false;button.textContent="登录工作台"}
   },
@@ -961,19 +1046,24 @@ var App={
       element.classList.toggle("hidden",!visible);
     });
   },
-  navigate:async function(view){
+  navigate:async function(view,preserveLocation){
     var nav=document.querySelector('.nav-item[data-view="'+view+'"]');
     if(!nav||nav.classList.contains("hidden"))view="dashboard";
+    if(!preserveLocation)byId("details").classList.remove("open");
     this.currentView=view;byId("page-title").textContent=viewTitles[view]||view;
     document.querySelectorAll(".nav-item").forEach(function(item){item.classList.toggle("active",item.getAttribute("data-view")===view)});
     document.querySelectorAll(".view").forEach(function(item){item.classList.toggle("active",item.id==="view-"+view)});
     byId("sidebar").classList.remove("open");
     await this.loadView(view);
+    if(!preserveLocation){
+      var stableViews=["events","tasks","approvals"],target=stableViews.indexOf(view)>=0?"/admin/"+view:"/admin/";
+      if(window.location.pathname!==target||!history.state||history.state.view!==view)history.pushState({view:view},"",target);
+    }
   },
   loadView:async function(view){
     var loaders={
       dashboard:this.loadDashboard,events:this.loadEvents,sessions:this.loadSessions,tasks:this.loadTasks,
-      approvals:this.loadApprovals,actions:this.loadActions,knowledge:this.loadKnowledge,persona:this.loadPersonas,
+      approvals:this.loadApprovals,actions:this.loadActions,knowledge:this.loadKnowledge,experience:this.loadExperience,
       watcher:this.loadWatcher,sops:this.loadSops,management:this.loadManagement,settings:this.loadSettings,diagnostics:this.loadDiagnostics
     };
     try{if(loaders[view])await loaders[view].call(this)}
@@ -981,8 +1071,31 @@ var App={
   },
   refreshCurrent:function(){return this.loadView(this.currentView)},
   toggleMenu:function(){byId("sidebar").classList.toggle("open")},
-  closeDetails:function(){byId("details").classList.remove("open")},
-  showDetails:function(title,html){byId("details-title").textContent=title;byId("details-body").innerHTML=html;byId("details").classList.add("open")},
+  closeDetails:function(){
+    byId("details").classList.remove("open");
+    var match=window.location.pathname.match(/^\/admin\/(events|tasks|approvals)\/[^/]+\/?$/);
+    if(match)history.pushState({view:match[1]},"","/admin/"+match[1]);
+  },
+  resetBusinessLocation:function(view){
+    byId("details").classList.remove("open");
+    history.replaceState({view:view},"","/admin/"+view);
+  },
+  showDetails:function(title,html,wide){byId("details-title").textContent=title;byId("details-body").innerHTML=html;byId("details").classList.toggle("wide",Boolean(wide));byId("details").classList.add("open")},
+  restoreBusinessLocation:async function(historyEvent){
+    if(/^\/admin\/?$/.test(window.location.pathname)){
+      var requestedView=(historyEvent&&historyEvent.state&&historyEvent.state.view)||(history.state&&history.state.view)||"dashboard";
+      if(this.currentView!==requestedView)await this.navigate(requestedView,true);
+      byId("details").classList.remove("open");return;
+    }
+    var match=window.location.pathname.match(/^\/admin\/(events|tasks|approvals)(?:\/([^/]+))?\/?$/);
+    if(!match){byId("details").classList.remove("open");return}
+    var view=match[1],resourceId=match[2]?decodeURIComponent(match[2]):null;
+    if(this.currentView!==view)await this.navigate(view,true);
+    if(!resourceId){byId("details").classList.remove("open");return}
+    if(view==="events")await this.openEvent(resourceId,true);
+    if(view==="tasks")await this.openTask(resourceId,true);
+    if(view==="approvals")await this.openApproval(resourceId,true);
+  },
   isManager:function(){return Auth.user&&["admin","manager"].indexOf(Auth.user.role)>=0},
   isAdmin:function(){return Auth.user&&Auth.user.role==="admin"},
   getAssignees:async function(){
@@ -1018,7 +1131,7 @@ var App={
     }
     byId("dashboard-health").innerHTML=healthHtml||'<div class="empty"><strong>暂无状态</strong>刷新后重试。</div>';
     byId("dashboard-events").innerHTML=events.length?events.map(function(event){
-      return '<tr><td>'+formatTime(event.updated_at||event.created_at||event.confirmed_at)+'</td><td><div class="cell-title">'+escapeHtml(event.raw_text||"-")+'</div><div class="cell-sub mono">'+escapeHtml(event.event_id||"")+'</div></td><td>'+badge(event.severity)+'</td><td>'+badge(event.status||"OPEN")+'</td><td>'+escapeHtml(event.assigned_to||"未分配")+'</td></tr>';
+      return '<tr><td>'+formatTime(event.updated_at||event.created_at||event.confirmed_at)+'</td><td><div class="cell-title">'+escapeHtml(event.raw_text||"暂无事件说明")+'</div><div class="cell-sub">'+escapeHtml(event.business_id||"事件编号待生成")+'</div></td><td>'+badge(event.severity)+'</td><td>'+badge(event.status||"OPEN")+'</td><td>'+escapeHtml(event.assigned_to_name||"未分配")+'</td></tr>';
     }).join(""):emptyRow(5,"暂无事件","通过现场事件入口提交第一条业务事件。");
   },
 
@@ -1068,15 +1181,31 @@ var App={
     });
     byId("event-count").textContent=rows.length+" 条";
     byId("events-table").innerHTML=rows.length?rows.map(function(event){
-      return '<tr><td>'+formatTime(event.updated_at||event.created_at||event.confirmed_at)+'</td><td><div class="cell-title">'+escapeHtml(event.raw_text||"-")+'</div><div class="cell-sub mono">'+escapeHtml(event.event_id||"")+'</div></td><td>'+escapeHtml(event.event_type||"-")+'</td><td>'+badge(event.severity)+'</td><td>'+badge(event.status||"OPEN")+'</td><td>'+escapeHtml(event.assigned_to||"未分配")+'</td><td><button class="btn small" type="button" onclick="App.openEvent(\''+escapeHtml(event.event_id)+'\')">详情</button></td></tr>';
+      var eventStatus=String(event.status||"OPEN").toUpperCase();
+      return '<tr><td>'+formatTime(event.updated_at||event.created_at||event.confirmed_at)+'</td><td><div class="cell-title">'+escapeHtml(event.raw_text||"暂无事件说明")+'</div><div class="cell-sub">'+escapeHtml(event.business_id||"事件编号待生成")+'</div></td><td>'+escapeHtml(event.event_type||"待确认")+'</td><td>'+badge(event.severity)+'</td><td>'+badge(eventStatus,eventStatusLabels[eventStatus]||"状态待确认")+'</td><td>'+escapeHtml(event.assigned_to_name||"未分配")+'</td><td><button class="btn small" type="button" onclick="App.openEvent(\''+escapeHtml(event.event_id)+'\')">查看卷宗</button></td></tr>';
     }).join(""):emptyRow(7,"暂无匹配事件","调整筛选或提交新的现场事件。");
   },
-  openEvent:async function(id){
+  openEvent:async function(id,preserveLocation){
+    if(this.currentView!=="events")await this.navigate("events",true);
     try{
-      var event=await api("/admin/events/"+encodeURIComponent(id));
-      var actions=String(event.status||"OPEN").toUpperCase()==="CLOSED"?"":'<div class="record-actions"><button class="btn small" onclick="App.editEvent(\''+escapeHtml(id)+'\')">更新分类与负责人</button><button class="btn danger small" onclick="App.closeEvent(\''+escapeHtml(id)+'\')">闭环事件</button></div>';
-      this.showDetails("事件详情",'<dl class="detail-list"><dt>事件 ID</dt><dd class="mono">'+escapeHtml(event.event_id)+'</dd><dt>Trace ID</dt><dd class="mono">'+escapeHtml(event.trace_id||"-")+'</dd><dt>原始描述</dt><dd>'+escapeHtml(event.raw_text||"-")+'</dd><dt>类型</dt><dd>'+escapeHtml(event.event_type||"-")+'</dd><dt>级别</dt><dd>'+badge(event.severity)+'</dd><dt>状态</dt><dd>'+badge(event.status||"OPEN")+'</dd><dt>负责人</dt><dd>'+escapeHtml(event.assigned_to||"未分配")+'</dd><dt>处置结果</dt><dd>'+escapeHtml(event.resolution||event.memory_content||"尚未闭环")+'</dd><dt>来源</dt><dd>'+escapeHtml(event.source_type||event.from_user||"-")+'</dd></dl><div style="margin-top:16px">'+actions+'</div>');
-    }catch(error){notify(error.message,"error")}
+      var event=await api("/admin/events/"+encodeURIComponent(id)),dossier=event.dossier||{},summary=dossier.summary||{};this.state.currentEventDossier=dossier;
+      var actions=String(summary.status||event.status||"OPEN").toUpperCase()==="CLOSED"?"":'<div class="record-actions"><button class="btn small" onclick="App.editEvent(\''+escapeHtml(id)+'\')">更新事件</button><button class="btn primary small" onclick="App.runEventWatcher(\''+escapeHtml(id)+'\')">闭环前合规检查</button><button class="btn danger small" onclick="App.closeEvent(\''+escapeHtml(id)+'\')">提交闭环</button></div>';
+      var journeyTimeline=dossier.journey_timeline||dossier.timeline||[];
+      var timeline=journeyTimeline.length?journeyTimeline.map(function(item){return '<div class="dossier-timeline-item"><strong>'+escapeHtml(humanizeActivitySummary(item.label||"业务状态已更新"))+(item.business_id?' · '+escapeHtml(item.business_id):"")+'</strong><p>'+escapeHtml(humanizeActivitySummary(item.summary))+'</p><div class="dossier-card-meta">'+escapeHtml(item.actor_name||"系统")+' · '+formatTime(item.created_at)+'</div></div>'}).join(""):'<div class="dossier-empty">暂无处置时间线，后续业务动作将在这里持续沉淀。</div>';
+      var tasks=(dossier.tasks||[]).length?(dossier.tasks||[]).map(function(task){var taskId=(task.technical||{}).task_id,dependencies=(task.dependencies||[]).length?(task.dependencies||[]).map(function(dependency){return escapeHtml(dependency.business_id)+' · '+escapeHtml(dependency.description)}).join("<br>"):"无前置任务";return '<article class="dossier-card"><div class="dossier-card-head"><div><div class="dossier-kicker">'+escapeHtml(task.business_id||"任务编号待生成")+'</div><h4>'+escapeHtml(task.description||"未命名任务")+'</h4></div>'+badge(task.status,task.status_label)+'</div><div class="dossier-card-meta">负责人：'+escapeHtml((task.assignee||{}).name||"未分配")+' · 截止：'+escapeHtml(task.due_at?formatTime(task.due_at):"未设置")+'</div><dl class="dossier-fields"><dt>前置任务</dt><dd>'+dependencies+'</dd><dt>阻塞原因</dt><dd>'+escapeHtml(task.block_reason||"无")+'</dd></dl>'+renderBusinessResult(task.result)+'<details class="technical-details"><summary>查看任务技术标识</summary><dl class="detail-list"><dt>内部任务 ID</dt><dd class="mono">'+escapeHtml(taskId||"暂无")+'</dd></dl></details>'+(taskId?'<div class="record-actions"><button class="btn small" onclick="App.openTask(\''+escapeHtml(taskId)+'\')">查看任务详情</button></div>':"")+'</article>'}).join(""):'<div class="dossier-empty">尚未创建处置任务。</div>';
+      var approvals=(dossier.approvals||[]).length?(dossier.approvals||[]).map(function(item){var approvalId=(item.technical||{}).approval_id;return '<article class="dossier-card"><div class="dossier-card-head"><div><div class="dossier-kicker">'+escapeHtml(item.business_id||"审批编号待生成")+'</div><h4>'+escapeHtml(item.action||"受控业务动作")+'</h4></div>'+badge(item.status,item.status_label)+'</div><p>'+escapeHtml(item.message||"暂无动作说明")+'</p><dl class="dossier-fields"><dt>关联任务</dt><dd>'+escapeHtml(item.task_business_id||"未关联任务")+'</dd><dt>申请人</dt><dd>'+escapeHtml((item.requester||{}).name||"业务申请人")+'</dd><dt>审核意见</dt><dd>'+escapeHtml(item.comment||"暂无审核意见")+'</dd><dt>执行状态</dt><dd>'+escapeHtml(item.execution_status_label||"执行状态待确认")+'</dd></dl>'+(item.supersedes_business_id?'<div class="dossier-card-meta">重新提交自 '+escapeHtml(item.supersedes_business_id)+'</div>':"")+'<details class="technical-details"><summary>查看审批技术标识</summary><dl class="detail-list"><dt>内部审批 ID</dt><dd class="mono">'+escapeHtml(approvalId||"暂无")+'</dd><dt>工具标识</dt><dd class="mono">'+escapeHtml((item.technical||{}).tool_name||"暂无")+'</dd></dl></details>'+(approvalId?'<div class="record-actions"><button class="btn small" onclick="App.openApproval(\''+escapeHtml(approvalId)+'\')">查看审批详情</button></div>':"")+'</article>'}).join(""):'<div class="dossier-empty">当前事件暂无受控动作审批。</div>';
+      var references=(dossier.references||[]).length?(dossier.references||[]).map(function(reference){var people=[reference.expert_name,reference.publisher_name].filter(Boolean).join(" · ");return '<article class="dossier-card"><div class="dossier-kicker">'+escapeHtml(reference.source_label||"业务依据")+(reference.business_id?' · '+escapeHtml(reference.business_id):"")+'</div><h4>'+escapeHtml(reference.title||"未命名依据")+' · v'+escapeHtml(reference.version||"待确认")+'</h4><div class="dossier-card-meta">'+escapeHtml(people||"来源责任人待确认")+' · 相关度 '+escapeHtml(reference.relevance===null||reference.relevance===undefined?"待确认":Math.round(Number(reference.relevance)*100)+"%")+'</div></article>'}).join(""):'<div class="dossier-empty">本事件尚未形成可展示的 SOP、案例或专家经验引用。</div>';
+      var conversation=dossier.conversation?(function(){var conversationStatus=String(dossier.conversation.status||"").toUpperCase(),channel=String(dossier.conversation.channel||"").toUpperCase();return '<article class="dossier-card"><div class="dossier-card-head"><h4>'+escapeHtml(dossier.conversation.title||"员工与企业运营助手")+'</h4>'+badge(conversationStatus,conversationStatusLabels[conversationStatus]||"状态待确认")+'</div><p><strong>员工上报：</strong>'+escapeHtml(dossier.conversation.message||"暂无消息")+'</p><p><strong>助手回应：</strong>'+escapeHtml(dossier.conversation.reply||"暂无助手回复记录")+'</p><div class="dossier-card-meta">'+escapeHtml(channelLabels[channel]||dossier.conversation.channel||"业务渠道")+' · '+formatTime(dossier.conversation.created_at)+'</div></article>'})():'<div class="dossier-empty">该事件来自历史补录，暂无关联员工会话。</div>';
+      var closureConditions=summary.closure_conditions||{},closureBlockers=closureConditions.blockers||[],eventClosed=String(summary.status||event.status||"OPEN").toUpperCase()==="CLOSED";
+      var closureHtml=eventClosed?'<div class="dossier-empty"><strong>事件已完成闭环</strong>闭环结论和完整证据已保留在卷宗中。</div>':closureConditions.ready?'<div class="dossier-empty"><strong>具备闭环条件</strong>任务、审批与受控动作均已完成，可运行闭环检查并提交结果。</div>':'<div class="dossier-empty"><strong>暂不具备闭环条件</strong>'+closureBlockers.map(function(blocker){return '<div>· '+escapeHtml(blocker.message||"仍有业务步骤未完成")+'</div>'}).join("")+'</div>';
+      var watcherRuns=dossier.watcher_runs||[];
+      var watcherHtml=watcherRuns.length?watcherRuns.map(function(run){var target_snapshot=run.target_snapshot||{},counts=["消息 "+((target_snapshot.messages||[]).length),"知识引用 "+((target_snapshot.knowledge_references||[]).length),"任务 "+((target_snapshot.tasks||[]).length),"审批 "+((target_snapshot.approvals||[]).length),"通知 "+((target_snapshot.notifications||[]).length)];var resultText=run.summary||(Number(run.finding_count||0)===0&&String(run.status).toUpperCase()==="SUCCEEDED"?"证据完整，可闭环":"巡检已记录具体问题");return '<article class="dossier-card"><div class="dossier-card-head"><div><div class="dossier-kicker">闭环前合规检查</div><h4>'+escapeHtml(resultText)+'</h4></div>'+badge(run.status)+'</div><div class="dossier-card-meta">'+escapeHtml(counts.join(" · "))+' · '+formatTime(run.completed_at||run.started_at)+'</div><details class="technical-details"><summary>查看检查目标与 Trace</summary><dl class="detail-list"><dt>模型</dt><dd>'+escapeHtml(run.model_name||"deepseek-v4-flash")+'</dd><dt>Trace ID</dt><dd class="mono">'+escapeHtml(run.trace_id||"暂无")+'</dd><dt>快照版本</dt><dd>'+escapeHtml(target_snapshot.schema_version||"暂无")+'</dd></dl></details></article>'}).join(""):'<div class="dossier-empty"><strong>尚未执行事件级合规检查</strong>在闭环前运行 Watcher，核对消息、依据、任务、审批、通知和处置时效。</div>';
+      var experienceCandidates=dossier.experience_candidates||[];
+      var candidateHtml=experienceCandidates.length?experienceCandidates.map(function(candidate){var candidateId=candidate.id||"",failed=String(candidate.extraction_status||candidate.status||"").toUpperCase()==="FAILED",candidateActions=[];if(failed)candidateActions.push('<button class="btn danger small" onclick="App.retryExperienceCandidate(\''+escapeHtml(id)+'\')">重试生成</button>');else if(String(candidate.status||"").toUpperCase()==="DRAFT"&&!candidate.source_interview_id)candidateActions.push('<button class="btn primary small" onclick="App.startInterviewFromCandidate(\''+escapeHtml(id)+'\',\''+escapeHtml(candidateId)+'\')">邀请专家访谈</button>');if(candidate.source_interview_id)candidateActions.push('<button class="btn small" onclick="App.viewExperienceInterview(\''+escapeHtml(candidate.source_interview_id)+'\')">查看访谈进度</button>');if(candidate.experience_card_id)candidateActions.push('<button class="btn small" onclick="App.viewExperienceCard(\''+escapeHtml(candidate.experience_card_id)+'\')">查看经验卡</button>');var statusText=failed?"经验候选生成失败 / 可重试":(candidate.status_label||"待专家完善"),interviewText=candidate.source_interview_business_id?(" · 访谈 "+candidate.source_interview_business_id+" / "+(candidate.interview_status||"已邀请")):"";return '<article class="dossier-card"><div class="dossier-card-head"><div><div class="dossier-kicker">'+escapeHtml(candidate.business_id||"经验候选")+'</div><h4>'+escapeHtml(candidate.title||"待完善的事件经验")+'</h4></div>'+badge(failed?"FAILED":candidate.status,statusText)+'</div><p>'+escapeHtml(candidate.applicable_context||candidate.summary||"系统已从闭环证据中形成候选，需经专家访谈和人工审核后才能发布。")+'</p><div class="dossier-card-meta">索引状态：'+escapeHtml(candidate.index_status||"NOT_INDEXED")+escapeHtml(interviewText)+' · '+formatTime(candidate.updated_at||candidate.created_at)+'</div>'+(candidateActions.length?'<div class="record-actions">'+candidateActions.join("")+'</div>':"")+'</article>'}).join(""):'<div class="dossier-empty"><strong>尚无经验候选</strong>事件闭环后，系统会基于真实处置证据生成不可检索的待审核候选。</div>';
+      var technical=dossier.technical||{};
+      var html='<div class="dossier"><section class="dossier-hero"><div class="dossier-hero-top"><div><div class="dossier-kicker">'+escapeHtml(summary.business_id||event.business_id||"事件编号待生成")+' · '+escapeHtml(summary.venue_name||"当前场地")+'</div><h3>'+escapeHtml(summary.title||event.raw_text||"未命名现场事件")+'</h3></div>'+badge(summary.status||event.status,summary.status_label||event.status)+'</div><div class="dossier-meta"><div class="dossier-meta-item"><span>事件类型</span><strong>'+escapeHtml(summary.event_type||event.event_type||"待确认")+'</strong></div><div class="dossier-meta-item"><span>紧急程度</span><strong>'+escapeHtml(summary.severity_label||event.severity||"待确认")+'</strong></div><div class="dossier-meta-item"><span>上报员工</span><strong>'+escapeHtml((summary.reporter||{}).name||"现场员工")+'</strong></div><div class="dossier-meta-item"><span>负责人</span><strong>'+escapeHtml((summary.assignee||{}).name||"未分配")+'</strong></div><div class="dossier-meta-item"><span>来源</span><strong>'+escapeHtml(summary.source_label||"业务渠道上报")+'</strong></div><div class="dossier-meta-item"><span>上报时间</span><strong>'+formatTime(summary.reported_at)+'</strong></div><div class="dossier-meta-item"><span>闭环结果</span><strong>'+escapeHtml(summary.resolution||"尚未提交")+'</strong></div><div class="dossier-meta-item"><span>闭环条件</span><strong>'+escapeHtml(summary.close_ready?"具备闭环条件":"仍需推进")+'</strong></div></div><div class="dossier-next"><strong>下一步：</strong>'+escapeHtml(summary.next_action||"继续推进现场处置。")+'</div><div style="margin-top:12px">'+closureHtml+'</div><div style="margin-top:12px">'+actions+'</div></section><section class="dossier-section"><div class="dossier-section-head"><h3>原始会话</h3><span>员工与统一助手</span></div><div class="dossier-section-body">'+conversation+'</div></section><section class="dossier-section"><div class="dossier-section-head"><h3>处置时间线</h3><span>'+journeyTimeline.length+' 条业务活动</span></div><div class="dossier-section-body dossier-timeline">'+timeline+'</div></section><section class="dossier-section"><div class="dossier-section-head"><h3>关联任务</h3><span>'+(dossier.tasks||[]).length+' 项</span></div><div class="dossier-section-body dossier-grid">'+tasks+'</div></section><section class="dossier-section"><div class="dossier-section-head"><h3>审批与受控动作</h3><span>'+(dossier.approvals||[]).length+' 项</span></div><div class="dossier-section-body dossier-grid">'+approvals+'</div></section><section class="dossier-section"><div class="dossier-section-head"><h3>处置依据</h3><span>SOP、案例与专家经验</span></div><div class="dossier-section-body dossier-grid">'+references+'</div></section><section class="dossier-section"><div class="dossier-section-head"><h3>Watcher 合规检查</h3><span>'+watcherRuns.length+' 次事件级检查</span></div><div class="dossier-section-body dossier-grid">'+watcherHtml+'</div></section><section class="dossier-section"><div class="dossier-section-head"><h3>事件经验候选</h3><span>闭环后待专家共创</span></div><div class="dossier-section-body dossier-grid">'+candidateHtml+'</div></section><section class="dossier-section"><div class="dossier-section-head"><h3>附件与现场证据</h3><span>'+(dossier.attachments||[]).length+' 项</span></div><div class="dossier-empty">'+((dossier.attachments||[]).length?"附件说明已记录":"暂无附件；MVP 支持记录附件名称、类型和外部引用。")+'</div></section><details class="technical-details"><summary>技术与审计信息（默认隐藏）</summary><dl class="detail-list"><dt>事件内部 ID</dt><dd class="mono">'+escapeHtml(technical.event_id||event.event_id||"暂无")+'</dd><dt>Trace ID</dt><dd class="mono">'+escapeHtml(technical.trace_id||"暂无")+'</dd><dt>会话内部 ID</dt><dd class="mono">'+escapeHtml(technical.session_id||"暂无")+'</dd><dt>消息内部 ID</dt><dd class="mono">'+escapeHtml(technical.message_id||"暂无")+'</dd><dt>向量记录 ID</dt><dd class="mono">'+escapeHtml(technical.vector_doc_id||"暂无")+'</dd></dl></details></div>';
+      this.showDetails("事件卷宗 · "+(summary.business_id||event.business_id||"编号待生成"),html,true);if(!preserveLocation&&window.location.pathname!=="/admin/events/"+encodeURIComponent(id))history.pushState({event_id:id},"","/admin/events/"+encodeURIComponent(id));
+    }catch(error){if(preserveLocation)this.resetBusinessLocation("events");notify(error.message,"error")}
   },
   editEvent:async function(id){
     try{
@@ -1094,8 +1223,26 @@ var App={
     }catch(error){notify(error.message,"error")}
   },
   closeEvent:async function(id){
-    var values=await requestInput({title:"闭环事件",description:"记录现场处置结果。闭环后事件不可继续修改。",submitLabel:"确认闭环",danger:true,fields:[{name:"resolution",label:"闭环结果",type:"textarea",required:true,minLength:3,maxLength:4000,rows:5,span:2}]});if(!values)return;
-    try{await api("/admin/events/"+encodeURIComponent(id)+"/close",{method:"POST",body:{resolution:values.resolution.trim()}});notify("事件已闭环","success");this.closeDetails();await this.loadEvents()}catch(error){notify(error.message,"error")}
+    var values=await requestInput({title:"闭环事件",description:"记录现场处置结果。闭环后事件不可继续修改；系统将基于真实卷宗生成不可检索的经验候选。",submitLabel:"确认闭环",danger:true,fields:[{name:"resolution",label:"闭环结果",type:"textarea",required:true,minLength:12,maxLength:4000,rows:5,span:2}]});if(!values)return;
+    try{
+      var result=await api("/admin/events/"+encodeURIComponent(id)+"/close",{method:"POST",body:{resolution:values.resolution.trim()}}),candidateResult=result.experience_candidate||{},outcome=String(candidateResult.outcome||"").toUpperCase();
+      if(outcome==="FAILED")notify("事件已闭环；经验候选生成失败 / 可重试","warning");else if(["CREATED","REPLAYED"].indexOf(outcome)>=0)notify("发现可沉淀经验，已生成待审核候选","success");else notify("事件已闭环","success");
+      await this.loadEvents();await this.openEvent(id,true)
+    }catch(error){notify(error.message,"error")}
+  },
+  runEventWatcher:async function(id){
+    try{var result=await api("/admin/events/"+encodeURIComponent(id)+"/watcher-check",{method:"POST"});notify(result.ready_to_close?(result.summary||"证据完整，可闭环"):(result.summary||"Watcher 已发现待处理问题"),result.ready_to_close?"success":"warning");await this.openEvent(id,true)}catch(error){notify("Watcher 检查失败："+error.message,"error")}
+  },
+  retryExperienceCandidate:async function(id){
+    try{var result=await api("/admin/events/"+encodeURIComponent(id)+"/experience-candidate/retry",{method:"POST"}),outcome=String(result.outcome||"").toUpperCase();if(outcome==="FAILED")notify("经验候选生成失败 / 可重试","warning");else notify("发现可沉淀经验，已生成待审核候选","success");await this.openEvent(id,true)}catch(error){notify(error.message,"error")}
+  },
+  startInterviewFromCandidate:async function(eventId,candidateId){
+    try{
+      var dossier=this.state.currentEventDossier||{},candidate=(dossier.experience_candidates||[]).find(function(item){return item.id===candidateId})||{},expertsResult=await api("/admin/experts?limit=200"),experts=(expertsResult.experts||[]).filter(function(item){return item.status==="ACTIVE"&&item.authorization_status==="SIGNED"});
+      if(!experts.length){notify("当前没有已签署授权的在岗专家，请先完善专家档案。","warning");return}
+      var values=await requestInput({title:"邀请专家完善经验候选",description:"专家将在统一员工助手中收到访谈邀请；候选不会在访谈、审核和发布完成前进入员工检索。",submitLabel:"发送访谈邀请",fields:[{name:"expert_id",label:"受访专家",type:"select",required:true,options:experts.map(function(item){return {value:item.id,label:item.display_name+" · "+(item.job_title||"专家")}}),span:2},{name:"title",label:"访谈主题",required:true,minLength:2,maxLength:200,defaultValue:candidate.title||"现场事件经验复盘",span:2}]});if(!values)return;
+      await api("/admin/experience-interviews",{method:"POST",body:{expert_id:values.expert_id,title:values.title.trim(),source_event_id:eventId,authorization_scopes:[{scope_type:"VENUE",scope_value:Auth.user.venue_id}]}});notify("访谈邀请已发送，专家可在统一员工助手中继续。","success");this.closeDetails();await this.navigate("experience")
+    }catch(error){notify(error.message,"error")}
   },
 
   loadSessions:async function(){
@@ -1111,34 +1258,50 @@ var App={
   },
 
   loadTasks:async function(){
-    var result=await api("/admin/tasks?limit=200");this.state.tasks=result.tasks||[];
-    if(this.isManager())await Promise.all([this.getAssignees(),this.loadSessions()]);
+    var requests=[api("/admin/tasks?limit=200"),api("/admin/events?limit=200")];
+    if(this.isManager())requests.push(this.getAssignees(),this.loadSessions());
+    var results=await Promise.all(requests);this.state.tasks=results[0].tasks||[];this.state.events=results[1].events||[];
     this.renderTasks();
   },
   renderTasks:function(){
     var query=byId("task-search").value.trim().toLowerCase(),status=byId("task-filter").value;
     var assigneeMap={};this.state.assignees.forEach(function(user){assigneeMap[user.id]=user.display_name});
-    var rows=this.state.tasks.filter(function(task){return (!status||task.status===status)&&(!query||[task.description,task.session_id,task.assigned_user_id].join(" ").toLowerCase().indexOf(query)>=0)});
+    var eventMap={};this.state.events.forEach(function(event){eventMap[event.event_id]=event});
+    var taskMap={};this.state.tasks.forEach(function(task){taskMap[task.id]=task});
+    var rows=this.state.tasks.filter(function(task){var linkedEvent=eventMap[task.event_id]||{};return (!status||task.status===status)&&(!query||[task.description,task.business_id,linkedEvent.business_id,linkedEvent.raw_text,task.assigned_user_id,task.block_reason].join(" ").toLowerCase().indexOf(query)>=0)});
     byId("task-count").textContent=rows.length+" 条";
     byId("tasks-table").innerHTML=rows.length?rows.map(function(task){
       var actions=[];var state=String(task.status||"").toUpperCase();
+      actions.push('<button class="btn small" type="button" data-action="view-task" data-id="'+escapeHtml(task.id)+'">详情</button>');
       if(state==="PENDING")actions.push('<button class="btn success small" onclick="App.taskAction(\''+escapeHtml(task.id)+'\',\'start\')">开始</button>');
       if(state==="RUNNING"){actions.push('<button class="btn success small" onclick="App.taskAction(\''+escapeHtml(task.id)+'\',\'complete\')">完成</button>');actions.push('<button class="btn danger small" onclick="App.taskAction(\''+escapeHtml(task.id)+'\',\'fail\')">失败</button>')}
+      if(state==="BLOCKED"&&task.block_reason&&App.isManager())actions.push('<button class="btn success small" type="button" data-action="unblock-task" data-id="'+escapeHtml(task.id)+'">解除阻塞</button>');
       if(state==="FAILED"&&App.isManager())actions.push('<button class="btn small" onclick="App.taskAction(\''+escapeHtml(task.id)+'\',\'retry\')">恢复</button>');
       if(App.isManager())actions.push('<button class="btn small" onclick="App.assignTask(\''+escapeHtml(task.id)+'\')">分配</button>');
-      return '<tr><td><div class="cell-title">'+escapeHtml(task.description)+'</div><div class="cell-sub mono">'+escapeHtml(task.id)+' · '+escapeHtml(task.session_id)+'</div></td><td>'+badge(task.status)+'</td><td>'+escapeHtml(assigneeMap[task.assigned_user_id]||task.assigned_user_id||"未分配")+'</td><td>人工执行</td><td class="mono">'+escapeHtml((task.dependencies||[]).join(", ")||"无")+'</td><td>'+escapeHtml(task.attempts||0)+' / '+escapeHtml(task.max_attempts||3)+'</td><td><div class="record-actions">'+actions.join("")+'</div></td></tr>';
+      var blockReason=task.block_reason?'<div class="cell-sub task-block-reason"><strong>人工阻塞原因：</strong>'+escapeHtml(task.block_reason)+'</div>':"";
+      var linkedEvent=eventMap[task.event_id]||{},dependencies=(task.dependencies||[]).map(function(dependencyId){var dependency=taskMap[dependencyId]||{};return dependency.business_id||"关联任务不存在或已删除"});
+      return '<tr><td><div class="cell-title">'+escapeHtml(task.description)+'</div>'+blockReason+'<div class="cell-sub">'+escapeHtml(task.business_id||"任务编号待生成")+' · '+escapeHtml(linkedEvent.business_id||"通用待办")+'</div></td><td>'+taskBadge(task.status)+'</td><td>'+escapeHtml(assigneeMap[task.assigned_user_id]||"未分配")+'</td><td>人工执行</td><td>'+escapeHtml(dependencies.join("、")||"无")+'</td><td>'+escapeHtml(task.attempts||0)+' / '+escapeHtml(task.max_attempts||3)+'</td><td><div class="record-actions">'+actions.join("")+'</div></td></tr>';
     }).join(""):emptyRow(7,"暂无任务","经理可以创建任务并建立依赖关系。");
   },
+  taskEventOptions:function(){
+    return this.state.events.filter(function(event){return String(event.status||"OPEN").toUpperCase()!=="CLOSED"}).map(function(event){return '<option value="'+escapeHtml(event.event_id)+'" data-session-id="'+escapeHtml(event.source_session_id||"")+'">'+escapeHtml(event.business_id||"事件编号待生成")+' · '+escapeHtml(String(event.raw_text||"未命名事件").slice(0,56))+'</option>'}).join("");
+  },
+  taskSessionOptions:function(){
+    return this.state.sessions.map(function(session){var title=session.display_name||session.user_display_name||session.history_summary||session.current_intent||"业务会话";return '<option value="'+escapeHtml(session.session_id)+'">'+escapeHtml(String(title).slice(0,72))+' · '+formatTime(session.updated_at||session.created_at)+'</option>'}).join("");
+  },
+  syncTaskSession:function(eventSelectId,sessionSelectId){
+    var option=byId(eventSelectId).selectedOptions[0],sessionId=option&&option.getAttribute("data-session-id");if(sessionId&&Array.from(byId(sessionSelectId).options).some(function(item){return item.value===sessionId}))byId(sessionSelectId).value=sessionId;
+  },
   openTaskDialog:function(){
-    if(!this.state.sessions.length){notify("请先提交现场事件或创建真实会话，再创建任务。","error");return}
-    var sessionSelect=byId("task-session");sessionSelect.innerHTML=this.state.sessions.map(function(session){return '<option value="'+escapeHtml(session.session_id)+'">'+escapeHtml(session.session_id)+' · '+escapeHtml(session.stage||"")+'</option>'}).join("");
+    if(!this.state.events.length||!this.state.sessions.length){notify("请先通过员工助手上报事件并形成真实会话。","error");return}
+    byId("task-event").innerHTML=this.taskEventOptions();byId("task-session").innerHTML=this.taskSessionOptions();this.syncTaskSession("task-event","task-session");
     byId("task-assignee").innerHTML='<option value="">暂不分配</option>'+this.state.assignees.map(function(user){return '<option value="'+escapeHtml(user.id)+'">'+escapeHtml(user.display_name)+' · '+escapeHtml(roleNames[user.role]||user.role)+'</option>'}).join("");
     openDialog("task-dialog");
   },
   createTask:async function(event){
     event.preventDefault();var dependencies=byId("task-dependencies").value.split(",").map(function(item){return item.trim()}).filter(Boolean);
     try{
-      await api("/admin/tasks",{method:"POST",body:{session_id:byId("task-session").value,description:byId("task-description").value.trim(),dependencies:dependencies,assigned_user_id:byId("task-assignee").value||null,max_attempts:Number(byId("task-attempts").value||3)}});
+      await api("/admin/tasks",{method:"POST",body:{event_id:byId("task-event").value,session_id:byId("task-session").value,description:byId("task-description").value.trim(),dependencies:dependencies,assigned_user_id:byId("task-assignee").value||null,max_attempts:Number(byId("task-attempts").value||3)}});
       closeDialog("task-dialog");byId("task-form").reset();notify("任务已创建","success");await this.loadTasks();
     }catch(error){notify(error.message,"error")}
   },
@@ -1171,18 +1334,18 @@ var App={
     submit.disabled=locked;submit.textContent=operation.status==="RUNNING"?"TodoWrite 拆解中…":"调用 TodoWrite 拆解";cancel.classList.toggle("hidden",operation.status!=="RUNNING");recovery.classList.toggle("hidden",["CHECK_REQUIRED","RETRYABLE"].indexOf(operation.status)<0);recover.textContent=operation.status==="RETRYABLE"?"继续原请求":"核对结果";
   },
   openTaskDecomposeDialog:function(){
-    if(!this.state.sessions.length){notify("请先提交现场事件或创建真实会话，再使用 AI 拆解。","error");return}
-    byId("task-decompose-session").innerHTML=this.state.sessions.map(function(session){return '<option value="'+escapeHtml(session.session_id)+'">'+escapeHtml(session.session_id)+' · '+escapeHtml(session.stage||"")+'</option>'}).join("");
+    if(!this.state.events.length||!this.state.sessions.length){notify("请先通过员工助手上报事件并形成真实会话。","error");return}
+    byId("task-decompose-event").innerHTML=this.taskEventOptions();byId("task-decompose-session").innerHTML=this.taskSessionOptions();this.syncTaskSession("task-decompose-event","task-decompose-session");
     byId("task-decompose-assignee").innerHTML='<option value="">暂不分配</option>'+this.state.assignees.map(function(user){return '<option value="'+escapeHtml(user.id)+'">'+escapeHtml(user.display_name)+' · '+escapeHtml(roleNames[user.role]||user.role)+'</option>'}).join("");
     var operation=this.todoDecomposition;
-    if(operation&&["RUNNING","CHECK_REQUIRED","RETRYABLE"].indexOf(operation.status)>=0&&operation.payload){byId("task-decompose-goal").value=operation.payload.goal;byId("task-decompose-session").value=operation.payload.session_id;byId("task-decompose-assignee").value=operation.payload.assigned_user_id||"";byId("task-decompose-attempts").value=operation.payload.max_attempts}
+    if(operation&&["RUNNING","CHECK_REQUIRED","RETRYABLE"].indexOf(operation.status)>=0&&operation.payload){byId("task-decompose-goal").value=operation.payload.goal;byId("task-decompose-event").value=operation.payload.event_id||"";byId("task-decompose-session").value=operation.payload.session_id;byId("task-decompose-assignee").value=operation.payload.assigned_user_id||"";byId("task-decompose-attempts").value=operation.payload.max_attempts}
     this.renderTaskDecomposition();openDialog("task-decompose-dialog");
   },
   decomposeTasks:async function(event){
     event.preventDefault();
     if(this.todoDecomposition&&["RUNNING","CHECK_REQUIRED","RETRYABLE"].indexOf(this.todoDecomposition.status)>=0){notify("上一次拆解结果尚未确认，请先核对，避免重复创建任务。","error");return}
     var traceId=newRequestId(),idempotencyKey=newRequestId();
-    var operation={status:"RUNNING",trace_id:traceId,idempotency_key:idempotencyKey,owner_user_id:(Auth.user&&Auth.user.id)||"",venue_id:(Auth.user&&Auth.user.venue_id)||"",agent_id:"TodoWrite",tasks_created:null,note:"正在等待 DeepSeek 返回任务图。",payload:{goal:byId("task-decompose-goal").value.trim(),session_id:byId("task-decompose-session").value,assigned_user_id:byId("task-decompose-assignee").value||null,max_attempts:Number(byId("task-decompose-attempts").value||3)}};
+    var operation={status:"RUNNING",trace_id:traceId,idempotency_key:idempotencyKey,owner_user_id:(Auth.user&&Auth.user.id)||"",venue_id:(Auth.user&&Auth.user.venue_id)||"",agent_id:"TodoWrite",tasks_created:null,note:"正在等待 DeepSeek 返回任务图。",payload:{goal:byId("task-decompose-goal").value.trim(),event_id:byId("task-decompose-event").value,session_id:byId("task-decompose-session").value,assigned_user_id:byId("task-decompose-assignee").value||null,max_attempts:Number(byId("task-decompose-attempts").value||3)}};
     this.todoDecomposition=operation;persistTodoDecomposition(operation);this.renderTaskDecomposition();await this.submitTodoDecomposition(operation);
   },
   submitTodoDecomposition:async function(operation){
@@ -1251,6 +1414,34 @@ var App={
     if(action==="fail"){var failed=await requestInput({title:"标记任务失败",description:"失败原因会进入任务记录，经理可据此恢复任务。",submitLabel:"标记失败",danger:true,fields:[{name:"error",label:"失败原因",type:"textarea",required:true,minLength:2,maxLength:2000,rows:4,span:2}]});if(!failed)return;options.body={error:failed.error.trim()}}
     try{var result=await api("/admin/tasks/"+encodeURIComponent(id)+"/"+action,options);var task=result.task||{};var message="任务状态已更新";if(action==="fail")message=String(task.status).toUpperCase()==="PENDING"?"任务失败，已进入自动重试 "+String(task.attempts||0)+" / "+String(task.max_attempts||3):"任务重试已耗尽，等待经理恢复";notify(message,"success");await this.loadTasks()}catch(error){notify(error.message,"error")}
   },
+  openTask:async function(id,preserveLocation){
+    if(this.currentView!=="tasks")await this.navigate("tasks",true);
+    try{
+      var result=await api("/admin/tasks/"+encodeURIComponent(id));var task=result.task||{};var state=String(task.status||"").toUpperCase();
+      var assignee=this.state.assignees.find(function(user){return user.id===task.assigned_user_id});
+      var blockReason=task.block_reason||((state==="BLOCKED")?"正在等待前置任务完成，不需要人工解除。":"无");
+      var unblockAction=state==="BLOCKED"&&task.block_reason&&this.isManager()?'<button class="btn success" type="button" data-action="unblock-task" data-id="'+escapeHtml(task.id)+'">确认障碍已解决并恢复任务</button>':"";
+      var linkedEvent=this.state.events.find(function(event){return event.event_id===task.event_id})||{},resultValue=task.result&&typeof task.result==="object"?{kind:"fields",fields:task.result}:{kind:"text",text:task.result||"尚未提交结果"};
+      this.showDetails("任务详情 · "+(task.business_id||"编号待生成"),'<dl class="detail-list"><dt>任务编号</dt><dd>'+escapeHtml(task.business_id||"任务编号待生成")+'</dd><dt>任务内容</dt><dd>'+escapeHtml(task.description||"暂无任务说明")+'</dd><dt>关联事件</dt><dd>'+(linkedEvent.event_id?'<button class="btn small" onclick="App.openEvent(\''+escapeHtml(linkedEvent.event_id)+'\')">'+escapeHtml(linkedEvent.business_id||"查看事件卷宗")+'</button>':'通用待办')+'</dd><dt>状态</dt><dd>'+taskBadge(task.status)+'</dd><dt>负责人</dt><dd>'+escapeHtml((assignee&&assignee.display_name)||"未分配")+'</dd><dt>执行方式</dt><dd>人工执行</dd><dt>截止时间</dt><dd>'+escapeHtml(task.due_at?formatTime(task.due_at):"未设置")+'</dd><dt>阻塞原因</dt><dd class="'+(task.block_reason?"task-block-reason":"")+'">'+escapeHtml(blockReason)+'</dd><dt>执行尝试</dt><dd>'+escapeHtml(task.attempts||0)+' / '+escapeHtml(task.max_attempts||3)+'</dd><dt>最近错误</dt><dd>'+escapeHtml(task.error||"无")+'</dd></dl><div class="dossier-section" style="margin-top:14px"><div class="dossier-section-head"><h3>完成结果</h3></div><div class="dossier-section-body">'+renderBusinessResult(resultValue)+'</div></div><details class="technical-details" style="margin-top:14px"><summary>技术与审计信息（默认隐藏）</summary><dl class="detail-list"><dt>任务内部 ID</dt><dd class="mono">'+escapeHtml(task.id||"暂无")+'</dd><dt>会话内部 ID</dt><dd class="mono">'+escapeHtml(task.session_id||"暂无")+'</dd><dt>前置任务 ID</dt><dd class="mono">'+escapeHtml((task.dependencies||[]).join(", ")||"无")+'</dd></dl></details>'+(unblockAction?'<div class="record-actions" style="margin-top:16px">'+unblockAction+'</div>':""));
+      if(!preserveLocation&&window.location.pathname!=="/admin/tasks/"+encodeURIComponent(id))history.pushState({task_id:id},"","/admin/tasks/"+encodeURIComponent(id));
+    }catch(error){if(preserveLocation)this.resetBusinessLocation("tasks");notify("任务详情加载失败："+error.message+(error.action?" 建议："+error.action:"")+(error.traceId?" · Trace "+error.traceId:""),"error")}
+  },
+  unblockTask:async function(id){
+    var current=this.state.tasks.find(function(task){return task.id===id})||{};
+    if(!await confirmAction({title:"解除任务阻塞",description:"员工上报："+(current.block_reason||"未提供原因")+"\n确认现场障碍已经解决后再恢复；如果仍有前置任务未完成，任务会继续等待。",submitLabel:"确认解除阻塞"}))return;
+    var result;
+    try{
+      result=await api("/admin/tasks/"+encodeURIComponent(id)+"/unblock",{method:"POST"});
+    }catch(error){
+      notify("解除阻塞失败："+error.message+(error.action?" 建议："+error.action:"")+(error.traceId?" · Trace "+error.traceId:""),"error");
+      return;
+    }
+    var task=result.task||{};var nextState=String(task.status||"").toUpperCase();
+    this.state.tasks=this.state.tasks.map(function(item){return item.id===id?task:item});this.renderTasks();this.closeDetails();
+    notify(nextState==="PENDING"?"人工阻塞已解除，任务已恢复为待执行。":"人工阻塞已解除，任务仍在等待前置任务完成。","success");
+    try{await this.loadTasks()}
+    catch(error){notify("阻塞已解除，但任务列表刷新失败。请手动刷新。"+(error.action?" "+error.action:"")+(error.traceId?" · Trace "+error.traceId:""),"warning")}
+  },
   assignTask:async function(id){
     var task=this.state.tasks.find(function(item){return item.id===id})||{};
     var assigneeOptions=[{value:"",label:"不分配（人工池）"}].concat(this.state.assignees.map(function(user){return {value:user.id,label:user.display_name+" · "+(roleNames[user.role]||user.role)}}));
@@ -1260,38 +1451,59 @@ var App={
 
   loadApprovals:async function(){
     var status=byId("approval-filter").value||"ALL";var path="/admin/approvals?limit=200&status="+encodeURIComponent(status);
-    this.state.approvals=await api(path);byId("approval-count").textContent=this.state.approvals.length+" 条";
+    var result=await Promise.all([api(path),api("/admin/tasks?limit=200"),api("/admin/events?limit=200")]);this.state.approvals=result[0];this.state.tasks=result[1].tasks||[];this.state.events=result[2].events||[];byId("approval-count").textContent=this.state.approvals.length+" 条";
     byId("approvals-table").innerHTML=this.state.approvals.length?this.state.approvals.map(function(item){
       var actions=String(item.status).toUpperCase()==="PENDING"?'<button class="btn success small" onclick="App.reviewApproval(\''+escapeHtml(item.approval_id)+'\',\'approve\')">批准</button><button class="btn danger small" onclick="App.reviewApproval(\''+escapeHtml(item.approval_id)+'\',\'reject\')">拒绝</button>':'<button class="btn small" onclick="App.openApproval(\''+escapeHtml(item.approval_id)+'\')">详情</button>';
-      return '<tr><td>'+formatTime(item.requested_at)+'</td><td><div class="cell-title">'+escapeHtml(item.tool_name)+'</div><div class="cell-sub mono">'+escapeHtml(item.approval_id)+'</div></td><td class="mono">'+escapeHtml(item.session_id)+'<div class="cell-sub">'+escapeHtml(item.requested_by||item.user_id)+'</div></td><td>'+badge(item.status)+'</td><td class="mono">'+escapeHtml(jsonPreview(item.args).slice(0,180))+'</td><td><div class="record-actions">'+actions+'</div></td></tr>';
+      var task=App.state.tasks.find(function(task){return task.id===item.task_id})||{},linkedEvent=App.state.events.find(function(event){return event.event_id===item.event_id})||{},args=item.args||{},evidence=item.evidence_snapshot||{},delivery=evidence.delivery||{},targets=Array.isArray(delivery.targets)?delivery.targets:[],targetSummary=targets.length?targets.map(function(target){return (target.display_name||"未命名员工")+(target.job_title?"（"+target.job_title+"）":"")}).join("、"):args.recipient_scope==="SESSION"?"当前任务会话":"收件范围待确认";
+      return '<tr><td>'+formatTime(item.requested_at)+'</td><td><div class="cell-title">'+escapeHtml(toolLabels[item.tool_name]||"受控业务动作")+'</div><div class="cell-sub">'+escapeHtml(item.business_id||"审批编号待生成")+'</div></td><td><div class="cell-title">'+escapeHtml(linkedEvent.business_id||"事件待关联")+'</div><div class="cell-sub">'+escapeHtml(task.business_id||"任务待关联")+'</div></td><td>'+badge(item.status,approvalStatusLabels[String(item.status||"").toUpperCase()]||"状态待确认")+'</td><td>'+escapeHtml(args.message||"暂无动作说明")+'<div class="cell-sub">'+escapeHtml(targetSummary)+'</div></td><td><div class="record-actions">'+actions+'</div></td></tr>';
     }).join(""):emptyRow(6,"暂无审批请求","高风险动作进入审批后会显示在这里。");
   },
   reviewApproval:async function(id,action){
     var rejecting=action==="reject";var values=await requestInput({title:rejecting?"拒绝审批":"批准审批",description:rejecting?"拒绝原因会返回给动作发起人。":"批准后系统将继续执行该高风险动作。",submitLabel:rejecting?"确认拒绝":"确认批准",danger:rejecting,fields:[{name:"comment",label:rejecting?"拒绝原因":"批准意见（可选）",type:"textarea",required:rejecting,minLength:rejecting?2:0,maxLength:2000,rows:4,span:2}]});if(!values)return;
-    try{var result=await api("/admin/approvals/"+encodeURIComponent(id)+"/"+action,{method:"POST",body:{comment:values.comment.trim()||null}});if(rejecting){notify("审批已拒绝","success")}else{var execution=result.execution_result||{},delivery=execution.result||{};var delivered=execution.status==="executed"&&["DELIVERED","SUCCEEDED"].indexOf(String(delivery.status||"").toUpperCase())>=0;if(delivered)notify("审批已批准，动作已真实投递","success");else notify("审批已批准，但动作未完成投递，请查看执行结果","error")}await this.loadApprovals()}catch(error){notify(error.message,"error")}
+    try{var result=await api("/admin/approvals/"+encodeURIComponent(id)+"/"+action,{method:"POST",body:{comment:values.comment.trim()||null}});if(rejecting){notify("审批已拒绝","success")}else{var execution=result.execution_result||{},delivery=execution.result||{};var delivered=execution.status==="executed"&&["DELIVERED","SUCCEEDED"].indexOf(String(delivery.status||"").toUpperCase())>=0;if(delivered&&delivery.channel==="WECOM_SIMULATOR_OUTBOX")notify("审批已批准，已送达企微模拟器 "+escapeHtml(delivery.delivered_count||0)+"/"+escapeHtml(delivery.target_count||0),"success");else if(delivered)notify("审批已批准，动作已真实投递","success");else notify("审批已批准，但动作未完成投递，请查看执行结果","error")}await this.loadApprovals()}catch(error){notify(error.message,"error")}
   },
-  openApproval:async function(id){
-    try{var item=await api("/admin/approvals/"+encodeURIComponent(id));this.showDetails("审批详情",'<dl class="detail-list"><dt>审批 ID</dt><dd class="mono">'+escapeHtml(item.approval_id)+'</dd><dt>工具</dt><dd>'+escapeHtml(item.tool_name)+'</dd><dt>状态</dt><dd>'+badge(item.status)+'</dd><dt>参数</dt><dd><pre class="json">'+escapeHtml(jsonPreview(item.args))+'</pre></dd><dt>意见</dt><dd>'+escapeHtml(item.comment||"-")+'</dd><dt>执行结果</dt><dd><pre class="json">'+escapeHtml(jsonPreview(item.execution_result||item.execution_error||{}))+'</pre></dd></dl>')}catch(error){notify(error.message,"error")}
+  openApproval:async function(id,preserveLocation){
+    if(this.currentView!=="approvals")await this.navigate("approvals",true);
+    try{
+      var item=await api("/admin/approvals/"+encodeURIComponent(id)),args=item.args||{},task=this.state.tasks.find(function(task){return task.id===item.task_id})||{},linkedEvent=this.state.events.find(function(event){return event.event_id===item.event_id})||{},execution=item.execution_result||{},evidence=item.evidence_snapshot||{},delivery=evidence.delivery||{},targets=Array.isArray(delivery.targets)?delivery.targets:[],deliveryResult=execution.result||{};
+      var recipientNames=targets.map(function(target){return target.display_name||""}).filter(Boolean);
+      var targetSummary=targets.length?targets.map(function(target){return (target.display_name||"未命名员工")+(target.job_title?" · "+target.job_title:"")}).join("；"):args.phone||args.recipient||"当前任务会话";
+      var deliveredCount=Number(deliveryResult.delivered_count||0),targetCount=Number(deliveryResult.target_count||targets.length||0),deliveryStatus=String(deliveryResult.status||"").toUpperCase(),approvalStatus=String(item.status||"").toUpperCase();
+      var executionSummary="受控动作尚未产生可确认的执行结果。";
+      if(approvalStatus==="PENDING")executionSummary="审批尚未完成，受控动作还未执行。";
+      else if(approvalStatus==="REJECTED")executionSummary="审批已拒绝，受控动作未执行。";
+      else if(item.execution_error||execution.status==="error")executionSummary="受控动作执行失败，请展开技术与审计信息查看失败原因。";
+      else if(execution.status==="executed"&&deliveryResult.channel==="WECOM_SIMULATOR_OUTBOX"&&["DELIVERED","SUCCEEDED"].indexOf(deliveryStatus)>=0)executionSummary="受控动作已完成，"+(recipientNames.length?recipientNames.join("、")+"共 ":"共 ")+deliveredCount+" 人已收到企微模拟器通知。";
+      else if(execution.status==="executed"&&["DELIVERED","SUCCEEDED"].indexOf(deliveryStatus)>=0)executionSummary="受控动作已完成，已成功投递给 "+deliveredCount+" / "+targetCount+" 位接收人。";
+      var deliverySummary=deliveryResult.channel==="WECOM_SIMULATOR_OUTBOX"?deliveredCount+"/"+targetCount+" 已送达企微模拟器":"尚无企微模拟器送达记录";
+      var executionState=String(item.execution_status||execution.status||"").toUpperCase(),executionStateLabel={SUCCEEDED:"已完成",EXECUTED:"已完成",DELIVERED:"已送达",FAILED:"执行失败",ERROR:"执行失败",PENDING:"待执行"}[executionState]||(approvalStatus==="PENDING"?"待审批":approvalStatus==="REJECTED"?"未执行":"状态待确认");
+      this.showDetails("审批详情 · "+(item.business_id||"编号待生成"),'<dl class="detail-list"><dt>审批编号</dt><dd>'+escapeHtml(item.business_id||"审批编号待生成")+'</dd><dt>业务动作</dt><dd>'+escapeHtml(toolLabels[item.tool_name]||"受控业务动作")+'</dd><dt>关联事件</dt><dd>'+(linkedEvent.event_id?'<button class="btn small" onclick="App.openEvent(\''+escapeHtml(linkedEvent.event_id)+'\')">'+escapeHtml(linkedEvent.business_id||"查看事件卷宗")+'</button>':'关联事件不存在或已删除')+'</dd><dt>关联任务</dt><dd>'+(task.id?'<button class="btn small" onclick="App.openTask(\''+escapeHtml(task.id)+'\')">'+escapeHtml(task.business_id||"查看任务详情")+'</button>':'关联任务不存在或已删除')+'</dd><dt>当前状态</dt><dd>'+badge(item.status,approvalStatusLabels[approvalStatus]||"状态待确认")+'</dd><dt>动作内容</dt><dd>'+escapeHtml(args.message||"暂无动作说明")+'</dd><dt>接收范围</dt><dd>'+escapeHtml(targetSummary)+'</dd><dt>送达汇总</dt><dd>'+escapeHtml(deliverySummary)+'</dd><dt>审核意见</dt><dd>'+escapeHtml(item.comment||"暂无审核意见")+'</dd><dt>执行状态</dt><dd>'+escapeHtml(executionStateLabel)+'</dd><dt>执行结果</dt><dd>'+escapeHtml(executionSummary)+'</dd></dl><details class="technical-details" style="margin-top:14px"><summary>技术与审计信息（默认隐藏）</summary><dl class="detail-list"><dt>审批内部 ID</dt><dd class="mono">'+escapeHtml(item.approval_id||"暂无")+'</dd><dt>工具标识</dt><dd class="mono">'+escapeHtml(item.tool_name||"暂无")+'</dd><dt>Trace ID</dt><dd class="mono">'+escapeHtml(item.correlation_trace_id||item.execution_trace_id||"暂无")+'</dd><dt>会话内部 ID</dt><dd class="mono">'+escapeHtml(item.session_id||"暂无")+'</dd><dt>原始执行状态</dt><dd class="mono">'+escapeHtml(item.execution_status||execution.status||"暂无")+'</dd><dt>原始执行回执</dt><dd><pre class="json">'+escapeHtml(jsonPreview(execution))+'</pre></dd><dt>原始执行错误</dt><dd class="mono">'+escapeHtml(item.execution_error||"无")+'</dd></dl></details>',true);
+      if(!preserveLocation&&window.location.pathname!=="/admin/approvals/"+encodeURIComponent(id))history.pushState({approval_id:id},"","/admin/approvals/"+encodeURIComponent(id));
+    }catch(error){if(preserveLocation)this.resetBusinessLocation("approvals");notify(error.message,"error")}
   },
 
   requestControlledAction:async function(){
-    if(!this.state.sessions.length)await this.loadSessions();
-    if(!this.state.sessions.length){notify("请先通过现场事件建立一个可关联会话","error");return}
+    try{var businessData=await Promise.all([api("/admin/tasks?limit=200"),api("/admin/events?limit=200"),api("/admin/approvals?status=ALL")]);this.state.tasks=businessData[0].tasks||[];this.state.events=businessData[1].events||[];this.state.approvals=businessData[2]||[]}catch(error){notify(error.message,"error");return}
+    var eligibleTasks=this.state.tasks.filter(function(task){return task.event_id&&task.session_id&&String(task.status||"").toUpperCase()==="DONE"});
+    if(!eligibleTasks.length){notify("请先完成一项已关联事件的任务并提交现场结果，再发起受控动作。","error");return}
     try{
       if(!this.state.integrations.length){var integrationPayload=await api("/admin/integrations");this.state.integrations=integrationPayload.integrations||[]}
     }catch(error){notify(error.message,"error");return}
     var smsIntegration=this.state.integrations.find(function(item){return item.id==="sms"});
     var smsReady=Boolean(smsIntegration&&smsIntegration.status==="READY");
-    var selected=await requestInput({title:"选择受控动作",description:"站内告警可直接完成真实闭环；外部渠道只有在配置并通过 Live 验收后才可选择。",submitLabel:"下一步",fields:[{name:"tool_name",label:"动作类型",type:"select",required:true,span:2,options:[{value:"send_in_app_alert",label:"站内告警（可用）"},{value:"send_sms",label:smsReady?"短信通知（指定号码）":"短信通知（未配置，禁用）",disabled:!smsReady},{value:"send_alert",label:smsReady?"外部告警广播（值班号码组）":"外部告警广播（未配置，禁用）",disabled:!smsReady}]}]});if(!selected)return;
-    var sessionOptions=this.state.sessions.map(function(session){return {value:session.session_id,label:session.session_id+" · "+(session.history_summary||session.current_intent||"现场会话")}});
-    var fields=[{name:"session_id",label:"关联会话",type:"select",required:true,options:sessionOptions,span:2}];
+    var selected=await requestInput({title:"选择受控动作",description:"企微模拟器通知可完成演示闭环；外部渠道只有在配置并通过 Live 验收后才可选择。",submitLabel:"下一步",fields:[{name:"tool_name",label:"动作类型",type:"select",required:true,span:2,options:[{value:"send_in_app_alert",label:"企微模拟器通知（演示可用）"},{value:"send_sms",label:smsReady?"短信通知（指定号码）":"短信通知（未配置，禁用）",disabled:!smsReady},{value:"send_alert",label:smsReady?"外部告警广播（值班号码组）":"外部告警广播（未配置，禁用）",disabled:!smsReady}]}]});if(!selected)return;
+    var taskOptions=eligibleTasks.map(function(task){var linkedEvent=App.state.events.find(function(event){return event.event_id===task.event_id})||{};return {value:task.id,label:(task.business_id||"任务编号待生成")+" · "+(linkedEvent.business_id||"事件编号待生成")+" · "+String(task.description||"已完成任务").slice(0,48)}});
+    var rejectedOptions=[{value:"",label:"首次提交，不替代历史审批"}].concat(this.state.approvals.filter(function(item){return item.tool_name===selected.tool_name&&String(item.status||"").toUpperCase()==="REJECTED"}).map(function(item){return {value:item.approval_id,label:"重新提交 "+(item.business_id||"历史审批")+" · "+String(item.comment||"已拒绝").slice(0,42)}}));
+    var fields=[{name:"task_id",label:"关联已完成任务",type:"select",required:true,options:taskOptions,span:2},{name:"supersedes_approval_id",label:"重新提交自（可选）",type:"select",options:rejectedOptions,span:2}];
+    if(selected.tool_name==="send_in_app_alert")fields.push({name:"recipient_scope",label:"通知范围",type:"select",required:true,span:2,options:[{value:"EVENT_PARTICIPANTS",label:"事件相关人员（企微模拟器）"},{value:"SESSION",label:"当前任务会话（兼容模式）"}]});
     if(selected.tool_name==="send_sms")fields.push({name:"recipient",label:"收件号码",type:"tel",required:true,minLength:6,maxLength:21,placeholder:"例如 13800138000"});
     fields.push({name:"priority",label:selected.tool_name==="send_sms"?"优先级":"告警级别",type:"select",required:true,options:selected.tool_name==="send_sms"?[{value:"normal",label:"普通"},{value:"high",label:"高优先级"}]:[{value:"info",label:"提示"},{value:"warning",label:"警告"},{value:"critical",label:"严重"}]});
     fields.push({name:"message",label:"动作内容",type:"textarea",required:true,minLength:1,maxLength:1000,rows:5,span:2});
-    var actionTitle=selected.tool_name==="send_sms"?"申请短信通知":selected.tool_name==="send_in_app_alert"?"申请站内告警":"申请外部告警广播";
-    var actionDescription=selected.tool_name==="send_in_app_alert"?"批准后系统会真实写入站内推送记录，并进入采纳闭环。":"外部渠道必须返回真实供应商回执；配置缺失时不会产生假发送结果。";
+    var actionTitle=selected.tool_name==="send_sms"?"申请短信通知":selected.tool_name==="send_in_app_alert"?"申请企微模拟器通知":"申请外部告警广播";
+    var actionDescription=selected.tool_name==="send_in_app_alert"?"系统会根据事件和任务自动冻结收件人；仅写入企微模拟器，不会发送到生产企微。":"外部渠道必须返回真实供应商回执；配置缺失时不会产生假发送结果。";
     var values=await requestInput({title:actionTitle,description:actionDescription,submitLabel:"提交审批",fields:fields});if(!values)return;
-    try{var result=await api("/admin/action-requests",{method:"POST",body:{tool_name:selected.tool_name,session_id:values.session_id,message:values.message.trim(),recipient:values.recipient?values.recipient.trim():null,priority:values.priority}});notify("受控动作已进入待审批状态 · "+result.approval_id,"success");await this.navigate("approvals")}catch(error){notify(error.message,"error")}
+    var selectedTask=eligibleTasks.find(function(task){return task.id===values.task_id});if(!selectedTask){notify("关联任务已变化，请刷新后重试。","error");return}
+    try{var result=await api("/admin/action-requests",{method:"POST",headers:{"Idempotency-Key":newRequestId()},body:{tool_name:selected.tool_name,recipient_scope:values.recipient_scope||"SESSION",session_id:selectedTask.session_id,event_id:selectedTask.event_id,task_id:selectedTask.id,supersedes_approval_id:values.supersedes_approval_id||null,message:values.message.trim(),recipient:values.recipient?values.recipient.trim():null,priority:values.priority}});notify("受控动作已进入待审批状态 · "+(result.business_id||"审批编号已生成"),"success");await this.navigate("approvals")}catch(error){notify(controlledActionErrorMessage(error),"error")}
   },
 
   loadActions:async function(){
@@ -1299,7 +1511,7 @@ var App={
     var result=await Promise.all(paths);this.state.pushLogs=result[0].push_logs||[];this.state.integrations=result[1].integrations||[];this.state.controlledActions=result[2]||[];this.state.sessions=result[3]||[];
     byId("integration-strip").innerHTML=this.state.integrations.map(function(item){return '<div class="record"><div class="record-head"><h3>'+escapeHtml(item.name)+'</h3>'+badge(item.status)+'</div><p>'+(item.live_verified?"已有真实 Live 证据":escapeHtml(item.blocked_reason||("缺少："+(item.missing||[]).join(", "))))+'</p><div class="cell-sub">已配置：'+(item.configured?"是":"否")+'</div></div>'}).join("");
     byId("controlled-action-count").textContent=this.state.controlledActions.length+" 条";
-    byId("controlled-actions-table").innerHTML=this.state.controlledActions.length?this.state.controlledActions.map(function(item){var execution=item.execution_result||{},delivery=execution.result||{},deliveryStatus=String(delivery.status||"").toUpperCase();var executionState=item.status==="REJECTED"?"NOT_EXECUTED":item.status==="PENDING"?"WAITING":item.execution_error||execution.status==="error"?"EXECUTION_FAILED":execution.status==="executed"&&["DELIVERED","SUCCEEDED"].indexOf(deliveryStatus)>=0?"DELIVERED":deliveryStatus||"UNKNOWN";return '<tr><td>'+formatTime(item.requested_at)+'</td><td><div class="cell-title">'+escapeHtml(item.tool_name)+'</div><div class="cell-sub mono">'+escapeHtml(item.approval_id)+'</div></td><td class="mono">'+escapeHtml(item.session_id||"-")+'</td><td>'+badge(item.status)+'</td><td>'+badge(executionState)+'</td><td><button class="btn small" onclick="App.openApproval(\''+escapeHtml(item.approval_id)+'\')">详情</button></td></tr>'}).join(""):emptyRow(6,"暂无受控动作","从审批中心或本页发起高风险动作后显示真实执行记录。");
+    byId("controlled-actions-table").innerHTML=this.state.controlledActions.length?this.state.controlledActions.map(function(item){var execution=item.execution_result||{},delivery=execution.result||{},deliveryStatus=String(delivery.status||"").toUpperCase();var executionState=item.status==="REJECTED"?"NOT_EXECUTED":item.status==="PENDING"?"WAITING":item.execution_error||execution.status==="error"?"EXECUTION_FAILED":execution.status==="executed"&&["DELIVERED","SUCCEEDED"].indexOf(deliveryStatus)>=0?"DELIVERED":deliveryStatus||"UNKNOWN";return '<tr><td>'+formatTime(item.requested_at)+'</td><td><div class="cell-title">'+escapeHtml(toolLabels[item.tool_name]||"受控业务动作")+'</div><div class="cell-sub">'+escapeHtml(item.business_id||"审批编号待生成")+'</div></td><td>'+escapeHtml(item.event_id?"已关联事件":"关联待补充")+'</td><td>'+badge(item.status,approvalStatusLabels[String(item.status||"").toUpperCase()]||"状态待确认")+'</td><td>'+badge(executionState)+'</td><td><button class="btn small" onclick="App.openApproval(\''+escapeHtml(item.approval_id)+'\')">详情</button></td></tr>'}).join(""):emptyRow(6,"暂无受控动作","从审批中心或本页发起高风险动作后显示真实执行记录。");
     this.renderPushLogs();
   },
   renderPushLogs:function(){
@@ -1307,9 +1519,9 @@ var App={
     byId("push-count").textContent=rows.length+" 条";
     byId("push-table").innerHTML=rows.length?rows.map(function(item){
       var actions=String(item.adoption_status)==="pending"?'<button class="btn success small" onclick="App.updatePush(\''+escapeHtml(item.push_id)+'\',\'adopted\')">采纳</button><button class="btn danger small" onclick="App.updatePush(\''+escapeHtml(item.push_id)+'\',\'rejected\')">拒绝</button>':'-';
-      var channel=item.channel==="in_app"?"站内":item.channel||"历史记录";
+      var channel=item.channel==="WECOM_SIMULATOR_OUTBOX"?"企微模拟器（演示）":item.channel==="in_app"?"站内":item.channel||"历史记录";
       return '<tr><td>'+formatTime(item.pushed_at)+'</td><td><div class="cell-title">'+escapeHtml(channel)+'</div><div class="cell-sub mono">'+escapeHtml(item.recipient||"-")+'</div></td><td>'+escapeHtml(item.from_user||"-")+'</td><td>'+escapeHtml(item.event_type||"-")+'</td><td>'+badge(item.severity)+'</td><td>'+badge(item.delivery_status||"RECORDED")+(item.delivery_error?'<div class="cell-sub">'+escapeHtml(item.delivery_error)+'</div>':'')+'</td><td>'+badge(item.adoption_status)+'</td><td>'+actions+'</td></tr>';
-    }).join(""):emptyRow(8,"暂无推送记录","批准站内告警或真实外部渠道动作后会记录在这里。");
+    }).join(""):emptyRow(8,"暂无推送记录","批准企微模拟器通知或真实外部渠道动作后会记录在这里。");
   },
   updatePush:async function(id,status){
     var values=await requestInput({title:status==="adopted"?"采纳推送":"拒绝推送",submitLabel:status==="adopted"?"确认采纳":"确认拒绝",danger:status==="rejected",fields:[{name:"notes",label:"处理说明（可选）",type:"textarea",maxLength:2000,rows:4,span:2}]});if(!values)return;
@@ -1343,40 +1555,154 @@ var App={
   },
   rebuildKnowledge:async function(){if(!await confirmAction({title:"重建知识索引",description:"系统将以当前场地 PostgreSQL 数据为准重建向量索引。",submitLabel:"开始重建"}))return;try{var result=await api("/admin/knowledge/rebuild-index",{method:"POST"});notify("已重建 "+result.rebuilt+" 条索引","success")}catch(error){notify(error.message,"error")}},
 
-  loadPersonas:async function(){var result=await api("/admin/personas");this.state.personas=result.personas||[];this.renderPersonas()},
-  renderPersonas:function(){
-    var query=byId("persona-search").value.trim().toLowerCase();var rows=this.state.personas.filter(function(item){return !query||[item.job_title,item.description].join(" ").toLowerCase().indexOf(query)>=0});
-    byId("persona-cards").innerHTML=rows.length?rows.map(function(item){var count=(item.logic_entries||[]).length;var actionLabel=count?"经验问答":item.active_interview_id?"继续访谈":"开始访谈";return '<article class="record"><div class="record-head"><h3>'+escapeHtml(item.job_title)+'</h3>'+badge(count?"READY":"IN_REVIEW",count+" 条经验")+'</div><p>'+escapeHtml(item.description||"尚未填写经验范围")+'</p><div class="record-actions"><button class="btn primary small" onclick="App.openPersona(\''+escapeHtml(item.id)+'\')">'+actionLabel+'</button><button class="btn danger small" onclick="App.deletePersona(\''+escapeHtml(item.id)+'\')">删除</button></div></article>'}).join(""):'<div class="empty"><strong>暂无数字分身</strong>创建分身并完成多轮经验访谈。</div>';
+  loadExperience:async function(){
+    var result=await Promise.all([
+      api("/admin/experts?limit=200"),api("/admin/experience-interviews?limit=200"),
+      api("/admin/experience-cards?limit=200"),this.getAssignees()
+    ]);
+    this.state.experts=result[0].experts||[];this.state.interviews=result[1].interviews||[];
+    this.state.experienceCards=result[2].experience_cards||[];this.renderExperience();
   },
-  newPersona:function(){byId("persona-form").reset();openDialog("persona-dialog")},
-  createPersona:async function(event){
-    event.preventDefault();
-    try{var result=await api("/admin/personas",{method:"POST",body:{job_title:byId("persona-title").value.trim(),description:byId("persona-description").value.trim(),logic_entries:[]}});closeDialog("persona-dialog");notify("分身已创建，开始访谈","success");await this.loadPersonas();await this.openPersona(result.persona_id)}catch(error){notify(error.message,"error")}
-  },
-  openPersona:async function(id){
-    var item=this.state.personas.find(function(persona){return persona.id===id});if(!item)return;
-    var hasEntries=(item.logic_entries||[]).length>0;this.personaFlow={personaId:id,interviewId:null,mode:hasEntries?"chat":"interview",question:0};
-    byId("persona-chat-title").textContent=hasEntries?("向 "+item.job_title+" 提问"):("访谈萃取 · "+item.job_title);
-    byId("persona-chat").innerHTML="";byId("persona-chat-note").textContent="";byId("persona-finalize").classList.add("hidden");openDialog("persona-chat-dialog");
-    if(!hasEntries){
-      try{var active=await api("/admin/personas/"+encodeURIComponent(id)+"/interview/active");var result=active.interview;if(!result)result=await api("/admin/personas/"+encodeURIComponent(id)+"/interview/start",{method:"POST"});this.personaFlow.interviewId=result.interview_id;this.personaFlow.question=result.current_question;this.addChat(result.reply_text,"agent");byId("persona-chat-note").textContent="第 "+result.current_question+" / "+result.total_questions+" 题 · Trace "+(result.trace_id||active.trace_id);if(result.prompt_finalize||result.stage==="summary"){this.personaFlow.mode="finalize";byId("persona-finalize").classList.remove("hidden")}}catch(error){notify(error.message,"error")}
+  experienceScopeText:function(scope){
+    var type=String(scope&&scope.scope_type||"").toUpperCase(),value=String(scope&&scope.scope_value||"");
+    if(type==="VENUE")return "当前场地全部员工";
+    if(type==="DEPARTMENT")return "部门："+value;
+    if(type==="JOB_TITLE")return "岗位："+value;
+    if(type==="ROLE")return "角色："+(roleNames[value]||"指定角色");
+    if(type==="USER"){
+      var user=this.state.assignees.find(function(item){return item.id===value});
+      return "员工："+(user?user.display_name:"指定员工");
     }
+    return "指定业务范围";
   },
-  addChat:function(text,who){var node=document.createElement("div");node.className="message "+who;node.textContent=text;byId("persona-chat").appendChild(node);byId("persona-chat").scrollTop=byId("persona-chat").scrollHeight},
-  sendPersonaMessage:async function(event){
-    event.preventDefault();if(!this.personaFlow)return;var input=byId("persona-chat-input");var text=input.value.trim();if(!text)return;input.value="";this.addChat(text,"user");
+  experienceUsageTypeText:function(value){
+    var labels={RETRIEVED:"检索命中",VIEWED:"查看详情",REFERENCED:"助手回答引用",HELPFUL:"反馈：有帮助",NOT_APPLICABLE:"反馈：不适用",NEEDS_EXPERT:"反馈：需要专家"};
+    return labels[String(value||"").toUpperCase()]||"其他采用动作";
+  },
+  experienceCardActions:function(item){
+    var id=escapeHtml(item.id),actions=['<button class="btn small" type="button" data-action="view-experience-card" data-id="'+id+'">查看</button>'];
+    if(item.status==="EXPERT_CONFIRMED")actions.push('<button class="btn primary small" type="button" data-action="submit-experience-card" data-id="'+id+'">提交审核</button>');
+    if(item.status==="IN_REVIEW"){
+      actions.push('<button class="btn danger small" type="button" data-action="reject-experience-card" data-id="'+id+'">驳回修改</button>');
+      actions.push('<button class="btn success small" type="button" data-action="publish-experience-card" data-id="'+id+'">批准发布</button>');
+    }
+    if(item.status==="PUBLISHED")actions.push('<button class="btn danger small" type="button" data-action="deprecate-experience-card" data-id="'+id+'">停用</button>');
+    return '<div class="record-actions">'+actions.join("")+'</div>';
+  },
+  renderExperience:function(){
+    var self=this,query=byId("experience-search").value.trim().toLowerCase(),cardStatus=byId("experience-card-filter").value;
+    var experts=this.state.experts.filter(function(item){return !query||[item.display_name,item.job_title,item.department,(item.expertise||[]).join(" ")].join(" ").toLowerCase().indexOf(query)>=0});
+    var interviews=this.state.interviews.filter(function(item){return !query||[item.title,item.expert_name,item.expert_job_title,item.expert_department].join(" ").toLowerCase().indexOf(query)>=0});
+    var cards=this.state.experienceCards.filter(function(item){var matchesStatus=!cardStatus||item.status===cardStatus;var matchesQuery=!query||[item.title,item.applicable_context,item.decision_rule,item.rationale,item.expert_name].join(" ").toLowerCase().indexOf(query)>=0;return matchesStatus&&matchesQuery});
+    byId("expert-count").textContent=experts.length+" 位";
+    byId("experts-table").innerHTML=experts.length?experts.map(function(item){
+      var expertise=(item.expertise||[]).join("、")||"待补充";
+      var authorized=item.authorization_status==="SIGNED";
+      var action=item.status==="ACTIVE"&&authorized?'<button class="btn primary small" type="button" data-action="new-interview" data-id="'+escapeHtml(item.id)+'">发起访谈</button>':"-";
+      return '<tr><td><div class="cell-title">'+escapeHtml(item.display_name||"未命名专家")+'</div><div class="cell-sub">'+experienceBadge(item.authorization_status)+'</div></td><td><div class="cell-title">'+escapeHtml(item.department||"未填写部门")+'</div><div class="cell-sub">'+escapeHtml(item.job_title||"未填写岗位")+'</div></td><td>'+escapeHtml(Number(item.years_experience||0))+" 年"+'</td><td>'+escapeHtml(expertise)+'</td><td>'+experienceBadge(item.status)+'</td><td>'+action+'</td></tr>';
+    }).join(""):emptyRow(6,"暂无专家档案","从当前场地员工中新增专家后即可发起访谈。");
+    byId("interview-count").textContent=interviews.length+" 场";
+    byId("interviews-table").innerHTML=interviews.length?interviews.map(function(item){
+      var progress=item.progress||{},percent=Math.max(0,Math.min(100,Number(progress.percent||0)));
+      var progressText=Number(progress.answered||0)+" / "+Number(progress.total||0)+" 题";
+      return '<tr><td>'+formatTime(item.updated_at)+'</td><td><div class="cell-title">'+escapeHtml(item.title||"未命名访谈")+'</div></td><td><div class="cell-title">'+escapeHtml(item.expert_name||"未关联专家")+'</div><div class="cell-sub">'+escapeHtml(item.expert_job_title||"")+'</div></td><td><div class="bar" aria-label="'+escapeHtml(progressText)+'"><span style="width:'+percent+'%"></span></div><div class="cell-sub">'+escapeHtml(progressText)+'</div></td><td>'+experienceBadge(item.status)+'</td><td><button class="btn small" type="button" data-action="view-experience-interview" data-id="'+escapeHtml(item.id)+'">查看进度</button></td></tr>';
+    }).join(""):emptyRow(6,"暂无经验访谈","选择一位在岗专家发起经验访谈。");
+    byId("experience-card-count").textContent=cards.length+" 条";
+    byId("experience-cards-table").innerHTML=cards.length?cards.map(function(item){
+      var summary=item.applicable_context||item.decision_rule||item.rationale||"内容待专家完善";
+      return '<tr><td>'+formatTime(item.updated_at)+'</td><td><div class="cell-title">'+escapeHtml(item.title||"未命名经验")+'</div><div class="cell-sub">'+escapeHtml(String(summary).slice(0,120))+'</div></td><td><div class="cell-title">'+escapeHtml(item.expert_name||"未关联专家")+'</div><div class="cell-sub">'+escapeHtml(item.expert_job_title||"")+'</div></td><td>第 '+escapeHtml(item.current_version||1)+' 版</td><td>'+experienceBadge(item.status)+'</td><td>'+self.experienceCardActions(item)+'</td></tr>';
+    }).join(""):emptyRow(6,"暂无符合条件的经验资产","专家完成访谈并确认后，经验会进入这里等待审核。");
+  },
+  newExpert:async function(){
     try{
-      if(this.personaFlow.mode==="chat"){var answer=await api("/admin/personas/"+encodeURIComponent(this.personaFlow.personaId)+"/chat",{method:"POST",body:{question:text}});this.addChat(answer.reply_text,"agent");byId("persona-chat-note").textContent="使用 "+answer.entries_used+" 条经验 · "+(answer.source_note||"")+" · Trace "+answer.trace_id;return}
-      var result=await api("/admin/personas/"+encodeURIComponent(this.personaFlow.personaId)+"/interview/continue",{method:"POST",body:{interview_id:this.personaFlow.interviewId,answer:text}});this.addChat(result.reply_text,"agent");this.personaFlow.question=result.current_question;
-      byId("persona-chat-note").textContent="第 "+result.current_question+" / "+result.total_questions+" 题 · Trace "+result.trace_id;
-      if(result.prompt_finalize||result.stage==="summary"){this.personaFlow.mode="finalize";byId("persona-finalize").classList.remove("hidden")}
+      var assignees=await this.getAssignees(),profiled={};this.state.experts.forEach(function(item){profiled[item.user_id]=true});
+      var eligible=assignees.filter(function(item){return !profiled[item.id]});
+      if(!eligible.length){notify("当前没有可新增为专家的在岗员工","error");return}
+      var values=await requestInput({title:"新增专家",description:"专家档案必须关联当前场地的正式员工账号。",submitLabel:"保存专家档案",fields:[
+        {name:"user_id",label:"关联员工",type:"select",required:true,options:eligible.map(function(item){return {value:item.id,label:item.display_name+" · "+(roleNames[item.role]||"员工")}}),span:2},
+        {name:"display_name",label:"专家姓名",required:true,minLength:1,maxLength:80,defaultValue:eligible[0].display_name},
+        {name:"department",label:"所属部门",required:true,minLength:1,maxLength:120,placeholder:"例如：运营保障部"},
+        {name:"job_title",label:"岗位",required:true,minLength:1,maxLength:120,placeholder:"例如：安保值班长"},
+        {name:"years_experience",label:"从业年限",type:"number",required:true,min:0,max:80,defaultValue:5},
+        {name:"expertise",label:"擅长领域",required:true,minLength:1,maxLength:500,span:2,placeholder:"例如：客流疏导、突发事件处置（使用逗号分隔）"},
+        {name:"authorization_statement",label:"经验使用授权声明",type:"textarea",required:true,minLength:10,maxLength:2000,rows:3,span:2,placeholder:"记录专家确认的授权范围和用途，不得代签。"}
+      ]});if(!values)return;
+      await api("/admin/experts",{method:"POST",body:{user_id:values.user_id,display_name:values.display_name.trim(),job_title:values.job_title.trim(),department:values.department.trim(),years_experience:Number(values.years_experience),expertise:String(values.expertise||"").split(/[,，、]/).map(function(item){return item.trim()}).filter(Boolean),authorization_status:"SIGNED",authorization_statement:values.authorization_statement.trim()}});
+      notify("专家档案已保存","success");await this.loadExperience();
     }catch(error){notify(error.message,"error")}
   },
-  finalizePersona:async function(){
-    if(!this.personaFlow||!this.personaFlow.interviewId)return;
-    try{var result=await api("/admin/personas/"+encodeURIComponent(this.personaFlow.personaId)+"/interview/finalize",{method:"POST",body:{interview_id:this.personaFlow.interviewId}});this.addChat(result.reply_text,"agent");byId("persona-chat-note").textContent="已保存 "+result.total_entries+" 条经验 · Trace "+result.trace_id;byId("persona-finalize").classList.add("hidden");this.personaFlow.mode="chat";await this.loadPersonas();notify("经验萃取已保存","success")}catch(error){notify(error.message,"error")}
+  newInterview:async function(expertId){
+    try{
+      var experts=this.state.experts.filter(function(item){return item.status==="ACTIVE"&&item.authorization_status==="SIGNED"});
+      if(!experts.length){notify("请先新增一位在岗专家","error");return}
+      var selected=expertId&&experts.some(function(item){return item.id===expertId})?expertId:"";
+      var fields=[];if(!selected)fields.push({name:"expert_id",label:"受访专家",type:"select",required:true,options:experts.map(function(item){return {value:item.id,label:item.display_name+" · "+item.job_title}}),span:2});
+      fields.push({name:"title",label:"访谈主题",required:true,minLength:2,maxLength:200,span:2,placeholder:"例如：节假日高峰客流疏导经验"});
+      var scopeOptions=[
+        {value:"VENUE",label:"当前场地全部员工"},
+        {value:"ROLE:manager",label:"指定角色：值班经理"},
+        {value:"ROLE:operator",label:"指定角色：现场操作员"}
+      ];
+      this.state.assignees.forEach(function(item){scopeOptions.push({value:"USER:"+item.id,label:"指定员工："+item.display_name+" · "+(roleNames[item.role]||"员工")})});
+      fields.push({name:"authorization_scope",label:"经验授权范围",type:"select",required:true,options:scopeOptions,span:2,help:"仅符合授权范围的员工可以通过 Agent 检索和引用这次访谈沉淀的经验。"});
+      var values=await requestInput({title:"发起经验访谈",description:"邀请将发送到专家的员工端；请选择经验发布后的可用范围。",submitLabel:"发送访谈邀请",fields:fields});if(!values)return;
+      var scopeParts=String(values.authorization_scope||"VENUE").split(":"),authorizationScope;
+      if(scopeParts[0]==="VENUE")authorizationScope={scope_type:"VENUE",scope_value:Auth.user.venue_id};
+      else if(scopeParts[0]==="ROLE")authorizationScope={scope_type:"ROLE",scope_value:scopeParts[1]};
+      else authorizationScope={scope_type:"USER",scope_value:scopeParts[1]};
+      await api("/admin/experience-interviews",{method:"POST",body:{expert_id:selected||values.expert_id,title:values.title.trim(),authorization_scopes:[authorizationScope]}});
+      notify("访谈邀请已发送","success");await this.loadExperience();
+    }catch(error){notify(error.message,"error")}
   },
-  deletePersona:async function(id){if(!await confirmAction({title:"删除数字分身",description:"数字分身及已萃取的经验记录将被删除。",submitLabel:"确认删除",danger:true}))return;try{await api("/admin/personas/"+encodeURIComponent(id),{method:"DELETE"});notify("分身已删除","success");await this.loadPersonas()}catch(error){notify(error.message,"error")}},
+  viewExperienceInterview:async function(id){
+    try{
+      var result=await api("/admin/experience-interviews/"+encodeURIComponent(id)),item=result.interview||{},progress=item.progress||{};
+      var scopes=(item.authorization_scopes||[]).map(this.experienceScopeText.bind(this));
+      var turns=(item.turns||[]).length?(item.turns||[]).map(function(turn){return '<div class="feed-item"><strong>第 '+escapeHtml(turn.turn_number)+' 题 · '+escapeHtml(turn.question_text||"")+'</strong><p>'+escapeHtml(turn.answer_text||"专家尚未回答")+'</p>'+(turn.source_excerpt?'<div class="cell-sub">现场原话：'+escapeHtml(turn.source_excerpt)+'</div>':"")+'</div>'}).join(""):'<div class="empty"><strong>专家尚未开始回答</strong>邀请已保存在系统中，等待专家从员工端接受。</div>';
+      var html='<dl class="detail-list"><dt>访谈主题</dt><dd>'+escapeHtml(item.title||"未命名访谈")+'</dd><dt>受访专家</dt><dd>'+escapeHtml(item.expert_name||"未关联专家")+' · '+escapeHtml(item.expert_job_title||"岗位待补充")+'</dd><dt>当前状态</dt><dd>'+experienceBadge(item.status)+'</dd><dt>完成进度</dt><dd>'+escapeHtml(progress.answered||0)+' / '+escapeHtml(progress.total||0)+' 题（'+escapeHtml(progress.percent||0)+'%）</dd><dt>经验授权</dt><dd>'+escapeHtml(scopes.join("；")||"授权范围待确认")+'</dd><dt>最近更新</dt><dd>'+formatTime(item.updated_at)+'</dd></dl><div class="feed" style="margin-top:18px"><div class="cell-title">访谈记录</div>'+turns+'</div>';
+      this.showDetails("访谈进度",html);
+    }catch(error){notify(error.message,"error")}
+  },
+  experienceDetailSection:function(title,items,emptyText){
+    var values=(items||[]).filter(Boolean);
+    return '<div class="feed-item"><strong>'+escapeHtml(title)+'</strong>'+(values.length?'<p>'+values.map(escapeHtml).join("<br>")+'</p>':'<p>'+escapeHtml(emptyText||"待补充")+'</p>')+'</div>';
+  },
+  viewExperienceCard:async function(id){
+    try{
+      var result=await api("/admin/experience-cards/"+encodeURIComponent(id)),item=result.experience_card||{},self=this;
+      var scopes=(item.authorization_scopes||[]).map(this.experienceScopeText.bind(this));
+      var timeline=(item.review_timeline||[]).length?(item.review_timeline||[]).map(function(entry){var actionNames={CONFIRM:"专家确认",SUBMIT:"提交审核",REJECT:"驳回修改",PUBLISH:"批准发布",DEPRECATE:"停用"};return '<div class="feed-item"><strong>'+escapeHtml(actionNames[entry.action]||"状态更新")+' · '+formatTime(entry.created_at)+'</strong><p>'+escapeHtml(entry.comment||"无补充说明")+'</p></div>'}).join(""):'<div class="empty"><strong>暂无审核记录</strong>状态动作完成后会形成审核时间线。</div>';
+      var versions=(item.versions||[]).length?(item.versions||[]).map(function(version){return '<div class="feed-item"><strong>第 '+escapeHtml(version.version_number)+' 版 · '+formatTime(version.created_at)+'</strong><p>'+escapeHtml(version.change_note||"内容更新")+'</p></div>'}).join(""):"";
+      var usageSummary=item.usage_summary||{};
+      var usageOverview="检索 "+Number(usageSummary.retrieved||0)+" 次 · 回答引用 "+Number(usageSummary.referenced||0)+" 次 · 明确反馈 "+Number(usageSummary.feedback||0)+" 次";
+      var usageRecords=(item.usage_records||[]).length?(item.usage_records||[]).map(function(entry){
+        var context=[entry.user_display_name||"已停用员工"];
+        if(entry.experience_version)context.push("第 "+entry.experience_version+" 版");
+        if(entry.score!==null&&entry.score!==undefined)context.push(Math.round(Number(entry.score)*100)+"% 相关");
+        var evidence=entry.query_text?'<p>问题：'+escapeHtml(entry.query_text)+'</p>':(entry.note?'<p>说明：'+escapeHtml(entry.note)+'</p>':'<p>本次记录没有补充说明。</p>');
+        return '<div class="feed-item"><strong>'+escapeHtml(self.experienceUsageTypeText(entry.usage_type))+' · '+formatTime(entry.created_at)+'</strong>'+evidence+'<div class="cell-sub">'+escapeHtml(context.join(" · "))+'</div></div>';
+      }).join(""):'<div class="empty"><strong>暂无采用记录</strong>员工检索、助手引用或提交反馈后会显示在这里。</div>';
+      var html='<dl class="detail-list"><dt>经验主题</dt><dd>'+escapeHtml(item.title||"未命名经验")+'</dd><dt>贡献专家</dt><dd>'+escapeHtml(item.expert_name||"未关联专家")+' · '+escapeHtml(item.expert_job_title||"岗位待补充")+'</dd><dt>当前状态</dt><dd>'+experienceBadge(item.status)+'</dd><dt>当前版本</dt><dd>第 '+escapeHtml(item.current_version||1)+' 版</dd><dt>适用范围</dt><dd>'+escapeHtml(scopes.join("；")||"授权范围待确认")+'</dd><dt>采用情况</dt><dd>'+escapeHtml(usageOverview)+'</dd><dt>最近更新</dt><dd>'+formatTime(item.updated_at)+'</dd></dl><div class="feed" style="margin-top:18px">'+
+        self.experienceDetailSection("适用情境",[item.applicable_context])+self.experienceDetailSection("观察信号",item.signals)+self.experienceDetailSection("判断规则",[item.decision_rule])+self.experienceDetailSection("建议动作",item.recommended_actions)+self.experienceDetailSection("判断依据",[item.rationale])+self.experienceDetailSection("禁止事项",item.prohibitions)+self.experienceDetailSection("例外情况",item.exceptions)+self.experienceDetailSection("来源摘录",item.source_excerpts)+'</div><div class="feed" style="margin-top:18px"><div class="cell-title">审核记录</div>'+timeline+'</div>'+(versions?'<div class="feed" style="margin-top:18px"><div class="cell-title">版本记录</div>'+versions+'</div>':"")+'<div class="feed" style="margin-top:18px"><div class="cell-title">采用记录</div>'+usageRecords+'</div>';
+      this.showDetails("经验详情",html);
+    }catch(error){notify(error.message,"error")}
+  },
+  submitExperienceCard:async function(id){
+    if(!await confirmAction({title:"提交经验审核",description:"专家已确认内容和授权范围。提交后，知识负责人可以驳回或批准发布。",submitLabel:"确认提交"}))return;
+    try{await api("/admin/experience-cards/"+encodeURIComponent(id)+"/submit",{method:"POST"});notify("经验已进入审核","success");await this.loadExperience()}catch(error){notify(error.message,"error")}
+  },
+  rejectExperienceCard:async function(id){
+    var values=await requestInput({title:"驳回经验修改",description:"说明需要专家补充或修订的具体内容。",submitLabel:"确认驳回",danger:true,fields:[{name:"comment",label:"驳回原因",type:"textarea",required:true,minLength:2,maxLength:2000,rows:5,span:2}]});if(!values)return;
+    try{await api("/admin/experience-cards/"+encodeURIComponent(id)+"/reject",{method:"POST",body:{comment:values.comment.trim()}});notify("经验已退回专家修改","success");await this.loadExperience()}catch(error){notify(error.message,"error")}
+  },
+  publishExperienceCard:async function(id){
+    var values=await requestInput({title:"批准并发布经验",description:"发布后，符合授权范围的员工可通过 Agent 检索和引用这条经验。",submitLabel:"批准发布",fields:[{name:"comment",label:"发布说明（可选）",type:"textarea",maxLength:2000,rows:4,span:2}]});if(!values)return;
+    try{await api("/admin/experience-cards/"+encodeURIComponent(id)+"/publish",{method:"POST",body:{comment:values.comment.trim()}});notify("经验已发布并进入检索服务","success");await this.loadExperience()}catch(error){notify(error.message,"error")}
+  },
+  deprecateExperienceCard:async function(id){
+    var values=await requestInput({title:"停用已发布经验",description:"停用后员工将无法再检索到这条经验，历史版本和审核记录会继续保留。",submitLabel:"确认停用",danger:true,fields:[{name:"comment",label:"停用原因",type:"textarea",required:true,minLength:2,maxLength:2000,rows:5,span:2}]});if(!values)return;
+    try{await api("/admin/experience-cards/"+encodeURIComponent(id)+"/deprecate",{method:"POST",body:{comment:values.comment.trim()}});notify("经验已停用并移出检索服务","success");await this.loadExperience()}catch(error){notify(error.message,"error")}
+  },
 
   loadWatcher:async function(){
     var result=await Promise.all([api("/admin/watcher/policies"),api("/admin/watcher/findings?limit=200"),api("/admin/watcher/runs?limit=50"),this.getAssignees()]);
@@ -1447,9 +1773,10 @@ var App={
   },
 
   loadDiagnostics:async function(){
-    var result=await Promise.all([api("/admin/health"),api("/admin/queue"),api("/admin/dead-letters?limit=50"),api("/admin/llm-calls?limit=50"),api("/admin/audit-logs?limit=50"),api("/skills")]);
-    var health=result[0],queue=result[1],dead=result[2],llm=result[3].llm_calls||[],audit=result[4].audit_logs||[],skills=result[5]||[];this.state.skills=skills;
+    var result=await Promise.all([api("/admin/health"),api("/admin/queue"),api("/admin/dead-letters?limit=50"),api("/admin/llm-calls?limit=50"),api("/admin/audit-logs?limit=50"),api("/skills"),api("/admin/recovery-runs?limit=20")]);
+    var health=result[0],queue=result[1],dead=result[2],llm=result[3].llm_calls||[],audit=result[4].audit_logs||[],skills=result[5]||[],recoveryRuns=result[6].recovery_runs||[];this.state.skills=skills;
     var components=health.components||{};byId("health-metrics").innerHTML=Object.keys(components).map(function(key){return '<div class="metric"><div class="metric-label">'+escapeHtml(key)+'</div><div class="metric-value" style="font-size:17px">'+badge(components[key])+'</div><div class="metric-note">整体 '+escapeHtml(health.status)+'</div></div>'}).join("");
+    byId("recovery-run-list").innerHTML=recoveryRuns.length?recoveryRuns.map(function(item){var trace=item.trace||[],counts=["任务图恢复 "+escapeHtml(item.task_graph_recovered_count||0),"任务状态重置 "+escapeHtml(item.task_graph_reset_count||0),"审批中断 "+escapeHtml(item.approval_interrupted_count||0),"Watcher 中断 "+escapeHtml(item.watcher_interrupted_count||0),"Redis 回收 "+escapeHtml(item.redis_claimed_count||0),"ACK "+escapeHtml(item.redis_acked_count||0)];var phases=trace.length?trace.map(function(entry){return '<div>'+escapeHtml(entry.phase||"恢复阶段")+' · '+escapeHtml(entry.status||"状态待确认")+'</div>'}).join(""):"暂无分阶段记录";return '<div class="feed-item"><strong>'+formatTime(item.started_at)+' · '+badge(item.status)+'</strong><p>'+counts.join(" · ")+'</p><div class="cell-sub">Redis '+escapeHtml(item.redis_status||"未记录")+' · App '+escapeHtml(item.app_version||"版本待确认")+'</div>'+(item.error_summary?'<div class="cell-sub error-state">'+escapeHtml(item.error_summary)+'</div>':"")+'<details class="technical-details"><summary>查看启动实例与恢复 Trace</summary><dl class="detail-list"><dt>实例 ID</dt><dd class="mono">'+escapeHtml(item.instance_id||"暂无")+'</dd><dt>Trace ID</dt><dd class="mono">'+escapeHtml(item.trace_id||"暂无")+'</dd><dt>完成时间</dt><dd>'+formatTime(item.completed_at)+'</dd><dt>阶段</dt><dd>'+phases+'</dd></dl></details></div>'}).join(""):'<div class="empty"><strong>暂无持久化恢复记录</strong>App 下一次正式启动后会在这里记录恢复结果。</div>';
     byId("queue-summary").textContent="pending "+(queue.pending||0)+" · dead "+(queue.dead_letter_depth||0);
     var letters=dead.dead_letters||[];byId("dead-letter-list").innerHTML=letters.length?letters.map(function(item){var id=item.id||item.message_id||item.redis_message_id;return '<div class="feed-item"><strong>'+escapeHtml(id||"dead-letter")+' '+badge("FAILED")+'</strong><p>'+escapeHtml(item.error||item.reason||"执行失败")+'</p><button class="btn small" onclick="App.retryDeadLetter(\''+escapeHtml(id)+'\')">重试</button></div>'}).join(""):'<div class="empty"><strong>没有死信</strong>当前队列无需人工恢复。</div>';
     byId("skill-count").textContent=skills.length+" 个";byId("skills-list").innerHTML=skills.map(function(skill){return '<div class="feed-item"><strong>'+escapeHtml(skill.name)+' '+badge("ACTIVE","v"+skill.version)+'</strong><p>'+escapeHtml(skill.description||"")+'</p><button class="btn small" onclick="App.reloadSkill(\''+escapeHtml(skill.name)+'\')">热重载</button></div>'}).join("");

@@ -1,0 +1,105 @@
+{
+  "form": {
+    "title": "申请站内告警",
+    "description": "批准后系统会真实写入站内推送记录，并进入采纳闭环。\n\n关联会话\n3591e950-de94-408c-81ad-d49f8f398867 · 现场会话\nfa64dba6-dec5-4745-a3d1-008a10f41141 · 现场会话\ncb4cc5fb-1bfd-40bc-8191-00410c2ace3b · 现场会话\n774aa9ef-a77e-480e-9c22-68e7df0246cc · 现场会话\na77ee8dd-88c4-41ae-b7b1-e260c2d8132d · 现场会话\nuat-golden-1785230678 · 现场会话\n86def3cd-96a2-4502-bfaf-e221b9a8358b · 现场会话\n3dd06d87-fcdf-4446-ba13-1b4a100fec42 · 现场会话\n告警级别\n提示\n警告\n严重\n动作内容",
+    "labels": [
+      "关联会话",
+      "告警级别",
+      "动作内容"
+    ],
+    "fields": [
+      {
+        "name": "session_id",
+        "id": "action-field-session_id",
+        "type": "select-one",
+        "required": true,
+        "value": "3591e950-de94-408c-81ad-d49f8f398867",
+        "options": [
+          {
+            "value": "3591e950-de94-408c-81ad-d49f8f398867",
+            "text": "3591e950-de94-408c-81ad-d49f8f398867 · 现场会话"
+          },
+          {
+            "value": "fa64dba6-dec5-4745-a3d1-008a10f41141",
+            "text": "fa64dba6-dec5-4745-a3d1-008a10f41141 · 现场会话"
+          },
+          {
+            "value": "cb4cc5fb-1bfd-40bc-8191-00410c2ace3b",
+            "text": "cb4cc5fb-1bfd-40bc-8191-00410c2ace3b · 现场会话"
+          },
+          {
+            "value": "774aa9ef-a77e-480e-9c22-68e7df0246cc",
+            "text": "774aa9ef-a77e-480e-9c22-68e7df0246cc · 现场会话"
+          },
+          {
+            "value": "a77ee8dd-88c4-41ae-b7b1-e260c2d8132d",
+            "text": "a77ee8dd-88c4-41ae-b7b1-e260c2d8132d · 现场会话"
+          },
+          {
+            "value": "uat-golden-1785230678",
+            "text": "uat-golden-1785230678 · 现场会话"
+          },
+          {
+            "value": "86def3cd-96a2-4502-bfaf-e221b9a8358b",
+            "text": "86def3cd-96a2-4502-bfaf-e221b9a8358b · 现场会话"
+          },
+          {
+            "value": "3dd06d87-fcdf-4446-ba13-1b4a100fec42",
+            "text": "3dd06d87-fcdf-4446-ba13-1b4a100fec42 · 现场会话"
+          }
+        ]
+      },
+      {
+        "name": "priority",
+        "id": "action-field-priority",
+        "type": "select-one",
+        "required": true,
+        "value": "info",
+        "options": [
+          {
+            "value": "info",
+            "text": "提示"
+          },
+          {
+            "value": "warning",
+            "text": "警告"
+          },
+          {
+            "value": "critical",
+            "text": "严重"
+          }
+        ]
+      },
+      {
+        "name": "message",
+        "id": "action-field-message",
+        "type": "textarea",
+        "required": true,
+        "value": "",
+        "options": []
+      }
+    ],
+    "buttons": [
+      {
+        "text": "关闭",
+        "type": "button"
+      },
+      {
+        "text": "取消",
+        "type": "button"
+      },
+      {
+        "text": "提交审批",
+        "type": "submit"
+      }
+    ]
+  },
+  "runtime": {
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

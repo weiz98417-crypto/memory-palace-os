@@ -1,0 +1,332 @@
+{
+  "uat_id": "MVP-UAT-008",
+  "operation": "Backup v2 integrity and isolated restore client verification",
+  "manifest": {
+    "schema_version": "memory-palace-mvp-backup/v2",
+    "script_version": "1.2.0",
+    "backup_id": "mp-memory-palace-uat-20260728t115337z-f78fb4b0",
+    "created_at_utc": "2026-07-28T11:54:11.2849101Z",
+    "source": {
+      "compose_project": "memory-palace-uat",
+      "compose_file_sha256": "3ee3b98695e2187bee5bc9105c2e5a5463db33088186b28639a0cf06a6573bcc",
+      "git": {
+        "available": true,
+        "revision": "cb55e244f0f2a5249f4065e0838dfbd9f47847f6",
+        "dirty": true
+      }
+    },
+    "artifacts": [
+      {
+        "name": "postgres",
+        "file": "postgres.dump",
+        "bytes": 91661,
+        "sha256": "b0eb79f3a5018f234ae8fe8b74abfbf8bade3db1d41c89d5ccecb26ee64faacd",
+        "verified": true
+      },
+      {
+        "name": "chroma",
+        "file": "chroma-data.tar.gz",
+        "bytes": 28038,
+        "sha256": "0ad21634e62dd57b0ce287d6625a75209850ad0a38dd169fa8fcedf366771149",
+        "verified": true
+      },
+      {
+        "name": "embedding_cache",
+        "file": "embedding-cache.tar.gz",
+        "bytes": 166300799,
+        "sha256": "3276216bd1b30a1b49b22db81f9ee81a46f7169571990050e963c2075ef76981",
+        "verified": true
+      }
+    ]
+  },
+  "postgres": {
+    "policy": "source-at-least-restore",
+    "counts": [
+      {
+        "table": "venues",
+        "source": 7,
+        "restored": 2,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "users",
+        "source": 14,
+        "restored": 4,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "sessions",
+        "source": 14,
+        "restored": 7,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "messages",
+        "source": 14,
+        "restored": 7,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "message_runs",
+        "source": 13,
+        "restored": 7,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "confirmed_events",
+        "source": 14,
+        "restored": 4,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "tasks",
+        "source": 28,
+        "restored": 2,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "approval_requests",
+        "source": 12,
+        "restored": 2,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "knowledge_documents",
+        "source": 8,
+        "restored": 2,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "sop_documents",
+        "source": 4,
+        "restored": 1,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "sop_versions",
+        "source": 21,
+        "restored": 6,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "system_settings",
+        "source": 1,
+        "restored": 1,
+        "exact_match": true,
+        "policy_valid": true
+      },
+      {
+        "table": "watcher_policies",
+        "source": 3,
+        "restored": 1,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "watcher_findings",
+        "source": 1131,
+        "restored": 55,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "watcher_runs",
+        "source": 231,
+        "restored": 227,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "push_logs",
+        "source": 6,
+        "restored": 0,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "audit_logs",
+        "source": 446,
+        "restored": 102,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "tool_invocation_logs",
+        "source": 6,
+        "restored": 0,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "personas",
+        "source": 7,
+        "restored": 0,
+        "exact_match": false,
+        "policy_valid": true
+      },
+      {
+        "table": "persona_interviews",
+        "source": 8,
+        "restored": 0,
+        "exact_match": false,
+        "policy_valid": true
+      }
+    ]
+  },
+  "restore_stack": [
+    {
+      "service": "app",
+      "container": "memory-palace-uat-restore-01-app-1",
+      "project": "memory-palace-uat-restore-01",
+      "image": "memory-palace-uat-restore-01-app",
+      "state": "running",
+      "health": "healthy"
+    },
+    {
+      "service": "postgres",
+      "container": "memory-palace-uat-restore-01-postgres-1",
+      "project": "memory-palace-uat-restore-01",
+      "image": "postgres:15.8-alpine",
+      "state": "running",
+      "health": "healthy"
+    },
+    {
+      "service": "redis",
+      "container": "memory-palace-uat-restore-01-redis-1",
+      "project": "memory-palace-uat-restore-01",
+      "image": "redis:7.2.5-alpine",
+      "state": "running",
+      "health": "healthy"
+    },
+    {
+      "service": "chromadb",
+      "container": "memory-palace-uat-restore-01-chromadb-1",
+      "project": "memory-palace-uat-restore-01",
+      "image": "chromadb/chroma:0.5.23",
+      "state": "running",
+      "health": "healthy"
+    },
+    {
+      "service": "nginx",
+      "container": "memory-palace-uat-restore-01-nginx-1",
+      "project": "memory-palace-uat-restore-01",
+      "image": "nginx:1.25.5-alpine",
+      "state": "running",
+      "health": "healthy"
+    }
+  ],
+  "client": {
+    "url": "http://localhost:18082/admin/",
+    "displayed_knowledge_rows": [
+      "07/28 02:23\t\n闸机断电应急处置 SOP\n1. 隔离故障回路；2. 开启人工通道分流；3. 复位控制器；4. 连续三轮通行复检；5. 登记事件与处置人；6. 值班经理复核后恢复开放。\n\t设施故障\t\nSOP\tv1\t-\t\n编辑\n删除",
+      "07/28 02:17\t\n东区闸机断电处置基线\n发现东区闸机控制器异常断电时，先隔离故障回路，开启人工通道分流，完成控制器复位后进行三轮通行复检，并在十分钟内登记事件与处置人。\n\t设施运维\t\nMANUAL\tv2\t闸机, 断电, 分流\t\n编辑\n删除"
+    ],
+    "query": "东区闸机断电",
+    "search_status": 200,
+    "search_results": [
+      {
+        "id": "knowledge:venue-uat:0fc30035a6c34b2f94c9990013873ccd",
+        "content": "发现东区闸机控制器异常断电时，先隔离故障回路，开启人工通道分流，完成控制器复位后进行三轮通行复检，并在十分钟内登记事件与处置人。",
+        "metadata": {
+          "category": "设施运维",
+          "knowledge_id": "0fc30035a6c34b2f94c9990013873ccd",
+          "source_type": "MANUAL",
+          "title": "东区闸机断电处置基线",
+          "venue_id": "venue-uat",
+          "version": 2
+        },
+        "score": 0.684
+      },
+      {
+        "id": "evt_0585fa3d-5663-46f0-8a80-92a1c95da5f1",
+        "content": "[P1] 设施故障事件：UAT 来源回归 2026-07-28：东区闸机控制器异常断电，现场完成隔离、分流、复位与复检。",
+        "metadata": {
+          "event_id": "0585fa3d-5663-46f0-8a80-92a1c95da5f1",
+          "event_type": "设施故障",
+          "from_user": "UAT 现场操作员",
+          "severity": "P1",
+          "venue_id": "venue-uat"
+        },
+        "score": 0.603
+      },
+      {
+        "id": "evt_fd277484-8878-4f12-9700-c852698f828a",
+        "content": "[P2] 设施故障事件：UAT 历史补录 2026-07-27：南门扶梯控制柜过热停运，现场已完成断电、游客分流、复位复检与恢复开放。",
+        "metadata": {
+          "event_id": "fd277484-8878-4f12-9700-c852698f828a",
+          "event_type": "设施故障",
+          "from_user": "UAT 现场操作员",
+          "severity": "P2",
+          "venue_id": "venue-uat"
+        },
+        "score": 0.513
+      },
+      {
+        "id": "evt_3c5d6030-3be0-4115-ada7-3f1f4218b8d5",
+        "content": "[P2] 人员安全事件：UAT 真实链路：东门检票区客流快速聚集，一名游客摔倒但意识清醒。现场已设置隔离带，请生成分级处置建议并记录事件。",
+        "metadata": {
+          "event_id": "3c5d6030-3be0-4115-ada7-3f1f4218b8d5",
+          "event_type": "人员安全",
+          "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "severity": "P2",
+          "venue_id": "venue-uat"
+        },
+        "score": 0.497
+      },
+      {
+        "id": "evt_d3037216-eab4-48ae-b4fa-93374984a22d",
+        "content": "[P0] 人员安全事件：索道在雷暴后突然停运，12名游客滞留空中，请立即启动应急处置并记录事件。",
+        "metadata": {
+          "event_id": "d3037216-eab4-48ae-b4fa-93374984a22d",
+          "event_type": "人员安全",
+          "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "severity": "P0",
+          "venue_id": "venue-uat"
+        },
+        "score": 0.452
+      },
+      {
+        "id": "sop:venue-uat:1",
+        "content": "1. 隔离故障回路；2. 开启人工通道分流；3. 复位控制器；4. 连续三轮通行复检；5. 登记事件与处置人；6. 值班经理复核后恢复开放。",
+        "metadata": {
+          "category": "设施故障",
+          "knowledge_id": "sop-1",
+          "source_id": "1",
+          "source_type": "SOP",
+          "title": "闸机断电应急处置 SOP",
+          "venue_id": "venue-uat",
+          "version": 1
+        },
+        "score": 0.445
+      }
+    ],
+    "rendered_results": [
+      "东区闸机断电处置基线 \n68%\n\n发现东区闸机控制器异常断电时，先隔离故障回路，开启人工通道分流，完成控制器复位后进行三轮通行复检，并在十分钟内登记事件与处置人。\n\n来源 MANUAL · 版本 2",
+      "evt_0585fa3d-5663-46f0-8a80-92a1c95da5f1 \n60%\n\n[P1] 设施故障事件：UAT 来源回归 2026-07-28：东区闸机控制器异常断电，现场完成隔离、分流、复位与复检。\n\n来源 - · 版本 -",
+      "evt_fd277484-8878-4f12-9700-c852698f828a \n51%\n\n[P2] 设施故障事件：UAT 历史补录 2026-07-27：南门扶梯控制柜过热停运，现场已完成断电、游客分流、复位复检与恢复开放。\n\n来源 - · 版本 -",
+      "evt_3c5d6030-3be0-4115-ada7-3f1f4218b8d5 \n50%\n\n[P2] 人员安全事件：UAT 真实链路：东门检票区客流快速聚集，一名游客摔倒但意识清醒。现场已设置隔离带，请生成分级处置建议并记录事件。\n\n来源 - · 版本 -",
+      "evt_d3037216-eab4-48ae-b4fa-93374984a22d \n45%\n\n[P0] 人员安全事件：索道在雷暴后突然停运，12名游客滞留空中，请立即启动应急处置并记录事件。\n\n来源 - · 版本 -",
+      "闸机断电应急处置 SOP \n45%\n\n1. 隔离故障回路；2. 开启人工通道分流；3. 复位控制器；4. 连续三轮通行复检；5. 登记事件与处置人；6. 值班经理复核后恢复开放。\n\n来源 SOP · 版本 1"
+    ]
+  },
+  "screenshots": [
+    "restore-01-knowledge-search-1440x900.png"
+  ],
+  "runtime": {
+    "console_errors": [],
+    "page_errors": [],
+    "failed_requests": [],
+    "http_errors": []
+  }
+}

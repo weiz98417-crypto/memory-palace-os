@@ -11,7 +11,7 @@ agent_metadata:
 # 2. 大语言模型 (LLM) 策略配置
 # 巡检专家是在做“法官”和“质检员”的工作，必须剥离所有的创造力和发散思维。
 llm_config:
-  model: "gpt-4o"            # 推荐使用逻辑最强的大模型进行复杂的日志阅读理解和指令比对
+  model: "deepseek-v4-flash"
   temperature: 0.0           # 【绝对红线】审计工作要求 100% 的确定性与铁面无私，温度必须降至 0
   top_p: 1.0                 # 配合 temperature 0 使用
   max_tokens: 1500           # 批量审查可能一次性输出多条违规工单明细，预留充足 Token

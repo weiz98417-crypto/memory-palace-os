@@ -1,0 +1,48 @@
+{
+  "operation": "Keep successful Todo result when the subsequent task-list refresh fails",
+  "state": {
+    "app_status": "SUCCEEDED",
+    "stored_status": "SUCCEEDED",
+    "status_text": "拆解完成",
+    "trace_text": "uat-success-trace-refresh-probe",
+    "note_text": "拆解已成功，仅任务列表刷新失败：UAT 列表刷新故障探针。请手动刷新任务列表，已创建的任务不会丢失。",
+    "dialog_open": false,
+    "result_visible": true,
+    "toast_messages": [
+      "登录成功",
+      "TodoWrite 已创建 2 项任务",
+      "拆解已成功，仅任务列表刷新失败：UAT 列表刷新故障探针。请手动刷新任务列表，已创建的任务不会丢失。 · Trace uat-success-trace-refresh-probe"
+    ]
+  },
+  "simulated_decomposition_status": 201,
+  "simulated_refresh_status": 503,
+  "application_server_decomposition_post_count": 0,
+  "expected_http_errors": [
+    {
+      "url": "http://localhost:8082/api/v1/admin/tasks?limit=200",
+      "status": 503
+    }
+  ],
+  "expected_console_errors": [
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+  ],
+  "unexpected_runtime": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  },
+  "runtime": {
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": [
+      {
+        "url": "http://localhost:8082/api/v1/admin/tasks?limit=200",
+        "status": 503
+      }
+    ]
+  }
+}

@@ -39,7 +39,7 @@ class TestPermissionEngine:
         result = await engine.check_and_execute(
             tool_name="search_memory",
             args={"query": "test"},
-            context={"session_id": "s1", "user_id": "u1"},
+            context={"session_id": "s1", "user_id": "u1", "venue_id": "venue-a"},
         )
         assert result["status"] in ("ok", "executed"), f"got {result['status']}"
 

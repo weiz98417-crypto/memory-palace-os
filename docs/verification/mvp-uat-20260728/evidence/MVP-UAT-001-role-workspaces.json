@@ -1,0 +1,730 @@
+{
+  "uat_id": "MVP-UAT-001",
+  "name": "登录、角色与工作台",
+  "result": "PASS",
+  "generated_at": "2026-07-29T08:18:48.078Z",
+  "run_suffix": "ms5tc4j0-55d68b",
+  "base_url": "http://localhost:8082/admin/",
+  "credentials": {
+    "admin_password": "[REDACTED]",
+    "manager_password": "[REDACTED]",
+    "operator_old_password": "[REDACTED]",
+    "operator_new_password": "[REDACTED]"
+  },
+  "fixture": {
+    "venue": {
+      "id": "uat-rbac-ms5tc4j0-55d68b",
+      "name": "RBAC 验收场地 ms5tc4j0-55d68b",
+      "status": "ACTIVE",
+      "created_at": 1785313123.5465188,
+      "updated_at": 1785313123.5465188
+    },
+    "users": [
+      {
+        "id": "3a20647038d841338b81d0888810f9d2",
+        "username": "uat-mgr-ms5tc4j0-55d68b",
+        "display_name": "验收经理 ms5tc4j0-55d68b",
+        "role": "manager",
+        "venue_id": "uat-rbac-ms5tc4j0-55d68b",
+        "status": "ACTIVE",
+        "created_at": 1785313123.6968336,
+        "updated_at": 1785313123.6968336,
+        "last_login_at": null
+      },
+      {
+        "id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "username": "uat-op-ms5tc4j0-55d68b",
+        "display_name": "验收操作员 ms5tc4j0-55d68b",
+        "role": "operator",
+        "venue_id": "uat-rbac-ms5tc4j0-55d68b",
+        "status": "ACTIVE",
+        "created_at": 1785313123.8770742,
+        "updated_at": 1785313123.8770742,
+        "last_login_at": null
+      }
+    ],
+    "creation_http_statuses": {
+      "venue": 201,
+      "manager": 201,
+      "operator": 201
+    }
+  },
+  "role_workspaces": {
+    "admin": {
+      "identity": {
+        "id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "username": "uat-admin",
+        "display_name": "UAT 系统管理员",
+        "role": "admin",
+        "venue_id": "venue-uat"
+      },
+      "account_name": "UAT 系统管理员",
+      "account_role": "系统管理员",
+      "tenant_chip": "场地 venue-uat",
+      "active_view": "view-dashboard",
+      "dashboard_health_label": "healthy",
+      "visible_navigation": [
+        {
+          "view": "dashboard",
+          "label": "总运营工作台"
+        },
+        {
+          "view": "events",
+          "label": "事现场事件"
+        },
+        {
+          "view": "sessions",
+          "label": "会消息与会话"
+        },
+        {
+          "view": "tasks",
+          "label": "任任务中心"
+        },
+        {
+          "view": "approvals",
+          "label": "审审批中心"
+        },
+        {
+          "view": "actions",
+          "label": "动推送与动作日志"
+        },
+        {
+          "view": "knowledge",
+          "label": "知知识库"
+        },
+        {
+          "view": "persona",
+          "label": "分数字分身"
+        },
+        {
+          "view": "watcher",
+          "label": "巡鹰眼巡检"
+        },
+        {
+          "view": "sops",
+          "label": "SOPSOP 中心"
+        },
+        {
+          "view": "management",
+          "label": "管用户与场地"
+        },
+        {
+          "view": "settings",
+          "label": "设系统设置"
+        },
+        {
+          "view": "diagnostics",
+          "label": "诊运维诊断"
+        }
+      ],
+      "hidden_navigation": []
+    },
+    "manager": {
+      "identity": {
+        "id": "3a20647038d841338b81d0888810f9d2",
+        "username": "uat-mgr-ms5tc4j0-55d68b",
+        "display_name": "验收经理 ms5tc4j0-55d68b",
+        "role": "manager",
+        "venue_id": "uat-rbac-ms5tc4j0-55d68b"
+      },
+      "account_name": "验收经理 ms5tc4j0-55d68b",
+      "account_role": "值班经理",
+      "tenant_chip": "场地 uat-rbac-ms5tc4j0-55d68b",
+      "active_view": "view-dashboard",
+      "dashboard_health_label": "业务视图",
+      "visible_navigation": [
+        {
+          "view": "dashboard",
+          "label": "总运营工作台"
+        },
+        {
+          "view": "events",
+          "label": "事现场事件"
+        },
+        {
+          "view": "sessions",
+          "label": "会消息与会话"
+        },
+        {
+          "view": "tasks",
+          "label": "任任务中心"
+        },
+        {
+          "view": "approvals",
+          "label": "审审批中心"
+        },
+        {
+          "view": "actions",
+          "label": "动推送与动作日志"
+        },
+        {
+          "view": "knowledge",
+          "label": "知知识库"
+        },
+        {
+          "view": "persona",
+          "label": "分数字分身"
+        },
+        {
+          "view": "watcher",
+          "label": "巡鹰眼巡检"
+        },
+        {
+          "view": "sops",
+          "label": "SOPSOP 中心"
+        },
+        {
+          "view": "settings",
+          "label": "设系统设置"
+        }
+      ],
+      "hidden_navigation": [
+        "management",
+        "diagnostics"
+      ]
+    },
+    "operator": {
+      "identity": {
+        "id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "username": "uat-op-ms5tc4j0-55d68b",
+        "display_name": "验收操作员 ms5tc4j0-55d68b",
+        "role": "operator",
+        "venue_id": "uat-rbac-ms5tc4j0-55d68b"
+      },
+      "account_name": "验收操作员 ms5tc4j0-55d68b",
+      "account_role": "现场操作员",
+      "tenant_chip": "场地 uat-rbac-ms5tc4j0-55d68b",
+      "active_view": "view-dashboard",
+      "dashboard_health_label": "业务视图",
+      "visible_navigation": [
+        {
+          "view": "dashboard",
+          "label": "总运营工作台"
+        },
+        {
+          "view": "events",
+          "label": "事现场事件"
+        },
+        {
+          "view": "sessions",
+          "label": "会消息与会话"
+        },
+        {
+          "view": "tasks",
+          "label": "任任务中心"
+        }
+      ],
+      "hidden_navigation": [
+        "approvals",
+        "actions",
+        "knowledge",
+        "persona",
+        "watcher",
+        "sops",
+        "management",
+        "settings",
+        "diagnostics"
+      ]
+    }
+  },
+  "dashboard_consistency": {
+    "admin": {
+      "trigger": "formal client refresh button",
+      "captured_same_refresh_round": true,
+      "response_http_statuses": {
+        "dashboard": 200,
+        "tasks": 200,
+        "skills": 200,
+        "approvals": 200
+      },
+      "api_counts": {
+        "events": 14,
+        "tasks": 7,
+        "approvals": 0,
+        "agents": 8
+      },
+      "ui_counts": {
+        "events": 14,
+        "tasks": 7,
+        "approvals": 0,
+        "agents": 8,
+        "updated_label": "更新于 16:18:42"
+      }
+    },
+    "manager": {
+      "trigger": "formal client refresh button",
+      "captured_same_refresh_round": true,
+      "response_http_statuses": {
+        "dashboard": 200,
+        "tasks": 200,
+        "skills": 200,
+        "approvals": 200
+      },
+      "api_counts": {
+        "events": 0,
+        "tasks": 0,
+        "approvals": 0,
+        "agents": 8
+      },
+      "ui_counts": {
+        "events": 0,
+        "tasks": 0,
+        "approvals": 0,
+        "agents": 8,
+        "updated_label": "更新于 16:18:44"
+      }
+    },
+    "operator": {
+      "trigger": "formal client refresh button",
+      "captured_same_refresh_round": true,
+      "response_http_statuses": {
+        "dashboard": 200,
+        "tasks": 200,
+        "skills": 200
+      },
+      "api_counts": {
+        "events": 0,
+        "tasks": 0,
+        "approvals": 0,
+        "agents": 8
+      },
+      "ui_counts": {
+        "events": 0,
+        "tasks": 0,
+        "approvals": 0,
+        "agents": 8,
+        "updated_label": "更新于 16:18:45"
+      }
+    }
+  },
+  "settings_lifecycle": {
+    "key": "organization_name",
+    "original_value": "示范景区运营中心",
+    "modified_value": "MVP 联合验收中心 ms5tc4j0-55d68b",
+    "modification": {
+      "status": 200,
+      "trace_id": "b14b880f12ca4df3b844829de3a91315",
+      "get_verified": true,
+      "audit": {
+        "venue_id": "venue-uat",
+        "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "action": "SETTING_UPDATED",
+        "resource_type": "system_setting",
+        "resource_id": "organization_name",
+        "outcome": "SUCCEEDED",
+        "trace_id": "b14b880f12ca4df3b844829de3a91315",
+        "metadata": {
+          "value_type": "string"
+        },
+        "created_at": 1785313122.6253092
+      }
+    },
+    "restoration": {
+      "status": 200,
+      "trace_id": "dffe134de2ab4daa828db0b7d433c94b",
+      "get_verified": true,
+      "audit": {
+        "venue_id": "venue-uat",
+        "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "action": "SETTING_UPDATED",
+        "resource_type": "system_setting",
+        "resource_id": "organization_name",
+        "outcome": "SUCCEEDED",
+        "trace_id": "dffe134de2ab4daa828db0b7d433c94b",
+        "metadata": {
+          "value_type": "string"
+        },
+        "created_at": 1785313122.890612
+      }
+    }
+  },
+  "user_management_lifecycle": {
+    "user_id": "2f3e53bbea394d77a55e26e458ba67a8",
+    "username": "uat-op-ms5tc4j0-55d68b",
+    "final_status": "ACTIVE",
+    "transitions": [
+      {
+        "target_status": "DISABLED",
+        "trace_id": "f9803adfaaea4a6995789e59daca2cd4",
+        "audit": {
+          "venue_id": "venue-uat",
+          "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "action": "USER_UPDATED",
+          "resource_type": "user",
+          "resource_id": "2f3e53bbea394d77a55e26e458ba67a8",
+          "outcome": "SUCCEEDED",
+          "trace_id": "f9803adfaaea4a6995789e59daca2cd4",
+          "metadata": {
+            "changed_fields": [
+              "status"
+            ]
+          },
+          "created_at": 1785313126.2972012
+        }
+      },
+      {
+        "target_status": "ACTIVE",
+        "trace_id": "84bf5d012aad4a21b7e327231092edec",
+        "audit": {
+          "venue_id": "venue-uat",
+          "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "action": "USER_UPDATED",
+          "resource_type": "user",
+          "resource_id": "2f3e53bbea394d77a55e26e458ba67a8",
+          "outcome": "SUCCEEDED",
+          "trace_id": "84bf5d012aad4a21b7e327231092edec",
+          "metadata": {
+            "changed_fields": [
+              "status"
+            ]
+          },
+          "created_at": 1785313126.4067652
+        }
+      }
+    ],
+    "password_reset": {
+      "status": 200,
+      "trace_id": "0e63b5b905c7450f9dd5d93a0149823a",
+      "audit": {
+        "venue_id": "venue-uat",
+        "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "action": "USER_PASSWORD_RESET",
+        "resource_type": "user",
+        "resource_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "outcome": "SUCCEEDED",
+        "trace_id": "0e63b5b905c7450f9dd5d93a0149823a",
+        "metadata": {},
+        "created_at": 1785313126.549634
+      }
+    }
+  },
+  "password_login_gate": {
+    "old_password_rejected_attempts": [
+      {
+        "attempt": 1,
+        "status": 401,
+        "code": "AUTH_INVALID_CREDENTIALS",
+        "trace_id": "e7a511c8663e43b8a12335a5542172be",
+        "error_visible": true
+      },
+      {
+        "attempt": 2,
+        "status": 401,
+        "code": "AUTH_INVALID_CREDENTIALS",
+        "trace_id": "69ba7d27cdce4eb7aac705aaa80fbc4a",
+        "error_visible": true
+      },
+      {
+        "attempt": 3,
+        "status": 401,
+        "code": "AUTH_INVALID_CREDENTIALS",
+        "trace_id": "9901007d6bde4a69b834df002d74d592",
+        "error_visible": true
+      }
+    ],
+    "new_password_login": {
+      "status": 200,
+      "identity": {
+        "id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "username": "uat-op-ms5tc4j0-55d68b",
+        "display_name": "验收操作员 ms5tc4j0-55d68b",
+        "role": "operator",
+        "venue_id": "uat-rbac-ms5tc4j0-55d68b"
+      },
+      "login_verified": true
+    }
+  },
+  "api_matrix": [
+    {
+      "capability": "admin-only venue administration",
+      "endpoint": "GET /api/v1/admin/venues",
+      "admin": {
+        "status": 200,
+        "ok": true,
+        "code": null,
+        "trace_id": null,
+        "venue_present": true
+      },
+      "manager": {
+        "status": 403,
+        "ok": false,
+        "code": "AUTH_FORBIDDEN",
+        "trace_id": "3cff43dfdc4641e188546f4367d3914d"
+      },
+      "operator": {
+        "status": 403,
+        "ok": false,
+        "code": "AUTH_FORBIDDEN",
+        "trace_id": "694f474d57ef438485fdbe9f1d76d1d8"
+      }
+    },
+    {
+      "capability": "manager-allowed assignee lookup",
+      "endpoint": "GET /api/v1/admin/assignees",
+      "manager": {
+        "status": 200,
+        "ok": true,
+        "code": null,
+        "trace_id": null,
+        "tenant_only": true,
+        "assignee_count": 2
+      },
+      "operator": {
+        "status": 403,
+        "ok": false,
+        "code": "AUTH_FORBIDDEN",
+        "trace_id": "3610c10be90146e8b6432c5927be37e4"
+      }
+    },
+    {
+      "capability": "manager-readable settings",
+      "endpoint": "GET /api/v1/admin/settings",
+      "manager": {
+        "status": 200,
+        "ok": true,
+        "code": null,
+        "trace_id": null,
+        "setting_count": 7
+      },
+      "operator": {
+        "status": 403,
+        "ok": false,
+        "code": "AUTH_FORBIDDEN",
+        "trace_id": "19fac377bb6c4dac89c935765973477d"
+      }
+    },
+    {
+      "capability": "manager-readable audit logs",
+      "endpoint": "GET /api/v1/admin/audit-logs",
+      "operator": {
+        "status": 403,
+        "ok": false,
+        "code": "AUTH_FORBIDDEN",
+        "trace_id": "4d2a74d05c2b479da317dd1c3dc2e717"
+      }
+    }
+  ],
+  "audits": {
+    "ui_fixture_creation": [
+      {
+        "venue_id": "venue-uat",
+        "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "action": "VENUE_CREATED",
+        "resource_type": "venue",
+        "resource_id": "uat-rbac-ms5tc4j0-55d68b",
+        "outcome": "SUCCEEDED",
+        "trace_id": "f98030c5c8604e80bbd2ddd99f312dcb",
+        "metadata": {
+          "name": "RBAC 验收场地 ms5tc4j0-55d68b"
+        },
+        "created_at": 1785313123.5493019
+      },
+      {
+        "venue_id": "venue-uat",
+        "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "action": "USER_CREATED",
+        "resource_type": "user",
+        "resource_id": "3a20647038d841338b81d0888810f9d2",
+        "outcome": "SUCCEEDED",
+        "trace_id": "50e713bd3e8f4e489bc656fbf7eb11c4",
+        "metadata": {
+          "username": "uat-mgr-ms5tc4j0-55d68b",
+          "role": "manager",
+          "venue_id": "uat-rbac-ms5tc4j0-55d68b"
+        },
+        "created_at": 1785313123.7416048
+      },
+      {
+        "venue_id": "venue-uat",
+        "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "action": "USER_CREATED",
+        "resource_type": "user",
+        "resource_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "outcome": "SUCCEEDED",
+        "trace_id": "0bd2373b95b149b6885c25dfa66921ec",
+        "metadata": {
+          "username": "uat-op-ms5tc4j0-55d68b",
+          "role": "operator",
+          "venue_id": "uat-rbac-ms5tc4j0-55d68b"
+        },
+        "created_at": 1785313123.9158514
+      }
+    ],
+    "successful_role_logins": [
+      {
+        "venue_id": "uat-rbac-ms5tc4j0-55d68b",
+        "user_id": "3a20647038d841338b81d0888810f9d2",
+        "action": "AUTH_LOGIN",
+        "resource_type": "auth_session",
+        "resource_id": "3a20647038d841338b81d0888810f9d2",
+        "outcome": "SUCCEEDED",
+        "trace_id": "2a32c602f6004891af8002113ebe8748",
+        "metadata": {},
+        "created_at": 1785313124.3027012
+      },
+      {
+        "venue_id": "uat-rbac-ms5tc4j0-55d68b",
+        "user_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "action": "AUTH_LOGIN",
+        "resource_type": "auth_session",
+        "resource_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "outcome": "SUCCEEDED",
+        "trace_id": "8dc7384a4aa546f89b021f64852b0dad",
+        "metadata": {},
+        "created_at": 1785313127.954242
+      },
+      {
+        "venue_id": "uat-rbac-ms5tc4j0-55d68b",
+        "user_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "action": "AUTH_LOGIN",
+        "resource_type": "auth_session",
+        "resource_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "outcome": "SUCCEEDED",
+        "trace_id": "c058e1623cf84597916b666c69bd0763",
+        "metadata": {},
+        "created_at": 1785313125.5436041
+      }
+    ],
+    "denied_old_password_logins": [
+      {
+        "venue_id": "uat-rbac-ms5tc4j0-55d68b",
+        "user_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "action": "AUTH_LOGIN",
+        "resource_type": "auth_session",
+        "resource_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "outcome": "DENIED",
+        "trace_id": "9901007d6bde4a69b834df002d74d592",
+        "metadata": {},
+        "created_at": 1785313127.4351783
+      },
+      {
+        "venue_id": "uat-rbac-ms5tc4j0-55d68b",
+        "user_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "action": "AUTH_LOGIN",
+        "resource_type": "auth_session",
+        "resource_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "outcome": "DENIED",
+        "trace_id": "69ba7d27cdce4eb7aac705aaa80fbc4a",
+        "metadata": {},
+        "created_at": 1785313127.1756997
+      },
+      {
+        "venue_id": "uat-rbac-ms5tc4j0-55d68b",
+        "user_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "action": "AUTH_LOGIN",
+        "resource_type": "auth_session",
+        "resource_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "outcome": "DENIED",
+        "trace_id": "e7a511c8663e43b8a12335a5542172be",
+        "metadata": {},
+        "created_at": 1785313126.9004762
+      }
+    ]
+  },
+  "screenshots": [
+    "screenshots/MVP-UAT-001-admin-workspace-1440x900.png",
+    "screenshots/MVP-UAT-001-admin-management-1440x900.png",
+    "screenshots/MVP-UAT-001-manager-workspace-1440x900.png",
+    "screenshots/MVP-UAT-001-operator-workspace-1440x900.png",
+    "screenshots/MVP-UAT-001-setting-modified-1440x900.png",
+    "screenshots/MVP-UAT-001-setting-restored-1440x900.png",
+    "screenshots/MVP-UAT-001-user-lifecycle-1440x900.png"
+  ],
+  "runtime": {
+    "telemetry": [
+      {
+        "role": "admin",
+        "console_errors": [],
+        "expected_console_rejections": [],
+        "expected_http_rejections": [],
+        "page_errors": [],
+        "failed_requests": [],
+        "server_errors": []
+      },
+      {
+        "role": "manager",
+        "console_errors": [],
+        "expected_console_rejections": [],
+        "expected_http_rejections": [],
+        "page_errors": [],
+        "failed_requests": [],
+        "server_errors": []
+      },
+      {
+        "role": "operator",
+        "console_errors": [],
+        "expected_console_rejections": [],
+        "expected_http_rejections": [],
+        "page_errors": [],
+        "failed_requests": [],
+        "server_errors": []
+      },
+      {
+        "role": "operator-old-password-rejections",
+        "console_errors": [],
+        "expected_console_rejections": [
+          {
+            "attempt": 1,
+            "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+          },
+          {
+            "attempt": 2,
+            "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+          },
+          {
+            "attempt": 3,
+            "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+          }
+        ],
+        "expected_http_rejections": [
+          {
+            "attempt": 1,
+            "method": "POST",
+            "url": "http://localhost:8082/api/v1/auth/login",
+            "status": 401
+          },
+          {
+            "attempt": 2,
+            "method": "POST",
+            "url": "http://localhost:8082/api/v1/auth/login",
+            "status": 401
+          },
+          {
+            "attempt": 3,
+            "method": "POST",
+            "url": "http://localhost:8082/api/v1/auth/login",
+            "status": 401
+          }
+        ],
+        "page_errors": [],
+        "failed_requests": [],
+        "server_errors": []
+      },
+      {
+        "role": "operator-new-password",
+        "console_errors": [],
+        "expected_console_rejections": [],
+        "expected_http_rejections": [],
+        "page_errors": [],
+        "failed_requests": [],
+        "server_errors": []
+      }
+    ]
+  },
+  "assertions": {
+    "admin_created_unique_venue_through_ui": true,
+    "admin_created_manager_and_operator_through_ui": true,
+    "all_passwords_runtime_random_and_redacted": true,
+    "all_three_roles_logged_in_through_formal_ui": true,
+    "all_three_dashboards_match_same_round_api_responses": true,
+    "role_navigation_and_dashboard_differences_verified": true,
+    "organization_setting_modified_verified_audited_and_restored_through_ui": true,
+    "operator_disabled_enabled_and_password_reset_through_ui": true,
+    "user_updates_and_password_reset_audited": true,
+    "old_password_rejected_and_new_password_login_succeeded": true,
+    "admin_only_api_enforced": true,
+    "manager_allowed_operator_denied_api_enforced": true,
+    "creation_and_login_audits_persisted": true,
+    "browser_console_page_request_and_5xx_errors_zero": true
+  }
+}

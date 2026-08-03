@@ -1,0 +1,32 @@
+{
+  "heading": "数字分身",
+  "text": "数字分身\n\n创建岗位分身，完成多轮访谈萃取，再使用已授权经验向 DeepSeek 提问并查看来源。\n\n创建数字分身\n暂无数字分身\n创建分身并完成多轮经验访谈。",
+  "buttons": [
+    {
+      "text": "创建数字分身",
+      "disabled": false,
+      "action": "new-persona",
+      "onclick": null
+    }
+  ],
+  "fields": [
+    {
+      "id": "persona-search",
+      "name": "",
+      "type": "text",
+      "placeholder": "搜索岗位或分身名称",
+      "value": "",
+      "required": false,
+      "options": []
+    }
+  ],
+  "rows": [],
+  "runtime": {
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

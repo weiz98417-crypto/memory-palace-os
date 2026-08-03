@@ -233,9 +233,9 @@ def get_wechat_client() -> Optional[WeChatWorkClient]:
     """返回 WeChatWorkClient 单例，首次调用时初始化。配置缺失返回 None。"""
     global _wechat_client
     if _wechat_client is None:
-        corpid = os.environ.get("WX_CORPID")
-        corpsecret = os.environ.get("WX_CORPSECRET")
-        agentid = os.environ.get("WX_AGENTID")
+        corpid = os.environ.get("WECHAT_CORP_ID") or os.environ.get("WX_CORPID")
+        corpsecret = os.environ.get("WECHAT_CORP_SECRET") or os.environ.get("WX_CORPSECRET")
+        agentid = os.environ.get("WECHAT_AGENT_ID") or os.environ.get("WX_AGENTID")
         if corpid and corpsecret and agentid:
             try:
                 _wechat_client = WeChatWorkClient(corpid=corpid, corpsecret=corpsecret, agentid=int(agentid))

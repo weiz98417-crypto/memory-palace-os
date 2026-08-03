@@ -16,8 +16,10 @@ from src.memory_palace.core.skill_base import SkillValidationError
 class TestPersonaExtractSkill:
 
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, monkeypatch):
         """每个测试前清理类级别的 interview_state"""
+        monkeypatch.setenv("APP_ENV", "test")
+        monkeypatch.setenv("MOCK_LLM", "true")
         PersonaExtractSkill._interview_state = {}
         yield
         PersonaExtractSkill._interview_state = {}
@@ -36,7 +38,7 @@ class TestPersonaExtractSkill:
         """技能可正常实例化"""
         skill = PersonaExtractSkill()
         assert skill.config["agent_metadata"]["name"] == "PersonaExtract_Skill"
-        assert skill.config["llm_config"]["model"] == "gpt-4o"
+        assert skill.config["llm_config"]["model"] == "deepseek-v4-flash"
 
     # =========================================================================
     # 10.2 入参校验
@@ -87,6 +89,7 @@ class TestPersonaExtractSkill:
         assert start_output.success
         assert start_output.structured_data["interview_id"]
         assert start_output.structured_data["current_question"] == 1
+        assert start_output.structured_data["total_questions"] == 4
         interview_id = start_output.structured_data["interview_id"]
 
         # 验证开场白非空且包含访谈提示
@@ -108,6 +111,7 @@ class TestPersonaExtractSkill:
             assert sd["interview_id"] == interview_id
             assert sd["stage"] == f"question_{q+1}"
             assert sd["current_question"] == q + 1
+            assert sd["total_questions"] == 4
 
         # 3. Q4回答 → 进入 summary（不再加载不存在的 Q5）
         q4_output = await skill.run(
@@ -121,8 +125,10 @@ class TestPersonaExtractSkill:
         assert q4_output.success
         sd4 = q4_output.structured_data
         assert sd4["stage"] == "summary"
-        assert sd4["current_question"] == 6  # else 分支直接标记 summary 阶段
+        assert sd4["current_question"] == 4
+        assert sd4["total_questions"] == 4
         assert sd4["prompt_finalize"] is True
+        assert skill._interview_state[interview_id]["current_question"] == 6
 
     # =========================================================================
     # 10.4 边界条件
@@ -165,8 +171,81 @@ class TestPersonaExtractSkill:
         )
         assert output.success
         iid = output.structured_data["interview_id"]
-        state = PersonaExtractSkill._interview_state[iid]
+        state = skill._interview_state[iid]
         assert state["source_persona_id"] == "existing_pid_123"
+
+    @pytest.mark.asyncio
+    async def test_continue_does_not_advance_or_create_entries_when_llm_fails(self, monkeypatch):
+        skill = PersonaExtractSkill()
+        started = await skill.run(
+            {"action": "start", "venue_id": "venue_x", "job_title": "前台"},
+            trace_id="t_llm_failure_start",
+        )
+        interview_id = started.structured_data["interview_id"]
+        failing_client = MagicMock()
+        failing_client.ask = AsyncMock(side_effect=RuntimeError("model unavailable"))
+        monkeypatch.setattr(
+            "src.memory_palace.skills.persona_extract.skill.llm_client",
+            failing_client,
+        )
+        monkeypatch.delenv("MOCK_LLM", raising=False)
+
+        output = await skill.run(
+            {
+                "action": "continue",
+                "interview_id": interview_id,
+                "venue_id": "venue_x",
+                "answer": "游客情绪激动时先隔离围观人群",
+            },
+            trace_id="t_llm_failure_continue",
+        )
+
+        assert output.success is False
+        assert output.action_taken == "fatal_error_fallback"
+        assert skill._interview_state[interview_id]["current_question"] == 1
+        assert skill._interview_state[interview_id]["all_entries"] == []
+
+    @pytest.mark.asyncio
+    async def test_parse_answer_keeps_schema_and_accepts_deepseek_top_level_entries(self, monkeypatch):
+        skill = PersonaExtractSkill()
+        response = MagicMock(
+            content='[{"trigger":"游客晕倒","behavior":"先检查意识和呼吸","reason":"避免错误搬动"}]',
+            is_mock=False,
+        )
+        client = MagicMock()
+        client.ask = AsyncMock(return_value=response)
+        client.parse_json = AsyncMock(
+            return_value=[
+                {
+                    "trigger": "游客晕倒",
+                    "behavior": "先检查意识和呼吸",
+                    "reason": "避免错误搬动",
+                }
+            ]
+        )
+        monkeypatch.setattr(
+            "src.memory_palace.skills.persona_extract.skill.llm_client",
+            client,
+        )
+
+        entries = await skill._parse_answer(
+            question_id=1,
+            answer="先确认游客意识和呼吸",
+            job_title="应急值班员",
+            trace_id="t_deepseek_array",
+            venue_id="venue_x",
+        )
+
+        assert entries == [
+            {
+                "trigger": "游客晕倒",
+                "behavior": "先检查意识和呼吸",
+                "reason": "避免错误搬动",
+            }
+        ]
+        system_prompt = client.ask.await_args.kwargs["system_prompt"]
+        assert "### 输出格式" in system_prompt
+        assert '"logic_entries"' in system_prompt
 
     def test_mock_parse_returns_entries(self):
         """mock模式 _mock_parse 返回占位条目"""

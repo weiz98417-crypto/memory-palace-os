@@ -1,6 +1,8 @@
 """
 token_metrics.py - LLM Token 消耗指标收集器
 """
+import os
+
 from prometheus_client import Counter, Histogram
 
 TOKEN_BUCKETS = (100, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000)
@@ -32,11 +34,13 @@ class TokenMetricsCollector:
     """Token 消耗指标收集器"""
 
     # Token 单价（美元/1M tokens）
+    _DEEPSEEK_PRICE = {
+        "input": float(os.environ.get("DEEPSEEK_INPUT_USD_PER_MILLION", "0")),
+        "output": float(os.environ.get("DEEPSEEK_OUTPUT_USD_PER_MILLION", "0")),
+    }
     TOKEN_PRICES = {
-        "gpt-4o": {"input": 5.0, "output": 15.0},
-        "gpt-4-turbo": {"input": 10.0, "output": 30.0},
-        "gpt-3.5-turbo": {"input": 0.5, "output": 1.5},
-        "default": {"input": 5.0, "output": 15.0},
+        "deepseek-v4-flash": _DEEPSEEK_PRICE,
+        "default": _DEEPSEEK_PRICE,
     }
 
     @staticmethod

@@ -1,0 +1,87 @@
+{
+  "heading": "知识库",
+  "text": "知识库\n\n结构化知识与 Chroma 向量索引保持一致，支持来源、版本、相关度、导入和索引重建。\n\n批量导入\n重建索引\n新增知识\n向量检索\nChroma 相似度\n检索\n知识筛选\nPostgreSQL 文档\n关键词\n知识条目\n2 条\n更新时间\t标题\t分类\t来源\t版本\t标签\t操作\n07/28 02:23\t\n闸机断电应急处置 SOP\n1. 隔离故障回路；2. 开启人工通道分流；3. 复位控制器；4. 连续三轮通行复检；5. 登记事件与处置人；6. 值班经理复核后恢复开放。\n\t设施故障\t\nSOP\tv1\t-\t\n编辑\n删除\n\n07/28 02:17\t\n东区闸机断电处置基线\n发现东区闸机控制器异常断电时，先隔离故障回路，开启人工通道分流，完成控制器复位后进行三轮通行复检，并在十分钟内登记事件与处置人。\n\t设施运维\t\nMANUAL\tv2\t闸机, 断电, 分流\t\n编辑\n删除",
+  "buttons": [
+    {
+      "text": "批量导入",
+      "disabled": false,
+      "action": "knowledge-import",
+      "onclick": null
+    },
+    {
+      "text": "重建索引",
+      "disabled": false,
+      "action": "knowledge-rebuild",
+      "onclick": null
+    },
+    {
+      "text": "新增知识",
+      "disabled": false,
+      "action": "new-knowledge",
+      "onclick": null
+    },
+    {
+      "text": "检索",
+      "disabled": false,
+      "action": null,
+      "onclick": null
+    },
+    {
+      "text": "编辑",
+      "disabled": false,
+      "action": null,
+      "onclick": "App.editKnowledge('sop-1')"
+    },
+    {
+      "text": "删除",
+      "disabled": false,
+      "action": null,
+      "onclick": "App.deleteKnowledge('sop-1')"
+    },
+    {
+      "text": "编辑",
+      "disabled": false,
+      "action": null,
+      "onclick": "App.editKnowledge('0fc30035a6c34b2f94c9990013873ccd')"
+    },
+    {
+      "text": "删除",
+      "disabled": false,
+      "action": null,
+      "onclick": "App.deleteKnowledge('0fc30035a6c34b2f94c9990013873ccd')"
+    }
+  ],
+  "fields": [
+    {
+      "id": "knowledge-vector-query",
+      "name": "",
+      "type": "text",
+      "placeholder": "输入业务问题进行语义检索",
+      "value": "",
+      "required": true,
+      "options": []
+    },
+    {
+      "id": "knowledge-filter",
+      "name": "",
+      "type": "text",
+      "placeholder": "按标题或正文筛选",
+      "value": "",
+      "required": false,
+      "options": []
+    }
+  ],
+  "rows": [
+    "更新时间\t标题\t分类\t来源\t版本\t标签\t操作",
+    "07/28 02:23\t\n闸机断电应急处置 SOP\n1. 隔离故障回路；2. 开启人工通道分流；3. 复位控制器；4. 连续三轮通行复检；5. 登记事件与处置人；6. 值班经理复核后恢复开放。\n\t设施故障\t\nSOP\tv1\t-\t\n编辑\n删除",
+    "07/28 02:17\t\n东区闸机断电处置基线\n发现东区闸机控制器异常断电时，先隔离故障回路，开启人工通道分流，完成控制器复位后进行三轮通行复检，并在十分钟内登记事件与处置人。\n\t设施运维\t\nMANUAL\tv2\t闸机, 断电, 分流\t\n编辑\n删除"
+  ],
+  "runtime": {
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

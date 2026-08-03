@@ -1,0 +1,186 @@
+{
+  "uat_id": "MVP-UAT-004",
+  "operation": "Adopt delivered in-app alert and reject duplicate terminal transition",
+  "adoption": {
+    "url": "http://localhost:8082/api/v1/admin/push_logs/1cd2324f-d0e/adoption",
+    "method": "PATCH",
+    "status": 200,
+    "payload": {
+      "updated": true,
+      "push_id": "1cd2324f-d0e",
+      "status": "adopted",
+      "trace_id": "046c89912f98434d84d110c2a094f715"
+    }
+  },
+  "duplicate_terminal_transition": {
+    "status": 409,
+    "payload": {
+      "detail": {
+        "code": "PUSH_LOG_STATE_CHANGED",
+        "message": "动作日志已被其他操作完成采纳确认。",
+        "trace_id": "1a54040fe7ac4bc29ac807c22cd9b57e",
+        "retryable": false,
+        "action": "刷新动作日志后查看当前采纳状态。"
+      }
+    }
+  },
+  "pushes": {
+    "push_logs": [
+      {
+        "id": 5,
+        "push_id": "1cd2324f-d0e",
+        "venue_id": "venue-uat",
+        "msg_id": "5396bc1c-0fb4-4854-a41d-e3440a2c7f16",
+        "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "raw_text": "UAT 站内告警批准链 ms5on9um：暑期高峰联合检查已完成，请值班经理确认闭环报告并采纳。",
+        "event_type": "站内告警",
+        "severity": "P1",
+        "stage1_triggered": false,
+        "hit_keywords": [
+          "controlled_action",
+          "in_app"
+        ],
+        "stage2_triggered": null,
+        "llm_confidence": null,
+        "pushed_at": 1785305248.8919022,
+        "confirmed_at": 1785307508.1503906,
+        "adoption_status": "adopted",
+        "confirmed_notes": null,
+        "confirmed_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "trace_id": "6bcabdab693646c1ad5eba99938f73eb",
+        "channel": "in_app",
+        "recipient": "session:uat-golden-1785230678",
+        "delivery_status": "DELIVERED",
+        "delivery_error": null,
+        "idempotency_key": "5396bc1c-0fb4-4854-a41d-e3440a2c7f16"
+      },
+      {
+        "id": 4,
+        "push_id": "c38f70f1-135",
+        "venue_id": "venue-uat",
+        "msg_id": "8aa90c15-da83-45a3-90f6-021f3532d81c",
+        "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "raw_text": "UAT 站内告警批准链：暑期高峰联合检查已完成，请值班经理确认闭环报告并采纳。",
+        "event_type": "站内告警",
+        "severity": "P1",
+        "stage1_triggered": false,
+        "hit_keywords": [
+          "controlled_action",
+          "in_app"
+        ],
+        "stage2_triggered": null,
+        "llm_confidence": null,
+        "pushed_at": 1785305084.0606349,
+        "confirmed_at": null,
+        "adoption_status": "pending",
+        "confirmed_notes": null,
+        "confirmed_by": null,
+        "trace_id": "506a2cef5b1540e9b06b9b04127bdae5",
+        "channel": "in_app",
+        "recipient": "session:uat-golden-1785230678",
+        "delivery_status": "DELIVERED",
+        "delivery_error": null,
+        "idempotency_key": "8aa90c15-da83-45a3-90f6-021f3532d81c"
+      },
+      {
+        "id": 3,
+        "push_id": "220284d0-753",
+        "venue_id": "venue-uat",
+        "msg_id": "6f97fd23-c4a1-47b6-a7a7-e4c6e5822a9e",
+        "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "raw_text": "UAT 站内告警批准链：暑期高峰联合检查已完成，请值班经理确认闭环报告并采纳。",
+        "event_type": "站内告警",
+        "severity": "P1",
+        "stage1_triggered": false,
+        "hit_keywords": [
+          "controlled_action",
+          "in_app"
+        ],
+        "stage2_triggered": null,
+        "llm_confidence": null,
+        "pushed_at": 1785304992.4176311,
+        "confirmed_at": null,
+        "adoption_status": "pending",
+        "confirmed_notes": null,
+        "confirmed_by": null,
+        "trace_id": "096b29f0d46c4e8ebed3d74317be7d5e",
+        "channel": "in_app",
+        "recipient": "session:uat-golden-1785230678",
+        "delivery_status": "DELIVERED",
+        "delivery_error": null,
+        "idempotency_key": "6f97fd23-c4a1-47b6-a7a7-e4c6e5822a9e"
+      },
+      {
+        "id": 2,
+        "push_id": "7b2e49f7-1da",
+        "venue_id": "venue-uat",
+        "msg_id": "b21a9e21-fee5-4280-8ea8-04beb7fa4b91",
+        "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "raw_text": "UAT 并发采纳验证：同一条站内告警只能进入一个终态。",
+        "event_type": "站内告警",
+        "severity": "P1",
+        "stage1_triggered": false,
+        "hit_keywords": [
+          "controlled_action",
+          "in_app"
+        ],
+        "stage2_triggered": null,
+        "llm_confidence": null,
+        "pushed_at": 1785246926.1036081,
+        "confirmed_at": 1785246927.1620355,
+        "adoption_status": "adopted",
+        "confirmed_notes": null,
+        "confirmed_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "trace_id": "d8b1d0302aa24dacab6fc557e8a24269",
+        "channel": "in_app",
+        "recipient": "session:uat-golden-1785230678",
+        "delivery_status": "DELIVERED",
+        "delivery_error": null,
+        "idempotency_key": "b21a9e21-fee5-4280-8ea8-04beb7fa4b91"
+      },
+      {
+        "id": 1,
+        "push_id": "2b286b8a-e7c",
+        "venue_id": "venue-uat",
+        "msg_id": "bc66ee7f-0ea8-43b2-b3f7-4a66d18221af",
+        "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "raw_text": "UAT 站内告警批准链：暑期高峰联合检查已完成，请值班经理确认闭环报告并采纳。",
+        "event_type": "站内告警",
+        "severity": "P1",
+        "stage1_triggered": false,
+        "hit_keywords": [
+          "controlled_action",
+          "in_app"
+        ],
+        "stage2_triggered": null,
+        "llm_confidence": null,
+        "pushed_at": 1785246685.9769022,
+        "confirmed_at": 1785246884.2200415,
+        "adoption_status": "adopted",
+        "confirmed_notes": null,
+        "confirmed_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "trace_id": "b5260c76b7ba4ca7ae2c998b0bdcc21c",
+        "channel": "in_app",
+        "recipient": "session:uat-golden-1785230678",
+        "delivery_status": "DELIVERED",
+        "delivery_error": null,
+        "idempotency_key": "bc66ee7f-0ea8-43b2-b3f7-4a66d18221af"
+      }
+    ],
+    "limit": 200,
+    "offset": 0
+  },
+  "runtime": {
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 409 (Conflict)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": [
+      {
+        "url": "http://localhost:8082/api/v1/admin/push_logs/1cd2324f-d0e/adoption",
+        "status": 409
+      }
+    ]
+  }
+}

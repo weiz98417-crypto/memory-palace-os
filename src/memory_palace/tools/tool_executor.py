@@ -10,6 +10,7 @@ Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 """
 
 import asyncio
+import inspect
 import json
 from typing import Any, Callable, Dict, Optional
 
@@ -54,7 +55,11 @@ def list_tools() -> Dict[str, Dict[str, Any]]:
     return _tools_metadata.copy()
 
 
-async def execute_tool(name: str, args: Dict[str, Any]) -> Dict[str, Any]:
+async def execute_tool(
+    name: str,
+    args: Dict[str, Any],
+    context: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     """
     执行已注册的工具
 
@@ -73,12 +78,15 @@ async def execute_tool(name: str, args: Dict[str, Any]) -> Dict[str, Any]:
 
     try:
         func = _tools[name]
+        call_args = dict(args)
+        if context is not None and "execution_context" in inspect.signature(func).parameters:
+            call_args["execution_context"] = context
 
         # 判断是 async 还是 sync 函数
         if asyncio.iscoroutinefunction(func):
-            result = await func(**args)
+            result = await func(**call_args)
         else:
-            result = func(**args)
+            result = func(**call_args)
 
         return {
             "status": "executed",
@@ -96,7 +104,8 @@ async def execute_tool(name: str, args: Dict[str, Any]) -> Dict[str, Any]:
         logger.error(f"[ToolExecutor] 工具 {name} 执行失败: {e}")
         return {
             "status": "error",
-            "message": str(e)
+            "code": getattr(e, "code", "TOOL_EXECUTION_FAILED"),
+            "message": str(e),
         }
 
 
@@ -162,8 +171,9 @@ def _register_builtin_tools():
     # 短信工具
     async def send_sms_tool(phone: str, message: str, priority: str = "normal") -> Dict[str, Any]:
         from .sms_client import send_sms
-        result = await send_sms(phone, message)
-        return {"sent": True, "phone": phone, "priority": priority}
+        severity = "P1" if priority == "high" else "P2"
+        result = await send_sms(phone, message, severity)
+        return {**result, "priority": priority}
 
     register_tool(
         "send_sms",
@@ -183,8 +193,7 @@ def _register_builtin_tools():
     # 告警工具
     async def send_alert_tool(message: str, level: str = "warning") -> Dict[str, Any]:
         from .sms_client import send_alert
-        result = await send_alert(message, level)
-        return {"sent": True, "level": level, "message": message}
+        return await send_alert(message, level)
 
     register_tool(
         "send_alert",
@@ -200,13 +209,170 @@ def _register_builtin_tools():
         }
     )
 
+    async def send_in_app_alert_tool(
+        message: str,
+        level: str = "warning",
+        recipient_scope: str = "SESSION",
+        execution_context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        context = execution_context or {}
+        database = context.get("_database")
+        if database is None:
+            raise RuntimeError("in-app alert database is unavailable")
+        from ..core.simulator_outbox import (
+            SimulatorRecipientsNotReady,
+            validate_frozen_simulator_targets,
+        )
+        from ..knowledge.push_logger import write_push_log
+
+        severity = {"critical": "P0", "warning": "P1", "info": "P2"}.get(level, "P2")
+        evidence_snapshot = context.get("evidence_snapshot")
+        if not isinstance(evidence_snapshot, dict):
+            evidence_snapshot = {}
+        delivery = evidence_snapshot.get("delivery")
+        if not isinstance(delivery, dict):
+            delivery = {}
+        frozen_targets = delivery.get("targets")
+        if not isinstance(frozen_targets, list):
+            frozen_targets = []
+        fanout_requested = (
+            str(recipient_scope or "").upper() == "EVENT_PARTICIPANTS"
+            or str(delivery.get("scope") or "").upper() == "EVENT_PARTICIPANTS"
+        )
+        if fanout_requested:
+            invalid_snapshot = (
+                str(delivery.get("scope") or "").upper() != "EVENT_PARTICIPANTS"
+                or str(delivery.get("channel") or "").upper()
+                != "WECOM_SIMULATOR_OUTBOX"
+                or not frozen_targets
+            )
+            unique_targets: list[dict[str, Any]] = []
+            seen_user_ids: set[str] = set()
+            for target in frozen_targets:
+                if not isinstance(target, dict):
+                    invalid_snapshot = True
+                    continue
+                user_id = str(target.get("user_id") or "").strip()
+                session_id = str(target.get("session_id") or "").strip()
+                if not user_id or not session_id or user_id in seen_user_ids:
+                    invalid_snapshot = True
+                    continue
+                seen_user_ids.add(user_id)
+                unique_targets.append(target)
+            if delivery.get("target_count") != len(unique_targets):
+                invalid_snapshot = True
+            if invalid_snapshot:
+                raise SimulatorRecipientsNotReady(
+                    [
+                        {
+                            "display_name": "冻结收件人",
+                            "reason_code": "FROZEN_TARGETS_INVALID",
+                            "reason": "审批缺少完整且一致的模拟器收件人证据",
+                        }
+                    ]
+                )
+            await validate_frozen_simulator_targets(
+                database,
+                venue_id=context.get("venue_id") or "",
+                targets=unique_targets,
+            )
+            delivered = []
+            approval_id = context.get("approval_id") or ""
+            for target in unique_targets:
+                user_id = str(target["user_id"])
+                session_id = str(target["session_id"])
+                push_id = await write_push_log(
+                    msg_id=approval_id,
+                    from_user=context.get("user_id") or "system",
+                    raw_text=message,
+                    event_type="企微模拟器通知",
+                    severity=severity,
+                    stage1_triggered=False,
+                    hit_keywords=["controlled_action", "wecom_simulator_outbox"],
+                    stage2_triggered=None,
+                    llm_confidence=None,
+                    trace_id=context.get("trace_id") or "",
+                    venue_id=context.get("venue_id") or "",
+                    database=database,
+                    channel="WECOM_SIMULATOR_OUTBOX",
+                    recipient=f"session:{session_id}",
+                    delivery_status="DELIVERED",
+                    idempotency_key=f"{approval_id}:recipient:{user_id}",
+                )
+                delivered.append(
+                    {
+                        "user_id": user_id,
+                        "session_id": session_id,
+                        "push_id": push_id,
+                    }
+                )
+            return {
+                "status": "DELIVERED",
+                "channel": "WECOM_SIMULATOR_OUTBOX",
+                "recipient_scope": recipient_scope,
+                "target_count": len(unique_targets),
+                "delivered_count": len(delivered),
+                "deliveries": delivered,
+            }
+
+        recipient = f"session:{context.get('session_id') or 'unknown'}"
+        push_id = await write_push_log(
+            msg_id=context.get("approval_id") or "",
+            from_user=context.get("user_id") or "system",
+            raw_text=message,
+            event_type="站内告警",
+            severity=severity,
+            stage1_triggered=False,
+            hit_keywords=["controlled_action", "in_app"],
+            stage2_triggered=None,
+            llm_confidence=None,
+            trace_id=context.get("trace_id") or "",
+            venue_id=context.get("venue_id") or "",
+            database=database,
+            channel="in_app",
+            recipient=recipient,
+            delivery_status="DELIVERED",
+            idempotency_key=context.get("approval_id") or None,
+        )
+        return {
+            "status": "DELIVERED",
+            "channel": "in_app",
+            "recipient": recipient,
+            "push_id": push_id,
+        }
+
+    register_tool(
+        "send_in_app_alert",
+        send_in_app_alert_tool,
+        description="发送站内告警",
+        parameters={
+            "type": "object",
+            "properties": {
+                "message": {"type": "string", "description": "告警内容"},
+                "level": {
+                    "type": "string",
+                    "enum": ["info", "warning", "critical"],
+                    "description": "告警级别",
+                },
+            },
+            "required": ["message"],
+        },
+    )
+
     # 记忆搜索
-    async def search_memory_tool(query: str, limit: int = 5) -> Dict[str, Any]:
+    async def search_memory_tool(
+        query: str,
+        limit: int = 5,
+        execution_context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
         from ..knowledge.vector_store import get_vector_client
+        venue_id = str((execution_context or {}).get("venue_id") or "").strip()
+        if not venue_id:
+            raise ValueError("venue_id is required for memory search")
         vs = get_vector_client()
         if vs is None:
             return {"results": [], "query": query, "error": "vector store not available"}
-        results = vs.query_experience(query, top_k=limit)
+        results = vs.query_experience(query, top_k=limit, venue_id=venue_id)
         return {"results": results, "query": query}
 
     register_tool(
@@ -224,7 +390,14 @@ def _register_builtin_tools():
     )
 
     # 记忆写入
-    async def write_memory_tool(content: str, metadata: Optional[Dict] = None) -> Dict[str, Any]:
+    async def write_memory_tool(
+        content: str,
+        metadata: Optional[Dict] = None,
+        execution_context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        venue_id = str((execution_context or {}).get("venue_id") or "").strip()
+        if not venue_id:
+            raise ValueError("venue_id is required for memory writes")
         from ..tools.llm_wrapper import sanitize_llm_output
         data, warns = sanitize_llm_output(
             {"content": content, "metadata": metadata or {}},
@@ -233,7 +406,7 @@ def _register_builtin_tools():
         if not data or not data.get("content"):
             return {"success": False, "content": content, "error": "content rejected by sanitizer"}
         content = data["content"]
-        metadata = data.get("metadata", {})
+        metadata = {**(data.get("metadata", {}) or {}), "venue_id": venue_id}
         from ..knowledge.vector_store import get_vector_client
         vs = get_vector_client()
         if vs is None:

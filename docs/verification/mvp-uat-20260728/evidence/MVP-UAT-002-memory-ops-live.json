@@ -1,0 +1,349 @@
+{
+  "uat_id": "MVP-UAT-002",
+  "operation": "Formal client MemoryOps grounded advice and trace inspection",
+  "input": {
+    "content": "这是历史经验咨询，不是正在发生的事件。请查询记忆库：以前东区配电间出现温控告警时怎么处理？请基于已有案例给出处置流程和避坑建议。"
+  },
+  "intake_status": 202,
+  "intake": {
+    "message_id": "1db4680e-b50f-4ac8-9097-07811ff83956",
+    "trace_id": "aefb624db784415fa38a3b3c188ce811",
+    "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+    "status": "QUEUED",
+    "created_at": "2026-07-29T07:56:31.267039Z"
+  },
+  "elapsed_ms": 9019,
+  "run": {
+    "status": "COMPLETED",
+    "message_id": "1db4680e-b50f-4ac8-9097-07811ff83956",
+    "trace_id": "aefb624db784415fa38a3b3c188ce811",
+    "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+    "agent": "memory_ops",
+    "result": "抱歉，记忆宫殿知识库中暂未检索到与您描述高度相关的历史处置案例。为确保合规，建议您直接请示当班值班经理。"
+  },
+  "trace": {
+    "trace_id": "aefb624db784415fa38a3b3c188ce811",
+    "venue_id": "venue-uat",
+    "status": "SUCCEEDED",
+    "message_run": {
+      "message_id": "1db4680e-b50f-4ac8-9097-07811ff83956",
+      "trace_id": "aefb624db784415fa38a3b3c188ce811",
+      "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "venue_id": "venue-uat",
+      "content": "这是历史经验咨询，不是正在发生的事件。请查询记忆库：以前东区配电间出现温控告警时怎么处理？请基于已有案例给出处置流程和避坑建议。",
+      "status": "COMPLETED",
+      "target_agent": "memory_ops",
+      "reply_text": "抱歉，记忆宫殿知识库中暂未检索到与您描述高度相关的历史处置案例。为确保合规，建议您直接请示当班值班经理。",
+      "error": null,
+      "created_at": 1785311791.2670603,
+      "updated_at": 1785311799.1792397,
+      "processed_at": 1785311799.1792397,
+      "result": {
+        "status": "processed",
+        "route": {
+          "status": "routed",
+          "intent": "emergency_advice",
+          "severity": "P2",
+          "priority": "P2",
+          "target_agent": "memory_ops",
+          "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "content": "这是历史经验咨询，不是正在发生的事件。请查询记忆库：以前东区配电间出现温控告警时怎么处理？请基于已有案例给出处置流程和避坑建议。",
+          "msg_id": "1db4680e-b50f-4ac8-9097-07811ff83956",
+          "trace_id": "aefb624db784415fa38a3b3c188ce811",
+          "venue_id": "venue-uat",
+          "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+          "context_trigger_data": null,
+          "agent_trace": [
+            {
+              "agent_id": "ContextTrigger",
+              "agent_name": "context_trigger",
+              "status": "SUCCEEDED",
+              "trace_id": "aefb624db784415fa38a3b3c188ce811",
+              "venue_id": "venue-uat",
+              "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e"
+            },
+            {
+              "agent_id": "Router",
+              "agent_name": "router",
+              "status": "SUCCEEDED",
+              "trace_id": "aefb624db784415fa38a3b3c188ce811",
+              "venue_id": "venue-uat",
+              "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e"
+            },
+            {
+              "agent_id": "MemoryOps",
+              "agent_name": "memory_ops",
+              "status": "SUCCEEDED",
+              "trace_id": "aefb624db784415fa38a3b3c188ce811",
+              "venue_id": "venue-uat",
+              "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e"
+            }
+          ],
+          "router_confidence": 0.95
+        },
+        "agent_result": {
+          "success": true,
+          "reply_text": "抱歉，记忆宫殿知识库中暂未检索到与您描述高度相关的历史处置案例。为确保合规，建议您直接请示当班值班经理。",
+          "structured_data": {
+            "retrieved_count": 1,
+            "reference_cases": [
+              null
+            ],
+            "action_taken": "rag_experience_advice"
+          },
+          "action_taken": "rag_experience_advice",
+          "error_msg": null,
+          "latency_ms": 4596,
+          "tokens_used": 1129
+        },
+        "reply_text": "抱歉，记忆宫殿知识库中暂未检索到与您描述高度相关的历史处置案例。为确保合规，建议您直接请示当班值班经理。",
+        "trace_id": "aefb624db784415fa38a3b3c188ce811",
+        "agent_trace": [
+          {
+            "agent_id": "ContextTrigger",
+            "agent_name": "context_trigger",
+            "status": "SUCCEEDED",
+            "trace_id": "aefb624db784415fa38a3b3c188ce811",
+            "venue_id": "venue-uat",
+            "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e"
+          },
+          {
+            "agent_id": "Router",
+            "agent_name": "router",
+            "status": "SUCCEEDED",
+            "trace_id": "aefb624db784415fa38a3b3c188ce811",
+            "venue_id": "venue-uat",
+            "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e"
+          },
+          {
+            "agent_id": "MemoryOps",
+            "agent_name": "memory_ops",
+            "status": "SUCCEEDED",
+            "trace_id": "aefb624db784415fa38a3b3c188ce811",
+            "venue_id": "venue-uat",
+            "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e"
+          }
+        ],
+        "event_id": "cd245972-0c6d-4d89-8aab-63c2ed72cd06"
+      }
+    },
+    "summary": {
+      "model_calls": 3,
+      "audits": 1,
+      "events": 1,
+      "tasks": 0,
+      "approvals": 0,
+      "tool_invocations": 0,
+      "watcher_runs": 0,
+      "push_logs": 0
+    },
+    "timeline": [
+      {
+        "kind": "MESSAGE",
+        "status": "COMPLETED",
+        "created_at": 1785311791.2670603,
+        "summary": "这是历史经验咨询，不是正在发生的事件。请查询记忆库：以前东区配电间出现温控告警时怎么处理？请基于已有案例给出处置流程和避坑建议。",
+        "resource_id": "1db4680e-b50f-4ac8-9097-07811ff83956",
+        "agent_id": "memory_ops"
+      },
+      {
+        "kind": "AUDIT",
+        "status": "SUCCEEDED",
+        "created_at": 1785311791.2694776,
+        "summary": "MESSAGE_RUN_CREATED",
+        "resource_id": "1db4680e-b50f-4ac8-9097-07811ff83956",
+        "agent_id": null
+      },
+      {
+        "kind": "MODEL",
+        "status": "SUCCEEDED",
+        "created_at": 1785311792.6691232,
+        "summary": "deepseek-v4-flash 模型调用",
+        "resource_id": "1dc193aa-d1ba-45c4-8de3-1c90689e0e41",
+        "agent_id": "ContextTrigger"
+      },
+      {
+        "kind": "MODEL",
+        "status": "SUCCEEDED",
+        "created_at": 1785311794.5382578,
+        "summary": "deepseek-v4-flash 模型调用",
+        "resource_id": "49da6001-53b0-4690-8502-c8a91db0e4c7",
+        "agent_id": "Router"
+      },
+      {
+        "kind": "MODEL",
+        "status": "SUCCEEDED",
+        "created_at": 1785311799.1356194,
+        "summary": "deepseek-v4-flash 模型调用",
+        "resource_id": "347e21f2-182a-4fa5-90e0-e2e5f94256fc",
+        "agent_id": "MemoryOps"
+      },
+      {
+        "kind": "EVENT",
+        "status": "OPEN",
+        "created_at": null,
+        "summary": "这是历史经验咨询，不是正在发生的事件。请查询记忆库：以前东区配电间出现温控告警时怎么处理？请基于已有案例给出处置流程和避坑建议。",
+        "resource_id": "cd245972-0c6d-4d89-8aab-63c2ed72cd06",
+        "agent_id": null
+      }
+    ]
+  },
+  "trace_view": {
+    "summary": "链路状态\nSUCCEEDED\n模型调用\n3\n参与 Agent\n4\n业务事件\n1\n任务 / 审批\n0 / 0\n审计记录\n1\naefb624db784415fa38a3b3c188ce811 · venue-uat",
+    "timeline": "07/29 15:56\n消息接入\nCOMPLETED\n这是历史经验咨询，不是正在发生的事件。请查询记忆库：以前东区配电间出现温控告警时怎么处理？请基于已有案例给出处置流程和避坑建议。\n\nAgent memory_ops · 资源 1db4680e-b50f-4ac8-9097-07811ff83956\n\n07/29 15:56\n审计\nSUCCEEDED\nMESSAGE_RUN_CREATED\n\n资源 1db4680e-b50f-4ac8-9097-07811ff83956\n\n07/29 15:56\n模型调用\nSUCCEEDED\ndeepseek-v4-flash 模型调用\n\nAgent ContextTrigger · 资源 1dc193aa-d1ba-45c4-8de3-1c90689e0e41\n\n07/29 15:56\n模型调用\nSUCCEEDED\ndeepseek-v4-flash 模型调用\n\nAgent Router · 资源 49da6001-53b0-4690-8502-c8a91db0e4c7\n\n07/29 15:56\n模型调用\nSUCCEEDED\ndeepseek-v4-flash 模型调用\n\nAgent MemoryOps · 资源 347e21f2-182a-4fa5-90e0-e2e5f94256fc\n\n-\n业务事件\nOPEN\n这是历史经验咨询，不是正在发生的事件。请查询记忆库：以前东区配电间出现温控告警时怎么处理？请基于已有案例给出处置流程和避坑建议。\n\n资源 cd245972-0c6d-4d89-8aab-63c2ed72cd06"
+  },
+  "timeline_agent_ids": [
+    "ContextTrigger",
+    "MemoryOps",
+    "Router",
+    "memory_ops"
+  ],
+  "memory_ops_calls": [
+    {
+      "id": "5ff1f565c85f4dfb9afe9083f3e287c8",
+      "venue_id": "venue-uat",
+      "trace_id": "aefb624db784415fa38a3b3c188ce811",
+      "provider": "deepseek",
+      "model_name": "deepseek-v4-flash",
+      "status": "SUCCEEDED",
+      "attempt_count": 1,
+      "latency_seconds": 4.5359485149383545,
+      "prompt_tokens": 685,
+      "completion_tokens": 444,
+      "total_tokens": 1129,
+      "request_id": "347e21f2-182a-4fa5-90e0-e2e5f94256fc",
+      "error_type": null,
+      "error_message": null,
+      "is_mock": false,
+      "created_at": 1785311799.1356194,
+      "agent_id": "MemoryOps",
+      "agent_name": "MemoryOps_Agent"
+    }
+  ],
+  "llm_calls": [
+    {
+      "id": "5ff1f565c85f4dfb9afe9083f3e287c8",
+      "venue_id": "venue-uat",
+      "trace_id": "aefb624db784415fa38a3b3c188ce811",
+      "provider": "deepseek",
+      "model_name": "deepseek-v4-flash",
+      "status": "SUCCEEDED",
+      "attempt_count": 1,
+      "latency_seconds": 4.5359485149383545,
+      "prompt_tokens": 685,
+      "completion_tokens": 444,
+      "total_tokens": 1129,
+      "request_id": "347e21f2-182a-4fa5-90e0-e2e5f94256fc",
+      "error_type": null,
+      "error_message": null,
+      "is_mock": false,
+      "created_at": 1785311799.1356194,
+      "agent_id": "MemoryOps",
+      "agent_name": "MemoryOps_Agent"
+    },
+    {
+      "id": "cc8c29ddbae94e13b32fba432417e852",
+      "venue_id": "venue-uat",
+      "trace_id": "aefb624db784415fa38a3b3c188ce811",
+      "provider": "deepseek",
+      "model_name": "deepseek-v4-flash",
+      "status": "SUCCEEDED",
+      "attempt_count": 1,
+      "latency_seconds": 1.8621561527252197,
+      "prompt_tokens": 745,
+      "completion_tokens": 162,
+      "total_tokens": 907,
+      "request_id": "49da6001-53b0-4690-8502-c8a91db0e4c7",
+      "error_type": null,
+      "error_message": null,
+      "is_mock": false,
+      "created_at": 1785311794.5382578,
+      "agent_id": "Router",
+      "agent_name": "Router_Agent"
+    },
+    {
+      "id": "6696522021e3476fb7f4a408df1e7634",
+      "venue_id": "venue-uat",
+      "trace_id": "aefb624db784415fa38a3b3c188ce811",
+      "provider": "deepseek",
+      "model_name": "deepseek-v4-flash",
+      "status": "SUCCEEDED",
+      "attempt_count": 1,
+      "latency_seconds": 1.386352777481079,
+      "prompt_tokens": 435,
+      "completion_tokens": 78,
+      "total_tokens": 513,
+      "request_id": "1dc193aa-d1ba-45c4-8de3-1c90689e0e41",
+      "error_type": null,
+      "error_message": null,
+      "is_mock": false,
+      "created_at": 1785311792.6691232,
+      "agent_id": "ContextTrigger",
+      "agent_name": "ContextTrigger_Skill"
+    }
+  ],
+  "audits": [
+    {
+      "id": 408,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "MESSAGE_RUN_CREATED",
+      "resource_type": "message_run",
+      "resource_id": "1db4680e-b50f-4ac8-9097-07811ff83956",
+      "outcome": "SUCCEEDED",
+      "trace_id": "aefb624db784415fa38a3b3c188ce811",
+      "created_at": 1785311791.2694776,
+      "metadata": {
+        "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+        "status": "QUEUED"
+      }
+    }
+  ],
+  "events": [
+    {
+      "id": 15,
+      "event_id": "cd245972-0c6d-4d89-8aab-63c2ed72cd06",
+      "push_id": "1db4680e-b50f-4ac8-9097-07811ff83956",
+      "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "raw_text": "这是历史经验咨询，不是正在发生的事件。请查询记忆库：以前东区配电间出现温控告警时怎么处理？请基于已有案例给出处置流程和避坑建议。",
+      "event_type": "其他",
+      "severity": "P2",
+      "context_trigger_data": "{}",
+      "memory_content": "[P2] 其他事件：这是历史经验咨询，不是正在发生的事件。请查询记忆库：以前东区配电间出现温控告警时怎么处理？请基于已有案例给出处置流程和避坑建议。",
+      "vector_doc_id": "evt_cd245972-0c6d-4d89-8aab-63c2ed72cd06",
+      "created_at": null,
+      "confirmed_at": 1785311799.1385777,
+      "venue_id": "venue-uat",
+      "source_type": "LIVE",
+      "status": "OPEN",
+      "assigned_to": null,
+      "resolution": null,
+      "trace_id": "aefb624db784415fa38a3b3c188ce811",
+      "closed_at": null,
+      "updated_at": null
+    }
+  ],
+  "sessions": [
+    {
+      "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "stage": "active",
+      "active_agent": null,
+      "current_intent": null,
+      "current_severity": null,
+      "created_at": 1785311791.274631,
+      "updated_at": 1785311791.274631,
+      "history_summary": "",
+      "agent_name": "router",
+      "message_count": 1,
+      "status": "active"
+    }
+  ],
+  "runtime": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

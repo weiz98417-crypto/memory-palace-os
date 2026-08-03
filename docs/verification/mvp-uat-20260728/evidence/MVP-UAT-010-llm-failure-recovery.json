@@ -1,0 +1,564 @@
+{
+  "uat_id": "MVP-UAT-010",
+  "operation": "DeepSeek network outage, bounded retry, explicit manual recovery, and verified Live restoration",
+  "fault_injection": {
+    "app_container": "memory-palace-uat-app-1",
+    "egress_network": "memory-palace-uat_egress",
+    "method": "Docker network disconnect on App only; PostgreSQL and formal client data plane remained available",
+    "egress_restored": true
+  },
+  "client_operation": {
+    "goal": "UAT DeepSeek outage 123747f5-4840-4e7d-b055-04d6c6468317: 生成景区强降雨期间巡检、升级、游客疏导和恢复复核任务图。",
+    "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+    "idempotency_key": "87ab15bb-24f9-4f9b-b765-36cfa9df03df",
+    "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b"
+  },
+  "failure": {
+    "transport_status": "REQUEST_INTERRUPTED",
+    "local_wait_cancelled": true,
+    "decomposition": {
+      "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b",
+      "venue_id": "venue-uat",
+      "requested_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "idempotency_key": "87ab15bb-24f9-4f9b-b765-36cfa9df03df",
+      "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+      "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+      "status": "FAILED",
+      "task_ids": "[]",
+      "error": "任务分解失败: Connection error.",
+      "created_at": 1785311807.7115674,
+      "updated_at": 1785311849.7455678
+    },
+    "llm_calls": [
+      {
+        "id": "f7d89aaf608c4fd6bccd0d861d5f52e6",
+        "venue_id": "venue-uat",
+        "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+        "agent_id": "TodoWrite",
+        "agent_name": "todo_write",
+        "provider": "deepseek",
+        "model_name": "deepseek-v4-flash",
+        "status": "FAILED",
+        "attempt_count": 3,
+        "latency_seconds": null,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "request_id": null,
+        "error_type": "APIConnectionError",
+        "is_mock": false,
+        "created_at": 1785311849.7410033
+      }
+    ],
+    "tasks": [],
+    "side_effects": {
+      "approvals": [],
+      "pushes": [],
+      "tool_invocations": [],
+      "audits": [
+        {
+          "id": 410,
+          "venue_id": "venue-uat",
+          "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "action": "TASK_DECOMPOSITION_FAILED",
+          "resource_type": "session",
+          "resource_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+          "outcome": "FAILED",
+          "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+          "created_at": 1785311849.7472422
+        }
+      ]
+    },
+    "client": {
+      "app_status": "RETRYABLE",
+      "stored_status": "RETRYABLE",
+      "idempotency_key": "87ab15bb-24f9-4f9b-b765-36cfa9df03df",
+      "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+      "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b",
+      "tasks_created": null,
+      "note": "任务分解失败: Connection error.",
+      "status_text": "可安全继续",
+      "recovery_visible": true,
+      "recovery_text": "继续原请求",
+      "submit_disabled": true
+    },
+    "status": {
+      "status": "FAILED",
+      "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b",
+      "idempotency_key": "87ab15bb-24f9-4f9b-b765-36cfa9df03df",
+      "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+      "retryable": true,
+      "result": null,
+      "error": "任务分解失败: Connection error."
+    },
+    "runtime": {
+      "console_errors": [],
+      "page_errors": [],
+      "failed_requests": [
+        {
+          "url": "http://localhost:8082/api/v1/admin/tasks/decompose",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "http_errors": []
+    }
+  },
+  "recovery": {
+    "http_status": 201,
+    "response": {
+      "status": "created",
+      "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+      "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b",
+      "idempotency_key": "87ab15bb-24f9-4f9b-b765-36cfa9df03df",
+      "agent_id": "TodoWrite",
+      "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+      "tasks_created": 7,
+      "tasks": [
+        {
+          "id": "6becb119-7751-4783-8db9-c4fa2e21f988",
+          "venue_id": "venue-uat",
+          "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+          "description": "调研景区地理及设施信息，了解降雨历史数据。",
+          "status": "PENDING",
+          "dependencies": [],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": null,
+          "created_at": 1785311864.4340096,
+          "updated_at": 1785311864.4340096,
+          "started_at": null,
+          "completed_at": null,
+          "attempts": 0,
+          "max_attempts": 3,
+          "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b"
+        },
+        {
+          "id": "ca3d9700-2852-4c69-aa03-37fd1a5cb2a6",
+          "venue_id": "venue-uat",
+          "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+          "description": "设计巡检任务：确定巡检人员、路线、关键检查点和频次。",
+          "status": "BLOCKED",
+          "dependencies": [
+            "6becb119-7751-4783-8db9-c4fa2e21f988"
+          ],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": null,
+          "created_at": 1785311864.4354954,
+          "updated_at": 1785311864.4354954,
+          "started_at": null,
+          "completed_at": null,
+          "attempts": 0,
+          "max_attempts": 3,
+          "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b"
+        },
+        {
+          "id": "ae64a7a9-6328-4c5a-b9ad-112f906bebd1",
+          "venue_id": "venue-uat",
+          "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+          "description": "设计升级任务：包括加固边坡、清理排水沟、设置临时挡水板等。",
+          "status": "BLOCKED",
+          "dependencies": [
+            "6becb119-7751-4783-8db9-c4fa2e21f988"
+          ],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": null,
+          "created_at": 1785311864.4363592,
+          "updated_at": 1785311864.4363592,
+          "started_at": null,
+          "completed_at": null,
+          "attempts": 0,
+          "max_attempts": 3,
+          "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b"
+        },
+        {
+          "id": "01cab98e-ed30-4de8-bbed-9c201c38bf0a",
+          "venue_id": "venue-uat",
+          "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+          "description": "设计游客疏导任务：包括预警发布、疏散路线规划、引导人员部署。",
+          "status": "BLOCKED",
+          "dependencies": [
+            "6becb119-7751-4783-8db9-c4fa2e21f988"
+          ],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": null,
+          "created_at": 1785311864.437249,
+          "updated_at": 1785311864.437249,
+          "started_at": null,
+          "completed_at": null,
+          "attempts": 0,
+          "max_attempts": 3,
+          "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b"
+        },
+        {
+          "id": "da577b44-ad3d-4247-86c8-15abf56c3f42",
+          "venue_id": "venue-uat",
+          "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+          "description": "设计恢复复核任务：确定检查清单、修复优先级和责任人。",
+          "status": "BLOCKED",
+          "dependencies": [
+            "6becb119-7751-4783-8db9-c4fa2e21f988"
+          ],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": null,
+          "created_at": 1785311864.43815,
+          "updated_at": 1785311864.43815,
+          "started_at": null,
+          "completed_at": null,
+          "attempts": 0,
+          "max_attempts": 3,
+          "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b"
+        },
+        {
+          "id": "c4bb3b4c-8e42-4489-979b-26cb77c0258e",
+          "venue_id": "venue-uat",
+          "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+          "description": "整合巡检、升级、疏导、复核任务，绘制任务图并标注依赖关系。",
+          "status": "BLOCKED",
+          "dependencies": [
+            "ca3d9700-2852-4c69-aa03-37fd1a5cb2a6",
+            "ae64a7a9-6328-4c5a-b9ad-112f906bebd1",
+            "01cab98e-ed30-4de8-bbed-9c201c38bf0a",
+            "da577b44-ad3d-4247-86c8-15abf56c3f42"
+          ],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": null,
+          "created_at": 1785311864.4389498,
+          "updated_at": 1785311864.4389498,
+          "started_at": null,
+          "completed_at": null,
+          "attempts": 0,
+          "max_attempts": 3,
+          "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b"
+        },
+        {
+          "id": "0fc104d2-3c50-4470-8405-d5abe45d19be",
+          "venue_id": "venue-uat",
+          "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+          "description": "审核任务图，修正逻辑和依赖关系，输出最终版本。",
+          "status": "BLOCKED",
+          "dependencies": [
+            "c4bb3b4c-8e42-4489-979b-26cb77c0258e"
+          ],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": null,
+          "created_at": 1785311864.4397597,
+          "updated_at": 1785311864.4397597,
+          "started_at": null,
+          "completed_at": null,
+          "attempts": 0,
+          "max_attempts": 3,
+          "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b"
+        }
+      ]
+    },
+    "decomposition": {
+      "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b",
+      "venue_id": "venue-uat",
+      "requested_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "idempotency_key": "87ab15bb-24f9-4f9b-b765-36cfa9df03df",
+      "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+      "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+      "status": "COMPLETED",
+      "task_ids": "[\"6becb119-7751-4783-8db9-c4fa2e21f988\", \"ca3d9700-2852-4c69-aa03-37fd1a5cb2a6\", \"ae64a7a9-6328-4c5a-b9ad-112f906bebd1\", \"01cab98e-ed30-4de8-bbed-9c201c38bf0a\", \"da577b44-ad3d-4247-86c8-15abf56c3f42\", \"c4bb3b4c-8e42-4489-979b-26cb77c0258e\", \"0fc104d2-3c50-4470-8405-d5abe45d19be\"]",
+      "error": null,
+      "created_at": 1785311807.7115674,
+      "updated_at": 1785311864.4540284
+    },
+    "llm_calls": [
+      {
+        "id": "f7d89aaf608c4fd6bccd0d861d5f52e6",
+        "venue_id": "venue-uat",
+        "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+        "agent_id": "TodoWrite",
+        "agent_name": "todo_write",
+        "provider": "deepseek",
+        "model_name": "deepseek-v4-flash",
+        "status": "FAILED",
+        "attempt_count": 3,
+        "latency_seconds": null,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "request_id": null,
+        "error_type": "APIConnectionError",
+        "is_mock": false,
+        "created_at": 1785311849.7410033
+      },
+      {
+        "id": "a24affc0747b4ce4a97e4d93372c8c74",
+        "venue_id": "venue-uat",
+        "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+        "agent_id": "TodoWrite",
+        "agent_name": "todo_write",
+        "provider": "deepseek",
+        "model_name": "deepseek-v4-flash",
+        "status": "SUCCEEDED",
+        "attempt_count": 1,
+        "latency_seconds": 11.59459114074707,
+        "prompt_tokens": 229,
+        "completion_tokens": 1183,
+        "total_tokens": 1412,
+        "request_id": "1cd0f51d-f7e9-410e-89e3-5d401f4ff51e",
+        "error_type": null,
+        "is_mock": false,
+        "created_at": 1785311864.4305532
+      }
+    ],
+    "tasks": [
+      {
+        "id": "6becb119-7751-4783-8db9-c4fa2e21f988",
+        "venue_id": "venue-uat",
+        "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+        "description": "调研景区地理及设施信息，了解降雨历史数据。",
+        "status": "PENDING",
+        "dependencies": "[]",
+        "assigned_agent": null,
+        "assigned_user_id": null,
+        "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b",
+        "attempts": 0,
+        "max_attempts": 3,
+        "created_at": 1785311864.4340096,
+        "updated_at": 1785311864.4527588
+      },
+      {
+        "id": "ca3d9700-2852-4c69-aa03-37fd1a5cb2a6",
+        "venue_id": "venue-uat",
+        "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+        "description": "设计巡检任务：确定巡检人员、路线、关键检查点和频次。",
+        "status": "BLOCKED",
+        "dependencies": "[\"6becb119-7751-4783-8db9-c4fa2e21f988\"]",
+        "assigned_agent": null,
+        "assigned_user_id": null,
+        "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b",
+        "attempts": 0,
+        "max_attempts": 3,
+        "created_at": 1785311864.4354954,
+        "updated_at": 1785311864.4527588
+      },
+      {
+        "id": "ae64a7a9-6328-4c5a-b9ad-112f906bebd1",
+        "venue_id": "venue-uat",
+        "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+        "description": "设计升级任务：包括加固边坡、清理排水沟、设置临时挡水板等。",
+        "status": "BLOCKED",
+        "dependencies": "[\"6becb119-7751-4783-8db9-c4fa2e21f988\"]",
+        "assigned_agent": null,
+        "assigned_user_id": null,
+        "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b",
+        "attempts": 0,
+        "max_attempts": 3,
+        "created_at": 1785311864.4363592,
+        "updated_at": 1785311864.4527588
+      },
+      {
+        "id": "01cab98e-ed30-4de8-bbed-9c201c38bf0a",
+        "venue_id": "venue-uat",
+        "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+        "description": "设计游客疏导任务：包括预警发布、疏散路线规划、引导人员部署。",
+        "status": "BLOCKED",
+        "dependencies": "[\"6becb119-7751-4783-8db9-c4fa2e21f988\"]",
+        "assigned_agent": null,
+        "assigned_user_id": null,
+        "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b",
+        "attempts": 0,
+        "max_attempts": 3,
+        "created_at": 1785311864.437249,
+        "updated_at": 1785311864.4527588
+      },
+      {
+        "id": "da577b44-ad3d-4247-86c8-15abf56c3f42",
+        "venue_id": "venue-uat",
+        "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+        "description": "设计恢复复核任务：确定检查清单、修复优先级和责任人。",
+        "status": "BLOCKED",
+        "dependencies": "[\"6becb119-7751-4783-8db9-c4fa2e21f988\"]",
+        "assigned_agent": null,
+        "assigned_user_id": null,
+        "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b",
+        "attempts": 0,
+        "max_attempts": 3,
+        "created_at": 1785311864.43815,
+        "updated_at": 1785311864.4527588
+      },
+      {
+        "id": "c4bb3b4c-8e42-4489-979b-26cb77c0258e",
+        "venue_id": "venue-uat",
+        "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+        "description": "整合巡检、升级、疏导、复核任务，绘制任务图并标注依赖关系。",
+        "status": "BLOCKED",
+        "dependencies": "[\"ca3d9700-2852-4c69-aa03-37fd1a5cb2a6\", \"ae64a7a9-6328-4c5a-b9ad-112f906bebd1\", \"01cab98e-ed30-4de8-bbed-9c201c38bf0a\", \"da577b44-ad3d-4247-86c8-15abf56c3f42\"]",
+        "assigned_agent": null,
+        "assigned_user_id": null,
+        "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b",
+        "attempts": 0,
+        "max_attempts": 3,
+        "created_at": 1785311864.4389498,
+        "updated_at": 1785311864.4527588
+      },
+      {
+        "id": "0fc104d2-3c50-4470-8405-d5abe45d19be",
+        "venue_id": "venue-uat",
+        "session_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+        "description": "审核任务图，修正逻辑和依赖关系，输出最终版本。",
+        "status": "BLOCKED",
+        "dependencies": "[\"c4bb3b4c-8e42-4489-979b-26cb77c0258e\"]",
+        "assigned_agent": null,
+        "assigned_user_id": null,
+        "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b",
+        "attempts": 0,
+        "max_attempts": 3,
+        "created_at": 1785311864.4397597,
+        "updated_at": 1785311864.4527588
+      }
+    ],
+    "side_effects": {
+      "approvals": [],
+      "pushes": [],
+      "tool_invocations": [],
+      "audits": [
+        {
+          "id": 410,
+          "venue_id": "venue-uat",
+          "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "action": "TASK_DECOMPOSITION_FAILED",
+          "resource_type": "session",
+          "resource_id": "87af711e-f68d-4001-8579-f2fbb6e8be9e",
+          "outcome": "FAILED",
+          "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+          "created_at": 1785311849.7472422
+        },
+        {
+          "id": 411,
+          "venue_id": "venue-uat",
+          "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "action": "TASK_CREATED",
+          "resource_type": "task",
+          "resource_id": "6becb119-7751-4783-8db9-c4fa2e21f988",
+          "outcome": "SUCCEEDED",
+          "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+          "created_at": 1785311864.445284
+        },
+        {
+          "id": 412,
+          "venue_id": "venue-uat",
+          "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "action": "TASK_CREATED",
+          "resource_type": "task",
+          "resource_id": "ca3d9700-2852-4c69-aa03-37fd1a5cb2a6",
+          "outcome": "SUCCEEDED",
+          "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+          "created_at": 1785311864.4462206
+        },
+        {
+          "id": 413,
+          "venue_id": "venue-uat",
+          "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "action": "TASK_CREATED",
+          "resource_type": "task",
+          "resource_id": "ae64a7a9-6328-4c5a-b9ad-112f906bebd1",
+          "outcome": "SUCCEEDED",
+          "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+          "created_at": 1785311864.446903
+        },
+        {
+          "id": 414,
+          "venue_id": "venue-uat",
+          "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "action": "TASK_CREATED",
+          "resource_type": "task",
+          "resource_id": "01cab98e-ed30-4de8-bbed-9c201c38bf0a",
+          "outcome": "SUCCEEDED",
+          "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+          "created_at": 1785311864.4475436
+        },
+        {
+          "id": 415,
+          "venue_id": "venue-uat",
+          "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "action": "TASK_CREATED",
+          "resource_type": "task",
+          "resource_id": "da577b44-ad3d-4247-86c8-15abf56c3f42",
+          "outcome": "SUCCEEDED",
+          "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+          "created_at": 1785311864.448149
+        },
+        {
+          "id": 416,
+          "venue_id": "venue-uat",
+          "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "action": "TASK_CREATED",
+          "resource_type": "task",
+          "resource_id": "c4bb3b4c-8e42-4489-979b-26cb77c0258e",
+          "outcome": "SUCCEEDED",
+          "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+          "created_at": 1785311864.4489942
+        },
+        {
+          "id": 417,
+          "venue_id": "venue-uat",
+          "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "action": "TASK_CREATED",
+          "resource_type": "task",
+          "resource_id": "0fc104d2-3c50-4470-8405-d5abe45d19be",
+          "outcome": "SUCCEEDED",
+          "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+          "created_at": 1785311864.449746
+        },
+        {
+          "id": 418,
+          "venue_id": "venue-uat",
+          "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "action": "TASK_DECOMPOSED",
+          "resource_type": "task_decomposition",
+          "resource_id": "8777190c8b6f4fcdaaa30b99d2654c2b",
+          "outcome": "SUCCEEDED",
+          "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+          "created_at": 1785311864.4505687
+        }
+      ]
+    },
+    "client": {
+      "app_status": "SUCCEEDED",
+      "stored_status": "SUCCEEDED",
+      "idempotency_key": "87ab15bb-24f9-4f9b-b765-36cfa9df03df",
+      "trace_id": "edb829bd-296c-4da0-ad14-ad7a4e2b8533",
+      "decomposition_id": "8777190c8b6f4fcdaaa30b99d2654c2b",
+      "tasks_created": 7,
+      "note": "任务拆解已成功持久化。",
+      "status_text": "拆解完成",
+      "recovery_visible": false,
+      "recovery_text": "核对结果",
+      "submit_disabled": false
+    },
+    "runtime": {
+      "console_errors": [],
+      "page_errors": [],
+      "failed_requests": [],
+      "http_errors": []
+    }
+  },
+  "duplicate_guards": {
+    "decomposition_post_count": 2,
+    "decomposition_row_count": 1,
+    "failed_phase_task_count": 0,
+    "final_task_count": 7,
+    "successful_llm_call_count": 1
+  },
+  "screenshots": [
+    "llm-failure-01-retryable-1440x900.png",
+    "llm-failure-02-recovered-1440x900.png"
+  ]
+}

@@ -1,0 +1,232 @@
+{
+  "heading": "现场事件",
+  "text": "现场事件\n\n现场上报只提交自由文本，由 Agent 判断类型与级别；历史补录与实时处置严格分离。\n\n事件入口\n正式主链\n现场智能受理\n历史事件补录\n事件内容\n系统将生成 message_id、session_id 与 trace_id，并进入 Redis 与 Agent 主链。\n提交现场事件\n事件筛选\n当前页实时过滤\n关键词\n类型\n全部\n人员安全\n设施故障\n客诉冲突\n天气环境\n其他\n状态\n全部\n待处置\n已闭环\n事件列表\n8 条\n时间\t事件\t类型\t级别\t状态\t负责人\t操作\n07/28 20:28\t\n以前遇到过游客在缆车上恐高发作的情况吗？该怎么安抚？请检索历史处置案例并给出流程建议。\nd792935a-ce54-42f1-be53-de6d165a5cf9\n\t其他\t\nP2\t\nOPEN\t未分配\t详情\n07/28 20:06\t\nUAT：北门闸机网络中断，现场已开启人工检票并记录排队人数。\ncd29ed00-e90f-46f3-8855-6e1707abc340\n\t设施故障\t\nP2\t\nOPEN\t未分配\t详情\n07/28 20:06\t\nUAT：西侧扶梯突然停运并有焦糊味，现场已设置警戒线并引导游客绕行。\n8c318a41-c666-44ec-8a0d-7f5fbe72a802\n\t设施故障\t\nP1\t\nOPEN\t未分配\t详情\n07/28 20:06\t\nUAT 实时链路降级：北门游客突发晕倒，现场人员已呼叫急救并建立隔离区，请生成处置建议。\n5dd09a09-65e3-4f50-8bc3-c9f147b2c813\n\t人员安全\t\nP0\t\nOPEN\t未分配\t详情\n07/28 19:14\t\n索道在雷暴后突然停运，12名游客滞留空中，请立即启动应急处置并记录事件。\nd3037216-eab4-48ae-b4fa-93374984a22d\n\t人员安全\t\nP0\t\nOPEN\t未分配\t详情\n07/28 16:07\t\nUAT 真实链路：东门检票区客流快速聚集，一名游客摔倒但意识清醒。现场已设置隔离带，请生成分级处置建议并记录事件。\n3c5d6030-3be0-4115-ada7-3f1f4218b8d5\n\t人员安全\t\nP2\t\nOPEN\t未分配\t详情\n07/28 00:37\t\nUAT 来源回归 2026-07-28：东区闸机控制器异常断电，现场完成隔离、分流、复位与复检。\n0585fa3d-5663-46f0-8a80-92a1c95da5f1\n\t设施故障\t\nP2\t\nCLOSED\t未分配\t详情\n07/28 00:15\t\nUAT 历史补录 2026-07-27：南门扶梯控制柜过热停运，现场已完成断电、游客分流、复位复检与恢复开放。\nfd277484-8878-4f12-9700-c852698f828a\n\t设施故障\t\nP2\t\nOPEN\t未分配\t详情",
+  "buttons": [
+    {
+      "text": "现场智能受理",
+      "disabled": false,
+      "action": "event-mode",
+      "onclick": null
+    },
+    {
+      "text": "历史事件补录",
+      "disabled": false,
+      "action": "event-mode",
+      "onclick": null
+    },
+    {
+      "text": "提交现场事件",
+      "disabled": false,
+      "action": null,
+      "onclick": null
+    },
+    {
+      "text": "详情",
+      "disabled": false,
+      "action": null,
+      "onclick": "App.openEvent('d792935a-ce54-42f1-be53-de6d165a5cf9')"
+    },
+    {
+      "text": "详情",
+      "disabled": false,
+      "action": null,
+      "onclick": "App.openEvent('cd29ed00-e90f-46f3-8855-6e1707abc340')"
+    },
+    {
+      "text": "详情",
+      "disabled": false,
+      "action": null,
+      "onclick": "App.openEvent('8c318a41-c666-44ec-8a0d-7f5fbe72a802')"
+    },
+    {
+      "text": "详情",
+      "disabled": false,
+      "action": null,
+      "onclick": "App.openEvent('5dd09a09-65e3-4f50-8bc3-c9f147b2c813')"
+    },
+    {
+      "text": "详情",
+      "disabled": false,
+      "action": null,
+      "onclick": "App.openEvent('d3037216-eab4-48ae-b4fa-93374984a22d')"
+    },
+    {
+      "text": "详情",
+      "disabled": false,
+      "action": null,
+      "onclick": "App.openEvent('3c5d6030-3be0-4115-ada7-3f1f4218b8d5')"
+    },
+    {
+      "text": "详情",
+      "disabled": false,
+      "action": null,
+      "onclick": "App.openEvent('0585fa3d-5663-46f0-8a80-92a1c95da5f1')"
+    },
+    {
+      "text": "详情",
+      "disabled": false,
+      "action": null,
+      "onclick": "App.openEvent('fd277484-8878-4f12-9700-c852698f828a')"
+    }
+  ],
+  "fields": [
+    {
+      "id": "event-mode",
+      "name": "",
+      "type": "hidden",
+      "placeholder": "",
+      "value": "live",
+      "required": false,
+      "options": []
+    },
+    {
+      "id": "event-type",
+      "name": "",
+      "type": "select-one",
+      "value": "人员安全",
+      "required": false,
+      "options": [
+        {
+          "value": "人员安全",
+          "text": "人员安全"
+        },
+        {
+          "value": "设施故障",
+          "text": "设施故障"
+        },
+        {
+          "value": "客诉冲突",
+          "text": "客诉冲突"
+        },
+        {
+          "value": "天气环境",
+          "text": "天气环境"
+        },
+        {
+          "value": "其他",
+          "text": "其他"
+        }
+      ]
+    },
+    {
+      "id": "event-severity",
+      "name": "",
+      "type": "select-one",
+      "value": "P2",
+      "required": false,
+      "options": [
+        {
+          "value": "P0",
+          "text": "P0"
+        },
+        {
+          "value": "P1",
+          "text": "P1"
+        },
+        {
+          "value": "P2",
+          "text": "P2"
+        },
+        {
+          "value": "P3",
+          "text": "P3"
+        },
+        {
+          "value": "P4",
+          "text": "P4"
+        }
+      ]
+    },
+    {
+      "id": "event-content",
+      "name": "",
+      "type": "textarea",
+      "placeholder": "自由描述现场情况、位置、人员与已采取动作。",
+      "value": "",
+      "required": true,
+      "options": []
+    },
+    {
+      "id": "event-search",
+      "name": "",
+      "type": "text",
+      "placeholder": "搜索事件内容、类型或负责人",
+      "value": "",
+      "required": false,
+      "options": []
+    },
+    {
+      "id": "event-filter-type",
+      "name": "",
+      "type": "select-one",
+      "value": "",
+      "required": false,
+      "options": [
+        {
+          "value": "",
+          "text": "全部"
+        },
+        {
+          "value": "人员安全",
+          "text": "人员安全"
+        },
+        {
+          "value": "设施故障",
+          "text": "设施故障"
+        },
+        {
+          "value": "客诉冲突",
+          "text": "客诉冲突"
+        },
+        {
+          "value": "天气环境",
+          "text": "天气环境"
+        },
+        {
+          "value": "其他",
+          "text": "其他"
+        }
+      ]
+    },
+    {
+      "id": "event-filter-status",
+      "name": "",
+      "type": "select-one",
+      "value": "",
+      "required": false,
+      "options": [
+        {
+          "value": "",
+          "text": "全部"
+        },
+        {
+          "value": "OPEN",
+          "text": "待处置"
+        },
+        {
+          "value": "CLOSED",
+          "text": "已闭环"
+        }
+      ]
+    }
+  ],
+  "rows": [
+    "时间\t事件\t类型\t级别\t状态\t负责人\t操作",
+    "07/28 20:28\t\n以前遇到过游客在缆车上恐高发作的情况吗？该怎么安抚？请检索历史处置案例并给出流程建议。\nd792935a-ce54-42f1-be53-de6d165a5cf9\n\t其他\t\nP2\t\nOPEN\t未分配\t详情",
+    "07/28 20:06\t\nUAT：北门闸机网络中断，现场已开启人工检票并记录排队人数。\ncd29ed00-e90f-46f3-8855-6e1707abc340\n\t设施故障\t\nP2\t\nOPEN\t未分配\t详情",
+    "07/28 20:06\t\nUAT：西侧扶梯突然停运并有焦糊味，现场已设置警戒线并引导游客绕行。\n8c318a41-c666-44ec-8a0d-7f5fbe72a802\n\t设施故障\t\nP1\t\nOPEN\t未分配\t详情",
+    "07/28 20:06\t\nUAT 实时链路降级：北门游客突发晕倒，现场人员已呼叫急救并建立隔离区，请生成处置建议。\n5dd09a09-65e3-4f50-8bc3-c9f147b2c813\n\t人员安全\t\nP0\t\nOPEN\t未分配\t详情",
+    "07/28 19:14\t\n索道在雷暴后突然停运，12名游客滞留空中，请立即启动应急处置并记录事件。\nd3037216-eab4-48ae-b4fa-93374984a22d\n\t人员安全\t\nP0\t\nOPEN\t未分配\t详情",
+    "07/28 16:07\t\nUAT 真实链路：东门检票区客流快速聚集，一名游客摔倒但意识清醒。现场已设置隔离带，请生成分级处置建议并记录事件。\n3c5d6030-3be0-4115-ada7-3f1f4218b8d5\n\t人员安全\t\nP2\t\nOPEN\t未分配\t详情",
+    "07/28 00:37\t\nUAT 来源回归 2026-07-28：东区闸机控制器异常断电，现场完成隔离、分流、复位与复检。\n0585fa3d-5663-46f0-8a80-92a1c95da5f1\n\t设施故障\t\nP2\t\nCLOSED\t未分配\t详情",
+    "07/28 00:15\t\nUAT 历史补录 2026-07-27：南门扶梯控制柜过热停运，现场已完成断电、游客分流、复位复检与恢复开放。\nfd277484-8878-4f12-9700-c852698f828a\n\t设施故障\t\nP2\t\nOPEN\t未分配\t详情"
+  ],
+  "runtime": {
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

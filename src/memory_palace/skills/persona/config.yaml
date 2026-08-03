@@ -11,7 +11,7 @@ agent_metadata:
 # 2. 大语言模型 (LLM) 策略配置
 # 分身专家需要处理复杂的逻辑疏导和情感抚慰，必须使用高情商、高智商模型。
 llm_config:
-  model: "gpt-4o"            # 旗舰模型，专门应对多轮复杂对话
+  model: "deepseek-v4-flash"
   temperature: 0.5           # 【关键区别】指挥官是0.1，这里调到0.5。必须保留一定的随机性，让对话显得有“人情味”和同理心
   top_p: 0.95                # 保证词汇的多样性
   max_tokens: 1000           # 允许深入的解释和多轮展开
@@ -22,7 +22,7 @@ llm_config:
 # 工业级系统的成本护城河，严防对话拖得太长导致 API 计费击穿。
 memory_config:
   max_history_turns: 5       # 【滑动窗口】只保留最近 5 轮（一问一答算一轮，共10条）的对话。更早的记忆将被静默丢弃
-  summarize_on_evict: false  # 高级开关：当记忆被挤出窗口时，是否用廉价模型（如 gpt-3.5）将其压缩成一句摘要拼在开头（当前版本暂不开启）
+  summarize_on_evict: false  # 当前版本暂不开启摘要压缩
 
 # 4. 业务逻辑与安全护栏 (Business Guardrails)
 logic_controls:

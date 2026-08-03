@@ -9,7 +9,6 @@ from .wechat_client import WeChatWorkClient as WeChatClient
 from .sms_client import send_alert, send_sms, send_voice_call
 from .logger_config import setup_logging as setup_logger
 from .time_utils import get_now, parse_to_datetime, calculate_elapsed_minutes, format_for_log, is_business_hours, get_relative_time_desc
-from .db_client import db_manager, DatabaseManager
 
 __all__ = [
     # 加解密
@@ -42,7 +41,12 @@ __all__ = [
     "format_for_log",
     "is_business_hours",
     "get_relative_time_desc",
-    # 数据库
-    "db_manager",
-    "DatabaseManager",
 ]
+
+
+def __getattr__(name):
+    if name in {"db_manager", "DatabaseManager"}:
+        from .db_client import DatabaseManager, db_manager
+
+        return {"db_manager": db_manager, "DatabaseManager": DatabaseManager}[name]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -88,12 +88,49 @@
 ---
 
 ## 6. 错误码规范 (Error Codes)
-当系统发生非预期故障时，日志及 `SkillOutput` 应携带以下编码：
+正式接口错误统一返回结构化 `detail.code`、业务可读消息、下一步动作、`retryable` 和请求 `trace_id`。统一员工助手 MVP 新增或强化的错误码如下：
 
-- `ERR_LLM_TIMEOUT`: 大模型接口响应超时。
-- `ERR_JSON_MALFORMED`: LLM 返回的 JSON 格式无法被正则剥离。
-- `ERR_WX_TOKEN_EXPIRED`: 企微 Access Token 刷新失败。
-- `ERR_VDB_DISCONNECT`: 向量库连接中断或磁盘已满。
+| 错误码 | HTTP | 含义 | 是否可重试 |
+| :--- | :---: | :--- | :---: |
+| `EVENT_NOT_FOUND` | 404 | 当前场地无权访问或不存在该事件 | 否 |
+| `EVENT_CLOSE_BLOCKED` | 409 | 仍有任务、审批或受控动作未满足闭环条件 | 否 |
+| `EVENT_RESOLUTION_INSUFFICIENT` | 422 | 闭环结果不足以说明实际处置与结果 | 否 |
+| `EVENT_CLOSE_PERSISTENCE_FAILED` | 503 | 闭环证据写入失败，事件已补偿回处理中 | 是 |
+| `EVENT_CLOSE_ROLLBACK_FAILED` | 500 | 闭环写入与补偿均未完整完成，需要人工核对 | 否 |
+| `WATCHER_EVENT_CHECK_FAILED` | 502 | 事件级 Watcher 运行失败，不得伪造成功结果 | 是 |
+| `EXPERIENCE_CANDIDATE_NOT_ELIGIBLE` | 409 | 事件未闭环或当前不具备候选生成资格 | 是 |
+| `EXPERIENCE_CANDIDATE_RETRY_FAILED` | 503 | 经验候选重试未能完成 | 是 |
+
+模型超时、401、熔断、JSON 解析失败和向量库不可用继续使用平台统一错误封装；失败响应不得返回假 Agent 结果、默认分数或空引用。
+
+## 7. 新增审计与恢复声明
+
+| 动作或记录 | 触发条件 | 权威证据 |
+| :--- | :--- | :--- |
+| `EVENT_CLOSE_DENIED` | 服务端闭环门禁拒绝 | `audit_logs` 与 `event_activities` |
+| `EVENT_WATCHER_CHECK` | 事件级 Watcher 成功或失败 | `audit_logs`、`watcher_runs`、`watcher_findings` |
+| `EVENT_CLOSED` | 闭环状态和证据均持久化成功 | `audit_logs`、`confirmed_events`、`event_activities` |
+| `EXPERIENCE_CANDIDATE_CREATED` | 候选萃取成功且保持 `DRAFT / NOT_INDEXED` | `audit_logs`、`experience_candidates`、`event_activities` |
+| `EXPERIENCE_CANDIDATE_GENERATION` | 闭环后的候选生成异常 | `audit_logs` 与候选尝试记录 |
+| `EXPERIENCE_CANDIDATE_RETRY` | 管理员或经理从事件卷宗重试 | `audit_logs` 与 `experience_candidate_attempts` |
+| App 启动恢复记录 | 每次正式 App lifespan 启动 | `runtime_recovery_runs`，通过 `GET /admin/recovery-runs` 只读查询 |
+
+## 8. 消息处理与回复送达状态
+
+`GET /api/v1/messages/{message_id}` 和员工会话历史会分别返回任务处理状态与回复送达状态。两者不能混用：Agent 产出成功但真实企微回复未送达时，消息不得显示为已完成。
+
+| 字段 | 状态 | 含义 |
+| :--- | :--- | :--- |
+| `status` | `QUEUED / PROCESSING / RECOVERING / RETRYING` | 消息仍在排队、处理或自动恢复 |
+| `status` | `COMPLETED` | Agent 结果已持久化，且当前渠道的送达条件已满足 |
+| `status` | `RETRY_REQUIRED` | 自动恢复已耗尽，或真实企微缺少配置，需要人工处理后从原消息重试 |
+| `delivery_status` | `PENDING` | 回复尚未完成渠道投递 |
+| `delivery_status` | `PERSISTED` | Web 或企微模拟器回复已持久化，可由客户端恢复和轮询 |
+| `delivery_status` | `DELIVERED` | 真实企微客户端已确认发送成功 |
+| `delivery_status` | `FAILED` | 真实企微发送失败，系统自动重试或等待人工重试 |
+| `delivery_status` | `CONFIGURATION_REQUIRED` | 真实企微回复配置缺失，管理员完成配置后重试原消息 |
+
+每条助手回复使用 `assistant-reply:{message_id}` 作为投递幂等键。企微瞬时失败只重投已保存的回复，不重新执行 Agent 或重复创建业务结果。`delivery_error` 只返回脱敏后的稳定中文说明；凭据、原始异常和私有路径不得进入员工状态、投递日志或死信输出。
 
 ---
 <div align="center">

@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>企业运营助手 · Memory Palace OS</title>
+  <link rel="stylesheet" href="/shared/base.css">
+  <link rel="stylesheet" href="/assistant/styles.css">
+</head>
+<body>
+  <section id="login-screen" class="login-stage" aria-label="企业运营助手登录">
+    <div class="login-context">
+      <div class="brand-lockup">
+        <div class="product-kicker">MEMORY PALACE OS</div>
+        <h1>企业运营助手</h1>
+        <p>现场上报、工作协同与组织经验入口</p>
+      </div>
+    </div>
+    <div class="login-panel-wrap">
+      <div class="login-panel">
+        <div>
+          <h2>登录企业账号</h2>
+          <p class="subcopy">使用组织分配的正式账号继续</p>
+        </div>
+        <form id="login-form" class="login-form">
+          <label class="field">
+            <span>用户名</span>
+            <input id="login-username" name="username" autocomplete="username" required minlength="2" maxlength="64">
+          </label>
+          <label class="field">
+            <span>密码</span>
+            <input id="login-password" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128">
+          </label>
+          <p id="login-error" class="form-error" role="alert"></p>
+          <button id="login-submit" class="btn primary" type="submit">登录助手</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <div id="app-screen" class="assistant-shell" hidden>
+    <aside class="workspace-rail" aria-label="员工助手导航">
+      <div class="rail-brand" aria-label="Memory Palace OS">
+        <span class="rail-mark">MP</span>
+        <span class="rail-name">企业运营助手</span>
+      </div>
+      <nav class="rail-nav">
+        <button class="rail-item active" type="button" data-section="chat"><span aria-hidden="true">对</span><span>助手</span></button>
+        <button class="rail-item" type="button" data-section="work"><span aria-hidden="true">工</span><span>工作</span></button>
+        <button class="rail-item" type="button" data-section="experience"><span aria-hidden="true">经</span><span>经验</span></button>
+        <button class="rail-item" type="button" data-section="me"><span aria-hidden="true">我</span><span>我的</span></button>
+      </nav>
+      <div class="rail-account">
+        <span id="rail-avatar" class="avatar">员</span>
+        <div>
+          <strong id="rail-user-name">员工</strong>
+          <span id="rail-user-role">企业成员</span>
+        </div>
+      </div>
+    </aside>
+
+    <aside id="conversation-panel" class="conversation-panel" aria-label="历史会话">
+      <header class="conversation-head">
+        <div>
+          <span class="eyebrow">历史会话</span>
+          <h2>最近沟通</h2>
+        </div>
+        <button class="icon-btn" type="button" data-action="new-session" title="新建会话" aria-label="新建会话">+</button>
+      </header>
+      <div id="session-list" class="session-list" aria-live="polite"></div>
+      <footer class="conversation-foot">
+        <button class="btn quiet" type="button" data-action="refresh-sessions"><span aria-hidden="true">↻</span>刷新会话</button>
+      </footer>
+    </aside>
+
+    <button id="conversation-backdrop" class="conversation-backdrop" type="button" data-action="close-sessions" aria-label="关闭会话列表"></button>
+
+    <main class="assistant-main">
+      <header class="mobile-header">
+        <button class="icon-btn" type="button" data-action="open-sessions" aria-label="打开会话列表">☰</button>
+        <div>
+          <strong>企业运营助手</strong>
+          <span id="mobile-user-name">员工</span>
+        </div>
+        <button class="icon-btn" type="button" data-action="refresh-current" aria-label="刷新当前内容">↻</button>
+      </header>
+
+      <section id="section-chat" class="app-section chat-section active" data-app-section="chat">
+        <header class="chat-head">
+          <div class="assistant-identity">
+            <span class="assistant-mark" aria-hidden="true">AI</span>
+            <div>
+              <h2>企业运营助手</h2>
+              <div class="assistant-state-row">
+                <span id="assistant-status" class="status-pill">可以开始</span>
+                <span id="assistant-status-detail">工作信息将保存到组织会话</span>
+              </div>
+            </div>
+          </div>
+          <button class="icon-btn desktop-only" type="button" data-action="refresh-current" title="刷新消息" aria-label="刷新消息">↻</button>
+        </header>
+
+        <div id="chat-error" class="chat-error" hidden></div>
+        <div id="message-stream" class="message-stream" aria-live="polite">
+          <div id="chat-empty" class="chat-empty">
+            <span class="assistant-mark large" aria-hidden="true">AI</span>
+            <h3>今天需要处理什么？</h3>
+            <p>直接描述现场情况、工作问题或需要查找的处置经验。</p>
+            <div class="quick-actions" aria-label="快捷指令">
+              <button type="button" data-prompt="我要上报一个现场问题：">上报现场问题</button>
+              <button type="button" data-prompt="请帮我查找这个情况的处置流程：">查找处置流程</button>
+              <button type="button" data-prompt="请帮我查找类似案例：">咨询类似案例</button>
+              <button type="button" data-prompt="我要补充处理进度：">补充处理进度</button>
+            </div>
+          </div>
+        </div>
+
+        <form id="message-form" class="composer">
+          <details class="attachment-details">
+            <summary>现场图片（可选）</summary>
+            <label class="field attachment-file-field" for="attachment-file">
+              <span>选择 JPG、PNG 或 WebP 图片，单张不超过 5 MB</span>
+              <input id="attachment-file" type="file" accept="image/jpeg,image/png,image/webp">
+            </label>
+            <div id="attachment-selection" class="attachment-selection" aria-live="polite">尚未选择现场图片</div>
+            <label class="field attachment-field" for="attachment-note">
+              <span>请描述图片中的关键信息</span>
+              <textarea id="attachment-note" maxlength="500" rows="2" placeholder="例如：东门闸机照片显示 3 号通道红灯"></textarea>
+            </label>
+            <p>图片会先上传并完成安全检查，再与本条消息绑定；上传失败不会清空已输入文字。</p>
+          </details>
+          <div class="composer-row">
+            <label class="sr-only" for="message-input">发送给企业运营助手</label>
+            <textarea id="message-input" rows="1" maxlength="5000" placeholder="描述现场情况或输入工作问题" required></textarea>
+            <button id="message-submit" class="send-button" type="submit" aria-label="发送消息">发送</button>
+          </div>
+          <div class="composer-meta">
+            <span id="composer-state">消息由企业正式服务处理</span>
+            <span id="message-count">0 / 5000</span>
+          </div>
+        </form>
+      </section>
+
+      <section id="section-work" class="app-section resource-section" data-app-section="work" hidden>
+        <header class="section-head">
+          <div>
+            <span class="eyebrow">我的工作</span>
+            <h1>任务与事件</h1>
+          </div>
+          <button class="btn" type="button" data-action="refresh-current"><span aria-hidden="true">↻</span>刷新</button>
+        </header>
+        <div class="work-page">
+          <form id="work-filter-form" class="work-filter-bar">
+            <label class="field compact-field" for="work-task-status">
+              <span>任务状态</span>
+              <select id="work-task-status" name="task_status">
+                <option value="">全部任务</option>
+                <option value="PENDING">待开始</option>
+                <option value="RUNNING">进行中</option>
+                <option value="BLOCKED">已阻塞</option>
+                <option value="DONE">已完成</option>
+                <option value="FAILED">未完成</option>
+              </select>
+            </label>
+            <label class="field compact-field" for="work-event-status">
+              <span>关联事件</span>
+              <select id="work-event-status" name="event_status">
+                <option value="">全部事件</option>
+                <option value="OPEN">处理中</option>
+                <option value="CLOSED">已闭环</option>
+              </select>
+            </label>
+            <button class="btn" type="submit">应用筛选</button>
+          </form>
+          <div id="work-summary" class="work-summary" aria-live="polite"></div>
+          <div id="work-error" class="inline-error" role="alert" hidden></div>
+          <div class="work-columns">
+            <section class="work-band" aria-labelledby="task-list-title">
+              <div class="band-head">
+                <div>
+                  <span class="eyebrow">本人负责</span>
+                  <h2 id="task-list-title">我的任务</h2>
+                </div>
+                <span id="task-count" class="count-label">0 项</span>
+              </div>
+              <div id="task-list" class="work-list" aria-live="polite"></div>
+            </section>
+            <section class="work-band" aria-labelledby="event-list-title">
+              <div class="band-head">
+                <div>
+                  <span class="eyebrow">工作上下文</span>
+                  <h2 id="event-list-title">我的事件</h2>
+                </div>
+                <span id="event-count" class="count-label">0 项</span>
+              </div>
+              <div id="event-list" class="work-list" aria-live="polite"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section id="section-experience" class="app-section resource-section" data-app-section="experience" hidden>
+        <header class="section-head">
+          <div>
+            <span class="eyebrow">经验共创</span>
+            <h1>专家经验工作台</h1>
+          </div>
+          <button class="btn" type="button" data-action="refresh-current"><span aria-hidden="true">↻</span>刷新</button>
+        </header>
+        <div class="experience-page">
+          <div id="experience-profile-summary" class="expert-summary" aria-live="polite"></div>
+          <div class="view-tabs" role="tablist" aria-label="经验工作台视图">
+            <button class="active" type="button" role="tab" aria-selected="true" data-experience-view="cocreate">经验共创</button>
+            <button type="button" role="tab" aria-selected="false" data-experience-view="search">经验检索</button>
+          </div>
+          <div id="experience-error" class="inline-error" role="alert" hidden></div>
+
+          <div id="experience-view-cocreate" class="experience-view" data-experience-panel="cocreate">
+            <section class="experience-band" aria-labelledby="interview-list-title">
+              <div class="band-head">
+                <div>
+                  <span class="eyebrow">共创任务</span>
+                  <h2 id="interview-list-title">访谈邀请</h2>
+                </div>
+                <span id="interview-count" class="count-label">0 项</span>
+              </div>
+              <div id="interview-list" class="experience-list" aria-live="polite"></div>
+            </section>
+            <section class="experience-band" aria-labelledby="experience-card-list-title">
+              <div class="band-head">
+                <div>
+                  <span class="eyebrow">本人沉淀</span>
+                  <h2 id="experience-card-list-title">我的经验卡</h2>
+                </div>
+                <span id="experience-card-count" class="count-label">0 项</span>
+              </div>
+              <div id="experience-own-card-list" class="experience-list" aria-live="polite"></div>
+            </section>
+          </div>
+
+          <div id="experience-view-search" class="experience-view" data-experience-panel="search" hidden>
+            <form id="experience-search-form" class="experience-search-form">
+              <label class="field" for="experience-search-query">
+                <span>现场问题</span>
+                <input id="experience-search-query" maxlength="5000" placeholder="例如：雨后观光车轮端出现间歇性异响" required>
+              </label>
+              <button class="btn primary" type="submit">检索经验</button>
+            </form>
+            <div id="experience-search-results" class="search-result-list" aria-live="polite">
+              <div class="empty-state compact"><strong>输入现场问题开始检索</strong></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="section-me" class="app-section resource-section" data-app-section="me" hidden>
+        <header class="section-head">
+          <div>
+            <span class="eyebrow">我的</span>
+            <h1>企业身份</h1>
+          </div>
+        </header>
+        <dl class="profile-list">
+          <div><dt>姓名</dt><dd id="profile-name">待加载</dd></div>
+          <div><dt>账号</dt><dd id="profile-username">待加载</dd></div>
+          <div><dt>身份</dt><dd id="profile-role">待加载</dd></div>
+          <div><dt>工作场地</dt><dd id="profile-venue">已绑定当前工作场地</dd></div>
+          <div><dt>助手渠道</dt><dd>网页员工助手</dd></div>
+        </dl>
+        <div class="profile-actions">
+          <button class="btn" type="button" data-action="logout">退出登录</button>
+        </div>
+      </section>
+
+      <dialog id="task-detail-dialog" class="task-dialog" aria-labelledby="task-detail-title">
+        <div class="dialog-head">
+          <div>
+            <span class="eyebrow">任务处理</span>
+            <h2 id="task-detail-title">任务详情</h2>
+          </div>
+          <button class="icon-btn" type="button" data-action="close-task" aria-label="关闭任务详情">×</button>
+        </div>
+        <div id="task-detail-body" class="dialog-body" aria-live="polite"></div>
+        <div id="task-action-error" class="inline-error" role="alert" hidden></div>
+        <div id="task-action-region" class="task-action-region">
+          <button id="task-start-button" class="btn primary" type="button" data-action="start-task" hidden>开始任务</button>
+          <form id="task-complete-form" class="task-action-form" hidden>
+            <label class="field" for="task-complete-summary">
+              <span>完成结果</span>
+              <textarea id="task-complete-summary" maxlength="2000" rows="3" placeholder="说明完成了什么、现场结果和需要交接的事项" required></textarea>
+            </label>
+            <button class="btn primary" type="submit">提交完成</button>
+          </form>
+          <form id="task-block-form" class="task-action-form" hidden>
+            <label class="field" for="task-block-reason">
+              <span>阻塞原因</span>
+              <textarea id="task-block-reason" maxlength="2000" rows="3" placeholder="说明缺少的条件、现场风险或需要谁协助" required></textarea>
+            </label>
+            <button class="btn" type="submit">上报阻塞</button>
+          </form>
+        </div>
+      </dialog>
+
+      <dialog id="event-detail-dialog" class="task-dialog" aria-labelledby="event-detail-title">
+        <div class="dialog-head">
+          <div>
+            <span class="eyebrow">事件进展</span>
+            <h2 id="event-detail-title">事件详情</h2>
+          </div>
+          <button class="icon-btn" type="button" data-action="close-event" aria-label="关闭事件详情">×</button>
+        </div>
+        <div id="event-detail-body" class="dialog-body" aria-live="polite"></div>
+        <div id="event-detail-error" class="inline-error" role="alert" hidden></div>
+      </dialog>
+
+      <dialog id="sop-detail-dialog" class="task-dialog" aria-labelledby="sop-detail-title">
+        <div class="dialog-head">
+          <div>
+            <span class="eyebrow">已发布知识依据</span>
+            <h2 id="sop-detail-title">SOP 详情</h2>
+          </div>
+          <button class="icon-btn" type="button" data-action="close-sop" aria-label="关闭 SOP 详情">×</button>
+        </div>
+        <div id="sop-detail-body" class="dialog-body" aria-live="polite"></div>
+        <div id="sop-detail-error" class="inline-error" role="alert" hidden></div>
+      </dialog>
+
+      <dialog id="interview-dialog" class="business-dialog" aria-labelledby="interview-dialog-title">
+        <div class="dialog-head">
+          <div>
+            <span class="eyebrow">专家访谈</span>
+            <h2 id="interview-dialog-title">访谈详情</h2>
+          </div>
+          <button class="icon-btn" type="button" data-action="close-interview" aria-label="关闭访谈">×</button>
+        </div>
+        <div class="dialog-scroll">
+          <div id="interview-progress" class="interview-progress" aria-live="polite"></div>
+          <div id="interview-turns" class="interview-turns"></div>
+          <div id="interview-action-error" class="inline-error" role="alert" hidden></div>
+          <div id="interview-command-bar" class="interview-command-bar">
+            <button id="interview-accept-button" class="btn primary" type="button" data-action="accept-interview" hidden>接受邀请</button>
+            <button id="interview-pause-button" class="btn" type="button" data-action="pause-interview" hidden>暂停访谈</button>
+            <button id="interview-resume-button" class="btn primary" type="button" data-action="resume-interview" hidden>恢复访谈</button>
+          </div>
+          <form id="interview-answer-form" class="interview-answer-form" hidden>
+            <div id="interview-next-question" class="question-panel"></div>
+            <label class="field" for="interview-answer">
+              <span>我的回答</span>
+              <textarea id="interview-answer" maxlength="8000" rows="5" required></textarea>
+            </label>
+            <label class="field" for="interview-source-excerpt">
+              <span>关键原话（可选）</span>
+              <textarea id="interview-source-excerpt" maxlength="2000" rows="2"></textarea>
+            </label>
+            <button class="btn primary" type="submit">提交本题</button>
+          </form>
+          <form id="interview-complete-form" class="extraction-panel" aria-live="polite" hidden>
+            <span class="extraction-indicator" aria-hidden="true"></span>
+            <div class="extraction-copy">
+              <span class="eyebrow">智能萃取</span>
+              <h3 id="interview-extraction-status">四轮回答已完成</h3>
+              <p id="interview-extraction-detail">正在准备经验草稿。</p>
+            </div>
+            <button id="interview-complete-button" class="btn primary" type="submit">生成经验草稿</button>
+          </form>
+        </div>
+      </dialog>
+
+      <dialog id="experience-card-dialog" class="business-dialog" aria-labelledby="experience-card-dialog-title">
+        <div class="dialog-head">
+          <div>
+            <span class="eyebrow">经验卡</span>
+            <h2 id="experience-card-dialog-title">经验详情</h2>
+          </div>
+          <button class="icon-btn" type="button" data-action="close-experience-card" aria-label="关闭经验卡">×</button>
+        </div>
+        <div class="dialog-scroll">
+          <div id="experience-card-status" class="card-status-row"></div>
+          <div id="experience-card-origin" class="extraction-origin" hidden></div>
+          <div id="experience-card-readonly" class="experience-detail"></div>
+          <div id="experience-card-action-error" class="inline-error" role="alert" hidden></div>
+          <form id="experience-card-revise-form" class="structured-form" hidden>
+            <label class="field full" for="experience-card-title"><span>经验标题</span><input id="experience-card-title" maxlength="200" required></label>
+            <label class="field full" for="experience-card-context"><span>适用情境</span><textarea id="experience-card-context" maxlength="4000" rows="3" required></textarea></label>
+            <label class="field" for="experience-card-signals"><span>识别信号（每行一条）</span><textarea id="experience-card-signals" maxlength="4000" rows="4" required></textarea></label>
+            <label class="field" for="experience-card-actions"><span>建议动作（每行一条）</span><textarea id="experience-card-actions" maxlength="4000" rows="4" required></textarea></label>
+            <label class="field full" for="experience-card-rule"><span>判断规则</span><textarea id="experience-card-rule" maxlength="4000" rows="3" required></textarea></label>
+            <label class="field full" for="experience-card-rationale"><span>判断依据</span><textarea id="experience-card-rationale" maxlength="4000" rows="3" required></textarea></label>
+            <label class="field" for="experience-card-prohibitions"><span>禁止事项（每行一条）</span><textarea id="experience-card-prohibitions" maxlength="4000" rows="3" required></textarea></label>
+            <label class="field" for="experience-card-exceptions"><span>例外情况（每行一条）</span><textarea id="experience-card-exceptions" maxlength="4000" rows="3" required></textarea></label>
+            <label class="field full" for="experience-card-sources"><span>经验来源原话（每行一条）</span><textarea id="experience-card-sources" maxlength="8000" rows="4" required></textarea></label>
+            <label class="field full" for="experience-card-change-note"><span>本次修改说明</span><input id="experience-card-change-note" maxlength="1000" placeholder="例如：补充禁止试车条件" required></label>
+            <div class="form-actions full">
+              <button class="btn" type="submit">保存修订</button>
+              <button id="experience-card-confirm-button" class="btn primary" type="button" data-action="confirm-card">确认并提交审核</button>
+            </div>
+          </form>
+        </div>
+      </dialog>
+    </main>
+
+    <nav class="bottom-nav" aria-label="员工助手导航">
+      <button class="active" type="button" data-section="chat"><span aria-hidden="true">对</span><small>助手</small></button>
+      <button type="button" data-section="work"><span aria-hidden="true">工</span><small>工作</small></button>
+      <button type="button" data-section="experience"><span aria-hidden="true">经</span><small>经验</small></button>
+      <button type="button" data-section="me"><span aria-hidden="true">我</span><small>我的</small></button>
+    </nav>
+  </div>
+
+  <div id="toast-region" class="toast-region" aria-live="polite"></div>
+  <script src="/shared/client.js"></script>
+  <script src="/assistant/app.js"></script>
+</body>
+</html>

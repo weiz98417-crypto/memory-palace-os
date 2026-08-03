@@ -6,32 +6,28 @@
 
 ---
 
-## 企业演示版（推荐入口）
+## 企业 MVP（正式入口）
 
-企业演示版只支持 Docker 运行，不需要配置真实 LLM、企微、短信或企业数据库密钥。
+当前交付面是原正式客户端，不是动画或播放器。产品包含 20 项业务功能、8 个 Agent 和 13 个正式视图，运行链路使用 Nginx、App、PostgreSQL、Redis Streams、ChromaDB 与真实 `deepseek-v4-flash`。
 
-```powershell
-scripts\demo.cmd start
-```
-
-启动成功后访问 [http://localhost:8000/demo](http://localhost:8000/demo)。
+Windows + Docker Desktop 快速启动：
 
 ```powershell
-scripts\demo.cmd status  # 查看状态
-scripts\demo.cmd verify  # 健康检查 + 四场景 live API + 176 条自动化测试
-scripts\demo.cmd reset   # 重建独立 Demo 数据卷
-scripts\demo.cmd logs    # 跟随日志，Ctrl+C 退出
-scripts\demo.cmd stop    # 停止服务，保留数据卷
+$envFile = 'C:\secure\memory-palace-uat.env'
+scripts\mvp.cmd install -EnvFile $envFile -Project memory-palace-uat -SecretsVolume memory-palace-secrets
+powershell -ExecutionPolicy Bypass -File scripts\set_deepseek_secret.ps1 -VolumeName memory-palace-secrets
+scripts\mvp.cmd start -EnvFile $envFile -Project memory-palace-uat -SecretsVolume memory-palace-secrets
+scripts\mvp.cmd verify -EnvFile $envFile -Project memory-palace-uat -SecretsVolume memory-palace-secrets
 ```
 
-默认提供四个版本化、可重复的标准场景：P0 应急、运营知识问答、老员工经验萃取、跨部门任务拆解。页面支持 Play/Pause/Step/Stop/Reset、步骤证据、失败重试、跨场景状态保留和 JSON 报告下载。
+启动成功后访问 [http://localhost:8082/admin/](http://localhost:8082/admin/)。系统不提供公开默认密码；使用部署 EnvFile 初始化的管理员账号登录，并在交付前完成密码轮换。
 
-- [企业演示版交付指南](docs/enterprise-demo/README.md)
-- [企业演示版 PRD](PRD-memory-palace-enterprise-demo.md)
-- [测试与视觉验证证据](docs/verification/enterprise-demo-v1/test-results.md)
-- [能力声明矩阵](docs/verification/enterprise-demo-v1/capability-matrix.md)
+- [企业 MVP 交付 PRD](PRD-memory-palace-enterprise-mvp.md)
+- [内部 UAT 与发布就绪报告](docs/verification/mvp-uat-20260728/internal-uat-release-readiness.md)
+- [浏览器 QA 报告](docs/verification/mvp-uat-20260728/browser-qa-report.md)
+- [备份、恢复与诊断手册](docs/operations/mvp-backup-restore.md)
 
-> 安全边界：默认模式为 `LOCAL_DEMO_SIMPLIFIED_AUTH`，服务只绑定 `127.0.0.1`。这不是生产鉴权方案，不应直接暴露到公网。
+> 当前仓库目标是企业 MVP 发布候选。开发团队内部 UAT 不替代客户 UAT；24 小时连续运行与客户签收仍需在目标环境完成。企微、短信和语音未配置时保持 `DISABLED_REQUIRES_CONFIG`，不会伪造发送成功。旧 `/demo` 仅保留为历史开发资产，不是交付入口。
 
 ---
 
@@ -71,13 +67,14 @@ scripts\demo.cmd stop    # 停止服务，保留数据卷
 
 | Agent | 职责 | 触发方式 |
 |-------|------|----------|
-| **Router** | 情境感知 · 意图识别 · P0 关键字检测 | 所有消息 |
-| **Commander** | SOP 指令下发 · 企微/短信/语音通知 | P0/P1 事件 |
-| **Memory Ops** | RAG 经验检索 · SOP 草稿萃取 | routine 检索 |
-| **Persona** | 数字分身对话 · 访谈萃取 · 个性化建议生成 | 多轮对话 |
+| **ContextTrigger** | 情境触发 · 优先级与 SLA 判断 | 现场消息 / Watcher |
+| **Router** | 意图识别 · Agent 路由 | 所有消息 |
+| **Commander** | P0/P1 处置建议 · 任务与审批编排 | 现场事件 |
+| **MemoryOps** | RAG 经验检索 · 来源归因 · SOP 草稿萃取 | 消息链路 / 知识检索 |
+| **Persona** | 授权经验问答 · 来源展示 | 正式客户端 |
 | **PersonaExtract** | 老员工结构化访谈萃取 · 逻辑条目提取 | 管理后台 / 访谈 API |
-| **Watcher** | SLA 巡检 · 催办触发 · 异常预警 | 定时任务 |
-| **TodoWrite** | 复杂目标 → 任务依赖图分解 | Agent 调用 |
+| **Watcher** | SLA 巡检 · 发现分派 · 闭环审计 | 手动 / 定时任务 |
+| **TodoWrite** | 复杂目标 → 可恢复任务依赖图 | 任务中心 |
 
 ### 四层上下文压缩 (Token 防火墙)
 
@@ -134,35 +131,28 @@ data/workspaces/{task-id}/
 
 ## 技术架构
 
-```
-企微 Webhook (AES-256-CBC)
-         ↓
-    Gateway ─── 签名验证 / 消息去重 / XML解析
-         ↓
-    Orchestrator ─── 意图分发 / SLA 记录 / Agent 调度
-         │
-         ├── Router          意图识别 & P0 紧急分诊
-         ├── Commander        P0/P1 SOP 指令下发
-         ├── Memory Ops       RAG 历史经验检索
-         ├── Persona          数字分身对话
-         ├── Watcher          SLA 巡检 & 催办
-         └── TodoWrite        任务分解 (Phase 3)
-         │
-         ▼
-    [Phase 1] 三层上下文压缩 ── Hot/Warm/Cold tiering
-         │
-         ▼
-    [Phase 2] 权限引擎 ── Level 0/1/2 + 审批流
-         │
-         ▼
-    [Phase 3] 任务依赖图 ── 持久化 & Docker 重启恢复
-         │
-         ▼
-    [Phase 4] 工作区隔离 ── chroot + 路径遍历防护
-
-工具层 ── WeChat / SMS / Voice Call / LLM Wrapper / Tool Executor
-         ↓
-    ChromaDB (向量) + SQLite (元数据)
+```text
+正式客户端 / 可选外部渠道
+            ↓
+          Nginx
+            ↓
+ FastAPI Gateway + JWT/RBAC/venue_id
+            ↓
+ Orchestrator + Redis Streams + TaskGraph
+            │
+            ├── ContextTrigger  情境触发与优先级
+            ├── Router          意图路由
+            ├── Commander       现场处置建议
+            ├── MemoryOps       知识检索与经验沉淀
+            ├── Persona         授权经验问答
+            ├── PersonaExtract  多轮访谈萃取
+            ├── TodoWrite       任务依赖图分解
+            └── Watcher         手动/定时巡检闭环
+            ↓
+ PostgreSQL（权威业务数据与审计）
+ Redis（队列、重试与死信）
+ ChromaDB（向量检索）
+ external secret volume（DeepSeek Key）
 ```
 
 ---
@@ -209,7 +199,7 @@ src/memory_palace/
 
 ---
 
-## 旧版开发运行（非企业演示入口）
+## 旧版本地开发运行（非企业 MVP 入口）
 
 ### 前置
 
@@ -227,35 +217,53 @@ source .venv/bin/activate  # Linux/macOS
 
 pip install -r requirements.txt
 cp .env.example .env
-# 编辑 .env 填入企业微信参数和 LLM API Key
+# 编辑 .env 填入非 LLM 密钥配置
 
 python -c "from src.memory_palace.knowledge.db_init import init_db; init_db()"
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+### Docker 持久化 DeepSeek 密钥
+
+Docker 部署不把 DeepSeek API Key 写入 `.env`、镜像层或容器环境变量。首次配置或轮换密钥时运行一次：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/set_deepseek_secret.ps1
+```
+
+脚本通过隐藏输入和原子替换把密钥保存到外部 Docker volume `memory-palace-secrets`，并自动重启正在使用该卷的应用容器。之后执行 `docker compose up -d --force-recreate`、重建应用镜像或重启 Docker Desktop 都会自动复用该密钥；只有主动删除外部 volume 或轮换密钥时才需要再次运行脚本。
+
+非 Docker 的本地 Python 运行可通过 `DEEPSEEK_API_KEY` 或 `DEEPSEEK_API_KEY_FILE` 提供同一密钥。
+
 ### 验证
 
-```bash
-curl http://localhost:8000/health
-# 健康检查返回 {"status": "ok"}
+```powershell
+scripts\mvp.cmd status -Project memory-palace-uat
+scripts\mvp.cmd verify -EnvFile C:\secure\memory-palace-uat.env -Project memory-palace-uat -SecretsVolume memory-palace-secrets
+scripts\mvp.cmd doctor -Project memory-palace-uat
+```
 
-# 企微回调地址（外网可达后）
-https://your-domain.com/webhook/v1/callback
-
-# 前端管理界面
-http://localhost:8000/admin
-# 管理员账号: admin / 123456
+正式客户端：`http://localhost:8082/admin/`。账号和密码来自部署初始化，不写入 README、镜像或交付截图。
 
 ### 管理后台功能
 
-访问 `/admin` 进入管理控制台，包含以下模块：
+访问 `/admin/` 进入正式企业运营工作台，包含 13 个产品视图：
 
 | 模块 | 说明 |
 |------|------|
-| **记忆卷宗** | 事件列表 · 事件详情 · 手动录入 |
-| **数字分身** | 分身列表 · 创建分身 · 访谈萃取 · 向分身提问 |
-| **推送日志** | 推送采纳率统计 · 推送记录查询 |
-| **仪表盘** | 记忆库总量 · 本周新增 · 采纳率 · 事件分布 |
+| **运营工作台** | 真实事件、任务、SLA、Agent 与更新时间统计 |
+| **现场事件** | 实时上报、历史补录、筛选、详情、处置与关闭 |
+| **消息与会话** | 会话列表、详情、历史、状态和关闭 |
+| **任务中心** | TodoWrite 分解、依赖、分配、执行、失败与恢复 |
+| **审批中心** | 高风险动作申请、批准、拒绝和执行结果 |
+| **推送与动作日志** | 渠道、收件人、状态、错误、采纳和并发冲突 |
+| **知识库** | 版本化知识 CRUD、导入、索引重建与语义检索 |
+| **数字分身** | Persona 创建、访谈恢复、授权问答、搜索与删除 |
+| **鹰眼巡检** | 策略、手动/定时运行、发现分派、关闭和停用 |
+| **SOP 中心** | 草稿、提审、驳回、修订、发布与再次检索 |
+| **用户与场地** | 用户生命周期、角色与 `venue_id` 管理 |
+| **系统设置** | 非敏感设置、模型和外部集成状态 |
+| **运维诊断** | 健康、队列、死信、热重载、Trace 和审计 |
 
 **数字分身访谈萃取流程：**
 
@@ -268,25 +276,24 @@ http://localhost:8000/admin
     ↓
 点击分身卡片 → 向该专家提问 → 获取第一人称回答
 ```
-```
 
 ---
 
 ## 配置说明
 
-### .env 核心变量
+### 部署 EnvFile 核心变量
 
 | 变量 | 必填 | 说明 |
 |---|---|---|
-| `WECOM_CORP_ID` | ✅ | 企业 ID |
-| `WECOM_AGENT_ID` | ✅ | 应用 AgentId |
-| `WECOM_CORP_SECRET` | ✅ | 应用密钥 |
-| `WECOM_ENCODING_AES_KEY` | ✅ | 回调 AES Key（43位） |
-| `WECOM_TOKEN` | ✅ | 回调 Token |
-| `LLM_PROVIDER` | 选填 | `openai` / `qwen` / `zhipu`，默认 openai |
-| `LLM_API_KEY` | 选填 | API Key |
-| `LLM_MODEL` | 选填 | 模型名，默认 gpt-4 |
-| `DEMO_MODE` | 选填 | `true` 时跳过 LLM 调用，使用 Mock 响应 |
+| `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | ✅ | PostgreSQL 数据库与凭据 |
+| `MEMORY_PALACE_JWT_SECRET` | ✅ | JWT 签名密钥，使用高熵随机值 |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | ✅ | 首次管理员账号，不使用演示密码 |
+| `DEFAULT_VENUE_ID` / `DEFAULT_VENUE_NAME` | ✅ | 初始租户与场地 |
+| `HTTP_PORT` | ✅ | Nginx 对外端口，UAT 默认 `8082` |
+| `MEMORY_PALACE_SECRETS_VOLUME` | ✅ | DeepSeek 外部 Secret 卷名称 |
+| `WECHAT_*` / `SMS_*` / `VOICE_*` | 选填 | 缺少真实供应商配置时安全禁用 |
+
+DeepSeek API Key 不写入 EnvFile，而是通过 `scripts/set_deepseek_secret.ps1` 一次性注入外部 Docker volume。所有生成式调用固定使用 `deepseek-v4-flash`，正式 MVP 不允许通过 `DEMO_MODE` 或 Mock 绕过模型。
 
 ---
 
@@ -378,12 +385,42 @@ pytest tests/unit/ -v
 - 确认 AES Key 长度为 43 位（Base64）
 
 **Q: 服务启动报错**
-- 检查 `.env` 是否存在且变量完整
-- 检查数据库目录权限：`chmod 755 data/`
+- 运行 `scripts\mvp.cmd doctor -Project <project>` 检查 Docker、容器、卷和依赖健康。
+- 确认 `-EnvFile` 指向仓库外的受限文件，并包含必填部署变量。
+- 确认外部 Secret 卷存在且 `deepseek_api_key` 非空。
 
 **Q: LLM 调用失败**
-- 设置 `DEMO_MODE=true` 跳过 LLM，使用 Mock 响应
-- 检查 API Key 是否正确，网络是否可达
+- 在运维诊断页查看真实 `deepseek-v4-flash` 调用、重试和 Trace。
+- 检查外部 Secret 卷、网络和 DeepSeek 账户状态。
+- 失败路径进入重试、熔断或人工继续，不返回伪造成功结果。
+
+---
+
+## 企业 MVP 运维
+
+Windows + Docker Desktop 的正式生命周期入口：
+
+```powershell
+$envFile = 'C:\secure\memory-palace-uat.env'
+scripts\mvp.cmd install -EnvFile $envFile -Project memory-palace-uat -SecretsVolume memory-palace-secrets
+scripts\mvp.cmd start -EnvFile $envFile -Project memory-palace-uat -SecretsVolume memory-palace-secrets
+scripts\mvp.cmd status -Project memory-palace-uat
+scripts\mvp.cmd migrate -EnvFile $envFile -Project memory-palace-uat -SecretsVolume memory-palace-secrets
+scripts\mvp.cmd verify -EnvFile $envFile -Project memory-palace-uat -SecretsVolume memory-palace-secrets
+scripts\mvp.cmd doctor -Project memory-palace-uat
+scripts\mvp.cmd backup -Project memory-palace-uat
+scripts\mvp.cmd logs -EnvFile $envFile -Project memory-palace-uat -SecretsVolume memory-palace-secrets -Tail 200
+scripts\mvp.cmd upgrade -EnvFile $envFile -Project memory-palace-uat -SecretsVolume memory-palace-secrets
+scripts\mvp.cmd restart-app -EnvFile $envFile -Project memory-palace-uat -SecretsVolume memory-palace-secrets
+scripts\mvp.cmd stop -EnvFile $envFile -Project memory-palace-uat -SecretsVolume memory-palace-secrets
+```
+
+Docker Desktop 无法连接镜像仓库、但固定版本镜像已在本机缓存时，`install` 和 `upgrade` 可显式增加 `-Offline`；它只跳过拉取，不放宽版本、迁移或健康门禁。
+
+`restart-app` 是恢复旅程的固定范围入口：只重启 App，等待其重新健康，并核对 PostgreSQL、Redis、ChromaDB 与 Nginx 的容器、进程和启动时间均未变化；命令会输出 App 重启前后的运行标识，供诊断页核验。
+
+`stop`、重启 Docker Desktop、重建 App/Nginx 镜像都保留数据卷和外部 Secret 卷。恢复必须指定新的 Compose project、独立 Secret 卷、环境文件和精确目标确认。完整安全说明见
+[企业 MVP 备份、恢复与诊断](docs/operations/mvp-backup-restore.md)。
 
 ---
 

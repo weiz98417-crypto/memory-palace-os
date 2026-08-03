@@ -17,7 +17,7 @@ asyncpg>=0.29.0
 redis>=5.0.0
 
 # Vector Store
-chromadb>=0.4.22
+chromadb==0.5.23
 
 # Scheduling
 apscheduler>=3.10.4

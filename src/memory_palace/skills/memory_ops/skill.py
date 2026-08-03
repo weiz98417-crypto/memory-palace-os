@@ -16,20 +16,12 @@ from typing import Any, Dict, List
 from loguru import logger
 
 from ...core.skill_base import BaseAgentSkill, SkillOutput, SkillValidationError
+from ...knowledge.evidence_backed_retrieval import (
+    KnowledgeRetrievalError,
+    RetrievalRequest,
+)
+from ...tools.llm_wrapper import llm_client
 from .. import register_skill
-
-try:
-    from ...tools.llm_wrapper import llm_client
-except ImportError:
-    logger.warning("llm_client 尚未实现，MemoryOps 将以模拟模式运行")
-    llm_client = None
-
-# 引入知识库的向量检索客户端
-try:
-    from ...knowledge.vector_store import get_vector_client
-except ImportError:
-    logger.warning("get_vector_client 尚未实现，MemoryOps 向量检索将以模拟模式运行")
-    get_vector_client = None
 
 
 @register_skill("memory_ops")
@@ -44,7 +36,7 @@ class MemoryOpsSkill(BaseAgentSkill):
 
         super().__init__(
             skill_name=self.config.get("agent_name", "MemoryOps_Agent"),
-            model_name=self.config.get("llm_config", {}).get("model", "gpt-4-turbo")
+            model_name=self.config.get("llm_config", {}).get("model", "deepseek-v4-flash")
         )
 
     def _load_config(self) -> Dict[str, Any]:
@@ -54,7 +46,7 @@ class MemoryOpsSkill(BaseAgentSkill):
             logger.warning("MemoryOps config 缺失，采用默认 RAG 参数。")
             return {
                 "agent_name": "MemoryOps_Agent",
-                "llm_config": {"model": "gpt-4-turbo"},
+                "llm_config": {"model": "deepseek-v4-flash"},
                 "rag_config": {"top_k": 3, "similarity_threshold": 0.75}
             }
 
@@ -84,9 +76,14 @@ class MemoryOpsSkill(BaseAgentSkill):
 
         formatted_str = ""
         for idx, doc in enumerate(docs, 1):
-            formatted_str += f"### 历史案例 {idx} (相似度: {doc.get('score', 0):.2f})\n"
-            formatted_str += f"- 发生时间: {doc.get('metadata', {}).get('date', '未知')}\n"
-            formatted_str += f"- 处置方案: {doc.get('content', '无详细内容')}\n\n"
+            reference = doc.get("metadata") or {}
+            formatted_str += (
+                f"### {reference['source_label']} {idx}: {reference['title']} "
+                f"(版本 {reference['version']})\n"
+            )
+            formatted_str += f"- 来源标识: {reference['source_id']}\n"
+            formatted_str += f"- 相关度: {reference['score']:.3f}\n"
+            formatted_str += f"- 已发布内容: {doc.get('content', '无详细内容')}\n\n"
         return formatted_str.strip()
 
     ### CHANGE: 核心方法改为 async
@@ -96,81 +93,86 @@ class MemoryOpsSkill(BaseAgentSkill):
         logger.info(f"[Trace-{trace_id}] MemoryOps 启动，开始为 '{query_text}' 检索历史经验...")
 
         try:
-            # ---------------------------------------------------------
-            # 1. 向量检索 (Retrieval)
-            # ---------------------------------------------------------
+            if not llm_client:
+                raise RuntimeError("MemoryOps LLM 客户端未初始化，不能生成检索建议")
+
             rag_params = self.config.get("rag_config", {})
             top_k = rag_params.get("top_k", 3)
             threshold = rag_params.get("similarity_threshold", 0.75)
 
-            vc = get_vector_client() if get_vector_client else None
-            if vc:
-                retrieved_docs = vc.query_experience(
-                    text=query_text,
-                    top_k=top_k,
-                    threshold=threshold
+            retriever = context.get("_knowledge_retriever")
+            if retriever is None:
+                raise RuntimeError("MemoryOps 证据检索模块未注入")
+            try:
+                retrieval = await retriever.retrieve(
+                    RetrievalRequest(
+                        query=query_text,
+                        venue_id=str(context.get("venue_id") or ""),
+                        trace_id=trace_id,
+                        user_id=str(context.get("from_user") or ""),
+                        message_id=str(context.get("msg_id") or "") or None,
+                        session_id=str(context.get("session_id") or "") or None,
+                        agent_id="MemoryOps",
+                        top_k=int(top_k),
+                        similarity_threshold=float(threshold),
+                    )
                 )
-            else:
-                retrieved_docs = []
+            except KnowledgeRetrievalError as exc:
+                return SkillOutput(
+                    success=False,
+                    reply_text="知识检索当前不可用，请由值班经理人工核验。",
+                    structured_data={
+                        "retrieval_snapshot_id": exc.snapshot_id,
+                        "retrieval_status": "FAILED",
+                        "retrieved_count": 0,
+                        "references": [],
+                        "action_taken": "knowledge_retrieval_failed",
+                    },
+                    action_taken="knowledge_retrieval_failed",
+                    error_msg="知识检索失败，未返回任何未经确权的引用",
+                )
+            retrieved_docs = list(retrieval.documents)
+            references = [dict(reference) for reference in retrieval.references]
 
-            logger.debug(f"[Trace-{trace_id}] 召回 {len(retrieved_docs)} 条相似历史记录。")
+            logger.debug(
+                f"[Trace-{trace_id}] 召回并确权 {len(retrieved_docs)} 条知识记录，"
+                f"快照 {retrieval.snapshot_id}。"
+            )
 
             knowledge_context = self._format_retrieved_docs(retrieved_docs)
-
-            # ---------------------------------------------------------
-            # 2. 组装增强生成 Prompt (Augmented Generation)
-            # ---------------------------------------------------------
             template = self._load_prompt_template()
             full_system_prompt = template.format(retrieved_knowledge=knowledge_context)
 
-            # ---------------------------------------------------------
-            # 3. 调用 LLM 进行总结推理
-            # ---------------------------------------------------------
-            if llm_client:
-                llm_params = self.config.get("llm_config", {})
+            llm_params = self.config.get("llm_config", {})
+            llm_res = await llm_client.ask(
+                system_prompt=full_system_prompt,
+                user_prompt=f"当前一线员工的提问/求助是：{query_text}\n请基于上述历史案例给出建议。",
+                model=self.model_name,
+                temperature=llm_params.get("temperature", 0.3),
+                json_mode=True,
+                trace_id=trace_id,
+                venue_id=context.get("venue_id", ""),
+                agent_id="MemoryOps",
+                agent_name=self.skill_name,
+            )
 
-                ### CHANGE: 添加 await 调用异步 LLM
-                llm_res = await llm_client.ask(
-                    system_prompt=full_system_prompt,
-                    user_prompt=f"当前一线员工的提问/求助是：{query_text}\n请基于上述历史案例给出建议。",
-                    model=self.model_name,
-                    temperature=llm_params.get("temperature", 0.3),
-                    json_mode=True,
-                    trace_id=trace_id
-                )
+            advice_data = await llm_client.parse_json(llm_res.content, trace_id=trace_id)
+            if not isinstance(advice_data, dict) or not str(advice_data.get("reply_text", "")).strip():
+                raise ValueError("MemoryOps LLM 返回结果缺少有效 reply_text")
 
-                # ---------------------------------------------------------
-                # 4. 解析结果并返回 DTO
-                # ---------------------------------------------------------
-                ### CHANGE: 添加 await 调用异步解析
-                advice_data = await llm_client.parse_json(llm_res.content, trace_id=trace_id)
-
-                reply_text = advice_data.get("reply_text")
-                if not retrieved_docs and not reply_text:
-                    reply_text = "抱歉，记忆宫殿中暂未检索到关于此情况的历史处置案例。建议直接请示值班经理。"
-
-                return SkillOutput(
-                    success=True,
-                    reply_text=reply_text,
-                    structured_data={
-                        "retrieved_count": len(retrieved_docs),
-                        "reference_cases": [doc.get("metadata", {}).get("case_id") for doc in retrieved_docs if doc.get("metadata")],
-                        "action_taken": "rag_experience_advice"
-                    },
-                    action_taken="rag_experience_advice",
-                    tokens_used=llm_res.tokens_used
-                )
-            else:
-                return SkillOutput(
-                    success=True,
-                    reply_text="记忆专家暂时离线，无法提供历史案例检索服务。",
-                    structured_data={
-                        "retrieved_count": 0,
-                        "reference_cases": [],
-                        "action_taken": "mock_rag_retrieval"
-                    },
-                    action_taken="mock_rag_retrieval"
-                )
+            return SkillOutput(
+                success=True,
+                reply_text=advice_data["reply_text"],
+                structured_data={
+                    "retrieval_snapshot_id": retrieval.snapshot_id,
+                    "retrieval_status": retrieval.status,
+                    "retrieved_count": len(references),
+                    "references": references,
+                    "action_taken": "rag_experience_advice",
+                },
+                action_taken="rag_experience_advice",
+                tokens_used=llm_res.tokens_used,
+            )
 
         except Exception as e:
             logger.error(f"[Trace-{trace_id}] MemoryOps RAG 链路执行失败: {e}")

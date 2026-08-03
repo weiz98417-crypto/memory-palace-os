@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#202a2f">
+  <title>企微接入模拟环境 · Memory Palace OS</title>
+  <link rel="stylesheet" href="/shared/base.css">
+  <link rel="stylesheet" href="/simulator/wecom/styles.css?v=20260803-1">
+</head>
+<body>
+  <section id="login-screen" class="login-stage" aria-label="企微模拟器登录">
+    <div class="login-context">
+      <div class="brand-lockup">
+        <div class="product-kicker">MEMORY PALACE OS</div>
+        <h1>企微接入模拟环境</h1>
+        <p>用于验证员工身份、消息受理与管理后台联动</p>
+      </div>
+    </div>
+    <div class="login-panel-wrap">
+      <div class="login-panel">
+        <div>
+          <h2>登录演示账号</h2>
+          <p class="subcopy">仅有模拟器权限的经理或管理员可进入</p>
+        </div>
+        <form id="login-form" class="login-form">
+          <label class="field">
+            <span>用户名</span>
+            <input id="login-username" name="username" autocomplete="username" required minlength="2" maxlength="64">
+          </label>
+          <label class="field">
+            <span>密码</span>
+            <input id="login-password" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128">
+          </label>
+          <p id="login-error" class="form-error" role="alert"></p>
+          <button id="login-submit" class="btn primary" type="submit">进入模拟环境</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <div id="simulator-app" class="simulator-app" hidden>
+    <header class="simulator-topbar">
+      <div class="topbar-brand">
+        <span class="brand-mark">MP</span>
+        <div><strong>Memory Palace OS</strong><span>渠道联调工作台</span></div>
+      </div>
+      <div class="environment-badge"><span aria-hidden="true"></span>企微接入模拟环境</div>
+      <div class="topbar-account">
+        <span id="signed-user">演示账号</span>
+        <a class="btn quiet" href="/admin/">管理后台</a>
+        <button class="btn" type="button" data-action="logout">退出</button>
+      </div>
+    </header>
+
+    <main class="simulator-workspace">
+      <aside class="control-panel" aria-label="演示控制">
+        <div class="boundary-notice">
+          <strong>模拟环境</strong>
+          <p>消息进入正式 Agent 与数据链路；本页面不代表企微应用认证或回调联调已经完成。</p>
+        </div>
+
+        <section class="control-section">
+          <div class="section-label">员工身份</div>
+          <label class="field" for="identity-select">
+            <span>选择当前发言员工</span>
+            <select id="identity-select">
+              <option value="">正在读取可用身份…</option>
+            </select>
+          </label>
+          <div id="identity-summary" class="identity-summary" aria-live="polite">
+            <span class="identity-avatar">员</span>
+            <div><strong>尚未选择员工</strong><span>请选择已授权身份</span></div>
+          </div>
+        </section>
+
+        <section class="control-section">
+          <div class="section-label">模拟会话</div>
+          <label class="field session-picker" for="session-select">
+            <span>选择该员工的企微模拟会话</span>
+            <select id="session-select" disabled>
+              <option value="">请先选择员工身份</option>
+            </select>
+          </label>
+          <p id="session-status" class="session-status" aria-live="polite">选择员工后读取其历史会话。</p>
+          <div class="control-actions">
+            <button class="btn" type="button" data-action="new-session"><span aria-hidden="true">+</span>新建会话</button>
+            <button class="btn" type="button" data-action="refresh"><span aria-hidden="true">↻</span>刷新状态</button>
+          </div>
+          <p id="session-summary" class="control-note">选择员工后可开始新的模拟会话。</p>
+        </section>
+
+        <section class="control-section quick-section">
+          <div class="section-label">常用输入</div>
+          <button type="button" data-prompt="我要上报一个现场问题：">上报现场问题</button>
+          <button type="button" data-prompt="请查询这个情况的处置流程：">查询处置流程</button>
+          <button type="button" data-prompt="请查找类似案例和专家经验：">查找经验依据</button>
+          <button id="experience-entry-button" type="button" data-action="open-latest-experience" disabled>处理经验共创</button>
+        </section>
+      </aside>
+
+      <section class="wecom-surface" aria-label="企微聊天模拟区域">
+        <header class="wecom-head">
+          <div class="wecom-title">
+            <span class="assistant-avatar">AI</span>
+            <div><h1>企业运营助手</h1><span id="conversation-identity">等待选择员工</span></div>
+          </div>
+          <div class="wecom-head-meta">
+            <span class="simulation-label">SIMULATION</span>
+            <span id="experience-summary" class="experience-summary">经验共创：等待选择员工</span>
+            <span id="outbox-summary" class="outbox-summary">审批与出站回流：0</span>
+          </div>
+        </header>
+
+        <div id="simulator-error" class="simulator-error" hidden></div>
+        <div id="simulator-message-stream" class="wecom-messages" aria-live="polite">
+          <div class="wecom-empty">
+            <span class="assistant-avatar large">AI</span>
+            <strong>企业运营助手</strong>
+            <p>选择员工身份后发送消息</p>
+          </div>
+        </div>
+
+        <form id="simulator-message-form" class="wecom-composer">
+          <details class="sim-attachment">
+            <summary>现场图片（可选）</summary>
+            <label class="sim-attachment-file" for="simulator-attachment-file">
+              <span>选择 JPG、PNG 或 WebP 图片，单张不超过 5 MB</span>
+              <input id="simulator-attachment-file" type="file" accept="image/jpeg,image/png,image/webp">
+            </label>
+            <div id="simulator-attachment-selection" class="sim-attachment-selection" aria-live="polite">尚未选择现场图片</div>
+            <label class="sr-only" for="simulator-attachment-note">现场图片说明</label>
+            <textarea id="simulator-attachment-note" rows="2" maxlength="500" placeholder="描述附件中的关键信息"></textarea>
+            <p>图片上传失败时，已输入的消息和说明会保留。</p>
+          </details>
+          <label class="sr-only" for="simulator-message-input">发送消息</label>
+          <textarea id="simulator-message-input" rows="3" maxlength="5000" placeholder="输入要发送给企业运营助手的消息" disabled required></textarea>
+          <div class="composer-actions">
+            <span id="delivery-status" class="delivery-status">等待选择员工</span>
+            <button id="simulator-send" class="wecom-send" type="submit" disabled>发送</button>
+          </div>
+        </form>
+      </section>
+
+      <aside class="evidence-panel" aria-label="真实链路证据">
+        <details id="evidence-drawer">
+          <summary>
+            <span><strong>真实链路证据</strong><small>默认折叠，仅供演示与验收</small></span>
+            <span id="evidence-status-badge" class="status-pill">尚未产生</span>
+          </summary>
+          <div class="evidence-content">
+            <dl class="evidence-list">
+              <div><dt>渠道</dt><dd id="evidence-channel">尚未产生</dd></div>
+              <div><dt>受理状态</dt><dd id="evidence-run-status">尚未产生</dd></div>
+              <div><dt>受理时间</dt><dd id="evidence-time">尚未产生</dd></div>
+              <div><dt>消息标识</dt><dd id="evidence-message">尚未产生</dd></div>
+              <div><dt>会话标识</dt><dd id="evidence-session">尚未产生</dd></div>
+              <div><dt>Trace</dt><dd id="evidence-trace">尚未产生</dd></div>
+            </dl>
+            <div class="evidence-links">
+              <a id="admin-session-link" class="btn" href="/admin/" aria-disabled="true">后台查看会话</a>
+              <a id="admin-trace-link" class="btn" href="/admin/" aria-disabled="true">后台查看 Trace</a>
+            </div>
+            <p class="evidence-note">模型、队列和审计明细以管理后台 Trace 记录为准。</p>
+          </div>
+        </details>
+      </aside>
+    </main>
+  </div>
+
+  <dialog id="interview-dialog" class="experience-dialog" aria-labelledby="interview-dialog-title">
+    <header class="dialog-head">
+      <div>
+        <span class="dialog-kicker">企业运营助手 · 经验共创</span>
+        <h2 id="interview-dialog-title">专家经验访谈</h2>
+      </div>
+      <button class="icon-btn" type="button" data-action="close-interview" aria-label="关闭访谈">×</button>
+    </header>
+    <div class="dialog-scroll">
+      <p id="interview-identity-note" class="dialog-context"></p>
+      <div id="interview-progress" class="interview-progress" aria-live="polite"></div>
+      <div id="interview-turns" class="interview-turns"></div>
+      <div id="interview-action-error" class="inline-error" role="alert" hidden></div>
+      <div id="interview-command-bar" class="interview-command-bar" hidden>
+        <button id="interview-accept-button" class="btn primary" type="button" data-action="accept-interview" hidden>接受访谈邀请</button>
+        <button id="interview-pause-button" class="btn" type="button" data-action="pause-interview" hidden>暂停并保存</button>
+        <button id="interview-resume-button" class="btn primary" type="button" data-action="resume-interview" hidden>恢复访谈</button>
+      </div>
+      <form id="interview-answer-form" class="interview-answer-form" hidden>
+        <div id="interview-next-question" class="question-panel"></div>
+        <label class="field" for="interview-answer">
+          <span>我的回答</span>
+          <textarea id="interview-answer" maxlength="8000" rows="5" required></textarea>
+        </label>
+        <label class="field" for="interview-source-excerpt">
+          <span>关键原话（可选）</span>
+          <textarea id="interview-source-excerpt" maxlength="2000" rows="2"></textarea>
+        </label>
+        <button class="btn primary" type="submit">提交本题</button>
+      </form>
+      <form id="interview-complete-form" class="extraction-panel" aria-live="polite" hidden>
+        <span class="extraction-indicator" aria-hidden="true"></span>
+        <div>
+          <span class="dialog-kicker">PersonaExtract · DeepSeek</span>
+          <h3 id="interview-extraction-status">四轮回答已完成</h3>
+          <p id="interview-extraction-detail">可以根据已保存回答生成经验草稿。</p>
+        </div>
+        <button id="interview-complete-button" class="btn primary" type="submit">生成经验草稿</button>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog id="experience-card-dialog" class="experience-dialog wide" aria-labelledby="experience-card-dialog-title">
+    <header class="dialog-head">
+      <div>
+        <span class="dialog-kicker">企业运营助手 · 经验卡</span>
+        <h2 id="experience-card-dialog-title">经验草稿</h2>
+      </div>
+      <button class="icon-btn" type="button" data-action="close-experience-card" aria-label="关闭经验卡">×</button>
+    </header>
+    <div class="dialog-scroll">
+      <div id="experience-card-status" class="card-status-row"></div>
+      <div id="experience-card-origin" class="experience-origin"></div>
+      <div id="experience-card-readonly" class="experience-detail"></div>
+      <div id="experience-card-action-error" class="inline-error" role="alert" hidden></div>
+      <form id="experience-card-revise-form" class="structured-form" hidden>
+        <label class="field full" for="experience-card-title"><span>经验标题</span><input id="experience-card-title" maxlength="200" required></label>
+        <label class="field full" for="experience-card-context"><span>适用情境</span><textarea id="experience-card-context" maxlength="4000" rows="3" required></textarea></label>
+        <label class="field" for="experience-card-signals"><span>识别信号（每行一条）</span><textarea id="experience-card-signals" maxlength="4000" rows="4" required></textarea></label>
+        <label class="field" for="experience-card-actions"><span>建议动作（每行一条）</span><textarea id="experience-card-actions" maxlength="4000" rows="4" required></textarea></label>
+        <label class="field full" for="experience-card-rule"><span>判断规则</span><textarea id="experience-card-rule" maxlength="4000" rows="3" required></textarea></label>
+        <label class="field full" for="experience-card-rationale"><span>判断依据</span><textarea id="experience-card-rationale" maxlength="4000" rows="3" required></textarea></label>
+        <label class="field" for="experience-card-prohibitions"><span>禁止事项（每行一条）</span><textarea id="experience-card-prohibitions" maxlength="4000" rows="3" required></textarea></label>
+        <label class="field" for="experience-card-exceptions"><span>例外情况（每行一条）</span><textarea id="experience-card-exceptions" maxlength="4000" rows="3" required></textarea></label>
+        <label class="field full" for="experience-card-sources"><span>经验来源原话（每行一条）</span><textarea id="experience-card-sources" maxlength="8000" rows="4" required></textarea></label>
+        <label class="field full" for="experience-card-change-note"><span>本次修改说明</span><input id="experience-card-change-note" maxlength="1000" placeholder="例如：补充禁止试车条件和适用车型" required></label>
+        <div class="form-actions full">
+          <button class="btn" type="submit">保存修订</button>
+          <button id="experience-card-confirm-button" class="btn primary" type="button" data-action="confirm-card">确认并提交审核</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <div id="toast-region" class="toast-region" aria-live="polite"></div>
+  <script src="/shared/client.js?v=20260803-1"></script>
+  <script src="/simulator/wecom/app.js?v=20260803-1"></script>
+</body>
+</html>

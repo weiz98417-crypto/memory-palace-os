@@ -11,7 +11,7 @@ agent_metadata:
 # 2. 大语言模型 (LLM) 策略配置
 # 路由层建议：追求速度与确定性。不建议使用 Temperature > 0.3 的设置。
 llm_config:
-  model: "gpt-3.5-turbo"     # 推荐 gpt-3.5-turbo 或 deepseek-chat (低成本，高性能识别)
+  model: "deepseek-v4-flash"
   temperature: 0.1           # 极低随机性，确保意图分类结果的一致性
   top_p: 0.9
   max_tokens: 300            # 路由返回 JSON 长度受限，防止 Token 溢出消耗

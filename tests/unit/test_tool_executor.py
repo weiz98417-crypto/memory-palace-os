@@ -20,7 +20,13 @@ class TestToolExecutor:
     def setup(self):
         """每个测试后从全局 _tools 中清理测试注册的工具"""
         from src.memory_palace.tools import tool_executor as te
-        builtins = {"send_sms", "send_alert", "search_memory", "write_memory"}
+        builtins = {
+            "send_sms",
+            "send_alert",
+            "send_in_app_alert",
+            "search_memory",
+            "write_memory",
+        }
         yield
         for key in list(te._tools.keys()):
             if key not in builtins:
@@ -43,6 +49,7 @@ class TestToolExecutor:
         tools = list_tools()
         assert isinstance(tools, dict)
         assert "send_sms" in tools
+        assert "send_in_app_alert" in tools
         assert "write_memory" in tools
 
     def test_list_tools_after_register(self):
@@ -57,6 +64,46 @@ class TestToolExecutor:
         """执行不存在的工具返回 status='error'"""
         result = await execute_tool("nonexistent_tool_xyz", {})
         assert result["status"] == "error"
+
+    @pytest.mark.asyncio
+    async def test_send_sms_reports_disabled_without_real_provider(self, monkeypatch):
+        """短信供应商未实现时不能伪造已发送。"""
+        monkeypatch.delenv("SMS_PROVIDER", raising=False)
+        monkeypatch.delenv("SMS_API_KEY", raising=False)
+
+        result = await execute_tool(
+            "send_sms",
+            {"phone": "13800138000", "message": "P0 告警", "priority": "high"},
+        )
+
+        assert result["status"] == "error"
+        assert result["code"] == "DISABLED_REQUIRES_CONFIG"
+        assert "sent" not in result
+
+    @pytest.mark.asyncio
+    async def test_send_sms_reports_delivered_only_after_provider_confirmation(self, monkeypatch):
+        """只有真实 Adapter 确认后才返回已投递。"""
+        import importlib
+
+        sms_module = importlib.import_module("src.memory_palace.tools.sms_client")
+        monkeypatch.setenv("SMS_PROVIDER", "test-sandbox")
+        monkeypatch.setenv("SMS_API_KEY", "sandbox-key")
+        notifier = sms_module.EmergencyNotifier(
+            sms_sender=lambda phone, template, params: {"request_id": "sms-live-1"}
+        )
+        monkeypatch.setattr(sms_module, "sms_client", notifier)
+
+        try:
+            result = await execute_tool(
+                "send_sms",
+                {"phone": "13800138000", "message": "P1 告警", "priority": "high"},
+            )
+        finally:
+            notifier.close()
+
+        assert result["status"] == "executed"
+        assert result["result"]["status"] == "DELIVERED"
+        assert result["result"]["sent"] is True
 
     def test_get_tool_nonexistent(self):
         """获取不存在的工具返回 None"""

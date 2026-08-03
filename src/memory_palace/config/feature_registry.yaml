@@ -1,0 +1,970 @@
+schema_version: 1
+release: unified-agent-experience-mvp
+baseline: PRD-memory-palace-unified-agent-experience-mvp.md
+baseline_documents: &baseline_documents
+  - PRD-memory-palace-unified-agent-experience-mvp.md
+  - docs/product/unified-agent-page-map.md
+  - docs/product/unified-agent-demo-journey.md
+generated_at: null
+
+x-defaults: &defaults
+  owner: product-engineering
+  status: BLOCKED
+  interactive: true
+  entrypoints: []
+  roles: [admin, manager, operator]
+  tenant_scope: venue_id
+  apis: []
+  services: []
+  agents: []
+  permission: AUTHENTICATED
+  data_dependencies: []
+  audit_events: []
+  trace_query: "GET /admin/audit-logs?trace_id={trace_id}"
+  error_codes: []
+  tests:
+    unit: []
+    integration: []
+    browser: []
+    live: []
+    uat: []
+  evidence:
+    automated: []
+    browser: []
+    live: []
+    uat: []
+  backup_restore: Covered by PostgreSQL, Redis, ChromaDB and volume restore verification.
+  external_config: []
+  known_limitations: []
+  blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+  references:
+    code: []
+    openspec: [openspec]
+    docs: *baseline_documents
+    release: [CHANGELOG.md]
+
+items:
+  - <<: *defaults
+    id: MVP-BIZ-001
+    name: 服务端登录与退出
+    category: business
+    entrypoints: [client:/login, client:/logout]
+    apis: [POST /auth/login, POST /auth/refresh, POST /auth/logout, GET /auth/me]
+    services: [identity-store, jwt-session]
+    permission: PUBLIC_LOGIN_AUTHENTICATED_SESSION
+    data_dependencies: [PostgreSQL.users, PostgreSQL.refresh_tokens, PostgreSQL.audit_logs]
+    audit_events: [AUTH_LOGIN, AUTH_REFRESH, AUTH_LOGOUT]
+    error_codes: [AUTH_INVALID_CREDENTIALS, HTTP_401, HTTP_403]
+    tests:
+      unit: []
+      integration: [tests/integration/test_auth_api.py]
+      browser: []
+      live: []
+      uat: [MVP-UAT-001, MVP-UAT-009]
+    evidence:
+      automated: [tests/integration/test_auth_api.py]
+      browser: [docs/verification/mvp-uat-20260728/screenshots/MVP-UAT-001-admin-workspace-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/MVP-UAT-001-manager-workspace-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/MVP-UAT-001-operator-workspace-1440x900.png]
+      live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-001-role-workspaces.json]
+      uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-001-role-workspaces.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-009-tenant-authz.json]
+    references:
+      code: [src/memory_palace/api/v1/endpoints/auth.py, static/index.html]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-002
+    name: 监控大屏
+    category: business
+    entrypoints: [client:/dashboard]
+    roles: [admin, manager]
+    apis: [GET /admin/dashboard, GET /admin/health, GET /admin/queue]
+    services: [dashboard-aggregation, health]
+    data_dependencies: [PostgreSQL.confirmed_events, PostgreSQL.tasks, Redis.memory_palace:messages]
+    audit_events: [AUTH_LOGIN]
+    error_codes: [DATABASE_NOT_READY, QUEUE_UNAVAILABLE]
+    tests:
+      unit: [tests/unit/test_runtime_hardening.py]
+      integration: [tests/integration/test_mvp_business_apis.py]
+      browser: []
+      live: []
+      uat: [MVP-UAT-001]
+    evidence:
+      automated: [tests/integration/test_mvp_business_apis.py]
+      browser: [docs/verification/mvp-uat-20260728/screenshots/dashboard-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/MVP-UAT-001-admin-workspace-1440x900.png]
+      live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-001-role-workspaces.json]
+      uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-001-role-workspaces.json]
+    known_limitations: []
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references:
+      code: [src/memory_palace/api/v1/endpoints/admin.py, static/index.html]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-003
+    name: 现场事件上报
+    category: business
+    entrypoints: [client:/events]
+    apis: [POST /messages/, "GET /messages/{message_id}"]
+    services: [message-runs, Redis Streams, queue-worker, orchestrator]
+    agents: [ContextTrigger, Router, Commander, MemoryOps]
+    data_dependencies: [PostgreSQL.message_runs, PostgreSQL.messages, Redis.memory_palace:messages]
+    audit_events: [MESSAGE_RUN_CREATED, LLM_CALL]
+    error_codes: [QUEUE_UNAVAILABLE, MESSAGE_NOT_FOUND, HTTP_503]
+    tests:
+      unit: [tests/unit/test_agent_truthfulness.py]
+      integration: [tests/integration/test_message_intake_api.py]
+      browser: []
+      live: []
+      uat: [MVP-UAT-002]
+    evidence:
+      automated: [tests/integration/test_message_intake_api.py]
+      browser: [docs/verification/mvp-uat-20260728/screenshots/event-02-live-processed-1440x900.png]
+      live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-002-live-event.json]
+      uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-002-live-event.json]
+    references:
+      code: [src/memory_palace/api/v1/endpoints/messages.py, src/memory_palace/core/queue_worker.py, static/index.html]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-004
+    name: 历史事件补录
+    category: business
+    entrypoints: [client:/events]
+    apis: [POST /admin/events]
+    services: [confirmed-event-saga]
+    data_dependencies: [PostgreSQL.confirmed_events, ChromaDB.memory_palace_experiences]
+    audit_events: [EVENT_CREATED, EVENT_CREATE_FAILED]
+    error_codes: [VECTOR_STORE_UNAVAILABLE, EVENT_CREATE_FAILED]
+    tests:
+      unit: []
+      integration: [tests/integration/test_mvp_business_apis.py::test_manual_event_creation_records_tenant_audit]
+      browser: []
+      live: []
+      uat: [MVP-UAT-003]
+    evidence:
+      automated: [tests/integration/test_mvp_business_apis.py::test_manual_event_creation_rolls_back_when_success_audit_fails]
+      browser: [docs/verification/mvp-uat-20260728/screenshots/event-04-history-imported-1440x900.png]
+      live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-003-history-event.json]
+      uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-003-history-event.json]
+    references:
+      code: [src/memory_palace/api/v1/endpoints/admin.py, src/memory_palace/knowledge/db_client.py]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-005
+    name: 事件卷宗与全链追踪
+    category: business
+    entrypoints: [admin:/events, "admin:/events/{event_id}"]
+    apis: [GET /admin/events, "GET /admin/events/{event_id}", GET /admin/llm-calls, GET /admin/audit-logs]
+    services: [event-query, event-dossier, trace-timeline]
+    agents: [ContextTrigger, Router, Commander, MemoryOps, TodoWrite, Watcher, PersonaExtract, Persona]
+    data_dependencies: [PostgreSQL.confirmed_events, PostgreSQL.event_activities, PostgreSQL.tasks, PostgreSQL.approval_requests, PostgreSQL.message_runs, PostgreSQL.agent_step_runs, PostgreSQL.llm_call_logs, PostgreSQL.watcher_runs, PostgreSQL.watcher_findings, PostgreSQL.experience_candidates, PostgreSQL.audit_logs]
+    audit_events: [EVENT_CREATED, EVENT_UPDATED, EVENT_CLOSE_DENIED, EVENT_CLOSED, EVENT_WATCHER_CHECK, EXPERIENCE_CANDIDATE_CREATED, EXPERIENCE_CANDIDATE_RETRY]
+    error_codes: [EVENT_NOT_FOUND, HTTP_403]
+    tests:
+      unit: []
+      integration: [tests/integration/test_event_dossier.py::test_event_dossier_is_human_readable_and_keeps_technical_ids_folded, tests/integration/test_event_dossier.py::test_admin_event_detail_returns_tenant_scoped_readable_dossier, tests/integration/test_event_dossier.py::test_event_dossier_includes_persisted_watcher_and_experience_candidate, tests/integration/test_evidence_backed_retrieval.py::test_trace_timeline_keeps_active_message_states_running, tests/integration/test_evidence_backed_retrieval.py::test_trace_timeline_marks_terminal_message_recovery_states_failed]
+      browser: []
+      live: []
+      uat: [E2E-03, E2E-04, E2E-12, E2E-15, UAT-F10]
+    evidence:
+      automated: [tests/integration/test_event_dossier.py::test_event_dossier_is_human_readable_and_keeps_technical_ids_folded, tests/integration/test_event_dossier.py::test_admin_event_detail_returns_tenant_scoped_readable_dossier, tests/integration/test_event_dossier.py::test_event_dossier_includes_persisted_watcher_and_experience_candidate, tests/integration/test_evidence_backed_retrieval.py::test_trace_timeline_keeps_active_message_states_running, tests/integration/test_evidence_backed_retrieval.py::test_trace_timeline_marks_terminal_message_recovery_states_failed]
+      browser: []
+      live: []
+      uat: []
+    blocked_reason: 统一员工助手新基线尚未提交事件卷宗的浏览器、Live 与 UAT 证据。
+    references:
+      code: [src/memory_palace/api/v1/endpoints/admin.py, static/index.html]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-006
+    name: 事件处置、闭环门禁与经验候选
+    category: business
+    entrypoints: ["admin:/events/{event_id}"]
+    roles: [admin, manager]
+    apis: ["PATCH /admin/events/{event_id}", "POST /admin/events/{event_id}/watcher-check", "POST /admin/events/{event_id}/close", "POST /admin/events/{event_id}/experience-candidate/retry"]
+    services: [event-workflow, event-closure, event-watcher-check, event-experience-candidates]
+    agents: [Watcher, PersonaExtract]
+    data_dependencies: [PostgreSQL.confirmed_events, PostgreSQL.event_activities, PostgreSQL.tasks, PostgreSQL.approval_requests, PostgreSQL.tool_invocation_logs, PostgreSQL.watcher_runs, PostgreSQL.watcher_findings, PostgreSQL.experience_candidates, PostgreSQL.experience_candidate_attempts, PostgreSQL.llm_call_logs, PostgreSQL.audit_logs]
+    audit_events: [EVENT_UPDATED, EVENT_CLOSE_DENIED, EVENT_CLOSED, EVENT_WATCHER_CHECK, EXPERIENCE_CANDIDATE_GENERATION, EXPERIENCE_CANDIDATE_CREATED, EXPERIENCE_CANDIDATE_RETRY]
+    error_codes: [EVENT_NOT_FOUND, EVENT_ALREADY_CLOSED, EVENT_NOT_ASSIGNED, EVENT_CLOSE_BLOCKED, EVENT_CLOSE_PERSISTENCE_FAILED, WATCHER_EVENT_CHECK_FAILED, EXPERIENCE_CANDIDATE_NOT_ELIGIBLE, EXPERIENCE_CANDIDATE_RETRY_FAILED]
+    tests:
+      unit: []
+      integration: [tests/integration/test_event_closure.py::test_event_close_denies_unfinished_task_and_keeps_event_open, tests/integration/test_event_closure.py::test_event_close_persists_audit_activity_and_makes_event_immutable, tests/integration/test_event_watcher_check.py::test_event_watcher_check_surfaces_deterministic_closure_blockers, tests/integration/test_event_candidate_workflow.py::test_event_close_keeps_closed_state_when_candidate_generation_is_retryable, tests/integration/test_event_candidate_workflow.py::test_event_candidate_retry_enforces_roles_and_tenant_scope]
+      browser: []
+      live: []
+      uat: [E2E-10, E2E-11, E2E-12, UAT-F03, UAT-F09]
+    evidence:
+      automated: [tests/integration/test_event_closure.py::test_event_close_denies_unfinished_task_and_keeps_event_open, tests/integration/test_event_closure.py::test_event_close_persists_audit_activity_and_makes_event_immutable, tests/integration/test_event_watcher_check.py::test_event_watcher_check_surfaces_deterministic_closure_blockers, tests/integration/test_event_candidate_workflow.py::test_event_close_keeps_closed_state_when_candidate_generation_is_retryable, tests/integration/test_event_candidate_workflow.py::test_event_candidate_retry_enforces_roles_and_tenant_scope]
+      browser: []
+      live: []
+      uat: []
+    blocked_reason: 统一员工助手新基线尚未提交闭环、Watcher 检查与经验候选重试的浏览器、Live 与 UAT 证据。
+    references:
+      code: [src/memory_palace/api/v1/endpoints/workflows.py]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-007
+    name: 消息与会话
+    category: business
+    entrypoints: [client:/sessions]
+    apis: [POST /messages/, "GET /messages/{message_id}", GET /sessions/, "GET /sessions/{session_id}", "DELETE /sessions/{session_id}"]
+    services: [message-runs, session-state]
+    data_dependencies: [PostgreSQL.message_runs, PostgreSQL.sessions, PostgreSQL.conversation_turns]
+    audit_events: [SESSION_CLOSED, SESSION_CLOSE_DENIED]
+    error_codes: [MESSAGE_NOT_FOUND, SESSION_NOT_FOUND, SESSION_STATE_CHANGED]
+    tests:
+      unit: [tests/unit/test_unified_agent_client_contract.py::test_clients_recover_restarted_sessions_and_retry_original_messages, tests/unit/test_unified_agent_client_contract.py::test_recovery_deadlines_and_context_guards_prevent_stale_client_updates]
+      integration: [tests/integration/test_message_intake_api.py, tests/integration/test_mvp_business_apis.py::test_cross_tenant_session_close_is_denied_and_audited]
+      browser: []
+      live: []
+      uat: [MVP-UAT-002]
+    evidence:
+      automated: [tests/unit/test_unified_agent_client_contract.py::test_clients_recover_restarted_sessions_and_retry_original_messages, tests/unit/test_unified_agent_client_contract.py::test_recovery_deadlines_and_context_guards_prevent_stale_client_updates, tests/integration/test_message_intake_api.py]
+      browser:
+        - docs/verification/mvp-uat-20260728/screenshots/event-06-live-details-1440x900.png
+        - docs/verification/mvp-uat-20260728/screenshots/session-01-before-create-1440x900.png
+        - docs/verification/mvp-uat-20260728/screenshots/session-02-list-and-detail-1440x900.png
+        - docs/verification/mvp-uat-20260728/screenshots/session-03-tenant-boundary-1440x900.png
+        - docs/verification/mvp-uat-20260728/screenshots/session-04-close-confirmation-1440x900.png
+        - docs/verification/mvp-uat-20260728/screenshots/session-05-closed-1440x900.png
+        - docs/verification/mvp-uat-20260728/screenshots/session-06-closed-after-refresh-1440x900.png
+      live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-002-live-event.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-002-session-lifecycle.json]
+      uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-002-live-event.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-002-session-lifecycle.json]
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references:
+      code: [src/memory_palace/api/v1/endpoints/messages.py, src/memory_palace/api/v1/endpoints/sessions.py]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-008
+    name: 任务图
+    category: business
+    entrypoints: [client:/tasks]
+    apis: [GET /admin/tasks, POST /admin/tasks, POST /admin/tasks/decompose, "PATCH /admin/tasks/{task_id}/assignment", "POST /admin/tasks/{task_id}/start", "POST /admin/tasks/{task_id}/complete", "POST /admin/tasks/{task_id}/fail", "POST /admin/tasks/{task_id}/retry"]
+    services: [LLMClient, TaskGraph]
+    agents: [TodoWrite]
+    data_dependencies: [PostgreSQL.tasks, PostgreSQL.llm_call_logs]
+    audit_events: [TASK_CREATED, TASK_DECOMPOSED, TASK_DECOMPOSITION_FAILED, TASK_ASSIGNED, TASK_STARTED, TASK_COMPLETED, TASK_FAILED, TASK_RETRIED]
+    error_codes: [TASK_NOT_FOUND, TASK_STATE_INVALID, TASK_DEPENDENCY_BLOCKED, TASK_DECOMPOSITION_FAILED, TASK_ASSIGNEE_INVALID]
+    tests:
+      unit: [tests/unit/test_todo_skill.py, tests/unit/test_formal_client_contract.py]
+      integration: [tests/integration/test_mvp_business_apis.py, tests/integration/test_todo_formal_workflow.py]
+      browser: []
+      live: []
+      uat: [MVP-UAT-004]
+    evidence:
+      automated: [tests/integration/test_mvp_business_apis.py]
+      browser: [docs/verification/mvp-uat-20260728/screenshots/todo-06-all-done-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/todo-07-trace-timeline-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/app-restart-02-retryable-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/llm-failure-02-recovered-1440x900.png]
+      live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-004-todo-lifecycle.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-004-todo-recovery.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-008-app-restart-recovery.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-010-llm-failure-recovery.json]
+      uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-004-todo-decompose.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-004-todo-lifecycle.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-004-todo-recovery.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-008-app-restart-recovery.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-010-llm-failure-recovery.json]
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references:
+      code: [src/memory_palace/api/v1/endpoints/workflows.py, src/memory_palace/core/task_graph.py]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-009
+    name: 审批中心
+    category: business
+    entrypoints: [client:/approvals]
+    roles: [admin, manager]
+    apis: [GET /admin/approvals, "GET /admin/approvals/{approval_id}", "POST /admin/approvals/{approval_id}/approve", "POST /admin/approvals/{approval_id}/reject"]
+    services: [PermissionEngine]
+    permission: APPROVAL
+    data_dependencies: [PostgreSQL.approval_requests, PostgreSQL.tool_invocation_logs]
+    audit_events: [APPROVAL_APPROVED, APPROVAL_REJECTED]
+    error_codes: [APPROVAL_NOT_FOUND, HTTP_404]
+    tests:
+      unit: []
+      integration: [tests/integration/test_mvp_business_apis.py]
+      browser: []
+      live: []
+      uat: [MVP-UAT-004]
+    evidence:
+      automated: [tests/integration/test_mvp_business_apis.py]
+      browser: [docs/verification/mvp-uat-20260728/screenshots/approval-08-approved-and-delivered-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/approval-09-rejected-1440x900.png]
+      live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-004-approval-decisions.json]
+      uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-004-approval-requests.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-004-approval-decisions.json]
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references:
+      code: [src/memory_palace/api/v1/endpoints/admin.py, src/memory_palace/core/permissions.py]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-010
+    name: 推送与动作日志
+    category: business
+    entrypoints: [client:/actions]
+    apis: [GET /admin/push_logs, "PATCH /admin/push_logs/{push_id}/adoption", GET /admin/audit-logs]
+    services: [push-logger, tool-executor]
+    data_dependencies: [PostgreSQL.push_logs, PostgreSQL.tool_invocation_logs, PostgreSQL.audit_logs]
+    audit_events: [PUSH_ADOPTION_UPDATED]
+    error_codes: [PUSH_LOG_NOT_FOUND, PUSH_LOG_STATE_CHANGED]
+    tests:
+      unit: []
+      integration: [tests/integration/test_mvp_business_apis.py, tests/integration/test_push_adoption_hardening.py, tests/integration/test_message_intake_api.py::test_structured_wecom_reply_falls_back_from_markdown_to_textcard_to_text, tests/integration/test_message_intake_api.py::test_wecom_delivery_retry_reuses_saved_agent_result, tests/integration/test_message_intake_api.py::test_concurrent_wecom_workers_send_once_and_late_failure_cannot_downgrade_delivery, tests/integration/test_message_intake_api.py::test_delivered_reply_ledger_rejects_late_failure_writes]
+      browser: []
+      live: []
+      uat: [MVP-UAT-004]
+    evidence:
+      automated: [tests/integration/test_mvp_business_apis.py, tests/integration/test_push_adoption_hardening.py, tests/integration/test_message_intake_api.py::test_structured_wecom_reply_falls_back_from_markdown_to_textcard_to_text, tests/integration/test_message_intake_api.py::test_wecom_delivery_retry_reuses_saved_agent_result, tests/integration/test_message_intake_api.py::test_concurrent_wecom_workers_send_once_and_late_failure_cannot_downgrade_delivery, tests/integration/test_message_intake_api.py::test_delivered_reply_ledger_rejects_late_failure_writes]
+      browser: [docs/verification/mvp-uat-20260728/screenshots/approval-10-push-adopted-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/approval-11-concurrent-adoption-terminal-1440x900.png]
+      live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-004-push-adoption.json]
+      uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-004-push-adoption.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-004-push-concurrency.json]
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references:
+      code: [src/memory_palace/api/v1/endpoints/admin.py, src/memory_palace/api/v1/endpoints/workflows.py, static/index.html]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-011
+    name: 知识搜索
+    category: business
+    entrypoints: [client:/knowledge]
+    apis: [POST /admin/knowledge/search, GET /admin/knowledge, "GET /admin/knowledge/{knowledge_id}"]
+    services: [knowledge-query, ChromaDB]
+    agents: [MemoryOps]
+    data_dependencies: [PostgreSQL.knowledge_documents, ChromaDB.memory_palace_experiences]
+    audit_events: [KNOWLEDGE_CREATED, KNOWLEDGE_UPDATED]
+    error_codes: [VECTOR_STORE_NOT_READY, KNOWLEDGE_NOT_FOUND]
+    tests:
+      unit: [tests/unit/test_agent_truthfulness.py]
+      integration: [tests/integration/test_mvp_business_apis.py]
+      browser: []
+      live: []
+      uat: [MVP-UAT-003, MVP-UAT-005]
+    evidence:
+      automated: [tests/integration/test_mvp_business_apis.py]
+      browser: [docs/verification/mvp-uat-20260728/screenshots/knowledge-04-semantic-search-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/event-05-history-vector-search-1440x900.png]
+      live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-005-knowledge-sop.json]
+      uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-003-history-event.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-005-knowledge-sop.json]
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references:
+      code: [src/memory_palace/api/v1/endpoints/knowledge.py, src/memory_palace/skills/memory_ops/skill.py]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-012
+    name: 知识管理
+    category: business
+    entrypoints: [client:/knowledge]
+    roles: [admin, manager]
+    apis: [POST /admin/knowledge, "PUT /admin/knowledge/{knowledge_id}", "DELETE /admin/knowledge/{knowledge_id}", POST /admin/knowledge/import, POST /admin/knowledge/rebuild-index]
+    services: [knowledge-saga, ChromaDB]
+    data_dependencies: [PostgreSQL.knowledge_documents, ChromaDB.memory_palace_experiences]
+    audit_events: [KNOWLEDGE_CREATED, KNOWLEDGE_UPDATED, KNOWLEDGE_DELETED, KNOWLEDGE_IMPORTED, KNOWLEDGE_INDEX_REBUILT]
+    error_codes: [KNOWLEDGE_NOT_FOUND, VECTOR_STORE_NOT_READY, KNOWLEDGE_WRITE_FAILED]
+    tests:
+      unit: []
+      integration: [tests/integration/test_mvp_business_apis.py]
+      browser: []
+      live: []
+      uat: [MVP-UAT-005]
+    evidence:
+      automated: [tests/integration/test_mvp_business_apis.py]
+      browser: [docs/verification/mvp-uat-20260728/screenshots/knowledge-01-create-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/knowledge-02-version-2-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/knowledge-03-index-rebuilt-1440x900.png]
+      live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-005-knowledge-sop.json]
+      uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-005-knowledge-sop.json]
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references:
+      code: [src/memory_palace/api/v1/endpoints/knowledge.py]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-013
+    name: SOP 生命周期
+    category: business
+    entrypoints: [client:/sops]
+    roles: [admin, manager]
+    apis: [GET /admin/sops, POST /admin/sops, "PUT /admin/sops/{sop_id}", "POST /admin/sops/{sop_id}/submit", "POST /admin/sops/{sop_id}/publish", "POST /admin/sops/{sop_id}/reject"]
+    services: [sop-saga, ChromaDB]
+    data_dependencies: [PostgreSQL.sop_documents, PostgreSQL.sop_versions, PostgreSQL.knowledge_documents, ChromaDB.memory_palace_experiences]
+    audit_events: [SOP_CREATED, SOP_UPDATED, SOP_SUBMITTED, SOP_PUBLISHED, SOP_PUBLISH_FAILED, SOP_REJECTED]
+    error_codes: [SOP_NOT_FOUND, SOP_STATE_INVALID, SOP_PUBLISH_FAILED]
+    tests:
+      unit: []
+      integration: [tests/integration/test_mvp_business_apis.py]
+      browser: []
+      live: []
+      uat: [MVP-UAT-005]
+    evidence:
+      automated: [tests/integration/test_mvp_business_apis.py]
+      browser: [docs/verification/mvp-uat-20260728/screenshots/sop-03-revised-published-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/sop-04-published-search-1440x900.png]
+      live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-005-knowledge-sop.json]
+      uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-005-knowledge-sop.json]
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references:
+      code: [src/memory_palace/api/v1/endpoints/knowledge.py]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-014
+    name: 专家档案与经验授权
+    category: business
+    entrypoints: [admin:/experience]
+    roles: [admin, manager]
+    apis: [GET /admin/experts, POST /admin/experts, "GET /admin/experts/{expert_id}", "PATCH /admin/experts/{expert_id}"]
+    services: [expert-profile, experience-authorization]
+    data_dependencies: [PostgreSQL.users, PostgreSQL.expert_profiles, PostgreSQL.audit_logs]
+    audit_events: [EXPERT_CREATED, EXPERT_UPDATED, EXPERT_AUTHORIZATION_SIGNED]
+    error_codes: [EXPERT_USER_INVALID, EXPERT_EXISTS, EXPERT_NOT_FOUND, EXPERT_AUTHORIZATION_STATEMENT_REQUIRED]
+    tests:
+      unit: [tests/unit/test_formal_client_contract.py::test_formal_client_manages_the_governed_expert_experience_lifecycle]
+      integration: [tests/integration/test_experience_assets_api.py::test_expert_must_sign_experience_authorization_before_interview]
+      browser: []
+      live: []
+      uat: [E2E-13, E2E-14, UAT-F10, UAT-F11]
+    evidence:
+      automated: [tests/integration/test_experience_assets_api.py::test_expert_must_sign_experience_authorization_before_interview, tests/unit/test_formal_client_contract.py::test_formal_client_manages_the_governed_expert_experience_lifecycle]
+      browser: []
+      live: []
+      uat: []
+    blocked_reason: 新专家档案与授权旅程尚未完成浏览器、Live 和 UAT 验收。
+    references:
+      code: [src/memory_palace/api/v1/endpoints/experiences.py, static/index.html]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-015
+    name: 统一助手专家访谈与萃取
+    category: business
+    entrypoints: [assistant:/experience, "assistant:/experience/interviews/{interview_id}", admin:/experience]
+    apis: [GET /admin/experience-interviews, POST /admin/experience-interviews, "GET /admin/experience-interviews/{interview_id}", GET /assistant/experience, "GET /assistant/experience/interviews/{interview_id}", "POST /assistant/experience/interviews/{interview_id}/accept", "POST /assistant/experience/interviews/{interview_id}/answers", "POST /assistant/experience/interviews/{interview_id}/pause", "POST /assistant/experience/interviews/{interview_id}/resume", "POST /assistant/experience/interviews/{interview_id}/complete", "PUT /assistant/experience/cards/{card_id}", "POST /assistant/experience/cards/{card_id}/confirm"]
+    services: [experience-interview-state, experience-draft-extractor, LLMClient]
+    agents: [PersonaExtract]
+    data_dependencies: [PostgreSQL.expert_profiles, PostgreSQL.experience_interviews, PostgreSQL.experience_interview_turns, PostgreSQL.experience_interview_authorizations, PostgreSQL.experience_cards, PostgreSQL.experience_card_versions, PostgreSQL.experience_authorizations, PostgreSQL.llm_call_logs]
+    audit_events: [EXPERIENCE_INTERVIEW_INVITED, EXPERIENCE_EXTRACTION_FAILED, EXPERIENCE_DRAFT_CREATED]
+    error_codes: [EXPERT_AUTHORIZATION_REQUIRED, INTERVIEW_NOT_FOUND, INTERVIEW_NOT_ACTIVE, INTERVIEW_NOT_PAUSED, INTERVIEW_ANSWERS_INCOMPLETE, EXPERIENCE_EXTRACTION_FAILED, EXPERIENCE_NOT_EDITABLE]
+    tests:
+      unit: [tests/unit/test_llm_model_policy.py::test_event_candidate_generation_uses_existing_persona_extract_agent]
+      integration: [tests/integration/test_experience_assets_api.py::test_completed_interview_is_extracted_server_side_from_persisted_answers, tests/integration/test_experience_assets_api.py::test_interview_cannot_complete_until_all_answers_are_persisted, tests/integration/test_experience_assets_api.py::test_failed_extraction_preserves_answers_is_audited_and_can_be_retried]
+      browser: []
+      live: []
+      uat: [E2E-13, E2E-14, UAT-F03, UAT-F07]
+    evidence:
+      automated: [tests/integration/test_experience_assets_api.py::test_completed_interview_is_extracted_server_side_from_persisted_answers, tests/integration/test_experience_assets_api.py::test_interview_cannot_complete_until_all_answers_are_persisted, tests/integration/test_experience_assets_api.py::test_failed_extraction_preserves_answers_is_audited_and_can_be_retried]
+      browser: []
+      live: []
+      uat: []
+    blocked_reason: 统一助手专家访谈、恢复与真实萃取尚未完成浏览器、Live 和 UAT 验收。
+    references:
+      code: [src/memory_palace/api/v1/endpoints/experiences.py, src/memory_palace/core/experience_assets.py, src/memory_palace/skills/persona_extract/skill.py, static/assistant/app.js, static/index.html]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-016
+    name: 经验审核、发布与统一助手复用
+    category: business
+    entrypoints: [admin:/experience, assistant:/, assistant:/experience]
+    roles: [admin, manager, operator]
+    apis: [GET /admin/experience-cards, "GET /admin/experience-cards/{card_id}", "POST /admin/experience-cards/{card_id}/submit", "POST /admin/experience-cards/{card_id}/reject", "POST /admin/experience-cards/{card_id}/publish", "POST /admin/experience-cards/{card_id}/deprecate", POST /assistant/messages, POST /assistant/experience/search, "POST /assistant/experience/cards/{card_id}/feedback"]
+    services: [experience-governance, experience-search, experience-usage-ledger, ChromaDB, LLMClient]
+    agents: [MemoryOps, Persona]
+    data_dependencies: [PostgreSQL.experience_cards, PostgreSQL.experience_card_versions, PostgreSQL.experience_reviews, PostgreSQL.experience_authorizations, PostgreSQL.experience_usage_logs, PostgreSQL.llm_call_logs, ChromaDB.memory_palace_experiences]
+    audit_events: [EXPERIENCE_REJECTED, EXPERIENCE_PUBLISHED, LLM_CALL]
+    error_codes: [EXPERIENCE_NOT_FOUND, EXPERIENCE_SELF_REVIEW, EXPERIENCE_NOT_PUBLISHABLE, EXPERIENCE_INDEX_WRITE_FAILED, EXPERIENCE_PUBLISH_CONFLICT, VECTOR_STORE_NOT_READY, LLM_UNAVAILABLE]
+    tests:
+      unit: [tests/unit/test_formal_client_contract.py::test_formal_client_manages_the_governed_expert_experience_lifecycle]
+      integration: [tests/integration/test_experience_assets_api.py::test_experience_card_is_unsearchable_until_expert_confirmation_and_governed_publish, tests/integration/test_experience_assets_api.py::test_vector_failure_keeps_card_out_of_published_and_search_results, tests/integration/test_message_intake_api.py::test_unified_assistant_uses_authorized_experience_via_persona_and_records_usage]
+      browser: []
+      live: []
+      uat: [E2E-14, E2E-15, UAT-F04, UAT-F08, UAT-F10, UAT-F11]
+    evidence:
+      automated: [tests/integration/test_experience_assets_api.py::test_experience_card_is_unsearchable_until_expert_confirmation_and_governed_publish, tests/integration/test_experience_assets_api.py::test_vector_failure_keeps_card_out_of_published_and_search_results, tests/integration/test_message_intake_api.py::test_unified_assistant_uses_authorized_experience_via_persona_and_records_usage]
+      browser: []
+      live: []
+      uat: []
+    blocked_reason: 新基线尚未证明经验经人工治理发布后被统一助手真实引用并记录采用证据。
+    references:
+      code: [src/memory_palace/api/v1/endpoints/experiences.py, src/memory_palace/core/experience_usage.py, src/memory_palace/core/orchestrator.py, static/assistant/app.js, static/index.html]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-017
+    name: Watcher 策略
+    category: business
+    entrypoints: [client:/watcher]
+    roles: [admin, manager]
+    apis: [GET /admin/watcher/policies, POST /admin/watcher/policies, "PUT /admin/watcher/policies/{policy_id}"]
+    services: [watcher-runtime, scheduler]
+    agents: [Watcher]
+    data_dependencies: [PostgreSQL.watcher_policies, PostgreSQL.scheduler_jobs]
+    audit_events: [WATCHER_POLICY_CREATED, WATCHER_POLICY_UPDATED]
+    error_codes: [WATCHER_POLICY_NOT_FOUND, WATCHER_POLICY_STATE_CHANGED]
+    tests:
+      unit: []
+      integration: [tests/integration/test_mvp_business_apis.py]
+      browser: []
+      live: []
+      uat: [MVP-UAT-007]
+    evidence:
+      automated: [tests/integration/test_mvp_business_apis.py]
+      browser: [docs/verification/mvp-uat-20260728/screenshots/watcher-02-policy-created-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/watcher-07-policy-edited-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/watcher-08-scheduled-run-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/watcher-09-policy-disabled-1440x900.png]
+      live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-007-watcher-lifecycle.json]
+      uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-007-watcher-lifecycle.json]
+    known_limitations: []
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references:
+      code: [src/memory_palace/api/v1/endpoints/watcher.py, static/index.html]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-018
+    name: 事件级 Watcher 与发现闭环
+    category: business
+    entrypoints: [admin:/watcher, "admin:/events/{event_id}"]
+    roles: [admin, manager]
+    apis: ["POST /admin/events/{event_id}/watcher-check", "POST /admin/watcher/policies/{policy_id}/run", GET /admin/watcher/runs, GET /admin/watcher/findings, "PATCH /admin/watcher/findings/{finding_id}", "POST /admin/watcher/findings/{finding_id}/close"]
+    services: [event-watcher-check, watcher-runtime, scheduler]
+    agents: [Watcher]
+    data_dependencies: [PostgreSQL.confirmed_events, PostgreSQL.event_activities, PostgreSQL.watcher_runs, PostgreSQL.watcher_findings, PostgreSQL.llm_call_logs, PostgreSQL.audit_logs]
+    audit_events: [EVENT_WATCHER_CHECK, WATCHER_RUN, WATCHER_FINDING_UPDATED, WATCHER_FINDING_CLOSED]
+    error_codes: [EVENT_NOT_FOUND, WATCHER_EVENT_CHECK_FAILED, WATCHER_RUN_FAILED, WATCHER_FINDING_NOT_FOUND, WATCHER_FINDING_CLOSED, WATCHER_ASSIGNEE_INVALID]
+    tests:
+      unit: [tests/unit/test_agent_truthfulness.py]
+      integration: [tests/integration/test_event_watcher_check.py::test_event_watcher_check_persists_complete_evidence_snapshot, tests/integration/test_event_watcher_check.py::test_event_watcher_check_sanitizes_evidence_and_model_output, tests/integration/test_event_watcher_check.py::test_event_watcher_check_does_not_fake_success_when_skill_fails, tests/integration/test_event_watcher_check.py::test_watcher_policy_sanitizes_model_output_and_findings, tests/integration/test_event_watcher_check.py::test_watcher_policy_failure_persists_and_logs_only_public_error, tests/integration/test_event_watcher_check.py::test_event_watcher_check_reuses_open_finding_but_keeps_every_run, tests/integration/test_event_watcher_check.py::test_event_watcher_check_enforces_roles_and_strict_tenant_scope]
+      browser: []
+      live: []
+      uat: [E2E-10, E2E-11, E2E-12, UAT-F03, UAT-F09]
+    evidence:
+      automated: [tests/integration/test_event_watcher_check.py::test_event_watcher_check_persists_complete_evidence_snapshot, tests/integration/test_event_watcher_check.py::test_event_watcher_check_sanitizes_evidence_and_model_output, tests/integration/test_event_watcher_check.py::test_event_watcher_check_does_not_fake_success_when_skill_fails, tests/integration/test_event_watcher_check.py::test_watcher_policy_sanitizes_model_output_and_findings, tests/integration/test_event_watcher_check.py::test_watcher_policy_failure_persists_and_logs_only_public_error, tests/integration/test_event_watcher_check.py::test_event_watcher_check_reuses_open_finding_but_keeps_every_run, tests/integration/test_event_watcher_check.py::test_event_watcher_check_enforces_roles_and_strict_tenant_scope]
+      browser: []
+      live: []
+      uat: []
+    blocked_reason: 新基线尚未提交事件级 Watcher、零发现和 finding 去重的浏览器、Live 与 UAT 证据。
+    references:
+      code: [src/memory_palace/api/v1/endpoints/watcher.py, src/memory_palace/core/watcher_runtime.py, static/index.html]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-019
+    name: 用户、角色和场地
+    category: business
+    entrypoints: [client:/management]
+    roles: [admin]
+    apis: [GET /admin/users, POST /admin/users, "PATCH /admin/users/{user_id}", "POST /admin/users/{user_id}/reset-password", GET /admin/venues, POST /admin/venues, "PATCH /admin/venues/{venue_id}"]
+    services: [identity-management, venue-management]
+    permission: ADMIN
+    data_dependencies: [PostgreSQL.users, PostgreSQL.venues, PostgreSQL.audit_logs]
+    audit_events: [USER_CREATED, USER_UPDATED, USER_PASSWORD_RESET, VENUE_CREATED, VENUE_UPDATED]
+    error_codes: [USER_NOT_FOUND, USERNAME_CONFLICT, VENUE_NOT_FOUND]
+    tests:
+      unit: []
+      integration: [tests/integration/test_mvp_business_apis.py]
+      browser: []
+      live: []
+      uat: [MVP-UAT-001, MVP-UAT-009]
+    evidence:
+      automated: [tests/integration/test_mvp_business_apis.py]
+      browser: [docs/verification/mvp-uat-20260728/screenshots/MVP-UAT-001-admin-management-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/MVP-UAT-009-tenant-b-session-boundary-1440x900.png]
+      live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-001-role-workspaces.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-009-tenant-authz.json]
+      uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-001-role-workspaces.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-009-tenant-authz.json]
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references:
+      code: [src/memory_palace/api/v1/endpoints/management.py]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: MVP-BIZ-020
+    name: 系统设置
+    category: business
+    entrypoints: [client:/settings, client:/diagnostics]
+    roles: [admin, manager]
+    apis: [GET /admin/settings, "PUT /admin/settings/{setting_key}", GET /admin/integrations, GET /admin/health, POST /admin/config/reload]
+    services: [settings, integration-diagnostics]
+    permission: ADMIN_OR_MANAGER
+    data_dependencies: [PostgreSQL.system_settings, PostgreSQL.audit_logs, environment-secrets]
+    audit_events: [SETTING_UPDATED, CONFIG_RELOADED, CONFIG_RELOAD_FAILED]
+    error_codes: [SETTING_NOT_ALLOWED, CONFIG_RELOAD_FAILED]
+    tests:
+      unit: [tests/unit/test_runtime_hardening.py]
+      integration: [tests/integration/test_mvp_business_apis.py::test_admin_runtime_reloads_are_audited]
+      browser: []
+      live: []
+      uat: [MVP-UAT-001, MVP-UAT-010]
+    evidence:
+      automated: [tests/integration/test_mvp_business_apis.py::test_admin_runtime_reloads_are_audited]
+      browser: [docs/verification/mvp-uat-20260728/screenshots/integrations-01-settings-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/runtime-reload-01-config-watcher-1440x900.png]
+      live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-010-integrations.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-008-runtime-reload.json]
+      uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-001-role-workspaces.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-010-integrations.json]
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references:
+      code: [src/memory_palace/api/v1/endpoints/management.py, src/memory_palace/api/v1/endpoints/admin.py]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: ContextTrigger
+    name: 情境触发 Agent
+    category: agent
+    entrypoints: [POST /messages/, "POST /admin/watcher/policies/{policy_id}/run"]
+    apis: [POST /messages/]
+    services: [orchestrator, LLMClient]
+    agents: [ContextTrigger]
+    data_dependencies: [PostgreSQL.push_logs, PostgreSQL.llm_call_logs]
+    audit_events: [LLM_CALL, PUSH_LOG_CREATED]
+    error_codes: [LLM_UNAVAILABLE, AGENT_FAILED]
+    tests:
+      unit: [tests/unit/test_agent_truthfulness.py]
+      integration: [tests/integration/test_message_intake_api.py]
+      browser: []
+      live: []
+      uat: [MVP-UAT-002]
+    evidence:
+      automated: [tests/unit/test_agent_truthfulness.py]
+      browser: [docs/verification/mvp-uat-20260728/screenshots/event-02-live-processed-1440x900.png]
+      live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-002-live-event.json]
+      uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-002-live-event.json]
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references: &agent_refs
+      code: [src/memory_palace/skills]
+      openspec: [openspec]
+      docs: *baseline_documents
+      release: [CHANGELOG.md]
+
+  - <<: *defaults
+    id: Router
+    name: 路由 Agent
+    category: agent
+    entrypoints: [POST /messages/]
+    apis: [POST /messages/]
+    services: [orchestrator, LLMClient]
+    agents: [Router]
+    data_dependencies: [PostgreSQL.message_runs, PostgreSQL.llm_call_logs]
+    audit_events: [LLM_CALL]
+    error_codes: [LLM_UNAVAILABLE, AGENT_FAILED]
+    tests:
+      unit: [tests/unit/test_agent_truthfulness.py]
+      integration: [tests/integration/test_message_intake_api.py]
+      browser: []
+      live: []
+      uat: [MVP-UAT-002]
+    evidence: {automated: [tests/unit/test_agent_truthfulness.py], browser: [docs/verification/mvp-uat-20260728/screenshots/event-02-live-processed-1440x900.png], live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-002-live-event.json], uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-002-live-event.json]}
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references: *agent_refs
+
+  - <<: *defaults
+    id: Commander
+    name: 现场指挥 Agent
+    category: agent
+    entrypoints: [POST /messages/]
+    apis: [POST /messages/, GET /admin/tasks]
+    services: [orchestrator, LLMClient, TaskGraph]
+    agents: [Commander]
+    data_dependencies: [PostgreSQL.message_runs, PostgreSQL.tasks, PostgreSQL.llm_call_logs]
+    audit_events: [LLM_CALL, TASK_CREATED]
+    error_codes: [LLM_UNAVAILABLE, AGENT_FAILED]
+    tests: {unit: [tests/unit/test_agent_truthfulness.py], integration: [tests/integration/test_message_intake_api.py], browser: [], live: [], uat: [MVP-UAT-002]}
+    evidence: {automated: [tests/unit/test_agent_truthfulness.py], browser: [docs/verification/mvp-uat-20260728/screenshots/event-02-live-processed-1440x900.png], live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-002-live-event.json], uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-002-live-event.json]}
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references: *agent_refs
+
+  - <<: *defaults
+    id: MemoryOps
+    name: 记忆检索 Agent
+    category: agent
+    entrypoints: [POST /messages/, POST /admin/knowledge/search]
+    apis: [POST /messages/, POST /admin/knowledge/search]
+    services: [LLMClient, ChromaDB]
+    agents: [MemoryOps]
+    data_dependencies: [PostgreSQL.knowledge_documents, ChromaDB.memory_palace_experiences, PostgreSQL.llm_call_logs]
+    audit_events: [LLM_CALL]
+    error_codes: [LLM_UNAVAILABLE, VECTOR_STORE_NOT_READY, AGENT_FAILED]
+    tests: {unit: [tests/unit/test_agent_truthfulness.py], integration: [tests/integration/test_mvp_business_apis.py], browser: [], live: [], uat: [MVP-UAT-002, MVP-UAT-005]}
+    evidence: {automated: [tests/unit/test_agent_truthfulness.py], browser: [docs/verification/mvp-uat-20260728/screenshots/memory-ops-01-before-submit-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/memory-ops-02-completed-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/memory-ops-03-trace-timeline-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/knowledge-04-semantic-search-1440x900.png], live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-002-memory-ops-live.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-005-knowledge-sop.json], uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-002-memory-ops-live.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-005-knowledge-sop.json]}
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references: *agent_refs
+
+  - <<: *defaults
+    id: Persona
+    name: 专家经验表达 Agent
+    category: agent
+    entrypoints: [assistant:/]
+    apis: [POST /assistant/messages, POST /assistant/experience/search]
+    services: [orchestrator, experience-search, experience-usage-ledger, LLMClient]
+    agents: [Persona]
+    data_dependencies: [PostgreSQL.expert_profiles, PostgreSQL.experience_cards, PostgreSQL.experience_authorizations, PostgreSQL.experience_usage_logs, PostgreSQL.llm_call_logs]
+    audit_events: [LLM_CALL]
+    error_codes: [LLM_UNAVAILABLE, VECTOR_STORE_NOT_READY, AGENT_FAILED]
+    tests: {unit: [tests/unit/test_agent_truthfulness.py], integration: [tests/integration/test_message_intake_api.py::test_unified_assistant_uses_authorized_experience_via_persona_and_records_usage], browser: [], live: [], uat: [E2E-15, UAT-F03, UAT-F04, UAT-F10]}
+    evidence: {automated: [tests/integration/test_message_intake_api.py::test_unified_assistant_uses_authorized_experience_via_persona_and_records_usage], browser: [], live: [], uat: []}
+    blocked_reason: 新基线尚未提交统一助手内受授权经验引用的浏览器、Live 与 UAT 证据。
+    references: *agent_refs
+
+  - <<: *defaults
+    id: PersonaExtract
+    name: 经验萃取 Agent
+    category: agent
+    entrypoints: [assistant:/experience, "assistant:/experience/interviews/{interview_id}"]
+    apis: ["POST /assistant/experience/interviews/{interview_id}/complete", "POST /admin/events/{event_id}/experience-candidate/retry"]
+    services: [experience-draft-extractor, event-experience-candidates, LLMClient]
+    agents: [PersonaExtract]
+    data_dependencies: [PostgreSQL.experience_interviews, PostgreSQL.experience_interview_turns, PostgreSQL.experience_candidates, PostgreSQL.experience_candidate_attempts, PostgreSQL.experience_cards, PostgreSQL.llm_call_logs]
+    audit_events: [EXPERIENCE_EXTRACTION_FAILED, EXPERIENCE_DRAFT_CREATED, EXPERIENCE_CANDIDATE_CREATED]
+    error_codes: [EXPERIENCE_EXTRACTION_FAILED, EXPERIENCE_CANDIDATE_RETRY_FAILED, LLM_UNAVAILABLE]
+    tests: {unit: [tests/unit/test_llm_model_policy.py::test_event_candidate_generation_uses_existing_persona_extract_agent], integration: [tests/integration/test_experience_assets_api.py::test_completed_interview_is_extracted_server_side_from_persisted_answers, tests/integration/test_event_experience_candidates.py::test_failed_candidate_extraction_is_retryable_without_publishing_pollution], browser: [], live: [], uat: [E2E-12, E2E-13, E2E-14, UAT-F03, UAT-F07]}
+    evidence: {automated: [tests/unit/test_llm_model_policy.py::test_event_candidate_generation_uses_existing_persona_extract_agent], browser: [], live: [], uat: []}
+    blocked_reason: 新基线尚未提交多轮访谈和闭环候选真实萃取的浏览器、Live 与 UAT 证据。
+    references: *agent_refs
+
+  - <<: *defaults
+    id: TodoWrite
+    name: 任务分解 Agent
+    category: agent
+    entrypoints: [client:/tasks]
+    apis: [POST /admin/tasks/decompose]
+    services: [LLMClient, TaskGraph]
+    agents: [TodoWrite]
+    data_dependencies: [PostgreSQL.tasks, PostgreSQL.llm_call_logs]
+    audit_events: [TASK_CREATED, TASK_DECOMPOSED, TASK_DECOMPOSITION_FAILED, LLM_CALL]
+    error_codes: [LLM_UNAVAILABLE, AGENT_FAILED, TASK_GRAPH_NOT_READY, TASK_DECOMPOSITION_FAILED]
+    tests: {unit: [tests/unit/test_todo_skill.py, tests/unit/test_agent_truthfulness.py, tests/unit/test_formal_client_contract.py], integration: [tests/integration/test_todo_formal_workflow.py], browser: [], live: [], uat: [MVP-UAT-004]}
+    evidence: {automated: [tests/unit/test_todo_skill.py], browser: [docs/verification/mvp-uat-20260728/screenshots/todo-02-decomposed-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/todo-06-all-done-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/app-restart-02-retryable-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/llm-failure-02-recovered-1440x900.png], live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-004-todo-decompose.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-004-todo-lifecycle.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-008-app-restart-recovery.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-010-llm-failure-recovery.json], uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-004-todo-decompose.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-004-todo-lifecycle.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-008-app-restart-recovery.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-010-llm-failure-recovery.json]}
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references: *agent_refs
+
+  - <<: *defaults
+    id: Watcher
+    name: 鹰眼巡检 Agent
+    category: agent
+    entrypoints: [admin:/watcher, "admin:/events/{event_id}"]
+    roles: [admin, manager]
+    apis: ["POST /admin/events/{event_id}/watcher-check", "POST /admin/watcher/policies/{policy_id}/run", GET /admin/watcher/runs, GET /admin/watcher/findings]
+    services: [event-watcher-check, watcher-runtime, scheduler, LLMClient]
+    agents: [Watcher]
+    data_dependencies: [PostgreSQL.confirmed_events, PostgreSQL.event_activities, PostgreSQL.watcher_runs, PostgreSQL.watcher_findings, PostgreSQL.llm_call_logs]
+    audit_events: [EVENT_WATCHER_CHECK, WATCHER_RUN, WATCHER_FINDING_UPDATED, WATCHER_FINDING_CLOSED]
+    error_codes: [WATCHER_EVENT_CHECK_FAILED, WATCHER_RUN_FAILED, LLM_UNAVAILABLE]
+    tests: {unit: [tests/unit/test_agent_truthfulness.py], integration: [tests/integration/test_event_watcher_check.py::test_event_watcher_check_persists_complete_evidence_snapshot, tests/integration/test_event_watcher_check.py::test_event_watcher_check_sanitizes_evidence_and_model_output, tests/integration/test_event_watcher_check.py::test_event_watcher_check_does_not_fake_success_when_skill_fails, tests/integration/test_event_watcher_check.py::test_watcher_policy_sanitizes_model_output_and_findings, tests/integration/test_event_watcher_check.py::test_watcher_policy_failure_persists_and_logs_only_public_error, tests/integration/test_event_watcher_check.py::test_event_watcher_check_reuses_open_finding_but_keeps_every_run], browser: [], live: [], uat: [E2E-11, UAT-F03, UAT-F09]}
+    evidence: {automated: [tests/integration/test_event_watcher_check.py::test_event_watcher_check_persists_complete_evidence_snapshot, tests/integration/test_event_watcher_check.py::test_event_watcher_check_sanitizes_evidence_and_model_output, tests/integration/test_event_watcher_check.py::test_event_watcher_check_does_not_fake_success_when_skill_fails, tests/integration/test_event_watcher_check.py::test_watcher_policy_sanitizes_model_output_and_findings, tests/integration/test_event_watcher_check.py::test_watcher_policy_failure_persists_and_logs_only_public_error], browser: [], live: [], uat: []}
+    blocked_reason: 新基线尚未提交事件级 Watcher 的真实模型、目标快照和去重证据。
+    references: *agent_refs
+
+  - <<: *defaults
+    id: MVP-PLATFORM-AUTHZ
+    name: 认证、角色与租户隔离
+    category: governance
+    entrypoints: [client:/login, admin:all-protected-routes]
+    apis: [GET /auth/me, GET /admin/audit-logs]
+    services: [JWT, RBAC, tenant-query-scope]
+    data_dependencies: [PostgreSQL.users, PostgreSQL.audit_logs]
+    audit_events: [AUTH_LOGIN, SESSION_CLOSE_DENIED]
+    error_codes: [HTTP_401, HTTP_403, SESSION_NOT_FOUND]
+    tests: {unit: [], integration: [tests/integration/test_auth_api.py, tests/integration/test_mvp_business_apis.py], browser: [], live: [], uat: [MVP-UAT-009]}
+    evidence: {automated: [tests/integration/test_auth_api.py], browser: [docs/verification/mvp-uat-20260728/screenshots/MVP-UAT-001-admin-workspace-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/MVP-UAT-001-manager-workspace-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/MVP-UAT-001-operator-workspace-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/MVP-UAT-009-tenant-b-session-boundary-1440x900.png], live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-001-role-workspaces.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-009-tenant-authz.json], uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-001-role-workspaces.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-009-tenant-authz.json]}
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references: *agent_refs
+
+  - <<: *defaults
+    id: MVP-PLATFORM-POSTGRES
+    name: PostgreSQL 权威存储与恢复
+    category: infrastructure
+    entrypoints: [admin:/health, operations:backup-restore]
+    roles: [admin]
+    apis: [GET /admin/health]
+    services: [PostgreSQL, migrations, backup-restore]
+    data_dependencies: [PostgreSQL]
+    audit_events: [CONFIG_RELOADED]
+    error_codes: [DATABASE_NOT_READY]
+    tests: {unit: [], integration: [scripts/verify_postgres_runtime.py], browser: [], live: [], uat: [MVP-UAT-008]}
+    evidence: {automated: [scripts/verify_postgres_runtime.py], browser: [docs/verification/mvp-uat-20260728/screenshots/restore-01-knowledge-search-1440x900.png], live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-008-backup-restore.json], uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-008-backup-restore.json]}
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references: *agent_refs
+
+  - <<: *defaults
+    id: MVP-PLATFORM-REDIS
+    name: Redis Streams 队列与死信恢复
+    category: infrastructure
+    entrypoints: [admin:/queue, admin:/dead-letters]
+    roles: [admin]
+    apis: [GET /admin/queue, GET /admin/dead-letters, "POST /admin/dead-letters/{dead_letter_id}/retry"]
+    services: [Redis Streams, queue-worker]
+    data_dependencies: [Redis.memory_palace:messages, Redis.memory_palace:dead_letter]
+    audit_events: [DEAD_LETTER_RETRIED]
+    error_codes: [QUEUE_UNAVAILABLE, DEAD_LETTER_RETRY_FAILED]
+    tests: {unit: [tests/unit/test_runtime_hardening.py], integration: [tests/integration/test_mvp_business_apis.py, tests/integration/test_message_intake_api.py::test_transient_failure_stays_retrying_until_final_dead_letter, tests/integration/test_message_intake_api.py::test_final_dead_letter_keeps_redis_pending_when_retry_state_persistence_fails, tests/integration/test_message_intake_api.py::test_concurrent_wecom_workers_send_once_and_late_failure_cannot_downgrade_delivery, tests/integration/test_message_intake_api.py::test_delivered_reply_ledger_rejects_late_failure_writes], browser: [], live: [], uat: [MVP-UAT-008]}
+    evidence: {automated: [tests/unit/test_runtime_hardening.py, tests/integration/test_message_intake_api.py::test_transient_failure_stays_retrying_until_final_dead_letter, tests/integration/test_message_intake_api.py::test_final_dead_letter_keeps_redis_pending_when_retry_state_persistence_fails, tests/integration/test_message_intake_api.py::test_concurrent_wecom_workers_send_once_and_late_failure_cannot_downgrade_delivery, tests/integration/test_message_intake_api.py::test_delivered_reply_ledger_rejects_late_failure_writes], browser: [docs/verification/mvp-uat-20260728/screenshots/dead-letter-01-retried-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/app-restart-02-retryable-1440x900.png], live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-008-dead-letter-recovery.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-008-app-restart-recovery.json], uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-008-dead-letter-recovery.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-008-app-restart-recovery.json]}
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references: *agent_refs
+
+  - <<: *defaults
+    id: MVP-PLATFORM-CHROMA
+    name: ChromaDB 知识向量存储
+    category: infrastructure
+    entrypoints: [admin:/health, client:/knowledge]
+    roles: [admin, manager]
+    apis: [POST /admin/knowledge/search, POST /admin/knowledge/rebuild-index]
+    services: [ChromaDB]
+    data_dependencies: [ChromaDB.memory_palace_experiences]
+    audit_events: [KNOWLEDGE_INDEX_REBUILT, EVENT_CREATE_FAILED]
+    error_codes: [VECTOR_STORE_NOT_READY, EVENT_CREATE_FAILED]
+    tests: {unit: [tests/unit/test_runtime_hardening.py], integration: [tests/integration/test_mvp_business_apis.py], browser: [], live: [], uat: [MVP-UAT-008]}
+    evidence: {automated: [tests/integration/test_mvp_business_apis.py], browser: [docs/verification/mvp-uat-20260728/screenshots/knowledge-03-index-rebuilt-1440x900.png, docs/verification/mvp-uat-20260728/screenshots/restore-01-knowledge-search-1440x900.png], live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-005-knowledge-sop.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-008-backup-restore.json], uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-005-knowledge-sop.json, docs/verification/mvp-uat-20260728/evidence/MVP-UAT-008-backup-restore.json]}
+    blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
+    references: *agent_refs
+
+  - <<: *defaults
+    id: MVP-PLATFORM-HEALTH
+    name: 健康、启动恢复、指标与热重载
+    category: operations
+    entrypoints: [admin:/diagnostics, admin:/health, admin:/metrics, admin:/skills]
+    roles: [admin, manager]
+    apis: [GET /admin/health, GET /admin/metrics, GET /admin/recovery-runs, POST /admin/config/reload, "POST /skills/{skill_name}/reload"]
+    services: [health, runtime-recovery, prometheus, scheduler, hot-reload]
+    data_dependencies: [PostgreSQL.runtime_recovery_runs, PostgreSQL.tasks, PostgreSQL.approval_requests, PostgreSQL.watcher_runs, PostgreSQL.audit_logs, Redis.memory_palace:messages]
+    audit_events: [RUNTIME_RECOVERY_AUDIT, CONFIG_RELOADED, CONFIG_RELOAD_FAILED, SKILL_RELOADED, SKILL_RELOAD_FAILED]
+    error_codes: [HTTP_401, HTTP_403, DATABASE_NOT_READY, CONFIG_RELOAD_FAILED, SKILL_RELOAD_FAILED]
+    tests: {unit: [tests/unit/test_runtime_hardening.py, tests/unit/test_formal_client_contract.py::test_diagnostics_renders_persisted_startup_and_recovery_runs, tests/unit/test_unified_agent_client_contract.py::test_clients_recover_restarted_sessions_and_retry_original_messages, tests/unit/test_unified_agent_client_contract.py::test_recovery_deadlines_and_context_guards_prevent_stale_client_updates], integration: [tests/integration/test_runtime_recovery_audit.py::test_application_recovery_persists_global_run_and_all_phase_counts, tests/integration/test_runtime_recovery_audit.py::test_redis_startup_recovery_claims_pending_then_observes_ack, tests/integration/test_runtime_recovery_audit.py::test_startup_recovery_fails_closed_on_partial_or_unsupported_claim, tests/integration/test_runtime_recovery_audit.py::test_application_recovery_rejects_partial_queue_claim, tests/integration/test_runtime_recovery_audit.py::test_admin_recovery_api_is_admin_only_and_never_reads_tenant_rows, tests/integration/test_runtime_recovery_audit.py::test_failed_recovery_persists_safe_error_without_exception_secret], browser: [], live: [], uat: [E2E-00, E2E-16, UAT-F02]}
+    evidence: {automated: [tests/integration/test_runtime_recovery_audit.py::test_application_recovery_persists_global_run_and_all_phase_counts, tests/integration/test_runtime_recovery_audit.py::test_redis_startup_recovery_claims_pending_then_observes_ack, tests/integration/test_runtime_recovery_audit.py::test_startup_recovery_fails_closed_on_partial_or_unsupported_claim, tests/integration/test_runtime_recovery_audit.py::test_application_recovery_rejects_partial_queue_claim, tests/integration/test_runtime_recovery_audit.py::test_admin_recovery_api_is_admin_only_and_never_reads_tenant_rows, tests/integration/test_runtime_recovery_audit.py::test_failed_recovery_persists_safe_error_without_exception_secret, tests/unit/test_formal_client_contract.py::test_diagnostics_renders_persisted_startup_and_recovery_runs, tests/unit/test_unified_agent_client_contract.py::test_clients_recover_restarted_sessions_and_retry_original_messages, tests/unit/test_unified_agent_client_contract.py::test_recovery_deadlines_and_context_guards_prevent_stale_client_updates], browser: [], live: [], uat: []}
+    blocked_reason: 新基线尚未提交真实 App 重启、pending 恢复和诊断页的 Live 与 UAT 证据。
+    references: *agent_refs
+
+  - <<: *defaults
+    id: MVP-INTEGRATION-DEEPSEEK
+    name: DeepSeek v4 Flash
+    category: integration
+    status: DISABLED_REQUIRES_CONFIG
+    interactive: false
+    entrypoints: [admin:/integrations]
+    roles: [admin, manager]
+    apis: [GET /admin/integrations, GET /admin/llm-calls, "GET /admin/events/{event_id}"]
+    services: [LLMClient, event-dossier]
+    agents: [ContextTrigger, Router, Commander, MemoryOps, Persona, PersonaExtract, TodoWrite, Watcher]
+    data_dependencies: [PostgreSQL.llm_call_logs, PostgreSQL.agent_step_runs, PostgreSQL.event_activities]
+    audit_events: [LLM_CALL]
+    error_codes: [LLM_UNAVAILABLE, AGENT_FAILED]
+    tests: {unit: [tests/unit/test_llm_model_policy.py, tests/unit/test_agent_truthfulness.py], integration: [tests/integration/test_event_dossier.py::test_event_dossier_is_human_readable_and_keeps_technical_ids_folded], browser: [], live: [], uat: [E2E-00, E2E-03, E2E-05, E2E-11, E2E-12, E2E-13, E2E-15, UAT-F03]}
+    evidence: {automated: [tests/unit/test_llm_model_policy.py, tests/integration/test_event_dossier.py::test_event_dossier_is_human_readable_and_keeps_technical_ids_folded], browser: [], live: [], uat: []}
+    external_config: [DEEPSEEK_API_KEY, LLM_DEFAULT_MODEL=deepseek-v4-flash]
+    blocked_reason: Deployment secret and Live DeepSeek evidence must both be present before this integration can become READY.
+    references: *agent_refs
+
+  - <<: *defaults
+    id: MVP-INTEGRATION-WECHAT
+    name: 企业微信
+    category: integration
+    status: DISABLED_REQUIRES_CONFIG
+    interactive: false
+    entrypoints: [admin:/integrations]
+    roles: [admin]
+    apis: [GET /wechat/callback, POST /wechat/callback]
+    services: [wechat-gateway, Redis Streams]
+    data_dependencies: [Redis.memory_palace:messages, PostgreSQL.push_logs]
+    audit_events: [PUSH_ADOPTION_UPDATED]
+    error_codes: [INTEGRATION_DISABLED, QUEUE_UNAVAILABLE]
+    tests: {unit: [tests/unit/test_runtime_hardening.py], integration: [tests/integration/test_message_intake_api.py::test_wechat_gateway_uses_canonical_persistent_ingress, tests/integration/test_message_intake_api.py::test_wechat_gateway_is_disabled_when_crypto_is_not_configured, tests/integration/test_message_intake_api.py::test_structured_wecom_reply_falls_back_from_markdown_to_textcard_to_text, tests/integration/test_message_intake_api.py::test_wecom_delivery_retry_reuses_saved_agent_result, tests/integration/test_message_intake_api.py::test_wecom_delivery_does_not_resend_after_send_succeeds_but_receipt_persistence_fails, tests/integration/test_message_intake_api.py::test_concurrent_wecom_workers_send_once_and_late_failure_cannot_downgrade_delivery, tests/integration/test_message_intake_api.py::test_delivered_reply_ledger_rejects_late_failure_writes, tests/integration/test_message_intake_api.py::test_recovered_wecom_delivery_reuses_result_saved_before_restart], browser: [], live: [], uat: [MVP-UAT-010]}
+    evidence: {automated: [tests/unit/test_runtime_hardening.py, tests/integration/test_message_intake_api.py::test_wechat_gateway_uses_canonical_persistent_ingress, tests/integration/test_message_intake_api.py::test_wechat_gateway_is_disabled_when_crypto_is_not_configured, tests/integration/test_message_intake_api.py::test_structured_wecom_reply_falls_back_from_markdown_to_textcard_to_text, tests/integration/test_message_intake_api.py::test_wecom_delivery_retry_reuses_saved_agent_result, tests/integration/test_message_intake_api.py::test_wecom_delivery_does_not_resend_after_send_succeeds_but_receipt_persistence_fails, tests/integration/test_message_intake_api.py::test_concurrent_wecom_workers_send_once_and_late_failure_cannot_downgrade_delivery, tests/integration/test_message_intake_api.py::test_delivered_reply_ledger_rejects_late_failure_writes, tests/integration/test_message_intake_api.py::test_recovered_wecom_delivery_reuses_result_saved_before_restart], browser: [docs/verification/mvp-uat-20260728/screenshots/integrations-02-disabled-actions-1440x900.png], live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-010-integrations.json], uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-010-integrations.json]}
+    external_config: [WECHAT_TOKEN, WECHAT_ENCODING_AES_KEY, WECHAT_CORP_ID, WECHAT_CORP_SECRET, WECHAT_AGENT_ID, customer sandbox]
+    blocked_reason: Customer WeChat sandbox credentials and callback/reply evidence are missing.
+    references: *agent_refs
+
+  - <<: *defaults
+    id: MVP-INTEGRATION-SMS
+    name: 短信通知
+    category: integration
+    status: DISABLED_REQUIRES_CONFIG
+    interactive: false
+    entrypoints: [admin:/integrations]
+    roles: [admin]
+    apis: [GET /admin/integrations]
+    services: [notification-adapter]
+    data_dependencies: [PostgreSQL.tool_invocation_logs]
+    audit_events: [TOOL_INVOCATION]
+    error_codes: [DISABLED_REQUIRES_CONFIG]
+    tests: {unit: [], integration: [], browser: [], live: [], uat: [MVP-UAT-010]}
+    evidence: {automated: [tests/unit/test_runtime_hardening.py], browser: [docs/verification/mvp-uat-20260728/screenshots/integrations-02-disabled-actions-1440x900.png], live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-010-integrations.json], uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-010-integrations.json]}
+    external_config: [SMS_PROVIDER, SMS_API_KEY, provider sandbox]
+    blocked_reason: Real provider adapter, credentials and sandbox send evidence are missing.
+    references: *agent_refs
+
+  - <<: *defaults
+    id: MVP-INTEGRATION-VOICE
+    name: 语音电话
+    category: integration
+    status: DISABLED_REQUIRES_CONFIG
+    interactive: false
+    entrypoints: [admin:/integrations]
+    roles: [admin]
+    apis: [GET /admin/integrations]
+    services: [notification-adapter]
+    data_dependencies: [PostgreSQL.tool_invocation_logs]
+    audit_events: [TOOL_INVOCATION]
+    error_codes: [DISABLED_REQUIRES_CONFIG]
+    tests: {unit: [], integration: [], browser: [], live: [], uat: [MVP-UAT-010]}
+    evidence: {automated: [tests/unit/test_runtime_hardening.py], browser: [docs/verification/mvp-uat-20260728/screenshots/integrations-02-disabled-actions-1440x900.png], live: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-010-integrations.json], uat: [docs/verification/mvp-uat-20260728/evidence/MVP-UAT-010-integrations.json]}
+    external_config: [VOICE_PROVIDER, VOICE_API_KEY, provider sandbox]
+    blocked_reason: Real provider adapter, credentials and sandbox call evidence are missing.
+    references: *agent_refs
+
+uat_journeys:
+  - {id: E2E-00, name: 管理员确认运行配置和渠道真实性, covers: [MVP-BIZ-001, MVP-BIZ-002, MVP-BIZ-019, MVP-BIZ-020, MVP-PLATFORM-AUTHZ, MVP-PLATFORM-HEALTH, MVP-INTEGRATION-DEEPSEEK, MVP-INTEGRATION-WECHAT, MVP-INTEGRATION-SMS, MVP-INTEGRATION-VOICE], status: BLOCKED, evidence: []}
+  - {id: E2E-01, name: 打开企微助手并确认身份, covers: [MVP-BIZ-001, MVP-BIZ-007, MVP-BIZ-019, MVP-PLATFORM-AUTHZ], status: BLOCKED, evidence: []}
+  - {id: E2E-02, name: 发送自由文本和现场附件, covers: [MVP-BIZ-003, MVP-BIZ-007, MVP-PLATFORM-REDIS], status: BLOCKED, evidence: []}
+  - {id: E2E-03, name: 完成智能受理并返回事件、SOP 和处置建议, covers: [MVP-BIZ-003, MVP-BIZ-005, MVP-BIZ-011, MVP-BIZ-013, ContextTrigger, Router, Commander, MemoryOps, MVP-PLATFORM-CHROMA, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
+  - {id: E2E-04, name: 在同一会话补充现场信息, covers: [MVP-BIZ-004, MVP-BIZ-005, MVP-BIZ-007], status: BLOCKED, evidence: []}
+  - {id: E2E-05, name: 使用 TodoWrite 生成可执行任务图, covers: [MVP-BIZ-008, TodoWrite, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
+  - {id: E2E-06, name: 验证任务依赖、员工权限并回填检修证据, covers: [MVP-BIZ-008, MVP-PLATFORM-AUTHZ], status: BLOCKED, evidence: []}
+  - {id: E2E-07, name: 创建高风险动作审批, covers: [MVP-BIZ-009], status: BLOCKED, evidence: []}
+  - {id: E2E-08, name: 拒绝审批、补充试车证据并重新提交, covers: [MVP-BIZ-008, MVP-BIZ-009], status: BLOCKED, evidence: []}
+  - {id: E2E-09, name: 批准动作并送达到企微模拟器, covers: [MVP-BIZ-009, MVP-BIZ-010], status: BLOCKED, evidence: []}
+  - {id: E2E-10, name: 完成任务并验证闭环门禁, covers: [MVP-BIZ-006, MVP-BIZ-008, MVP-BIZ-009, MVP-BIZ-018], status: BLOCKED, evidence: []}
+  - {id: E2E-11, name: 运行 Watcher 合规检查, covers: [MVP-BIZ-017, MVP-BIZ-018, Watcher, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
+  - {id: E2E-12, name: 关闭事件并生成待审核经验候选, covers: [MVP-BIZ-005, MVP-BIZ-006, MVP-BIZ-018, PersonaExtract, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
+  - {id: E2E-13, name: 专家通过统一助手完成经验访谈, covers: [MVP-BIZ-014, MVP-BIZ-015, PersonaExtract, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
+  - {id: E2E-14, name: 审核、退回、修订并发布经验, covers: [MVP-BIZ-014, MVP-BIZ-015, MVP-BIZ-016, PersonaExtract, MVP-PLATFORM-CHROMA], status: BLOCKED, evidence: []}
+  - {id: E2E-15, name: 再次复用经验并完成后台全链路审计, covers: [MVP-BIZ-002, MVP-BIZ-005, MVP-BIZ-010, MVP-BIZ-011, MVP-BIZ-012, MVP-BIZ-013, MVP-BIZ-016, Router, MemoryOps, Persona, MVP-PLATFORM-CHROMA, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
+  - {id: E2E-16, name: 真实重启 App 并恢复处理中会话, covers: [MVP-BIZ-007, MVP-BIZ-008, MVP-BIZ-020, MVP-PLATFORM-POSTGRES, MVP-PLATFORM-REDIS, MVP-PLATFORM-CHROMA, MVP-PLATFORM-HEALTH], status: BLOCKED, evidence: []}
+  - {id: UAT-F01, name: 重复消息与业务幂等, covers: [MVP-BIZ-003, MVP-BIZ-007, MVP-BIZ-008, TodoWrite], status: BLOCKED, evidence: []}
+  - {id: UAT-F02, name: Worker 在 ACK 前重启恢复, covers: [MVP-BIZ-007, MVP-BIZ-008, MVP-PLATFORM-REDIS, MVP-PLATFORM-HEALTH], status: BLOCKED, evidence: []}
+  - {id: UAT-F03, name: DeepSeek 超时、401 与熔断恢复, covers: [MVP-BIZ-003, MVP-BIZ-006, MVP-BIZ-015, MVP-BIZ-018, ContextTrigger, Router, Commander, MemoryOps, Persona, PersonaExtract, TodoWrite, Watcher, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
+  - {id: UAT-F04, name: ChromaDB 检索不可用, covers: [MVP-BIZ-011, MVP-BIZ-012, MVP-BIZ-013, MVP-BIZ-016, MemoryOps, Persona, MVP-PLATFORM-CHROMA], status: BLOCKED, evidence: []}
+  - {id: UAT-F05, name: 未完成依赖时拒绝后续任务, covers: [MVP-BIZ-008], status: BLOCKED, evidence: []}
+  - {id: UAT-F06, name: 审批并发与动作执行失败, covers: [MVP-BIZ-009, MVP-BIZ-010], status: BLOCKED, evidence: []}
+  - {id: UAT-F07, name: 访谈刷新与重启恢复, covers: [MVP-BIZ-015, PersonaExtract], status: BLOCKED, evidence: []}
+  - {id: UAT-F08, name: 经验发布索引失败, covers: [MVP-BIZ-016, MVP-PLATFORM-CHROMA], status: BLOCKED, evidence: []}
+  - {id: UAT-F09, name: Watcher 重复运行 finding 去重, covers: [MVP-BIZ-017, MVP-BIZ-018, Watcher], status: BLOCKED, evidence: []}
+  - {id: UAT-F10, name: 跨场地全链路读取拒绝, covers: [MVP-BIZ-001, MVP-BIZ-005, MVP-BIZ-007, MVP-BIZ-008, MVP-BIZ-014, MVP-BIZ-016, MVP-BIZ-019, MVP-PLATFORM-AUTHZ], status: BLOCKED, evidence: []}
+  - {id: UAT-F11, name: 普通员工越权治理接口拒绝, covers: [MVP-BIZ-009, MVP-BIZ-014, MVP-BIZ-016, MVP-PLATFORM-AUTHZ], status: BLOCKED, evidence: []}
+  - {id: UAT-F12, name: 真实企微未配置时安全禁用, covers: [MVP-BIZ-020, MVP-INTEGRATION-WECHAT, MVP-INTEGRATION-SMS, MVP-INTEGRATION-VOICE], status: BLOCKED, evidence: []}
+  - {id: UAT-F13, name: 外部身份无映射或已停用, covers: [MVP-BIZ-003, MVP-BIZ-007, MVP-BIZ-019, MVP-PLATFORM-AUTHZ, MVP-INTEGRATION-WECHAT], status: BLOCKED, evidence: []}

@@ -7,6 +7,7 @@ Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 """
 import time
 import pytest
+from unittest.mock import AsyncMock, MagicMock
 from src.memory_palace.core.context_tier import (
     ContextTier,
     HotMessage,
@@ -136,11 +137,58 @@ class TestContextCompressor:
         assert comp.hot_size == 10
 
     @pytest.mark.asyncio
-    async def test_disabled_summarization(self):
-        """LLM 摘要已禁用，_call_summarization_llm 返回占位符"""
-        comp = ContextCompressor()
-        result = await comp._call_summarization_llm("test batch")
-        assert "已禁用" in result
+    async def test_warm_summary_uses_llm_and_records_venue_scope(self, monkeypatch):
+        client = MagicMock()
+        client.ask = AsyncMock(return_value=MagicMock(content="游客咨询闭园流程并确认完成"))
+        monkeypatch.setattr(
+            "src.memory_palace.tools.llm_wrapper.get_llm_client",
+            lambda: client,
+        )
+        comp = ContextCompressor(hot_size=1, warm_batch=1, cold_trigger=100)
+        ctx = TieredContext(session_id="s1", user_id="u1", venue_id="venue-a")
+
+        await comp.add_message(ctx, "user", "暴雨时怎么闭园")
+        _, was_compressed = await comp.add_message(ctx, "assistant", "按闭园 SOP 执行")
+
+        assert was_compressed is True
+        assert [summary.summary for summary in ctx.warm_summaries] == ["游客咨询闭园流程并确认完成"]
+        assert [message.content for message in ctx.hot_messages] == ["按闭园 SOP 执行"]
+        assert client.ask.await_args.kwargs["venue_id"] == "venue-a"
+        assert client.ask.await_args.kwargs["model"] == "deepseek-v4-flash"
+
+    @pytest.mark.asyncio
+    async def test_warm_summary_failure_preserves_hot_messages(self, monkeypatch):
+        client = MagicMock()
+        client.ask = AsyncMock(side_effect=RuntimeError("model unavailable"))
+        monkeypatch.setattr(
+            "src.memory_palace.tools.llm_wrapper.get_llm_client",
+            lambda: client,
+        )
+        comp = ContextCompressor(hot_size=1, warm_batch=1, cold_trigger=100)
+        ctx = TieredContext(session_id="s1", user_id="u1", venue_id="venue-a")
+        await comp.add_message(ctx, "user", "第一条消息")
+
+        with pytest.raises(RuntimeError, match="model unavailable"):
+            await comp.add_message(ctx, "assistant", "第二条消息")
+
+        assert [message.content for message in ctx.hot_messages] == ["第一条消息", "第二条消息"]
+        assert ctx.warm_summaries == []
+
+    @pytest.mark.asyncio
+    async def test_cold_narrative_failure_is_not_stored_as_fake_content(self, monkeypatch):
+        client = MagicMock()
+        client.ask = AsyncMock(side_effect=RuntimeError("model unavailable"))
+        monkeypatch.setattr(
+            "src.memory_palace.tools.llm_wrapper.get_llm_client",
+            lambda: client,
+        )
+        comp = ContextCompressor(hot_size=10, warm_batch=5, cold_trigger=1)
+        ctx = TieredContext(session_id="s1", user_id="u1", venue_id="venue-a")
+
+        with pytest.raises(RuntimeError, match="model unavailable"):
+            await comp.add_message(ctx, "user", "需要生成叙事的消息")
+
+        assert ctx.cold_narrative is None
 
     def test_build_tiered_context(self):
         """从消息列表构建 TieredContext"""

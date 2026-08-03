@@ -1,37 +1,70 @@
-version: "3.9"
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Memory Palace OS — Docker Compose
-# 服务：app（FastAPI）+ chromadb + nginx
-# SQLite 文件直接挂载到宿主机，无需独立容器
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+name: memory-palace-mvp
 
 services:
+  attachment-init:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: "no"
+    user: root
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - chown -R appuser:appuser /app/data/attachments && chmod 0750 /app/data/attachments
+    volumes:
+      - attachment-data:/app/data/attachments
+    network_mode: none
+    security_opt:
+      - no-new-privileges:true
 
-  # ── 主应用（FastAPI + Gunicorn）────────────────────────────────
   app:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
-    container_name: memory-palace-app
     restart: unless-stopped
-    env_file:
-      - ../.env                       # 真实密钥从 .env 注入，不进镜像
     environment:
-      # ChromaDB 连接地址（容器内服务名）
+      APP_ENV: prod
+      DEMO_MODE: "false"
+      DEEPSEEK_API_KEY_FILE: /run/memory-palace-secrets/deepseek_api_key
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
+      LLM_DEFAULT_MODEL: deepseek-v4-flash
+      MEMORY_PALACE_JWT_SECRET: ${MEMORY_PALACE_JWT_SECRET:?MEMORY_PALACE_JWT_SECRET is required}
+      MEMORY_PALACE_API_KEYS: ${MEMORY_PALACE_API_KEYS:-}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+      ADMIN_DISPLAY_NAME: ${ADMIN_DISPLAY_NAME:-系统管理员}
+      MEMORY_PALACE_UAT_BASE_URL: http://localhost:8000
+      UAT_EMPLOYEE_PASSWORD_FILE: /run/memory-palace-secrets/uat_employee_password
+      DEFAULT_VENUE_ID: ${DEFAULT_VENUE_ID:-venue-hq}
+      DEFAULT_VENUE_NAME: ${DEFAULT_VENUE_NAME:-示范景区运营中心}
+      WECHAT_CORP_ID: ${WECHAT_CORP_ID:-}
+      WECHAT_CORP_SECRET: ${WECHAT_CORP_SECRET:-}
+      WECHAT_AGENT_ID: ${WECHAT_AGENT_ID:-}
+      WECHAT_TOKEN: ${WECHAT_TOKEN:-}
+      WECHAT_ENCODING_AES_KEY: ${WECHAT_ENCODING_AES_KEY:-}
+      SMS_PROVIDER: ${SMS_PROVIDER:-}
+      SMS_API_KEY: ${SMS_API_KEY:-}
+      SMS_SIGN_NAME: ${SMS_SIGN_NAME:-}
+      VOICE_PROVIDER: ${VOICE_PROVIDER:-}
+      VOICE_API_KEY: ${VOICE_API_KEY:-}
+      ALERT_PHONES: ${ALERT_PHONES:-}
+
       CHROMA_HOST: chromadb
-      CHROMA_PORT: "8001"
-      # PostgreSQL 连接
-      DATABASE_URL: postgresql://mp_user:mp_pass@postgres:5432/memory_palace
-      # Redis 连接
-      REDIS_URL: redis://redis:6379
-      # SQLite 路径映射到挂载卷（DEMO_MODE 兜底）
-      DB_PATH: /app/data/memory.db
+      CHROMA_PORT: "8000"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mp_user}@postgres:5432/${POSTGRES_DB:-memory_palace}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      REDIS_URL: redis://redis:6379/0
+      USE_REDIS: "true"
       LOG_DIR: /app/data/logs
+      ATTACHMENT_STORAGE_DIR: /app/data/attachments
     volumes:
-      - sqlite-data:/app/data          # SQLite + 日志持久化
-      - workspaces-data:/app/data/workspaces  # [Phase 4] 工作区隔离
+      - app-logs:/app/data/logs
+      - attachment-data:/app/data/attachments
+      - workspaces-data:/app/data/workspaces
+      - embedding-cache:/home/appuser/.cache
+      - app-secrets:/run/memory-palace-secrets:ro
     depends_on:
+      attachment-init:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -39,129 +72,115 @@ services:
       chromadb:
         condition: service_healthy
     networks:
-      - internal
-    # 不对外暴露端口，由 nginx 代理
+      - data-plane
+      - egress
     expose:
       - "8000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
 
-  # ── PostgreSQL 数据库 ───────────────────────────────────────────
   postgres:
-    image: postgres:15-alpine
-    container_name: memory-palace-pg
+    image: postgres:15.8-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: memory_palace
-      POSTGRES_USER: mp_user
-      POSTGRES_PASSWORD: mp_pass
+      POSTGRES_DB: ${POSTGRES_DB:-memory_palace}
+      POSTGRES_USER: ${POSTGRES_USER:-mp_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
       - pg-data:/var/lib/postgresql/data
     networks:
-      - internal
+      - data-plane
     expose:
       - "5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mp_user -d memory_palace"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mp_user} -d ${POSTGRES_DB:-memory_palace}"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 8
+    security_opt:
+      - no-new-privileges:true
 
-  # ── Redis 消息队列 ──────────────────────────────────────────────
   redis:
-    image: redis:7-alpine
-    container_name: memory-palace-redis
+    image: redis:7.2.5-alpine
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
     volumes:
       - redis-data:/data
     networks:
-      - internal
+      - data-plane
     expose:
       - "6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 8
+    security_opt:
+      - no-new-privileges:true
 
-  # ── ChromaDB 向量数据库 ─────────────────────────────────────────
   chromadb:
-    image: chromadb/chroma:latest
-    container_name: memory-palace-chroma
+    image: chromadb/chroma:0.5.23
     restart: unless-stopped
     environment:
-      - IS_PERSISTENT=TRUE
-      - ANONYMIZED_TELEMETRY=FALSE      # 关闭遥测，本地部署隐私优先
+      IS_PERSISTENT: "TRUE"
+      ANONYMIZED_TELEMETRY: "FALSE"
     volumes:
-      - chroma-data:/chroma/chroma      # 向量数据持久化
+      - chroma-data:/chroma/chroma
     networks:
-      - internal
+      - data-plane
     expose:
-      - "8001"
+      - "8000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/api/v1/heartbeat"]
-      interval: 20s
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 15s
       timeout: 5s
-      retries: 3
-      start_period: 10s
+      retries: 8
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
 
-  # ── Nginx 反向代理 ──────────────────────────────────────────────
   nginx:
-    image: nginx:1.25-alpine
-    container_name: memory-palace-nginx
+    image: nginx:1.25.5-alpine
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "${HTTP_PORT:-8080}:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro         # SSL 证书目录（宿主机挂载）
       - nginx-logs:/var/log/nginx
     depends_on:
       app:
         condition: service_healthy
     networks:
-      - internal
-      - external
+      - data-plane
+      - egress
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 持久化卷
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 volumes:
   pg-data:
-    driver: local
   redis-data:
-    driver: local
-  sqlite-data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data                   # 映射到宿主机 deploy/data/，方便备份
-  workspaces-data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/workspaces        # [Phase 4] 工作区隔离目录
   chroma-data:
-    driver: local
+  app-logs:
+  attachment-data:
+  workspaces-data:
+  embedding-cache:
   nginx-logs:
-    driver: local
+  app-secrets:
+    external: true
+    name: ${MEMORY_PALACE_SECRETS_VOLUME:-memory-palace-secrets}
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 网络隔离：internal 仅容器间通信，external 对外
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 networks:
-  internal:
-    driver: bridge
-    internal: true                     # ChromaDB 和 app 不直接暴露公网
-  external:
-    driver: bridge
-
-    
+  data-plane:
+    internal: true
+  egress:

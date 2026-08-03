@@ -27,6 +27,19 @@ from sqlalchemy.exc import SQLAlchemyError
 # =============================================================================
 Base = declarative_base()
 
+
+def _resolve_database_uri() -> str:
+    configured_uri = os.environ.get("DATABASE_URI")
+    app_env = os.environ.get("APP_ENV", "dev").lower()
+    if configured_uri:
+        if app_env == "prod" and configured_uri.lower().startswith("sqlite"):
+            raise RuntimeError("正式环境禁止使用 SQLite 数据库")
+        return configured_uri
+    if app_env == "prod":
+        raise RuntimeError("正式环境未配置 DATABASE_URI，禁止回退到 SQLite")
+    project_root = Path(__file__).resolve().parent.parent.parent.parent
+    return f"sqlite:///{project_root / 'data' / 'memory.db'}"
+
 class IncidentLog(Base):
     """工单流水表：记录所有突发事件的流转状态，供 Watcher 巡检"""
     __tablename__ = 'incident_logs'
@@ -61,11 +74,7 @@ class DatabaseManager:
     """数据库全局管理器 (单例模式)"""
 
     def __init__(self):
-        # 生产环境优先从环境变量读取 DB URI (例如 postgresql://user:pass@host/dbname)
-        # 默认降级为本地 SQLite，方便开发测试
-        _project_root = Path(__file__).resolve().parent.parent.parent.parent
-        _default_db = _project_root / "data" / "memory.db"
-        self.db_uri = os.environ.get("DATABASE_URI", f"sqlite:///{_default_db}")
+        self.db_uri = _resolve_database_uri()
         
         # 针对 SQLite 和关系型数据库做不同的连接池配置
         connect_args = {}

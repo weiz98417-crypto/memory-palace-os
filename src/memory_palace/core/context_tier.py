@@ -134,7 +134,7 @@ class ContextCompressor:
         hot_size: int = 10,
         warm_batch: int = 20,
         cold_trigger: int = 50,
-        summarization_model: str = "gpt-4o-mini"
+        summarization_model: str = "deepseek-v4-flash"
     ):
         self.hot_size = hot_size
         self.warm_batch = warm_batch
@@ -143,8 +143,6 @@ class ContextCompressor:
 
         # [修复] 添加锁保护并发访问
         self._lock = asyncio.Lock()
-        # 待处理的待 evict 消息批次
-        self._pending_batch: List[HotMessage] = []
         self._batch_counter = 0
 
     async def add_message(
@@ -173,8 +171,7 @@ class ContextCompressor:
 
         # 检查 Hot 层是否溢出
         if len(ctx.hot_messages) > self.hot_size:
-            await self._evict_to_warm(ctx)
-            was_compressed = True
+            was_compressed = await self._evict_to_warm(ctx)
 
         # 检查是否需要生成 Cold 叙事
         if ctx.total_messages >= self.cold_trigger and ctx.cold_narrative is None:
@@ -183,32 +180,34 @@ class ContextCompressor:
 
         return ctx, was_compressed
 
-    async def _evict_to_warm(self, ctx: TieredContext) -> None:
+    async def _evict_to_warm(self, ctx: TieredContext) -> bool:
         """
         将 Hot 层最老的消息 evict 到 Warm 层 (生成 LLM 摘要)
 
-        策略: 批量处理，每次 evict 半个 hot_tier_size 的消息
+        仅当 Hot 层之外累计出完整 warm_batch 时才生成摘要；模型失败前不删除原消息。
         """
         async with self._lock:
-            evict_count = max(1, self.hot_size // 2)
-            evicted = ctx.hot_messages[:evict_count]
-            ctx.hot_messages = ctx.hot_messages[evict_count:]
+            eligible_count = len(ctx.hot_messages) - self.hot_size
+            if eligible_count < self.warm_batch:
+                return False
+
+            evicted = list(ctx.hot_messages[:self.warm_batch])
 
             logger.debug(
-                f"[ContextCompressor] Evict {len(evicted)} 条消息到 Warm 层, "
-                f"Hot 层剩余 {len(ctx.hot_messages)} 条"
+                f"[ContextCompressor] 准备压缩 {len(evicted)} 条消息到 Warm 层"
             )
 
-            # 加入待处理批次
-            self._pending_batch.extend(evicted)
+            await self._generate_batch_summary(ctx, evicted)
+            del ctx.hot_messages[:len(evicted)]
+            return True
 
-            # 当批次达到阈值时，生成摘要
-            if len(self._pending_batch) >= self.warm_batch:
-                await self._generate_batch_summary(ctx)
-
-    async def _generate_batch_summary(self, ctx: TieredContext) -> WarmSummary:
+    async def _generate_batch_summary(
+        self,
+        ctx: TieredContext,
+        messages: List[HotMessage],
+    ) -> WarmSummary:
         """使用 LLM 生成批次摘要"""
-        if not self._pending_batch:
+        if not messages:
             raise ValueError("No pending batch to summarize")
 
         self._batch_counter += 1
@@ -217,33 +216,34 @@ class ContextCompressor:
         # 格式化批次内容
         batch_text = "\n".join([
             f"[{m.role}]: {m.content}"
-            for m in self._pending_batch
+            for m in messages
         ])
 
         # 估算原始 token 数 (粗略: 字符数 / 4)
-        estimated_tokens = sum(len(m.content) for m in self._pending_batch) // 4
+        estimated_tokens = sum(len(m.content) for m in messages) // 4
 
         # 调用 LLM 生成摘要
-        summary_text = await self._call_summarization_llm(batch_text)
+        summary_text = await self._call_summarization_llm(
+            batch_text,
+            session_id=ctx.session_id,
+            venue_id=ctx.venue_id,
+        )
 
         warm_summary = WarmSummary(
             batch_id=batch_id,
-            message_count=len(self._pending_batch),
+            message_count=len(messages),
             summary=summary_text,
-            time_range_start=self._pending_batch[0].timestamp,
-            time_range_end=self._pending_batch[-1].timestamp,
+            time_range_start=messages[0].timestamp,
+            time_range_end=messages[-1].timestamp,
             tokens_used=len(summary_text) // 4  # 估算
         )
 
         ctx.warm_summaries.append(warm_summary)
         ctx.total_tokens_saved += estimated_tokens - warm_summary.tokens_used
 
-        # 清空待处理批次
-        self._pending_batch.clear()
-
         logger.info(
             f"[ContextCompressor] 生成 Warm 摘要 {batch_id}: "
-            f"{len(self._pending_batch)} 条消息 -> {len(summary_text)} 字"
+            f"{len(messages)} 条消息 -> {len(summary_text)} 字"
         )
 
         return warm_summary
@@ -269,7 +269,7 @@ class ContextCompressor:
             source_text = "\n\n".join(warm_texts)
 
         # 调用 LLM 生成叙事摘要
-        narrative = await self._call_narrative_llm(source_text, ctx.session_id)
+        narrative = await self._call_narrative_llm(source_text, ctx.session_id, ctx.venue_id)
 
         ctx.cold_narrative = ColdNarrative(
             session_id=ctx.session_id,
@@ -285,10 +285,13 @@ class ContextCompressor:
 
         return ctx.cold_narrative
 
-    async def _call_summarization_llm(self, batch_text: str) -> str:
-        """[DISABLED] LLM 摘要生成已暂停 — 输出暂未被任何 Agent 消费"""
-        logger.debug("[ContextCompressor] summarization disabled — returning placeholder")
-        return "[摘要已禁用]"
+    async def _call_summarization_llm(
+        self,
+        batch_text: str,
+        session_id: str,
+        venue_id: str = "",
+    ) -> str:
+        """调用 LLM 生成 Warm 层摘要。"""
         try:
             from ..tools.llm_wrapper import get_llm_client
             llm = get_llm_client()
@@ -306,18 +309,21 @@ class ContextCompressor:
                 system_prompt="你是一个对话摘要专家。",
                 user_prompt=prompt,
                 temperature=0.3,
-                model="gpt-4o-mini",
-                trace_id=f"summarize_{uuid.uuid4().hex[:8]}"
+                model=self.summarization_model,
+                trace_id=f"summarize_{session_id}_{uuid.uuid4().hex[:8]}",
+                venue_id=venue_id,
             )
 
-            return response.content.strip()
+            summary = response.content.strip()
+            if not summary:
+                raise ValueError("ContextCompressor LLM 返回了空 Warm 摘要")
+            return summary
 
         except Exception as e:
             logger.error(f"[ContextCompressor] LLM 摘要生成失败: {e}")
-            # 降级: 返回简单拼接
-            return f"[摘要] {batch_text[:100]}..."
+            raise
 
-    async def _call_narrative_llm(self, source_text: str, session_id: str) -> str:
+    async def _call_narrative_llm(self, source_text: str, session_id: str, venue_id: str = "") -> str:
         """调用 LLM 生成叙事性摘要"""
         try:
             from ..tools.llm_wrapper import get_llm_client
@@ -336,15 +342,19 @@ class ContextCompressor:
                 system_prompt="你是一个叙事分析师。",
                 user_prompt=prompt,
                 temperature=0.3,
-                model="gpt-4o-mini",
-                trace_id=f"narrative_{session_id}"
+                model="deepseek-v4-flash",
+                trace_id=f"narrative_{session_id}",
+                venue_id=venue_id,
             )
 
-            return response.content.strip()
+            narrative = response.content.strip()
+            if not narrative:
+                raise ValueError("ContextCompressor LLM 返回了空 Cold 叙事")
+            return narrative
 
         except Exception as e:
             logger.error(f"[ContextCompressor] LLM 叙事生成失败: {e}")
-            return f"[会话叙事] {source_text[:100]}..."
+            raise
 
     def assemble_prompt(
         self,

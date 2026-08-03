@@ -38,7 +38,7 @@ class TestDemoFullChain:
 
         router_output = SkillOutput(
             success=True,
-            structured_data={"intent": "other", "severity": "P3"},
+            structured_data={"intent": "chitchat", "severity": "P4"},
             action_taken="router_routed",
         )
 
@@ -64,7 +64,7 @@ class TestDemoFullChain:
             pass
 
         with patch("src.memory_palace.knowledge.db_client.save_message", side_effect=mock_save):
-            with patch("src.memory_palace.knowledge.db_client.create_or_update_session", side_effect=AsyncMock()):
+            with patch.object(Orchestrator, "_save_message", side_effect=mock_save):
                 with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
                     orch = Orchestrator()
                     worker = MessageQueueWorker(queue=queue, concurrency=1, orchestrator=orch)
@@ -105,16 +105,25 @@ class TestDemoFullChain:
             action_taken="demo",
         )
 
+        router_output = SkillOutput(
+            success=True,
+            structured_data={"intent": "chitchat", "severity": "P4"},
+            action_taken="router_routed",
+        )
+
         def get_skill(name):
             m = MagicMock()
-            m.run = AsyncMock(return_value=agent_output)
+            m.run = AsyncMock(
+                return_value=router_output if name == "router" else agent_output
+            )
             return m
 
         with patch("src.memory_palace.knowledge.db_client.save_message", side_effect=AsyncMock()):
-            with patch("src.memory_palace.knowledge.db_client.create_or_update_session", side_effect=AsyncMock()):
+            with patch.object(Orchestrator, "_save_message", new_callable=AsyncMock):
                 with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
                     orch = Orchestrator()
                     result = await orch.process(payload)
 
         assert result["status"] == "processed", "Demo 模式应正常处理"
-        assert result["agent_result"] is not None, "应有 Agent 返回结果"
+        assert result["agent_result"] is None, "闲聊直答不应伪造专家 Agent 结果"
+        assert "企业运营助手" in result["reply_text"]

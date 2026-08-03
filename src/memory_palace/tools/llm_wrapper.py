@@ -14,12 +14,20 @@ import json
 import re
 import asyncio  ### CHANGE: 导入 asyncio 用于异步 sleep
 import time
+import uuid
 from typing import Any, Dict, Optional, Union
 from dataclasses import dataclass
 from loguru import logger
 
 ### CHANGE: 从 openai 导入 AsyncOpenAI 替代 OpenAI
 from openai import AsyncOpenAI, APIConnectionError, RateLimitError, APITimeoutError, InternalServerError
+
+from ..config.secrets import read_secret
+from ..core.sensitive_output import public_error_message
+
+
+REQUIRED_GENERATIVE_MODEL = "deepseek-v4-flash"
+DEFAULT_DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1"
 
 
 @dataclass
@@ -29,6 +37,10 @@ class LLMResponse:
     tokens_used: int
     model_name: str
     latency_seconds: float
+    request_id: Optional[str] = None
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    is_mock: bool = False
 
 
 class LLMClient:
@@ -37,18 +49,98 @@ class LLMClient:
     def __init__(self):
         ### CHANGE: 类型注解改为 AsyncOpenAI
         self._client: Optional[AsyncOpenAI] = None
-        self.default_model = os.environ.get("LLM_DEFAULT_MODEL", "gpt-4o")
-        self.max_retries = int(os.environ.get("LLM_MAX_RETRIES", 3))
+        self._database: Optional[Any] = None
+        configured_model = os.environ.get("LLM_DEFAULT_MODEL", REQUIRED_GENERATIVE_MODEL)
+        if configured_model != REQUIRED_GENERATIVE_MODEL:
+            raise ValueError(
+                f"生成式模型必须配置为 {REQUIRED_GENERATIVE_MODEL}，当前值为 {configured_model}"
+            )
+        self.default_model = REQUIRED_GENERATIVE_MODEL
+        self.max_retries = max(1, int(os.environ.get("LLM_MAX_RETRIES", 3)))
         self.base_backoff = 2.0
+        app_env = os.environ.get("APP_ENV", "dev").lower()
+        if app_env in {"prod", "production"} and os.environ.get("MOCK_LLM", "").lower() == "true":
+            raise ValueError("正式环境禁止启用 MOCK_LLM")
+
+    def set_database(self, database: Any) -> None:
+        """Attach the formal database used for non-sensitive LLM call evidence."""
+        self._database = database
+
+    async def _record_call(
+        self,
+        *,
+        trace_id: str,
+        venue_id: str,
+        agent_id: str,
+        agent_name: str,
+        model_name: str,
+        status: str,
+        attempt_count: int,
+        latency_seconds: Optional[float] = None,
+        prompt_tokens: int = 0,
+        completion_tokens: int = 0,
+        total_tokens: int = 0,
+        request_id: Optional[str] = None,
+        error: Optional[BaseException] = None,
+        is_mock: bool = False,
+    ) -> None:
+        if self._database is None:
+            return
+        try:
+            await self._database.execute(
+                """
+                INSERT INTO llm_call_logs (
+                    id, venue_id, trace_id, agent_id, agent_name, provider, model_name, status,
+                    attempt_count, latency_seconds, prompt_tokens,
+                    completion_tokens, total_tokens, request_id, error_type,
+                    error_message, is_mock, created_at
+                ) VALUES (?, ?, ?, ?, ?, 'deepseek', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    uuid.uuid4().hex,
+                    venue_id or "",
+                    trace_id,
+                    agent_id,
+                    agent_name,
+                    model_name,
+                    status,
+                    attempt_count,
+                    latency_seconds,
+                    prompt_tokens,
+                    completion_tokens,
+                    total_tokens,
+                    request_id,
+                    type(error).__name__ if error else None,
+                    public_error_message(error, context="model"),
+                    is_mock,
+                    time.time(),
+                ),
+            )
+        except Exception as exc:
+            logger.warning("[Trace-{}] LLM 调用证据写入失败: {}", trace_id, type(exc).__name__)
+
+    def _resolve_model(self, requested_model: Optional[str]) -> str:
+        if requested_model and requested_model != REQUIRED_GENERATIVE_MODEL:
+            raise ValueError(
+                f"不允许调用生成式模型 {requested_model}，唯一允许模型为 {REQUIRED_GENERATIVE_MODEL}"
+            )
+        return REQUIRED_GENERATIVE_MODEL
+
+    def _mock_mode_enabled(self) -> bool:
+        enabled = os.environ.get("MOCK_LLM", "").lower() == "true"
+        app_env = os.environ.get("APP_ENV", "dev").lower()
+        if enabled and app_env in {"prod", "production"}:
+            raise ValueError("正式环境禁止启用 MOCK_LLM")
+        return enabled
 
     ### CHANGE: 改为 async 方法，返回 AsyncOpenAI
     async def get_client(self) -> AsyncOpenAI:
         """获取或初始化异步 OpenAI 客户端（单例懒加载）"""
         if self._client is None:
-            api_key = os.environ.get("OPENAI_API_KEY")
-            base_url = os.environ.get("OPENAI_BASE_URL")
+            api_key = read_secret("DEEPSEEK_API_KEY")
+            base_url = os.environ.get("DEEPSEEK_BASE_URL") or DEFAULT_DEEPSEEK_BASE_URL
             if not api_key:
-                logger.warning("未检测到 OPENAI_API_KEY 环境变量，LLM 调用将会失败。")
+                logger.warning("未检测到 DeepSeek API 密钥，LLM 调用将会失败。")
 
             ### CHANGE: 使用 AsyncOpenAI 替代 OpenAI
             self._client = AsyncOpenAI(
@@ -59,10 +151,33 @@ class LLMClient:
             )
         return self._client
 
-    def _demo_json(self, system_prompt: str) -> str:
-        """DEMO_MODE 下根据 system_prompt 推断并返回合法的 JSON 响应"""
+    def _mock_json(self, prompt_context: str) -> str:
+        """显式 MOCK_LLM 测试模式下按输出契约返回可识别的模拟结果。"""
         import json as _json
-        sp = system_prompt.lower()
+        sp = prompt_context.lower()
+        if "audit_score" in sp and "escalated_cases" in sp:
+            return _json.dumps({
+                "is_violation_found": False,
+                "escalated_cases": [],
+                "audit_score": 100,
+                "summary_message": "[MOCK] 本次巡检未发现违规。",
+            }, ensure_ascii=False)
+        if "required_tools" in sp and "next_step_check" in sp:
+            return _json.dumps({
+                "reply_text": "[MOCK] 请按应急 SOP 执行并回报现场状态。",
+                "action_taken": "emergency_dispatch_sop",
+                "required_tools": [],
+                "next_step_check": "请确认现场状态。",
+            }, ensure_ascii=False)
+        if "is_hallucination_prevented" in sp and "reasoning_log" in sp:
+            return _json.dumps({
+                "reply_text": "[MOCK] 未检索到可验证的历史案例，请联系当班值班经理。",
+                "action_taken": "rag_experience_advice",
+                "structured_data": {
+                    "is_hallucination_prevented": True,
+                    "reasoning_log": "MOCK_LLM test response",
+                },
+            }, ensure_ascii=False)
         # ContextTrigger Stage2: 触发判断
         if "trigger" in sp and "severity" in sp and "event_type" in sp:
             return _json.dumps({
@@ -70,29 +185,32 @@ class LLMClient:
                 "severity": "P3",
                 "event_type": "其他",
                 "confidence": 0.1,
-                "reason": "DEMO_MODE mock",
+                "reason": "MOCK_LLM test response",
             }, ensure_ascii=False)
         # Router: 意图识别
         if "intent" in sp and ("chitchat" in sp or "incident" in sp or "emergency" in sp):
             return _json.dumps({
                 "intent": "chitchat",
                 "severity": "P3",
+                "summary": "MOCK_LLM 测试消息",
+                "is_critical": False,
                 "confidence": 0.5,
             }, ensure_ascii=False)
         # Persona: 人设回复
-        if "reply_text" in sp or "persona" in sp or "回复" in sp:
+        if "emotion_state" in sp and "interview_stage" in sp:
             return _json.dumps({
-                "reply_text": "[DEMO] 这是模拟的文旅助手回复。在实际部署中，这里会由 LLM 生成个性化的游客服务回复。",
-                "reply_type": "text",
-                "tokens_used": 0,
+                "reply_text": "[MOCK] 这是测试模式下的分身回复。",
+                "emotion_state": "neutral",
+                "interview_stage": "ongoing",
+                "is_completed": False,
             }, ensure_ascii=False)
         # Commander/TODO: 任务分解
         if "task" in sp and "dependency" in sp:
-            return _json.dumps({
-                "tasks": [{"title": "DEMO 示例任务", "description": "模拟任务", "priority": "P3", "dependencies": []}],
-            }, ensure_ascii=False)
+            return _json.dumps([
+                {"description": "MOCK_LLM 测试任务", "depends_on": []},
+            ], ensure_ascii=False)
         # Fallback: generic JSON
-        return _json.dumps({"status": "ok", "message": "DEMO_MODE mock"}, ensure_ascii=False)
+        return _json.dumps({"status": "mocked", "message": "MOCK_LLM test response"}, ensure_ascii=False)
 
     ### CHANGE: 方法添加 async 前缀
     async def ask(self,
@@ -102,27 +220,42 @@ class LLMClient:
             temperature: float = 0.3,
             max_tokens: Optional[int] = None,
             json_mode: bool = False,
-            trace_id: str = "UNKNOWN") -> LLMResponse:
+            trace_id: str = "UNKNOWN",
+            venue_id: str = "",
+            agent_id: str = "",
+            agent_name: str = "") -> LLMResponse:
         """
         发起大模型调用，自带指数退避重试与防抖机制 (异步版本)。
         """
-        # MOCK_LLM: 独立控制 LLM mock（DEMO_MODE 不再强制 mock LLM）
-        if os.environ.get("MOCK_LLM", "").lower() == "true":
+        actual_model = self._resolve_model(model)
+
+        # MOCK_LLM 仅允许测试或显式演示环境使用，正式环境在初始化时拒绝。
+        if self._mock_mode_enabled():
             logger.info(f"[Trace-{trace_id}] MOCK_LLM: 返回 Mock 响应 (json={json_mode})")
             if json_mode:
-                # 根据 system_prompt 推断 skill 类型，返回合法的 JSON
-                mock_content = self._demo_json(system_prompt)
+                mock_content = self._mock_json(f"{system_prompt}\n{user_prompt}")
             else:
-                mock_content = f"[DEMO] 模拟回复: {user_prompt[:40]}..."
-            return LLMResponse(
+                mock_content = f"[MOCK] 测试回复: {user_prompt[:40]}..."
+            response = LLMResponse(
                 content=mock_content,
                 tokens_used=0,
-                model_name="demo",
+                model_name=actual_model,
                 latency_seconds=0.0,
+                is_mock=True,
             )
+            await self._record_call(
+                trace_id=trace_id,
+                venue_id=venue_id,
+                agent_id=agent_id,
+                agent_name=agent_name,
+                model_name=actual_model,
+                status="MOCKED",
+                attempt_count=1,
+                latency_seconds=0.0,
+                is_mock=True,
+            )
+            return response
 
-        env_model = os.environ.get("LLM_DEFAULT_MODEL", "")
-        actual_model = env_model or model or self.default_model
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
@@ -144,7 +277,20 @@ class LLMClient:
             from src.memory_palace.tools.llm_fallback import build_fallback_chain
             chain = build_fallback_chain()
             if chain:
-                return await chain.call(messages, actual_model, temperature, max_tokens, json_mode, trace_id)
+                response = await chain.call(messages, actual_model, temperature, max_tokens, json_mode, trace_id)
+                await self._record_call(
+                    trace_id=trace_id,
+                    venue_id=venue_id,
+                    agent_id=agent_id,
+                    agent_name=agent_name,
+                    model_name=response.model_name,
+                    status="SUCCEEDED",
+                    attempt_count=1,
+                    latency_seconds=response.latency_seconds,
+                    total_tokens=response.tokens_used,
+                    request_id=response.request_id,
+                )
+                return response
         except Exception as e:
             logger.debug(f"[Trace-{trace_id}] Fallback chain unavailable: {e}")
 
@@ -162,15 +308,36 @@ class LLMClient:
                 latency = time.time() - start_time
                 content = response.choices[0].message.content or ""
                 tokens = response.usage.total_tokens if response.usage else 0
+                prompt_tokens = response.usage.prompt_tokens if response.usage else 0
+                completion_tokens = response.usage.completion_tokens if response.usage else 0
+                request_id = getattr(response, "id", None)
                 
                 logger.info(f"[Trace-{trace_id}] LLM 响应成功 | 耗时: {latency:.2f}s | Tokens: {tokens}")
                 
-                return LLMResponse(
+                result = LLMResponse(
                     content=content, 
                     tokens_used=tokens, 
                     model_name=actual_model,
-                    latency_seconds=latency
+                    latency_seconds=latency,
+                    request_id=request_id,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
                 )
+                await self._record_call(
+                    trace_id=trace_id,
+                    venue_id=venue_id,
+                    agent_id=agent_id,
+                    agent_name=agent_name,
+                    model_name=actual_model,
+                    status="SUCCEEDED",
+                    attempt_count=attempt,
+                    latency_seconds=latency,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    total_tokens=tokens,
+                    request_id=request_id,
+                )
+                return result
 
             except RateLimitError as e:
                 last_exception = e
@@ -191,10 +358,32 @@ class LLMClient:
                 await asyncio.sleep(2.0)  ### CHANGE
                 
             except Exception as e:
-                logger.error(f"[Trace-{trace_id}] LLM 调用发生未捕获的致命异常: {e}")
+                logger.error(
+                    f"[Trace-{trace_id}] LLM 调用发生未捕获的致命异常: {type(e).__name__}"
+                )
+                await self._record_call(
+                    trace_id=trace_id,
+                    venue_id=venue_id,
+                    agent_id=agent_id,
+                    agent_name=agent_name,
+                    model_name=actual_model,
+                    status="FAILED",
+                    attempt_count=attempt,
+                    error=e,
+                )
                 raise RuntimeError(f"LLM 致命异常: {str(e)}") from e
 
         logger.error(f"[Trace-{trace_id}] LLM 接口历经 {self.max_retries} 次重试后彻底失败。")
+        await self._record_call(
+            trace_id=trace_id,
+            venue_id=venue_id,
+            agent_id=agent_id,
+            agent_name=agent_name,
+            model_name=actual_model,
+            status="FAILED",
+            attempt_count=self.max_retries,
+            error=last_exception,
+        )
         raise last_exception
 
     async def ask_with_reference_context(
@@ -204,7 +393,10 @@ class LLMClient:
         user_prompt: str,
         model: Optional[str] = None,
         temperature: float = 0.3,
-        trace_id: str = "UNKNOWN"
+        trace_id: str = "UNKNOWN",
+        venue_id: str = "",
+        agent_id: str = "",
+        agent_name: str = "",
     ) -> LLMResponse:
         """
         [新] 带参考上下文的 LLM 调用
@@ -225,17 +417,29 @@ class LLMClient:
         Returns:
             LLMResponse
         """
-        if os.environ.get("MOCK_LLM", "").lower() == "true":
-            logger.info(f"[Trace-{trace_id}] MOCK_LLM: 返回 Mock 响应 (with context)")
-            return LLMResponse(
-                content=f"[DEMO] Mock response with {len(context_messages)} context messages",
-                tokens_used=0,
-                model_name="demo",
-                latency_seconds=0.0,
-            )
+        actual_model = self._resolve_model(model)
 
-        env_model = os.environ.get("LLM_DEFAULT_MODEL", "")
-        actual_model = env_model or model or self.default_model
+        if self._mock_mode_enabled():
+            logger.info(f"[Trace-{trace_id}] MOCK_LLM: 返回 Mock 响应 (with context)")
+            response = LLMResponse(
+                content=f"[MOCK] Test response with {len(context_messages)} context messages",
+                tokens_used=0,
+                model_name=actual_model,
+                latency_seconds=0.0,
+                is_mock=True,
+            )
+            await self._record_call(
+                trace_id=trace_id,
+                venue_id=venue_id,
+                agent_id=agent_id,
+                agent_name=agent_name,
+                model_name=actual_model,
+                status="MOCKED",
+                attempt_count=1,
+                latency_seconds=0.0,
+                is_mock=True,
+            )
+            return response
 
         messages = [
             {"role": "system", "content": system_prompt}
@@ -266,15 +470,36 @@ class LLMClient:
                 latency = time.time() - start_time
                 content = response.choices[0].message.content or ""
                 tokens = response.usage.total_tokens if response.usage else 0
+                prompt_tokens = response.usage.prompt_tokens if response.usage else 0
+                completion_tokens = response.usage.completion_tokens if response.usage else 0
+                request_id = getattr(response, "id", None)
 
                 logger.info(f"[Trace-{trace_id}] LLM 响应成功 | 耗时: {latency:.2f}s | Tokens: {tokens}")
 
-                return LLMResponse(
+                result = LLMResponse(
                     content=content,
                     tokens_used=tokens,
                     model_name=actual_model,
-                    latency_seconds=latency
+                    latency_seconds=latency,
+                    request_id=request_id,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
                 )
+                await self._record_call(
+                    trace_id=trace_id,
+                    venue_id=venue_id,
+                    agent_id=agent_id,
+                    agent_name=agent_name,
+                    model_name=actual_model,
+                    status="SUCCEEDED",
+                    attempt_count=attempt,
+                    latency_seconds=latency,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    total_tokens=tokens,
+                    request_id=request_id,
+                )
+                return result
 
             except RateLimitError as e:
                 last_exception = e
@@ -294,14 +519,36 @@ class LLMClient:
                 await asyncio.sleep(2.0)
 
             except Exception as e:
-                logger.error(f"[Trace-{trace_id}] LLM 调用发生未捕获的致命异常: {e}")
+                logger.error(
+                    f"[Trace-{trace_id}] LLM 调用发生未捕获的致命异常: {type(e).__name__}"
+                )
+                await self._record_call(
+                    trace_id=trace_id,
+                    venue_id=venue_id,
+                    agent_id=agent_id,
+                    agent_name=agent_name,
+                    model_name=actual_model,
+                    status="FAILED",
+                    attempt_count=attempt,
+                    error=e,
+                )
                 raise RuntimeError(f"LLM 致命异常: {str(e)}") from e
 
         logger.error(f"[Trace-{trace_id}] LLM 接口历经 {self.max_retries} 次重试后彻底失败。")
+        await self._record_call(
+            trace_id=trace_id,
+            venue_id=venue_id,
+            agent_id=agent_id,
+            agent_name=agent_name,
+            model_name=actual_model,
+            status="FAILED",
+            attempt_count=self.max_retries,
+            error=last_exception,
+        )
         raise last_exception
 
     ### CHANGE: 解析方法改为 async (虽然纯 CPU 操作，但保持接口一致性)
-    async def parse_json(self, content: str, trace_id: str = "UNKNOWN") -> Dict[str, Any]:
+    async def parse_json(self, content: str, trace_id: str = "UNKNOWN") -> Any:
         """
         工业级 JSON 解析器 (异步版本)：
         注：JSON 解析本身是 CPU 密集型，但为保持与 ask() 的调用一致性，提供 async 接口。
@@ -309,7 +556,7 @@ class LLMClient:
         """
         if not content or not content.strip():
             logger.error(f"[Trace-{trace_id}] LLM 返回内容为空，无法解析为 JSON。")
-            return {}
+            raise ValueError("LLM 返回内容为空，无法解析为 JSON")
 
         content = content.strip()
 
@@ -338,7 +585,7 @@ class LLMClient:
             pass
 
         logger.error(f"[Trace-{trace_id}] 无法从 LLM 输出中提取有效 JSON。原始内容: {content[:200]}...")
-        return {}
+        raise ValueError("LLM 返回内容不是有效 JSON")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

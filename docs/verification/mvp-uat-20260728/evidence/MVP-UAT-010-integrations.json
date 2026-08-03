@@ -1,0 +1,155 @@
+{
+  "uat_id": "MVP-UAT-010",
+  "operation": "Evidence-backed integration status and safe-disabled external actions",
+  "integrations": [
+    {
+      "id": "deepseek",
+      "name": "DeepSeek",
+      "status": "READY",
+      "model": "deepseek-v4-flash",
+      "configured": true,
+      "live_verified": true,
+      "missing": [],
+      "evidence": {
+        "provider": "deepseek",
+        "model_name": "deepseek-v4-flash",
+        "status": "SUCCEEDED",
+        "is_mock": false,
+        "request_id": "71e99848-a33a-429e-8ccc-b25efa8c2d77",
+        "trace_id": "972efb10e0be4b94bf5e33929e1e36f7",
+        "created_at": 1785312613.5009618
+      },
+      "blocked_reason": null
+    },
+    {
+      "id": "in_app",
+      "name": "站内告警",
+      "status": "READY",
+      "configured": true,
+      "live_verified": true,
+      "missing": [],
+      "evidence": {
+        "push_id": "bee1b989-2dc",
+        "recipient": "session:uat-golden-1785230678",
+        "delivery_status": "DELIVERED",
+        "trace_id": "cd324a7461074220ac35460e4db09a21",
+        "pushed_at": 1785307525.9703498
+      },
+      "blocked_reason": null
+    },
+    {
+      "id": "wechat",
+      "name": "企业微信",
+      "status": "DISABLED_REQUIRES_CONFIG",
+      "configured": false,
+      "safe_disabled_verified": true,
+      "live_verified": false,
+      "missing": [
+        "WECHAT_TOKEN",
+        "WECHAT_ENCODING_AES_KEY",
+        "WECHAT_CORP_ID",
+        "WECHAT_CORP_SECRET",
+        "WECHAT_AGENT_ID"
+      ],
+      "evidence": null,
+      "blocked_reason": null
+    },
+    {
+      "id": "sms",
+      "name": "短信",
+      "status": "DISABLED_REQUIRES_CONFIG",
+      "configured": false,
+      "safe_disabled_verified": true,
+      "live_verified": false,
+      "missing": [
+        "SMS_PROVIDER",
+        "SMS_API_KEY"
+      ],
+      "evidence": null,
+      "blocked_reason": null
+    },
+    {
+      "id": "voice",
+      "name": "语音电话",
+      "status": "DISABLED_REQUIRES_CONFIG",
+      "configured": false,
+      "safe_disabled_verified": true,
+      "live_verified": false,
+      "missing": [
+        "VOICE_PROVIDER",
+        "VOICE_API_KEY"
+      ],
+      "evidence": null,
+      "blocked_reason": null
+    }
+  ],
+  "ui": {
+    "settings_cards": [
+      "DeepSeek \nREADY\n\n已配置 是 · Live 验证 通过 · deepseek-v4-flash\n\n已就绪",
+      "站内告警 \nREADY\n\n已配置 是 · Live 验证 通过\n\n已就绪",
+      "企业微信 \nDISABLED_REQUIRES_CONFIG\n\n已配置 否 · Live 验证 未通过\n\n缺少 WECHAT_TOKEN, WECHAT_ENCODING_AES_KEY, WECHAT_CORP_ID, WECHAT_CORP_SECRET, WECHAT_AGENT_ID",
+      "短信 \nDISABLED_REQUIRES_CONFIG\n\n已配置 否 · Live 验证 未通过\n\n缺少 SMS_PROVIDER, SMS_API_KEY",
+      "语音电话 \nDISABLED_REQUIRES_CONFIG\n\n已配置 否 · Live 验证 未通过\n\n缺少 VOICE_PROVIDER, VOICE_API_KEY"
+    ],
+    "controlled_action_options": [
+      {
+        "value": "send_in_app_alert",
+        "text": "站内告警（可用）",
+        "disabled": false
+      },
+      {
+        "value": "send_sms",
+        "text": "短信通知（未配置，禁用）",
+        "disabled": true
+      },
+      {
+        "value": "send_alert",
+        "text": "外部告警广播（未配置，禁用）",
+        "disabled": true
+      }
+    ]
+  },
+  "disabled_action_probes": {
+    "marker": "uat-integration-disabled-482b0d3e-6109-40f1-beac-21aa73b07399",
+    "send_sms": {
+      "status": 409,
+      "payload": {
+        "detail": {
+          "code": "INTEGRATION_DISABLED",
+          "message": "外部通知渠道未配置，当前动作已安全禁用。",
+          "trace_id": "ff158b360a4a4be88e398fee32bd2f0a",
+          "retryable": false,
+          "action": "请先配置并验收以下依赖：SMS_PROVIDER_ADAPTER。"
+        }
+      }
+    },
+    "send_alert": {
+      "status": 409,
+      "payload": {
+        "detail": {
+          "code": "INTEGRATION_DISABLED",
+          "message": "外部通知渠道未配置，当前动作已安全禁用。",
+          "trace_id": "7129c784590140e285385b1d4c00fea5",
+          "retryable": false,
+          "action": "请先配置并验收以下依赖：ALERT_PHONES, SMS_PROVIDER_ADAPTER。"
+        }
+      }
+    },
+    "approval_count_before": 12,
+    "approval_count_after": 12,
+    "push_count_before": 6,
+    "push_count_after": 6,
+    "fake_approval_created": false,
+    "fake_push_created": false
+  },
+  "screenshots": [
+    "integrations-01-settings-1440x900.png",
+    "integrations-02-disabled-actions-1440x900.png"
+  ],
+  "runtime": {
+    "console_errors": [],
+    "page_errors": [],
+    "failed_requests": [],
+    "http_errors": []
+  }
+}

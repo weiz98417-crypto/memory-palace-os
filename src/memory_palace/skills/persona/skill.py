@@ -1,13 +1,4 @@
-"""
-知识分身专家智能体 (Persona Skill Implementation) - 异步版本
-
-核心变更：
-1. 核心执行方法添加 async/await
-2. 调用 llm_client 的地方添加 await
-3. 文件 IO 保持同步 (磁盘读写快，无需异步)
-
-Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
-"""
+"""Evidence-constrained Persona expression for the unified assistant."""
 
 import yaml
 import json
@@ -16,20 +7,13 @@ from typing import Any, Dict, List
 from loguru import logger
 
 from ...core.skill_base import BaseAgentSkill, SkillOutput, SkillValidationError
+from ...tools.llm_wrapper import llm_client
 from .. import register_skill
-
-try:
-    from ...tools.llm_wrapper import llm_client
-except ImportError:
-    logger.warning("llm_client 尚未实现，Persona 将以模拟模式运行")
-    llm_client = None
 
 
 @register_skill("persona")
 class PersonaSkill(BaseAgentSkill):
-    """
-    知识分身专家：负责深度的拟人化交互、模拟面试审查或复杂政策咨询 (异步版本)。
-    """
+    """Express authorized experience without impersonating the source expert."""
 
     def __init__(self):
         self.base_path = Path(__file__).parent
@@ -37,7 +21,7 @@ class PersonaSkill(BaseAgentSkill):
 
         super().__init__(
             skill_name=self.config.get("agent_name", "Persona_Expert_Agent"),
-            model_name=self.config.get("llm_config", {}).get("model", "gpt-4o")
+            model_name=self.config.get("llm_config", {}).get("model", "deepseek-v4-flash")
         )
 
     def _load_config(self) -> Dict[str, Any]:
@@ -47,7 +31,7 @@ class PersonaSkill(BaseAgentSkill):
             logger.warning("Persona config 缺失，采用默认对话参数。")
             return {
                 "agent_name": "Persona_Expert_Agent",
-                "llm_config": {"model": "gpt-4o", "temperature": 0.5},
+                "llm_config": {"model": "deepseek-v4-flash", "temperature": 0.5},
                 "memory_config": {"max_history_turns": 5}
             }
 
@@ -64,9 +48,49 @@ class PersonaSkill(BaseAgentSkill):
             return f.read().strip()
 
     def _validate_context(self, context: Dict[str, Any]) -> None:
-        """分身专家入参校验"""
+        """Validate unified-assistant input and any governed evidence."""
         if "raw_text" not in context or not str(context["raw_text"]).strip():
             raise SkillValidationError("Persona 缺少用户输入的 'raw_text'。")
+        experience_references = self._experience_references(context)
+        if not experience_references:
+            raise SkillValidationError("Persona 只能使用已发布且已授权的专家经验。")
+        if context.get("persona_trigger") not in {
+            "AUTHORIZED_RETRIEVAL",
+            "EXPLICIT_EXPERT",
+        }:
+            raise SkillValidationError("Persona 缺少可审计的专家经验授权触发来源。")
+
+    @staticmethod
+    def _experience_references(context: Dict[str, Any]) -> List[Dict[str, Any]]:
+        references = context.get("knowledge_references") or []
+        if not isinstance(references, list):
+            raise SkillValidationError("Persona 的知识引用必须是列表。")
+
+        experience_references = []
+        required = {
+            "source_id",
+            "source_type",
+            "source_label",
+            "title",
+            "version",
+            "status",
+            "expert_name",
+            "content",
+        }
+        for reference in references:
+            if not isinstance(reference, dict):
+                continue
+            source_type = str(reference.get("source_type") or "").upper()
+            if source_type not in {"EXPERIENCE", "EXPERIENCE_CARD"}:
+                continue
+            if not required.issubset(reference):
+                raise SkillValidationError("Persona 收到的专家经验缺少来源字段。")
+            if str(reference.get("status") or "").upper() != "PUBLISHED":
+                raise SkillValidationError("Persona 只能使用已发布的专家经验。")
+            if any(reference.get(field) in {None, ""} for field in required):
+                raise SkillValidationError("Persona 收到的专家经验存在空来源字段。")
+            experience_references.append(dict(reference))
+        return experience_references
 
     def _format_history_window(self, history: List[Dict[str, str]]) -> str:
         """
@@ -81,77 +105,103 @@ class PersonaSkill(BaseAgentSkill):
 
         formatted_str = ""
         for msg in recent_history:
-            role_name = "员工" if msg.get("role") == "user" else "专家"
+            role_name = "员工" if msg.get("role") == "user" else "企业运营助手"
             content = msg.get("content", "").replace("\n", " ")
             formatted_str += f"[{role_name}]: {content}\n"
 
         return formatted_str.strip()
 
-    ### CHANGE: 核心方法改为 async
     async def _execute_impl(self, context: Dict[str, Any], trace_id: str) -> SkillOutput:
-        """执行分身深度交互逻辑 (异步版本)"""
+        """Generate a governed assistant response from explicit evidence."""
         query_text = str(context["raw_text"]).strip()
         chat_history = context.get("history", [])
+        knowledge_references = context.get("knowledge_references") or []
+        experience_references = self._experience_references(context)
+        response_mode = "AUTHORIZED_EXPERIENCE_SYNTHESIS"
 
-        logger.info(f"[Trace-{trace_id}] Persona 启动深度交互 | 历史轮数: {len(chat_history)}")
+        logger.info(
+            f"[Trace-{trace_id}] Persona 启动统一助手表达 | "
+            f"模式={response_mode} | 历史轮数={len(chat_history)}"
+        )
 
         try:
-            # 1. 组装历史上下文
             formatted_history = self._format_history_window(chat_history)
-
-            # 2. 动态渲染系统级 Prompt
             template = self._load_prompt_template()
-            full_system_prompt = template.format(chat_history=formatted_history)
+            evidence_context = json.dumps(
+                knowledge_references,
+                ensure_ascii=False,
+                default=str,
+            )
+            full_system_prompt = template.format(
+                chat_history=formatted_history,
+                response_mode=response_mode,
+                evidence_context=evidence_context,
+            )
 
-            if llm_client:
-                # 3. 调用 LLM
-                llm_params = self.config.get("llm_config", {})
+            if not llm_client:
+                raise RuntimeError("Persona LLM 客户端未初始化，不能生成分身回答")
 
-                ### CHANGE: 添加 await 调用异步 LLM
-                llm_res = await llm_client.ask(
-                    system_prompt=full_system_prompt,
-                    user_prompt=f"员工最新回复：{query_text}",
-                    model=self.model_name,
-                    temperature=llm_params.get("temperature", 0.5),
-                    json_mode=True,
-                    trace_id=trace_id
-                )
+            llm_params = self.config.get("llm_config", {})
 
-                # 4. 解析大模型返回的复合 JSON
-                ### CHANGE: 添加 await 调用异步解析
-                persona_data = await llm_client.parse_json(llm_res.content, trace_id=trace_id)
+            llm_res = await llm_client.ask(
+                system_prompt=full_system_prompt,
+                user_prompt=f"员工最新回复：{query_text}",
+                model=self.model_name,
+                temperature=llm_params.get("temperature", 0.5),
+                json_mode=True,
+                trace_id=trace_id,
+                venue_id=context.get("venue_id", ""),
+                agent_id="Persona",
+                agent_name=self.skill_name,
+            )
 
-                # 工业级容错
-                reply_text = persona_data.get("reply_text")
-                if not reply_text:
-                    logger.warning(f"[Trace-{trace_id}] Persona 模型未返回 reply_text 字段，触发安全降级。")
-                    reply_text = "抱歉，我正在思考您的诉求，请您稍后重新描述。"
-                    persona_data["reply_text"] = reply_text
+            persona_data = await llm_client.parse_json(llm_res.content, trace_id=trace_id)
+            required_fields = {
+                "reply_text",
+                "emotion_state",
+                "interview_stage",
+                "is_completed",
+                "used_experience_card_ids",
+            }
+            if not isinstance(persona_data, dict) or not required_fields.issubset(persona_data):
+                raise ValueError("Persona LLM 返回结果缺少必需字段")
+            if not str(persona_data["reply_text"]).strip():
+                raise ValueError("Persona LLM 返回了空回复")
+            used_ids = persona_data.get("used_experience_card_ids")
+            if not isinstance(used_ids, list) or any(not isinstance(item, str) for item in used_ids):
+                raise ValueError("Persona LLM 返回了无效的经验引用列表")
+            allowed_ids = {
+                str(reference["source_id"])
+                for reference in experience_references
+            }
+            if set(used_ids) != allowed_ids or len(used_ids) != len(allowed_ids):
+                raise ValueError("Persona LLM 未严格使用已授权的经验引用")
 
-                return SkillOutput(
-                    success=True,
-                    reply_text=reply_text,
-                    structured_data={
-                        "emotion_state": persona_data.get("emotion_state", "neutral"),
-                        "interview_stage": persona_data.get("interview_stage", "ongoing"),
-                        "is_completed": persona_data.get("is_completed", False),
-                        "action_taken": "persona_deep_interaction"
-                    },
-                    action_taken="persona_deep_interaction",
-                    tokens_used=llm_res.tokens_used
-                )
-            else:
-                return SkillOutput(
-                    success=True,
-                    reply_text="分身专家暂时离线，请稍后再试。",
-                    structured_data={
-                        "emotion_state": "neutral",
-                        "interview_stage": "mock",
-                        "is_completed": False,
-                        "action_taken": "mock_persona_interaction"
-                    },
-                    action_taken="mock_persona_interaction"
-                )
+            reply_text = str(persona_data["reply_text"]).strip()
+            disclosure = (
+                "以上建议由企业运营助手基于已发布并授权的专家经验生成，"
+                "非专家本人实时回复。"
+            )
+            if experience_references and "非专家本人实时回复" not in reply_text:
+                reply_text = f"{reply_text}\n\n{disclosure}"
+
+            return SkillOutput(
+                success=True,
+                reply_text=reply_text,
+                structured_data={
+                    "emotion_state": persona_data["emotion_state"],
+                    "interview_stage": persona_data["interview_stage"],
+                    "is_completed": persona_data["is_completed"],
+                    "response_mode": response_mode,
+                    "used_experience_card_ids": used_ids,
+                    "experience_references": experience_references,
+                    "ai_generated": True,
+                    "expert_live_reply": False,
+                    "action_taken": "authorized_experience_synthesis",
+                },
+                action_taken="authorized_experience_synthesis",
+                tokens_used=llm_res.tokens_used,
+            )
 
         except KeyError as e:
             logger.error(f"[Trace-{trace_id}] Persona Prompt 格式化失败，可能是由于 JSON 的 {{}} 未转义导致: {e}")

@@ -36,6 +36,11 @@ class TestSLARecording:
             reply_text="【P0 指令】已通知运维团队。",
             action_taken="commander_dispatched",
         )
+        router_output = SkillOutput(
+            success=True,
+            structured_data={"intent": "incident_report", "severity": "P0", "confidence": 0.99},
+            action_taken="router_routed",
+        )
 
         sla_called = {"called": False}
 
@@ -46,6 +51,8 @@ class TestSLARecording:
             m = MagicMock()
             if name == "context_trigger":
                 m.run = AsyncMock(return_value=ct_output)
+            elif name == "router":
+                m.run = AsyncMock(return_value=router_output)
             elif name == "commander":
                 m.run = AsyncMock(return_value=commander_output)
             else:
@@ -59,9 +66,9 @@ class TestSLARecording:
             "content": "过山车突然停了，上面有游客！",
         }
 
-        with patch("src.memory_palace.knowledge.db_client.save_message", side_effect=AsyncMock()):
+        with patch.object(Orchestrator, "_save_message", new_callable=AsyncMock):
             with patch("src.memory_palace.knowledge.db_client.create_or_update_session", side_effect=AsyncMock()):
-                with patch("src.memory_palace.knowledge.db_client.update_sla_response", side_effect=mock_update_sla):
+                with patch.object(Orchestrator, "_update_sla_response", side_effect=mock_update_sla):
                     with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
                         orch = Orchestrator()
                         result = await orch.process(payload)
@@ -106,9 +113,9 @@ class TestSLARecording:
             "content": "今天天气不错",
         }
 
-        with patch("src.memory_palace.knowledge.db_client.save_message", side_effect=AsyncMock()):
+        with patch.object(Orchestrator, "_save_message", new_callable=AsyncMock):
             with patch("src.memory_palace.knowledge.db_client.create_or_update_session", side_effect=AsyncMock()):
-                with patch("src.memory_palace.knowledge.db_client.update_sla_response", side_effect=mock_update_sla):
+                with patch.object(Orchestrator, "_update_sla_response", side_effect=mock_update_sla):
                     with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
                         orch = Orchestrator()
                         result = await orch.process(payload)

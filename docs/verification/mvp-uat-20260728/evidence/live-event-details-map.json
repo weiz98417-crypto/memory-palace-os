@@ -1,0 +1,81 @@
+{
+  "event": {
+    "id": 11,
+    "event_id": "b250f04f-0be9-4a61-acc8-824424c1474d",
+    "push_id": "e32b7013-3787-414f-8a56-7398521ce0b5",
+    "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+    "raw_text": "UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+    "event_type": "人员安全",
+    "severity": "P0",
+    "context_trigger_data": "{\"stage\": \"stage2\", \"should_trigger\": true, \"event_type\": \"人员安全\", \"severity\": \"P0\", \"confidence\": 0.95, \"stage1_keywords\": []}",
+    "memory_content": "[P0] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+    "vector_doc_id": "evt_b250f04f-0be9-4a61-acc8-824424c1474d",
+    "created_at": null,
+    "confirmed_at": 1785247630.6158996,
+    "venue_id": "venue-uat",
+    "source_type": "LIVE",
+    "status": "OPEN",
+    "assigned_to": null,
+    "resolution": null,
+    "trace_id": "4ecf6f93a7454a72a2e76265f6e112c2",
+    "closed_at": null,
+    "updated_at": null
+  },
+  "details": {
+    "visible_candidates": [
+      {
+        "id": "details",
+        "tag": "ASIDE",
+        "text": "事件详情\n关闭\n事件 ID\nb250f04f-0be9-4a61-acc8-824424c1474d\nTrace ID\n4ecf6f93a7454a72a2e76265f6e112c2\n原始描述\nUAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。\n类型\n人员安全\n级别\nP0\n状态\nOPEN\n负责人\n未分配\n处置结果\n[P0] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。\n来源\nLIVE\n更新分类与负责人\n闭环事件",
+        "buttons": [
+          {
+            "text": "关闭",
+            "onclick": null,
+            "action": "close-details"
+          },
+          {
+            "text": "更新分类与负责人",
+            "onclick": "App.editEvent('b250f04f-0be9-4a61-acc8-824424c1474d')",
+            "action": null
+          },
+          {
+            "text": "闭环事件",
+            "onclick": "App.closeEvent('b250f04f-0be9-4a61-acc8-824424c1474d')",
+            "action": null
+          }
+        ]
+      },
+      {
+        "id": "details-title",
+        "tag": "H2",
+        "text": "事件详情",
+        "buttons": []
+      },
+      {
+        "id": "details-body",
+        "tag": "DIV",
+        "text": "事件 ID\nb250f04f-0be9-4a61-acc8-824424c1474d\nTrace ID\n4ecf6f93a7454a72a2e76265f6e112c2\n原始描述\nUAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。\n类型\n人员安全\n级别\nP0\n状态\nOPEN\n负责人\n未分配\n处置结果\n[P0] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。\n来源\nLIVE\n更新分类与负责人\n闭环事件",
+        "buttons": [
+          {
+            "text": "更新分类与负责人",
+            "onclick": "App.editEvent('b250f04f-0be9-4a61-acc8-824424c1474d')",
+            "action": null
+          },
+          {
+            "text": "闭环事件",
+            "onclick": "App.closeEvent('b250f04f-0be9-4a61-acc8-824424c1474d')",
+            "action": null
+          }
+        ]
+      }
+    ]
+  },
+  "runtime": {
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

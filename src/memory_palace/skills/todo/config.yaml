@@ -1,7 +1,7 @@
 # TodoWrite Skill Configuration
 
 llm_config:
-  model: gpt-4o-mini  # 使用较小的模型进行任务分解，更快更便宜
+  model: deepseek-v4-flash
 
 max_tasks: 10  # 最多分解为 10 个任务
 

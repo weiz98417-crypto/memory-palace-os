@@ -16,7 +16,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from loguru import logger
 
-
 # ==============================================================================
 # 验证类型
 # ==============================================================================
@@ -116,12 +115,7 @@ class Validators:
     @staticmethod
     def is_model_name(value: str) -> bool:
         """验证模型名称"""
-        valid_models = [
-            "gpt-4", "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo",
-            "claude-3-opus", "claude-3-sonnet", "claude-3-haiku",
-            "gemini-pro", "gemini-ultra"
-        ]
-        return value in valid_models or value.startswith("gpt-") or value.startswith("claude-")
+        return value == "deepseek-v4-flash"
 
     @staticmethod
     def is_aes_key(value: str) -> bool:
@@ -152,9 +146,9 @@ class EnvValidator:
 
         # 添加规则
         validator.add_rule(EnvRule(
-            name="OpenAI API Key",
-            env_key="OPENAI_API_KEY",
-            description="OpenAI API 密钥",
+            name="DeepSeek API Key",
+            env_key="DEEPSEEK_API_KEY",
+            description="DeepSeek API 密钥",
             validator=lambda v: len(v) > 10
         ))
 
@@ -177,27 +171,38 @@ class EnvValidator:
             level=ValidationLevel.INFO,
             required=False,
             default="dev",
-            validator=lambda v: v in ["dev", "test", "prod"]
+            validator=lambda v: v in ["dev", "test", "prod", "production"]
         ))
 
         # LLM 配置
         self.add_rule(EnvRule(
-            name="OpenAI API Key",
-            env_key="OPENAI_API_KEY",
-            description="OpenAI API 密钥 (生产必需)",
+            name="DeepSeek API Key",
+            env_key="DEEPSEEK_API_KEY",
+            description="DeepSeek API 密钥 (生产必需)",
             level=ValidationLevel.ERROR,
             validator=Validators.is_token,
-            error_message="请设置有效的 OPENAI_API_KEY"
+            error_message="请设置有效的 DEEPSEEK_API_KEY"
         ))
 
         self.add_rule(EnvRule(
             name="LLM Base URL",
-            env_key="LLM_BASE_URL",
-            description="LLM API 地址 (可选，自定义中转时需要)",
+            env_key="DEEPSEEK_BASE_URL",
+            description="DeepSeek API 地址",
             level=ValidationLevel.WARNING,
             required=False,
-            default="https://api.openai.com/v1",
+            default="https://api.deepseek.com/v1",
             validator=Validators.is_url
+        ))
+
+        self.add_rule(EnvRule(
+            name="生成式模型",
+            env_key="LLM_DEFAULT_MODEL",
+            description="企业 MVP 唯一生成式模型",
+            level=ValidationLevel.ERROR,
+            required=False,
+            default="deepseek-v4-flash",
+            validator=Validators.is_model_name,
+            error_message="LLM_DEFAULT_MODEL 必须为 deepseek-v4-flash",
         ))
 
         # 数据库配置
@@ -205,18 +210,16 @@ class EnvValidator:
             name="PostgreSQL 连接",
             env_key="DATABASE_URL",
             description="PostgreSQL 连接串 (生产必需，DEMO_MODE 跳过)",
-            level=ValidationLevel.WARNING,
-            required=False,
-            default="postgresql://localhost:5432/memory_palace",
+            level=ValidationLevel.ERROR,
+            required=True,
         ))
 
         self.add_rule(EnvRule(
             name="Redis 连接",
             env_key="REDIS_URL",
-            description="Redis 连接串 (生产推荐，DEMO_MODE 跳过)",
-            level=ValidationLevel.WARNING,
-            required=False,
-            default="redis://localhost:6379",
+            description="Redis 连接串 (生产必需，DEMO_MODE 跳过)",
+            level=ValidationLevel.ERROR,
+            required=True,
         ))
 
         # 认证配置
@@ -231,9 +234,23 @@ class EnvValidator:
         self.add_rule(EnvRule(
             name="JWT 密钥",
             env_key="MEMORY_PALACE_JWT_SECRET",
-            description="JWT HS256 签名密钥 (生产推荐)",
-            level=ValidationLevel.WARNING,
-            required=False,
+            description="JWT HS256 签名密钥 (生产必需，至少 32 字符)",
+            level=ValidationLevel.ERROR,
+            required=True,
+            validator=lambda v: len(v) >= 32,
+            error_message="MEMORY_PALACE_JWT_SECRET 必须至少 32 个字符",
+        ))
+
+        self.add_rule(EnvRule(
+            name="管理员初始密码",
+            env_key="ADMIN_PASSWORD",
+            description="首次部署管理员密码",
+            level=ValidationLevel.ERROR,
+            required=True,
+            validator=lambda v: len(v) >= 12 and v.lower() not in {
+                "123456", "password", "change_me_in_production"
+            },
+            error_message="ADMIN_PASSWORD 必须至少 12 个字符且不能使用示例值",
         ))
 
         # LLM Fallback
@@ -250,7 +267,8 @@ class EnvValidator:
             name="企微 Corp ID",
             env_key="WECHAT_CORP_ID",
             description="企业微信 Corp ID",
-            level=ValidationLevel.ERROR,
+            level=ValidationLevel.WARNING,
+            required=False,
             validator=lambda v: len(v) > 5
         ))
 
@@ -258,7 +276,8 @@ class EnvValidator:
             name="企微应用密钥",
             env_key="WECHAT_CORP_SECRET",
             description="企业微信应用密钥",
-            level=ValidationLevel.ERROR,
+            level=ValidationLevel.WARNING,
+            required=False,
             validator=Validators.is_token
         ))
 
@@ -266,7 +285,8 @@ class EnvValidator:
             name="企微回调 Token",
             env_key="WECHAT_TOKEN",
             description="企业微信回调 Token",
-            level=ValidationLevel.ERROR,
+            level=ValidationLevel.WARNING,
+            required=False,
             validator=Validators.is_token
         ))
 
@@ -274,7 +294,8 @@ class EnvValidator:
             name="企微加密密钥",
             env_key="WECHAT_ENCODING_AES_KEY",
             description="企业微信加密 AES Key",
-            level=ValidationLevel.ERROR,
+            level=ValidationLevel.WARNING,
+            required=False,
             validator=Validators.is_aes_key,
             error_message="AES Key 必须是 43 位字符"
         ))
@@ -318,10 +339,16 @@ class EnvValidator:
 
     def validate(self) -> ValidationResult:
         """执行验证"""
+        from .secrets import read_secret
+
         result = ValidationResult()
 
         for rule in self.rules:
-            value = os.environ.get(rule.env_key)
+            value = (
+                read_secret(rule.env_key)
+                if rule.env_key == "DEEPSEEK_API_KEY"
+                else os.environ.get(rule.env_key)
+            )
             env_key = rule.env_key
 
             # 检查是否存在
@@ -442,5 +469,3 @@ __all__ = [
     "validate_env_strict",
     "_auto_validate",
 ]
-
-    

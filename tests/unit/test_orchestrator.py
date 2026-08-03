@@ -72,8 +72,8 @@ class TestRoutingDecision:
                 assert result["route"].get("target_agent") == "commander"
 
     @pytest.mark.asyncio
-    async def test_routine_message_routes_to_persona_extract(self, orchestrator):
-        """常规消息走默认路由到 persona_extract"""
+    async def test_other_message_routes_to_memory_ops(self, orchestrator):
+        """日常咨询进入确权知识检索，不冒充专家 Persona。"""
         payload = {
             "msg_id": "test_002",
             "trace_id": "trace_routine",
@@ -81,17 +81,50 @@ class TestRoutingDecision:
             "content": "今天天气怎么样？",
         }
 
-        with patch.object(orchestrator, "_save_message", new_callable=AsyncMock):
-            with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
-                result = await orchestrator.process(payload)
+        def get_skill(name):
+            if name == "router":
+                skill = MagicMock()
+                skill.run = AsyncMock(
+                    return_value=SkillOutput(
+                        success=True,
+                        structured_data={
+                            "intent": "other",
+                            "severity": "P3",
+                            "confidence": 0.9,
+                        },
+                        action_taken="router_routed",
+                    )
+                )
+                return skill
+            return None
 
-                assert result["status"] == "processed"
-                assert result["route"].get("intent") == "routine"
-                assert result["route"].get("target_agent") == "persona_extract"
+        with patch.object(orchestrator, "_save_message", new_callable=AsyncMock):
+            with patch.object(
+                orchestrator,
+                "_execute_agent",
+                new_callable=AsyncMock,
+                return_value=SkillOutput(
+                    success=True,
+                    reply_text="知识库暂无相关营业时间，请咨询值班经理。",
+                    structured_data={"references": []},
+                    action_taken="rag_experience_advice",
+                ),
+            ) as execute_agent:
+                with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
+                    result = await orchestrator.process(payload)
+
+        assert result["status"] == "processed"
+        assert result["route"].get("intent") == "other"
+        assert result["route"].get("target_agent") == "memory_ops"
+        assert execute_agent.await_args.args[0]["target_agent"] == "memory_ops"
+        assert all(
+            step["agent_id"] != "Persona"
+            for step in result["agent_trace"]
+        )
 
     @pytest.mark.asyncio
-    async def test_router_failure_uses_default_route(self, orchestrator):
-        """Router 执行失败时，降级到默认路由"""
+    async def test_router_unavailable_fails_closed_without_default_agent(self, orchestrator):
+        """Router 不可用时失败关闭，不调用默认 Agent。"""
         payload = {
             "msg_id": "test_003",
             "trace_id": "trace_fail",
@@ -100,14 +133,96 @@ class TestRoutingDecision:
         }
 
         with patch.object(orchestrator, "_save_message", new_callable=AsyncMock):
-            with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
-                result = await orchestrator.process(payload)
+            with patch.object(orchestrator, "_execute_agent", new_callable=AsyncMock) as execute_agent:
+                with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
+                    result = await orchestrator.process(payload)
 
-                assert result["route"].get("status") == "routed"
-                assert result["route"].get("target_agent") == "persona_extract"
+        assert result["status"] == "failed"
+        assert result["route"].get("status") == "failed"
+        assert result["route"].get("target_agent") == "router"
+        execute_agent.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_failed_agent_output_is_reported_as_failed_run(self, orchestrator):
+        payload = {
+            "msg_id": "test_agent_failure",
+            "trace_id": "trace_agent_failure",
+            "from_user": "worker_failure",
+            "content": "东门游客晕倒",
+        }
+        route = {
+            "status": "routed",
+            "target_agent": "commander",
+            "priority": "P3",
+        }
+        failed_output = SkillOutput(
+            success=False,
+            reply_text="系统正忙，请稍后再试。",
+            error_msg="DeepSeek authentication failed",
+            action_taken="fatal_error_fallback",
+        )
+
+        with patch.object(orchestrator, "_save_message", new_callable=AsyncMock):
+            with patch.object(orchestrator, "_route", new_callable=AsyncMock, return_value=route):
+                with patch.object(orchestrator, "_execute_agent", new_callable=AsyncMock, return_value=failed_output):
+                    result = await orchestrator.process(payload)
+
+        assert result["status"] == "failed"
+        assert result["error"] == "DeepSeek authentication failed"
+        assert result["reply_text"] == "系统正忙，请稍后再试。"
+
+    @pytest.mark.asyncio
+    async def test_router_skill_failure_stops_before_default_agent_execution(self, orchestrator):
+        payload = {
+            "msg_id": "test_router_skill_failure",
+            "trace_id": "trace_router_skill_failure",
+            "from_user": "worker_failure",
+            "content": "西侧扶梯出现焦糊味",
+        }
+        router_failure = SkillOutput(
+            success=False,
+            reply_text="系统正忙，请稍后再试。",
+            error_msg="DeepSeek authentication failed",
+            action_taken="fatal_error_fallback",
+        )
+
+        def get_skill(name):
+            if name == "router":
+                skill = MagicMock()
+                skill.run = AsyncMock(return_value=router_failure)
+                return skill
+            return None
+
+        with patch.object(orchestrator, "_save_message", new_callable=AsyncMock):
+            with patch.object(orchestrator, "_execute_agent", new_callable=AsyncMock) as execute_agent:
+                with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
+                    result = await orchestrator.process(payload)
+
+        assert result["status"] == "failed"
+        assert result["route"]["target_agent"] == "router"
+        assert result["error"] == "DeepSeek authentication failed"
+        execute_agent.assert_not_called()
 
 
 class TestSLARecording:
+
+    @staticmethod
+    def _successful_route(priority):
+        return {
+            "status": "routed",
+            "target_agent": "memory_ops",
+            "priority": priority,
+            "intent": "knowledge_query",
+            "agent_trace": [],
+        }
+
+    @staticmethod
+    def _successful_agent_output():
+        return SkillOutput(
+            success=True,
+            reply_text="处理完成",
+            action_taken="rag_experience_advice",
+        )
 
     @pytest.mark.asyncio
     async def test_p0_updates_sla_response(self, orchestrator):
@@ -121,10 +236,31 @@ class TestSLARecording:
         }
 
         with patch.object(orchestrator, "_save_message", new_callable=AsyncMock):
-            with patch.object(orchestrator, "_update_sla_response", new_callable=AsyncMock) as mock_sla:
-                with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
-                    await orchestrator.process(payload)
-                    mock_sla.assert_called_once_with("test_p0_sla")
+            with patch.object(
+                orchestrator,
+                "_route",
+                new_callable=AsyncMock,
+                return_value=self._successful_route("P0"),
+            ):
+                with patch.object(
+                    orchestrator,
+                    "_execute_agent",
+                    new_callable=AsyncMock,
+                    return_value=self._successful_agent_output(),
+                ):
+                    with patch.object(
+                        orchestrator,
+                        "_save_live_event",
+                        new_callable=AsyncMock,
+                        return_value=None,
+                    ):
+                        with patch.object(
+                            orchestrator,
+                            "_update_sla_response",
+                            new_callable=AsyncMock,
+                        ) as mock_sla:
+                            await orchestrator.process(payload)
+                            mock_sla.assert_called_once_with("test_p0_sla")
 
     @pytest.mark.asyncio
     async def test_p1_updates_sla_response(self, orchestrator):
@@ -138,10 +274,31 @@ class TestSLARecording:
         }
 
         with patch.object(orchestrator, "_save_message", new_callable=AsyncMock):
-            with patch.object(orchestrator, "_update_sla_response", new_callable=AsyncMock) as mock_sla:
-                with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
-                    await orchestrator.process(payload)
-                    mock_sla.assert_called_once_with("test_p1_sla")
+            with patch.object(
+                orchestrator,
+                "_route",
+                new_callable=AsyncMock,
+                return_value=self._successful_route("P1"),
+            ):
+                with patch.object(
+                    orchestrator,
+                    "_execute_agent",
+                    new_callable=AsyncMock,
+                    return_value=self._successful_agent_output(),
+                ):
+                    with patch.object(
+                        orchestrator,
+                        "_save_live_event",
+                        new_callable=AsyncMock,
+                        return_value=None,
+                    ):
+                        with patch.object(
+                            orchestrator,
+                            "_update_sla_response",
+                            new_callable=AsyncMock,
+                        ) as mock_sla:
+                            await orchestrator.process(payload)
+                            mock_sla.assert_called_once_with("test_p1_sla")
 
     @pytest.mark.asyncio
     async def test_p3_does_not_update_sla(self, orchestrator):
@@ -155,10 +312,31 @@ class TestSLARecording:
         }
 
         with patch.object(orchestrator, "_save_message", new_callable=AsyncMock):
-            with patch.object(orchestrator, "_update_sla_response", new_callable=AsyncMock) as mock_sla:
-                with patch("src.memory_palace.core.orchestrator.get_skill_by_name", return_value=None):
-                    await orchestrator.process(payload)
-                    mock_sla.assert_not_called()
+            with patch.object(
+                orchestrator,
+                "_route",
+                new_callable=AsyncMock,
+                return_value=self._successful_route("P3"),
+            ):
+                with patch.object(
+                    orchestrator,
+                    "_execute_agent",
+                    new_callable=AsyncMock,
+                    return_value=self._successful_agent_output(),
+                ):
+                    with patch.object(
+                        orchestrator,
+                        "_save_live_event",
+                        new_callable=AsyncMock,
+                        return_value=None,
+                    ):
+                        with patch.object(
+                            orchestrator,
+                            "_update_sla_response",
+                            new_callable=AsyncMock,
+                        ) as mock_sla:
+                            await orchestrator.process(payload)
+                            mock_sla.assert_not_called()
 
 
 class TestAgentHandoff:

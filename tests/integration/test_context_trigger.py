@@ -1,7 +1,7 @@
 """
 情境触发集成测试 (Context Trigger Integration Test)
 
-验证：Stage1 关键词命中 → ContextTrigger 判断 → 路由到 Commander
+验证：Stage1 关键词命中 → ContextTrigger 判断 → Router 分诊 → Commander
 
 Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 """
@@ -17,7 +17,7 @@ class TestContextTrigger:
 
     @pytest.mark.asyncio
     async def test_emergency_keyword_routes_to_commander(self):
-        """紧急关键词命中 → 直接路由到 Commander，跳过 Router"""
+        """紧急关键词命中后仍由 Router 分诊到 Commander。"""
 
         ct_output = SkillOutput(
             success=True,
@@ -38,10 +38,25 @@ class TestContextTrigger:
             action_taken="commander_dispatched",
         )
 
+        router_output = SkillOutput(
+            success=True,
+            structured_data={
+                "intent": "incident_report",
+                "severity": "P0",
+                "confidence": 0.99,
+            },
+            action_taken="router_routed",
+        )
+
+        agent_calls = []
+
         def get_skill(name):
+            agent_calls.append(name)
             m = MagicMock()
             if name == "context_trigger":
                 m.run = AsyncMock(return_value=ct_output)
+            elif name == "router":
+                m.run = AsyncMock(return_value=router_output)
             elif name == "commander":
                 m.run = AsyncMock(return_value=commander_output)
             else:
@@ -56,18 +71,24 @@ class TestContextTrigger:
             "timestamp": 1234567890.0,
         }
 
-        with patch("src.memory_palace.knowledge.db_client.save_message", side_effect=AsyncMock()):
-            with patch("src.memory_palace.knowledge.db_client.create_or_update_session", side_effect=AsyncMock()):
-                with patch("src.memory_palace.knowledge.db_client.update_sla_response", side_effect=AsyncMock()):
-                    with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
-                        orch = Orchestrator()
-                        result = await orch.process(payload)
+        orch = Orchestrator()
+        with patch.object(orch, "_save_message", new_callable=AsyncMock):
+            with patch.object(orch, "_update_sla_response", new_callable=AsyncMock):
+                with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
+                    result = await orch.process(payload)
 
         assert result["status"] == "processed"
         route = result["route"]
         assert route["target_agent"] == "commander", f"紧急事件应路由到 Commander，实际: {route['target_agent']}"
         assert route["severity"] == "P0"
         assert "context_trigger_data" in route
+        assert agent_calls == ["context_trigger", "router", "memory_ops", "commander"]
+        assert [step["agent_id"] for step in result["agent_trace"]] == [
+            "ContextTrigger",
+            "Router",
+            "MemoryOps",
+            "Commander",
+        ]
 
     @pytest.mark.asyncio
     async def test_normal_message_goes_to_router(self):
@@ -110,11 +131,10 @@ class TestContextTrigger:
             "content": "今天天气不错，适合带团。",
         }
 
-        with patch("src.memory_palace.knowledge.db_client.save_message", side_effect=AsyncMock()):
-            with patch("src.memory_palace.knowledge.db_client.create_or_update_session", side_effect=AsyncMock()):
-                with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
-                    orch = Orchestrator()
-                    result = await orch.process(payload)
+        orch = Orchestrator()
+        with patch.object(orch, "_save_message", new_callable=AsyncMock):
+            with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
+                result = await orch.process(payload)
 
         assert result["status"] == "processed"
         assert result["route"]["target_agent"] != "commander", "非紧急消息不应路由到 Commander"

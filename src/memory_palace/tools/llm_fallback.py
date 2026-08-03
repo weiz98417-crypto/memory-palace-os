@@ -6,8 +6,13 @@ from typing import Optional
 from loguru import logger
 from openai import AsyncOpenAI
 
+from src.memory_palace.config.secrets import read_secret
 from src.memory_palace.tools.circuit_breaker import CircuitBreaker, CircuitOpenError
-from src.memory_palace.tools.llm_wrapper import LLMResponse
+from src.memory_palace.tools.llm_wrapper import (
+    DEFAULT_DEEPSEEK_BASE_URL,
+    LLMResponse,
+    REQUIRED_GENERATIVE_MODEL,
+)
 
 
 @dataclass
@@ -92,19 +97,29 @@ def build_fallback_chain() -> Optional[LLMFallbackChain]:
 
     models = []
 
-    # Primary: existing OPENAI_API_KEY (DeepSeek compatible)
-    primary_key = os.environ.get("OPENAI_API_KEY", "")
-    primary_url = os.environ.get("OPENAI_BASE_URL", "")
-    primary_model = os.environ.get("LLM_DEFAULT_MODEL", "gpt-4o")
+    # Primary: DeepSeek OpenAI-compatible endpoint.
+    primary_key = read_secret("DEEPSEEK_API_KEY")
+    primary_url = os.environ.get("DEEPSEEK_BASE_URL", "") or DEFAULT_DEEPSEEK_BASE_URL
     if primary_key:
-        models.append(ModelConfig("primary", primary_key, primary_url, primary_model))
+        models.append(ModelConfig("primary", primary_key, primary_url, REQUIRED_GENERATIVE_MODEL))
 
     # Fallback: LLM_FALLBACK_* env vars
     fallback_key = os.environ.get("LLM_FALLBACK_API_KEY", "")
     fallback_url = os.environ.get("LLM_FALLBACK_BASE_URL", "")
-    fallback_model = os.environ.get("LLM_FALLBACK_MODEL", "")
     if fallback_key:
-        models.append(ModelConfig("fallback", fallback_key, fallback_url, fallback_model))
+        configured_fallback_model = os.environ.get("LLM_FALLBACK_MODEL", REQUIRED_GENERATIVE_MODEL)
+        if configured_fallback_model != REQUIRED_GENERATIVE_MODEL:
+            raise ValueError(
+                f"备用生成模型也必须是 {REQUIRED_GENERATIVE_MODEL}，当前值为 {configured_fallback_model}"
+            )
+        models.append(
+            ModelConfig(
+                "fallback",
+                fallback_key,
+                fallback_url or DEFAULT_DEEPSEEK_BASE_URL,
+                REQUIRED_GENERATIVE_MODEL,
+            )
+        )
 
     if len(models) > 1:
         return LLMFallbackChain(models)

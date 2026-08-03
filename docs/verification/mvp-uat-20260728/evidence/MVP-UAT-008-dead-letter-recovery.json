@@ -1,0 +1,54 @@
+{
+  "uat_id": "MVP-UAT-008",
+  "operation": "Tenant-scoped Redis dead-letter recovery through the formal diagnostics client",
+  "injected_entry": {
+    "id": "1785312703011-0",
+    "venue_id": "venue-uat",
+    "message_id": "uat-dead-letter-9855b733-8a59-4c7f-b0aa-60a95b61d341",
+    "trace_id": "75f9387f35594d7a86c0a09c241b00c7",
+    "error": "MVP UAT synthetic dead-letter 9855b733-8a59-4c7f-b0aa-60a95b61d341",
+    "contains_credentials": false
+  },
+  "ui_selection": {
+    "exact_dead_letter_id": "1785312703011-0",
+    "retry_button_count": 1
+  },
+  "retry": {
+    "status": 200,
+    "response": {
+      "dead_letter_id": "1785312703011-0",
+      "stream_message_id": "1785312703604-0",
+      "message_id": "uat-dead-letter-9855b733-8a59-4c7f-b0aa-60a95b61d341",
+      "trace_id": "3f2f8998682a4084a45c599dc62103b8"
+    }
+  },
+  "consumption": {
+    "postgres_message_count": 1,
+    "dead_letter_deleted": true,
+    "stream_message_acknowledged": true
+  },
+  "audit": {
+    "id": 455,
+    "venue_id": "venue-uat",
+    "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+    "action": "DEAD_LETTER_RETRIED",
+    "resource_type": "dead_letter",
+    "resource_id": "1785312703011-0",
+    "outcome": "SUCCEEDED",
+    "trace_id": "3f2f8998682a4084a45c599dc62103b8",
+    "created_at": 1785312703.6059918,
+    "metadata": {
+      "message_id": "uat-dead-letter-9855b733-8a59-4c7f-b0aa-60a95b61d341",
+      "stream_message_id": "1785312703604-0"
+    }
+  },
+  "screenshots": [
+    "dead-letter-01-retried-1440x900.png"
+  ],
+  "runtime": {
+    "console_errors": [],
+    "page_errors": [],
+    "failed_requests": [],
+    "http_errors": []
+  }
+}

@@ -22,19 +22,18 @@ system:
 # 2. 大语言模型 (LLM) 配置
 # -----------------------------------------------------------------------------
 llm:
-  default_model: "gpt-4o"  # 生产环境建议替换为中转网关或内部 Proxy
+  default_model: "deepseek-v4-flash"
   timeout: 30.0           # 请求超时时间 (秒)
   max_retries: 3          # 最大重试次数
   retry_delay: 1.0        # 重试延迟 (秒)
   # API 配置 - 敏感信息通过环境变量覆盖
-  base_url: "https://api.openai.com/v1"
-  # api_key: ""           # 通过 OPENAI_API_KEY 环境变量设置
-  # 支持多模型配置
+  base_url: "https://api.deepseek.com/v1"
+  # api_key: ""           # 通过 DEEPSEEK_API_KEY 环境变量设置
+  # 所有生成式档位锁定到同一模型，避免静默切换供应商或能力层级
   models:
-    fast: "gpt-3.5-turbo"
-    standard: "gpt-4o"
-    premium: "gpt-4-turbo"
-    local: "local-model"  # 本地模型
+    fast: "deepseek-v4-flash"
+    standard: "deepseek-v4-flash"
+    premium: "deepseek-v4-flash"
   # Embedding 配置
   embedding:
     model: "text-embedding-3-small"

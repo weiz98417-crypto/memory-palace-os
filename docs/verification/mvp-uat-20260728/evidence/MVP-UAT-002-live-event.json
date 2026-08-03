@@ -1,0 +1,392 @@
+{
+  "uat_id": "MVP-UAT-002",
+  "operation": "Live event intelligent intake",
+  "input": {
+    "content": "UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。"
+  },
+  "intake_status": 202,
+  "intake": {
+    "message_id": "6609c0c4-236b-45d3-b5bb-9073c3084329",
+    "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+    "session_id": "df4e397f-3f39-497e-955c-916b8c5c1f33",
+    "status": "QUEUED",
+    "created_at": "2026-07-29T07:53:50.322078Z"
+  },
+  "elapsed_ms": 9136,
+  "run": {
+    "status": "COMPLETED",
+    "message_id": "6609c0c4-236b-45d3-b5bb-9073c3084329",
+    "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+    "session_id": "df4e397f-3f39-497e-955c-916b8c5c1f33",
+    "agent": "commander",
+    "result": "确认已呼叫医护。立即封锁事发区域至医护到达，严禁挪动游客，安排人员引导医护进场。保持急救通道畅通。"
+  },
+  "trace": {
+    "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+    "venue_id": "venue-uat",
+    "status": "SUCCEEDED",
+    "message_run": {
+      "message_id": "6609c0c4-236b-45d3-b5bb-9073c3084329",
+      "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+      "session_id": "df4e397f-3f39-497e-955c-916b8c5c1f33",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "venue_id": "venue-uat",
+      "content": "UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+      "status": "COMPLETED",
+      "target_agent": "commander",
+      "reply_text": "确认已呼叫医护。立即封锁事发区域至医护到达，严禁挪动游客，安排人员引导医护进场。保持急救通道畅通。",
+      "error": null,
+      "created_at": 1785311630.3220956,
+      "updated_at": 1785311638.8710709,
+      "processed_at": 1785311638.8710709,
+      "result": {
+        "status": "processed",
+        "route": {
+          "status": "routed",
+          "intent": "incident_report",
+          "severity": "P1",
+          "priority": "P1",
+          "target_agent": "commander",
+          "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+          "content": "UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+          "msg_id": "6609c0c4-236b-45d3-b5bb-9073c3084329",
+          "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+          "venue_id": "venue-uat",
+          "session_id": "df4e397f-3f39-497e-955c-916b8c5c1f33",
+          "context_trigger_data": {
+            "stage": "stage2",
+            "should_trigger": true,
+            "event_type": "人员安全",
+            "severity": "P0",
+            "confidence": 0.95,
+            "stage1_keywords": []
+          },
+          "agent_trace": [
+            {
+              "agent_id": "ContextTrigger",
+              "agent_name": "context_trigger",
+              "status": "SUCCEEDED",
+              "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+              "venue_id": "venue-uat",
+              "session_id": "df4e397f-3f39-497e-955c-916b8c5c1f33"
+            },
+            {
+              "agent_id": "Router",
+              "agent_name": "router",
+              "status": "SUCCEEDED",
+              "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+              "venue_id": "venue-uat",
+              "session_id": "df4e397f-3f39-497e-955c-916b8c5c1f33"
+            },
+            {
+              "agent_id": "Commander",
+              "agent_name": "commander",
+              "status": "SUCCEEDED",
+              "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+              "venue_id": "venue-uat",
+              "session_id": "df4e397f-3f39-497e-955c-916b8c5c1f33"
+            }
+          ],
+          "router_confidence": 0.95
+        },
+        "agent_result": {
+          "success": true,
+          "reply_text": "确认已呼叫医护。立即封锁事发区域至医护到达，严禁挪动游客，安排人员引导医护进场。保持急救通道畅通。",
+          "structured_data": {
+            "dispatch_action": "emergency_dispatch_sop",
+            "next_step_check": "请在医护到达后3分钟内反馈游客状况及是否需转送医院。",
+            "required_tools": [
+              "medical_kit",
+              "barrier_tape",
+              "security_backup"
+            ]
+          },
+          "action_taken": "emergency_response_dispatch",
+          "error_msg": null,
+          "latency_ms": 2952,
+          "tokens_used": 790
+        },
+        "reply_text": "确认已呼叫医护。立即封锁事发区域至医护到达，严禁挪动游客，安排人员引导医护进场。保持急救通道畅通。",
+        "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+        "agent_trace": [
+          {
+            "agent_id": "ContextTrigger",
+            "agent_name": "context_trigger",
+            "status": "SUCCEEDED",
+            "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+            "venue_id": "venue-uat",
+            "session_id": "df4e397f-3f39-497e-955c-916b8c5c1f33"
+          },
+          {
+            "agent_id": "Router",
+            "agent_name": "router",
+            "status": "SUCCEEDED",
+            "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+            "venue_id": "venue-uat",
+            "session_id": "df4e397f-3f39-497e-955c-916b8c5c1f33"
+          },
+          {
+            "agent_id": "Commander",
+            "agent_name": "commander",
+            "status": "SUCCEEDED",
+            "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+            "venue_id": "venue-uat",
+            "session_id": "df4e397f-3f39-497e-955c-916b8c5c1f33"
+          }
+        ],
+        "event_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9"
+      }
+    },
+    "summary": {
+      "model_calls": 3,
+      "audits": 1,
+      "events": 1,
+      "tasks": 0,
+      "approvals": 0,
+      "tool_invocations": 0,
+      "watcher_runs": 0,
+      "push_logs": 0
+    },
+    "timeline": [
+      {
+        "kind": "MESSAGE",
+        "status": "COMPLETED",
+        "created_at": 1785311630.3220956,
+        "summary": "UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+        "resource_id": "6609c0c4-236b-45d3-b5bb-9073c3084329",
+        "agent_id": "commander"
+      },
+      {
+        "kind": "AUDIT",
+        "status": "SUCCEEDED",
+        "created_at": 1785311630.3244565,
+        "summary": "MESSAGE_RUN_CREATED",
+        "resource_id": "6609c0c4-236b-45d3-b5bb-9073c3084329",
+        "agent_id": null
+      },
+      {
+        "kind": "MODEL",
+        "status": "SUCCEEDED",
+        "created_at": 1785311632.60864,
+        "summary": "deepseek-v4-flash 模型调用",
+        "resource_id": "2687afbe-80c4-4f11-bcb8-99c057e2f7cd",
+        "agent_id": "ContextTrigger"
+      },
+      {
+        "kind": "MODEL",
+        "status": "SUCCEEDED",
+        "created_at": 1785311635.860408,
+        "summary": "deepseek-v4-flash 模型调用",
+        "resource_id": "cc37085a-24e6-42c3-85c3-594a59b8aa99",
+        "agent_id": "Router"
+      },
+      {
+        "kind": "MODEL",
+        "status": "SUCCEEDED",
+        "created_at": 1785311638.817773,
+        "summary": "deepseek-v4-flash 模型调用",
+        "resource_id": "9cde8b95-c71a-4fc2-9df8-a69c922b4069",
+        "agent_id": "Commander"
+      },
+      {
+        "kind": "EVENT",
+        "status": "OPEN",
+        "created_at": null,
+        "summary": "UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+        "resource_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+        "agent_id": null
+      }
+    ]
+  },
+  "llm_calls": [
+    {
+      "id": "4772d8acf7a34b999f9314463051d9fd",
+      "venue_id": "venue-uat",
+      "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+      "provider": "deepseek",
+      "model_name": "deepseek-v4-flash",
+      "status": "SUCCEEDED",
+      "attempt_count": 1,
+      "latency_seconds": 2.9505348205566406,
+      "prompt_tokens": 596,
+      "completion_tokens": 194,
+      "total_tokens": 790,
+      "request_id": "9cde8b95-c71a-4fc2-9df8-a69c922b4069",
+      "error_type": null,
+      "error_message": null,
+      "is_mock": false,
+      "created_at": 1785311638.817773,
+      "agent_id": "Commander",
+      "agent_name": "Commander_Agent"
+    },
+    {
+      "id": "e6d1d0e8d39d40858b153c9b8831f560",
+      "venue_id": "venue-uat",
+      "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+      "provider": "deepseek",
+      "model_name": "deepseek-v4-flash",
+      "status": "SUCCEEDED",
+      "attempt_count": 1,
+      "latency_seconds": 3.2471325397491455,
+      "prompt_tokens": 745,
+      "completion_tokens": 284,
+      "total_tokens": 1029,
+      "request_id": "cc37085a-24e6-42c3-85c3-594a59b8aa99",
+      "error_type": null,
+      "error_message": null,
+      "is_mock": false,
+      "created_at": 1785311635.860408,
+      "agent_id": "Router",
+      "agent_name": "Router_Agent"
+    },
+    {
+      "id": "45897e741e0f4b67b20b3bf11ff16ab5",
+      "venue_id": "venue-uat",
+      "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+      "provider": "deepseek",
+      "model_name": "deepseek-v4-flash",
+      "status": "SUCCEEDED",
+      "attempt_count": 1,
+      "latency_seconds": 2.2664990425109863,
+      "prompt_tokens": 429,
+      "completion_tokens": 174,
+      "total_tokens": 603,
+      "request_id": "2687afbe-80c4-4f11-bcb8-99c057e2f7cd",
+      "error_type": null,
+      "error_message": null,
+      "is_mock": false,
+      "created_at": 1785311632.60864,
+      "agent_id": "ContextTrigger",
+      "agent_name": "ContextTrigger_Skill"
+    }
+  ],
+  "audits": [
+    {
+      "id": 403,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "MESSAGE_RUN_CREATED",
+      "resource_type": "message_run",
+      "resource_id": "6609c0c4-236b-45d3-b5bb-9073c3084329",
+      "outcome": "SUCCEEDED",
+      "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+      "created_at": 1785311630.3244565,
+      "metadata": {
+        "session_id": "df4e397f-3f39-497e-955c-916b8c5c1f33",
+        "status": "QUEUED"
+      }
+    }
+  ],
+  "events": [
+    {
+      "id": 14,
+      "event_id": "40726799-e5b8-446e-94ae-f5d4306a7eb9",
+      "push_id": "6609c0c4-236b-45d3-b5bb-9073c3084329",
+      "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "raw_text": "UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+      "event_type": "人员安全",
+      "severity": "P1",
+      "context_trigger_data": "{\"stage\": \"stage2\", \"should_trigger\": true, \"event_type\": \"人员安全\", \"severity\": \"P0\", \"confidence\": 0.95, \"stage1_keywords\": []}",
+      "memory_content": "[P1] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+      "vector_doc_id": "evt_40726799-e5b8-446e-94ae-f5d4306a7eb9",
+      "created_at": null,
+      "confirmed_at": 1785311638.8202968,
+      "venue_id": "venue-uat",
+      "source_type": "LIVE",
+      "status": "OPEN",
+      "assigned_to": null,
+      "resolution": null,
+      "trace_id": "6b0949134d1a4af891bcfa25d1499113",
+      "closed_at": null,
+      "updated_at": null
+    },
+    {
+      "id": 13,
+      "event_id": "7c2d96e6-8a8c-4e5a-b4fb-bbe69c7f8eb0",
+      "push_id": "11236ade-bfa0-4e6e-b74b-477a427d083a",
+      "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "raw_text": "UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+      "event_type": "人员安全",
+      "severity": "P1",
+      "context_trigger_data": "{\"stage\": \"stage2\", \"should_trigger\": true, \"event_type\": \"人员安全\", \"severity\": \"P0\", \"confidence\": 0.95, \"stage1_keywords\": []}",
+      "memory_content": "[P1] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+      "vector_doc_id": "evt_7c2d96e6-8a8c-4e5a-b4fb-bbe69c7f8eb0",
+      "created_at": null,
+      "confirmed_at": 1785311566.7560217,
+      "venue_id": "venue-uat",
+      "source_type": "LIVE",
+      "status": "OPEN",
+      "assigned_to": null,
+      "resolution": null,
+      "trace_id": "e4adacaba830406eb49f6d15991375cd",
+      "closed_at": null,
+      "updated_at": null
+    },
+    {
+      "id": 11,
+      "event_id": "b250f04f-0be9-4a61-acc8-824424c1474d",
+      "push_id": "e32b7013-3787-414f-8a56-7398521ce0b5",
+      "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "raw_text": "UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+      "event_type": "人员安全",
+      "severity": "P0",
+      "context_trigger_data": "{\"stage\": \"stage2\", \"should_trigger\": true, \"event_type\": \"人员安全\", \"severity\": \"P0\", \"confidence\": 0.95, \"stage1_keywords\": []}",
+      "memory_content": "[P0] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+      "vector_doc_id": "evt_b250f04f-0be9-4a61-acc8-824424c1474d",
+      "created_at": null,
+      "confirmed_at": 1785247630.6158996,
+      "venue_id": "venue-uat",
+      "source_type": "LIVE",
+      "status": "CLOSED",
+      "assigned_to": null,
+      "resolution": "现场医护到达后完成血糖检测与补糖处置，游客意识恢复并由家属陪同离场；急救通道恢复，值班经理复核记录与时间戳齐全。",
+      "trace_id": "4ecf6f93a7454a72a2e76265f6e112c2",
+      "closed_at": 1785247868.5329769,
+      "updated_at": 1785247868.5329769
+    },
+    {
+      "id": 10,
+      "event_id": "ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6",
+      "push_id": "efcc888a-941f-4dca-b08c-afe10abf40cf",
+      "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "raw_text": "UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+      "event_type": "人员安全",
+      "severity": "P1",
+      "context_trigger_data": "{\"stage\": \"stage2\", \"should_trigger\": true, \"event_type\": \"人员安全\", \"severity\": \"P0\", \"confidence\": 0.98, \"stage1_keywords\": []}",
+      "memory_content": "[P1] 人员安全事件：UAT 实时受理：北门游客突发低血糖并短暂晕厥，现场已呼叫医护、疏散围观游客并建立急救通道，请生成分阶段处置建议并记录链路。",
+      "vector_doc_id": "evt_ab09c5e7-4c00-45c1-9ca0-b3ff356e40c6",
+      "created_at": null,
+      "confirmed_at": 1785247590.7701843,
+      "venue_id": "venue-uat",
+      "source_type": "LIVE",
+      "status": "OPEN",
+      "assigned_to": null,
+      "resolution": null,
+      "trace_id": "6c2e33b3711f4b0088e3f26daec904e7",
+      "closed_at": null,
+      "updated_at": null
+    }
+  ],
+  "sessions": [
+    {
+      "session_id": "df4e397f-3f39-497e-955c-916b8c5c1f33",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "stage": "active",
+      "active_agent": null,
+      "current_intent": null,
+      "current_severity": null,
+      "created_at": 1785311630.3308222,
+      "updated_at": 1785311630.3308222,
+      "history_summary": "",
+      "agent_name": "router",
+      "message_count": 1,
+      "status": "active"
+    }
+  ],
+  "runtime": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

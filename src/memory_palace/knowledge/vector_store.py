@@ -17,40 +17,90 @@ from loguru import logger
 
 
 class PalaceVectorStore:
-    def __init__(self):
-        # 工业路径：数据持久化到 data/ 目录
-        self.db_path = os.environ.get("VECTOR_DB_PATH", "data/vector_db")
+    def __init__(self, *, embedding_function=None):
+        app_env = os.environ.get("APP_ENV", "dev").lower()
+        chroma_host = os.environ.get("CHROMA_HOST", "").strip()
+        self.emb_fn = embedding_function or embedding_functions.DefaultEmbeddingFunction()
 
-        # 1. 选用 OpenAI 工业级 Embedding 模型 (text-embedding-3-small)
-        self.emb_fn = embedding_functions.OpenAIEmbeddingFunction(
-            api_key=os.environ.get("OPENAI_API_KEY"), model_name="text-embedding-3-small"
-        )
+        if chroma_host:
+            chroma_port = int(os.environ.get("CHROMA_PORT", "8000"))
+            chroma_ssl = os.environ.get("CHROMA_SSL", "false").lower() == "true"
+            self._client = chromadb.HttpClient(host=chroma_host, port=chroma_port, ssl=chroma_ssl)
+            self.backend_mode = "remote_http"
+            self.db_path = None
+        else:
+            if app_env in {"prod", "production"}:
+                raise RuntimeError("正式环境必须配置 CHROMA_HOST，禁止回退到本地向量库")
+            self.db_path = os.environ.get(
+                "CHROMA_PERSIST_DIR",
+                os.environ.get("VECTOR_DB_PATH", "data/vector_db"),
+            )
+            self._client = chromadb.PersistentClient(path=self.db_path)
+            self.backend_mode = "local_persistent"
 
-        # 2. 建立持久化客户端
-        self._client = chromadb.PersistentClient(path=self.db_path)
-
-        # 3. 初始化集合，指定余弦空间 (cosine)
         self.collection = self._client.get_or_create_collection(
-            name="memory_palace_vdb", embedding_function=self.emb_fn, metadata={"hnsw:space": "cosine"}
+            name=os.environ.get("CHROMA_COLLECTION", "memory_palace_vdb"),
+            embedding_function=self.emb_fn,
+            metadata={"hnsw:space": "cosine"},
         )
-        logger.info(f"向量知识库初始化完成，挂载点: {self.db_path}")
+        logger.info("向量知识库初始化完成，后端: {}", self.backend_mode)
 
-    def upsert_experience(self, content: str, metadata: Dict[str, Any], doc_id: str):
+    def health(self) -> Dict[str, Any]:
+        try:
+            heartbeat = self._client.heartbeat()
+            return {
+                "status": "healthy",
+                "backend": self.backend_mode,
+                "heartbeat": heartbeat,
+            }
+        except Exception as exc:
+            return {
+                "status": "unhealthy",
+                "backend": self.backend_mode,
+                "error_type": type(exc).__name__,
+            }
+
+    def upsert_experience(
+        self,
+        content: str,
+        metadata: Dict[str, Any],
+        doc_id: str,
+        *,
+        strict: bool = False,
+    ) -> bool:
         """插入或更新一条经验碎片"""
         try:
             self.collection.upsert(documents=[content], metadatas=[metadata], ids=[doc_id])
             logger.debug(f"[VectorStore] 数据上云: {doc_id}")
+            return True
         except Exception as e:
             logger.error(f"[VectorStore] Upsert 失败: {e}")
+            if strict:
+                raise
+            return False
 
-    def query_experience(self, text: str, top_k: int = 3, threshold: float = 0.75) -> List[Dict[str, Any]]:
+    def query_experience(
+        self,
+        text: str,
+        top_k: int = 3,
+        threshold: float = 0.75,
+        *,
+        venue_id: str,
+        strict: bool = False,
+    ) -> List[Dict[str, Any]]:
         """
         语义检索逻辑：带相似度阈值过滤，防止召回毫无相关的噪音。
         """
+        if not venue_id or not venue_id.strip():
+            raise ValueError("venue_id is required for tenant-scoped vector retrieval")
         try:
-            results = self.collection.query(
-                query_texts=[text], n_results=top_k, include=["documents", "metadatas", "distances"]
-            )
+            query_args: Dict[str, Any] = {
+                "query_texts": [text],
+                "n_results": top_k,
+                "include": ["documents", "metadatas", "distances"],
+            }
+            query_args["where"] = {"venue_id": venue_id}
+            results = self.collection.query(**query_args)
 
             clean_results = []
             if not results or not results["documents"]:
@@ -64,6 +114,7 @@ class PalaceVectorStore:
                 if similarity >= threshold:
                     clean_results.append(
                         {
+                            "id": results.get("ids", [[]])[0][i],
                             "content": results["documents"][0][i],
                             "metadata": results["metadatas"][0][i],
                             "score": round(similarity, 3),
@@ -73,7 +124,21 @@ class PalaceVectorStore:
             return clean_results
         except Exception as e:
             logger.error(f"[VectorStore] 检索过程中断: {e}")
+            if strict:
+                raise
             return []
+
+    def delete_experience(self, doc_id: str, *, strict: bool = False) -> bool:
+        """删除一条向量记录。"""
+        try:
+            self.collection.delete(ids=[doc_id])
+            logger.debug(f"[VectorStore] 数据已删除: {doc_id}")
+            return True
+        except Exception as e:
+            logger.error(f"[VectorStore] 删除失败: {e}")
+            if strict:
+                raise
+            return False
 
     def close(self) -> None:
         """Release Chroma's background runtime when the store is no longer used."""
@@ -95,6 +160,8 @@ def get_vector_client() -> Optional[PalaceVectorStore]:
         try:
             _vector_client = PalaceVectorStore()
         except Exception as e:
+            if os.environ.get("APP_ENV", "dev").lower() in {"prod", "production"}:
+                raise
             logger.warning(f"[VectorStore] 初始化失败（将以降级模式运行）: {e}")
             _vector_client = None
     return _vector_client

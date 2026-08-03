@@ -61,14 +61,17 @@ class TestOrchestratorWithContainer:
         })
         mock_agent_memory.record_agent_turn = MagicMock()
 
+        mock_db = MagicMock()
+        mock_db.execute = AsyncMock(return_value=1)
+
         c = AppContainer()
-        c.override(llm_client=mock_llm, agent_memory=mock_agent_memory)
+        c.override(llm_client=mock_llm, agent_memory=mock_agent_memory, db_client=mock_db)
 
         orch = Orchestrator(container=c)
 
         router_output = SkillOutput(
             success=True,
-            structured_data={"intent": "other", "severity": "P3"},
+            structured_data={"intent": "chitchat", "severity": "P4"},
             action_taken="router_routed",
         )
 
@@ -88,6 +91,45 @@ class TestOrchestratorWithContainer:
                     result = await orch.process(payload)
 
         assert result["status"] == "processed"
+
+    @pytest.mark.asyncio
+    async def test_orchestrator_persists_through_injected_database_client(self):
+        mock_db = MagicMock()
+        mock_db.execute = AsyncMock(return_value=1)
+
+        c = AppContainer()
+        c.override(db_client=mock_db)
+        orch = Orchestrator(container=c)
+
+        router_output = SkillOutput(
+            success=True,
+            structured_data={"intent": "chitchat", "severity": "P4"},
+            action_taken="router_routed",
+        )
+
+        def get_skill(name):
+            skill = MagicMock()
+            skill.run = AsyncMock(return_value=router_output)
+            return skill
+
+        payload = {
+            "msg_id": "di_db_001",
+            "trace_id": "trace_di_db",
+            "session_id": "session_di_db",
+            "from_user": "operator-01",
+            "content": "设备巡检发现异常",
+        }
+
+        from unittest.mock import patch
+        with patch("src.memory_palace.knowledge.db_client.save_message", new_callable=AsyncMock):
+            with patch("src.memory_palace.knowledge.db_client.create_or_update_session", new_callable=AsyncMock):
+                with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
+                    await orch.process(payload)
+
+        assert mock_db.execute.await_count >= 2
+        executed_sql = "\n".join(call.args[0] for call in mock_db.execute.await_args_list)
+        assert "INSERT INTO messages" in executed_sql
+        assert "INSERT INTO sessions" in executed_sql
 
 
 class TestContextTier:

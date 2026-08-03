@@ -1,0 +1,204 @@
+{
+  "uat_id": "MVP-UAT-004",
+  "operation": "Approve and reject controlled actions",
+  "approved": {
+    "decision": "approve",
+    "approval_id": "5396bc1c-0fb4-4854-a41d-e3440a2c7f16",
+    "url": "http://localhost:8082/api/v1/admin/approvals/5396bc1c-0fb4-4854-a41d-e3440a2c7f16/approve",
+    "status": 200,
+    "payload": {
+      "approved": true,
+      "approval_id": "5396bc1c-0fb4-4854-a41d-e3440a2c7f16",
+      "execution_result": {
+        "status": "executed",
+        "result": {
+          "status": "DELIVERED",
+          "channel": "in_app",
+          "recipient": "session:uat-golden-1785230678",
+          "push_id": "1cd2324f-d0e"
+        }
+      },
+      "execution_error": null,
+      "trace_id": "6bcabdab693646c1ad5eba99938f73eb"
+    }
+  },
+  "rejected": {
+    "decision": "reject",
+    "approval_id": "69d7251d-f6e0-4ef7-8bf1-50a24cd59efe",
+    "url": "http://localhost:8082/api/v1/admin/approvals/69d7251d-f6e0-4ef7-8bf1-50a24cd59efe/reject",
+    "status": 200,
+    "payload": {
+      "rejected": true,
+      "approval_id": "69d7251d-f6e0-4ef7-8bf1-50a24cd59efe",
+      "trace_id": "f059c41d478d460292f4851aeea3f27f"
+    }
+  },
+  "approvals": [
+    {
+      "approval_id": "69d7251d-f6e0-4ef7-8bf1-50a24cd59efe",
+      "tool_name": "send_in_app_alert",
+      "args": {
+        "message": "UAT 站内告警拒绝链 ms5on9um：该通知缺少现场复核附件，应拒绝并退回补充。",
+        "level": "info"
+      },
+      "session_id": "uat-golden-1785230678",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "requested_at": 1785305245.319012,
+      "requested_by": "formal-client:uat-admin",
+      "status": "REJECTED",
+      "venue_id": "venue-uat",
+      "reviewed_at": 1785305250.1192303,
+      "reviewed_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "comment": "UAT 拒绝：缺少现场复核附件，退回补充",
+      "execution_result": null,
+      "execution_error": null,
+      "correlation_trace_id": "f059c41d478d460292f4851aeea3f27f",
+      "execution_trace_id": null,
+      "execution_status": "NOT_EXECUTED"
+    },
+    {
+      "approval_id": "5396bc1c-0fb4-4854-a41d-e3440a2c7f16",
+      "tool_name": "send_in_app_alert",
+      "args": {
+        "message": "UAT 站内告警批准链 ms5on9um：暑期高峰联合检查已完成，请值班经理确认闭环报告并采纳。",
+        "level": "warning"
+      },
+      "session_id": "uat-golden-1785230678",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "requested_at": 1785305243.9871988,
+      "requested_by": "formal-client:uat-admin",
+      "status": "APPROVED",
+      "venue_id": "venue-uat",
+      "reviewed_at": 1785305248.88777,
+      "reviewed_by": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "comment": "UAT 批准：联合检查记录齐全，同意投递站内告警",
+      "execution_result": {
+        "status": "executed",
+        "result": {
+          "status": "DELIVERED",
+          "channel": "in_app",
+          "recipient": "session:uat-golden-1785230678",
+          "push_id": "1cd2324f-d0e"
+        }
+      },
+      "execution_error": null,
+      "correlation_trace_id": "6bcabdab693646c1ad5eba99938f73eb",
+      "execution_trace_id": "6bcabdab693646c1ad5eba99938f73eb",
+      "execution_status": "SUCCEEDED"
+    }
+  ],
+  "pushes": [
+    {
+      "id": 5,
+      "push_id": "1cd2324f-d0e",
+      "venue_id": "venue-uat",
+      "msg_id": "5396bc1c-0fb4-4854-a41d-e3440a2c7f16",
+      "from_user": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "raw_text": "UAT 站内告警批准链 ms5on9um：暑期高峰联合检查已完成，请值班经理确认闭环报告并采纳。",
+      "event_type": "站内告警",
+      "severity": "P1",
+      "stage1_triggered": false,
+      "hit_keywords": [
+        "controlled_action",
+        "in_app"
+      ],
+      "stage2_triggered": null,
+      "llm_confidence": null,
+      "pushed_at": 1785305248.8919022,
+      "confirmed_at": null,
+      "adoption_status": "pending",
+      "confirmed_notes": null,
+      "confirmed_by": null,
+      "trace_id": "6bcabdab693646c1ad5eba99938f73eb",
+      "channel": "in_app",
+      "recipient": "session:uat-golden-1785230678",
+      "delivery_status": "DELIVERED",
+      "delivery_error": null,
+      "idempotency_key": "5396bc1c-0fb4-4854-a41d-e3440a2c7f16"
+    }
+  ],
+  "audits": [
+    {
+      "id": 280,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "APPROVAL_REJECTED",
+      "resource_type": "approval",
+      "resource_id": "69d7251d-f6e0-4ef7-8bf1-50a24cd59efe",
+      "outcome": "SUCCEEDED",
+      "trace_id": "f059c41d478d460292f4851aeea3f27f",
+      "created_at": 1785305250.1212342,
+      "metadata": {
+        "comment": "UAT 拒绝：缺少现场复核附件，退回补充"
+      }
+    },
+    {
+      "id": 279,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "CONTROLLED_ACTION_EXECUTED",
+      "resource_type": "approval",
+      "resource_id": "5396bc1c-0fb4-4854-a41d-e3440a2c7f16",
+      "outcome": "SUCCEEDED",
+      "trace_id": "6bcabdab693646c1ad5eba99938f73eb",
+      "created_at": 1785305248.8971226,
+      "metadata": {
+        "tool_name": "send_in_app_alert",
+        "execution_status": "executed",
+        "execution_error": null
+      }
+    },
+    {
+      "id": 278,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "APPROVAL_APPROVED",
+      "resource_type": "approval",
+      "resource_id": "5396bc1c-0fb4-4854-a41d-e3440a2c7f16",
+      "outcome": "SUCCEEDED",
+      "trace_id": "6bcabdab693646c1ad5eba99938f73eb",
+      "created_at": 1785305248.895283,
+      "metadata": {
+        "comment": "UAT 批准：联合检查记录齐全，同意投递站内告警"
+      }
+    },
+    {
+      "id": 276,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "CONTROLLED_ACTION_REQUESTED",
+      "resource_type": "approval",
+      "resource_id": "69d7251d-f6e0-4ef7-8bf1-50a24cd59efe",
+      "outcome": "SUCCEEDED",
+      "trace_id": "f059c41d478d460292f4851aeea3f27f",
+      "created_at": 1785305245.3209572,
+      "metadata": {
+        "tool_name": "send_in_app_alert",
+        "session_id": "uat-golden-1785230678",
+        "approval_status": "PENDING"
+      }
+    },
+    {
+      "id": 275,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "CONTROLLED_ACTION_REQUESTED",
+      "resource_type": "approval",
+      "resource_id": "5396bc1c-0fb4-4854-a41d-e3440a2c7f16",
+      "outcome": "SUCCEEDED",
+      "trace_id": "6bcabdab693646c1ad5eba99938f73eb",
+      "created_at": 1785305243.9892392,
+      "metadata": {
+        "tool_name": "send_in_app_alert",
+        "session_id": "uat-golden-1785230678",
+        "approval_status": "PENDING"
+      }
+    }
+  ],
+  "runtime": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

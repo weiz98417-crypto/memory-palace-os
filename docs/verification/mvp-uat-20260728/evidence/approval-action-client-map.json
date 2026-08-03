@@ -1,0 +1,184 @@
+{
+  "approvals": {
+    "buttons": [
+      {
+        "text": "发起受控动作",
+        "disabled": false
+      },
+      {
+        "text": "详情",
+        "disabled": false
+      },
+      {
+        "text": "详情",
+        "disabled": false
+      },
+      {
+        "text": "详情",
+        "disabled": false
+      },
+      {
+        "text": "详情",
+        "disabled": false
+      }
+    ],
+    "rows": [
+      "申请时间\t工具\t会话 / 申请人\t状态\t参数摘要\t操作",
+      "07/28 21:50\t\nsend_in_app_alert\n5944c02f-b3e3-4725-ab23-5180c0a32ab7\n\tuat-golden-1785230678\nformal-client:uat-admin\n\t\nREJECTED\t{ \"message\": \"UAT 站内告警拒绝链：该通知缺少现场复核附件，应拒绝并退回补充。\", \"level\": \"info\" }\t\n详情",
+      "07/28 21:50\t\nsend_in_app_alert\nbc66ee7f-0ea8-43b2-b3f7-4a66d18221af\n\tuat-golden-1785230678\nformal-client:uat-admin\n\t\nAPPROVED\t{ \"message\": \"UAT 站内告警批准链：暑期高峰联合检查已完成，请值班经理确认闭环报告并采纳。\", \"level\": \"warning\" }\t\n详情",
+      "07/28 02:15\t\nsend_sms\n98e1f652-63d5-466b-99c7-3eb60caf3ed6\n\t774aa9ef-a77e-480e-9c22-68e7df0246cc\nformal-client:uat-manager\n\t\nAPPROVED\t{ \"phone\": \"13800138001\", \"message\": \"UAT 受控动作批准后真实失败验证\", \"priority\": \"high\" }\t\n详情",
+      "07/28 02:15\t\nsend_sms\n91f33008-fb39-486b-847a-ae000f72ae37\n\t774aa9ef-a77e-480e-9c22-68e7df0246cc\nformal-client:uat-manager\n\t\nREJECTED\t{ \"phone\": \"13800138000\", \"message\": \"UAT 受控动作拒绝链验证\", \"priority\": \"normal\" }\t\n详情"
+    ]
+  },
+  "actions": {
+    "buttons": [
+      {
+        "text": "发起受控动作",
+        "disabled": false
+      },
+      {
+        "text": "详情",
+        "disabled": false
+      },
+      {
+        "text": "详情",
+        "disabled": false
+      },
+      {
+        "text": "详情",
+        "disabled": false
+      },
+      {
+        "text": "详情",
+        "disabled": false
+      },
+      {
+        "text": "采纳",
+        "disabled": false
+      },
+      {
+        "text": "拒绝",
+        "disabled": false
+      }
+    ],
+    "rows": [
+      "申请时间\t动作\t关联会话\t审批状态\t执行状态\t操作",
+      "07/28 21:50\t\nsend_in_app_alert\n5944c02f-b3e3-4725-ab23-5180c0a32ab7\n\tuat-golden-1785230678\t\nREJECTED\t\nNOT_EXECUTED\t详情",
+      "07/28 21:50\t\nsend_in_app_alert\nbc66ee7f-0ea8-43b2-b3f7-4a66d18221af\n\tuat-golden-1785230678\t\nAPPROVED\t\nDELIVERED\t详情",
+      "07/28 02:15\t\nsend_sms\n98e1f652-63d5-466b-99c7-3eb60caf3ed6\n\t774aa9ef-a77e-480e-9c22-68e7df0246cc\t\nAPPROVED\t\nEXECUTION_FAILED\t详情",
+      "07/28 02:15\t\nsend_sms\n91f33008-fb39-486b-847a-ae000f72ae37\n\t774aa9ef-a77e-480e-9c22-68e7df0246cc\t\nREJECTED\t\nNOT_EXECUTED\t详情",
+      "时间\t渠道 / 收件人\t发送人\t事件\t级别\t投递状态\t采纳状态\t操作",
+      "07/28 21:51\t\n站内\nsession:uat-golden-1785230678\n\t9e5bfb15b8b54f96aa0ccc7a7ea11d36\t站内告警\t\nP1\t\nDELIVERED\t\npending\t采纳拒绝"
+    ],
+    "row_actions": [
+      {
+        "text": "申请时间\t动作\t关联会话\t审批状态\t执行状态\t操作",
+        "buttons": []
+      },
+      {
+        "text": "07/28 21:50\t\nsend_in_app_alert\n5944c02f-b3e3-4725-ab23-5180c0a32ab7\n\tuat-golden-1785230678\t\nREJECTED\t\nNOT_EXECUTED\t详情",
+        "buttons": [
+          {
+            "text": "详情",
+            "onclick": "App.openApproval('5944c02f-b3e3-4725-ab23-5180c0a32ab7')"
+          }
+        ]
+      },
+      {
+        "text": "07/28 21:50\t\nsend_in_app_alert\nbc66ee7f-0ea8-43b2-b3f7-4a66d18221af\n\tuat-golden-1785230678\t\nAPPROVED\t\nDELIVERED\t详情",
+        "buttons": [
+          {
+            "text": "详情",
+            "onclick": "App.openApproval('bc66ee7f-0ea8-43b2-b3f7-4a66d18221af')"
+          }
+        ]
+      },
+      {
+        "text": "07/28 02:15\t\nsend_sms\n98e1f652-63d5-466b-99c7-3eb60caf3ed6\n\t774aa9ef-a77e-480e-9c22-68e7df0246cc\t\nAPPROVED\t\nEXECUTION_FAILED\t详情",
+        "buttons": [
+          {
+            "text": "详情",
+            "onclick": "App.openApproval('98e1f652-63d5-466b-99c7-3eb60caf3ed6')"
+          }
+        ]
+      },
+      {
+        "text": "07/28 02:15\t\nsend_sms\n91f33008-fb39-486b-847a-ae000f72ae37\n\t774aa9ef-a77e-480e-9c22-68e7df0246cc\t\nREJECTED\t\nNOT_EXECUTED\t详情",
+        "buttons": [
+          {
+            "text": "详情",
+            "onclick": "App.openApproval('91f33008-fb39-486b-847a-ae000f72ae37')"
+          }
+        ]
+      },
+      {
+        "text": "时间\t渠道 / 收件人\t发送人\t事件\t级别\t投递状态\t采纳状态\t操作",
+        "buttons": []
+      },
+      {
+        "text": "07/28 21:51\t\n站内\nsession:uat-golden-1785230678\n\t9e5bfb15b8b54f96aa0ccc7a7ea11d36\t站内告警\t\nP1\t\nDELIVERED\t\npending\t采纳拒绝",
+        "buttons": [
+          {
+            "text": "采纳",
+            "onclick": "App.updatePush('2b286b8a-e7c','adopted')"
+          },
+          {
+            "text": "拒绝",
+            "onclick": "App.updatePush('2b286b8a-e7c','rejected')"
+          }
+        ]
+      }
+    ],
+    "text": "推送与动作日志\n\n站内告警可完成审批、投递与采纳闭环；未配置的外部渠道保持禁用，不显示假回执。\n\n发起受控动作\nDeepSeek\nREADY\n\n已有真实 Live 证据\n\n已配置：是\n站内告警\nREADY\n\n已有真实 Live 证据\n\n已配置：是\n企业微信\nDISABLED_REQUIRES_CONFIG\n\n缺少：WECHAT_TOKEN, WECHAT_ENCODING_AES_KEY, WECHAT_CORP_ID, WECHAT_CORP_SECRET, WECHAT_AGENT_ID\n\n已配置：否\n短信\nDISABLED_REQUIRES_CONFIG\n\n缺少：SMS_PROVIDER, SMS_API_KEY\n\n已配置：否\n语音电话\nDISABLED_REQUIRES_CONFIG\n\n缺少：VOICE_PROVIDER, VOICE_API_KEY\n\n已配置：否\n受控动作记录\n4 条\n申请时间\t动作\t关联会话\t审批状态\t执行状态\t操作\n07/28 21:50\t\nsend_in_app_alert\n5944c02f-b3e3-4725-ab23-5180c0a32ab7\n\tuat-golden-1785230678\t\nREJECTED\t\nNOT_EXECUTED\t详情\n07/28 21:50\t\nsend_in_app_alert\nbc66ee7f-0ea8-43b2-b3f7-4a66d18221af\n\tuat-golden-1785230678\t\nAPPROVED\t\nDELIVERED\t详情\n07/28 02:15\t\nsend_sms\n98e1f652-63d5-466b-99c7-3eb60caf3ed6\n\t774aa9ef-a77e-480e-9c22-68e7df0246cc\t\nAPPROVED\t\nEXECUTION_FAILED\t详情\n07/28 02:15\t\nsend_sms\n91f33008-fb39-486b-847a-ae000f72ae37\n\t774aa9ef-a77e-480e-9c22-68e7df0246cc\t\nREJECTED\t\nNOT_EXECUTED\t详情\n全部采纳状态\n待确认\n已采纳\n已拒绝\n推送记录\n1 条\n时间\t渠道 / 收件人\t发送人\t事件\t级别\t投递状态\t采纳状态\t操作\n07/28 21:51\t\n站内\nsession:uat-golden-1785230678\n\t9e5bfb15b8b54f96aa0ccc7a7ea11d36\t站内告警\t\nP1\t\nDELIVERED\t\npending\t采纳拒绝"
+  },
+  "request_dialog": {
+    "title": "选择受控动作",
+    "labels": [
+      "动作类型"
+    ],
+    "fields": [
+      {
+        "name": "tool_name",
+        "id": "action-field-tool_name",
+        "type": "select-one",
+        "required": true,
+        "options": [
+          {
+            "value": "send_in_app_alert",
+            "text": "站内告警（可用）"
+          },
+          {
+            "value": "send_sms",
+            "text": "短信通知（未配置，禁用）"
+          },
+          {
+            "value": "send_alert",
+            "text": "外部告警广播（未配置，禁用）"
+          }
+        ]
+      }
+    ],
+    "buttons": [
+      {
+        "text": "关闭",
+        "type": "button"
+      },
+      {
+        "text": "取消",
+        "type": "button"
+      },
+      {
+        "text": "下一步",
+        "type": "submit"
+      }
+    ]
+  },
+  "runtime": {
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

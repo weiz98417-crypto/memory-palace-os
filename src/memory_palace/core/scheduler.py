@@ -1,142 +1,108 @@
-"""
-定时任务引擎 (System Scheduler)
+"""PostgreSQL-backed Watcher scheduling for the formal runtime."""
 
-职责：
-1. 管控主动型智能体（如：鹰眼巡检专家 Watcher）的触发时机。
-2. 维护系统级定时巡检（每日 10:00 & 20:00）及临时催办任务。
-3. 提供任务持久化存储，确保服务重启后逻辑不中断。
+from __future__ import annotations
 
-Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
-"""
-
-import os
 import time
+from typing import Any, Optional
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from loguru import logger
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-from apscheduler.executors.pool import ThreadPoolExecutor
+
+from .watcher_runtime import recover_interrupted_watcher_runs, run_watcher_policy
 
 
-# Watcher 最后运行时间（供 demo/stats 查询）
 _last_watcher_run: float = 0.0
 
 
 def get_last_watcher_run() -> float:
-    """返回上次鹰眼巡检的 Unix 时间戳，未运行过返回 0"""
     return _last_watcher_run
 
 
-# 定时任务回调（模块级函数，避免 APScheduler 序列化实例方法失败）
-def _run_watcher_callback():
-    """鹰眼巡检回调。由 APScheduler 在线程中调用。"""
-    global _last_watcher_run
-    import asyncio
-    from loguru import logger
-
-    logger.info("🦅 鹰眼定时巡检波次开始...")
-    try:
-        from src.memory_palace.skills.watcher import WatcherSkill
-    except ImportError:
-        logger.warning("WatcherSkill 尚未实现，跳过本次巡检。")
-        return
-
-    try:
-        watcher = WatcherSkill()
-
-        async def _run():
-            return await watcher.run(context={"trigger_source": "scheduler"})
-
-        result = asyncio.run(_run())
-        _last_watcher_run = time.time()
-        logger.success(f"🦅 鹰眼巡检波次结束 | processed: {result.structured_data.get('processed_count', 'N/A') if hasattr(result, 'structured_data') else 'N/A'}")
-    except Exception as e:
-        logger.error(f"🦅 鹰眼执行中发生未捕获异常: {e}")
-
 class TaskScheduler:
-    """
-    工业级异步定时任务管理器 (基于 APScheduler)
-    """
+    """Schedules persisted Watcher policies on the application event loop."""
 
-    def __init__(self):
-        # 1. 配置 JobStore (任务持久化)
-        # 将定时任务存储在 SQLite 中，防止程序崩溃后任务丢失
-        job_stores = {
-            'default': SQLAlchemyJobStore(url="sqlite:///./data/jobs.sqlite")
-        }
-
-        # 2. 配置执行池
-        executors = {
-            'default': ThreadPoolExecutor(20)  # 最大 20 个并发任务
-        }
-
-        job_defaults = {
-            'coalesce': False,          # 即使积压了多次，也只执行一次
-            'max_instances': 1,         # 同一个任务同一时间只允许运行一个实例（防并发冲突）
-            'misfire_grace_time': 3600  # 如果错过执行时间，1小时内允许补偿执行
-        }
-
-        self.scheduler = BackgroundScheduler(
-            jobstores=job_stores,
-            executors=executors,
-            job_defaults=job_defaults,
-            timezone="Asia/Shanghai"
+    def __init__(self, container: Optional[Any] = None):
+        self._container = container
+        self.scheduler = AsyncIOScheduler(
+            timezone="Asia/Shanghai",
+            job_defaults={
+                "coalesce": True,
+                "max_instances": 1,
+                "misfire_grace_time": 3600,
+            },
         )
 
-    def start(self):
-        """启动调度引擎"""
+    @property
+    def _db(self):
+        return getattr(self._container, "db_client", None)
+
+    async def start(self) -> None:
+        if self._db is not None:
+            await recover_interrupted_watcher_runs(self._db)
         if not self.scheduler.running:
             self.scheduler.start()
-            logger.success("⏱️ 系统调度引擎已启动 (SQLAlchemy Persistence Enabled)")
+        await self.reload_jobs()
+        logger.success("⏱️ PostgreSQL 巡检策略调度器已启动")
+
+    async def reload_jobs(self) -> None:
+        """Rebuild runtime jobs from persisted enabled policies."""
+        for job in self.scheduler.get_jobs():
+            if job.id.startswith("watcher-policy-"):
+                self.scheduler.remove_job(job.id)
+
+        if self._db is None:
+            logger.warning("巡检调度器缺少数据库连接，暂不注册策略")
+            return
+
+        policies = await self._db.fetch_all(
+            "SELECT id, venue_id, schedule_cron FROM watcher_policies WHERE enabled = ?",
+            (True,),
+        )
+        registered = 0
+        for policy in policies:
             try:
-                self._register_default_jobs()
-            except Exception as e:
-                logger.warning(f"定时任务注册失败（不影响启动）: {e}")
+                trigger = CronTrigger.from_crontab(
+                    policy["schedule_cron"],
+                    timezone="Asia/Shanghai",
+                )
+            except ValueError as exc:
+                logger.error("巡检策略 {} 的 Cron 无效: {}", policy["id"], exc)
+                continue
+            self.scheduler.add_job(
+                self._run_policy,
+                trigger=trigger,
+                id=f"watcher-policy-{policy['id']}",
+                args=[policy["id"], policy["venue_id"]],
+                replace_existing=True,
+            )
+            registered += 1
+        logger.info("📅 已从 PostgreSQL 注册 {} 条巡检策略", registered)
 
-    def _register_default_jobs(self):
-        """注册系统级预设任务（如每日鹰眼巡检）"""
-        
-        # 任务 A：每日上午 10:00 鹰眼全量巡检
-        self.add_cron_job(
-            func=_run_watcher_callback,
-            hour=10, minute=0,
-            job_id="daily_watcher_morning",
-            replace_existing=True
-        )
-
-        # 任务 B：每日晚上 20:00 鹰眼全量巡检
-        self.add_cron_job(
-            func=_run_watcher_callback,
-            hour=20, minute=0,
-            job_id="daily_watcher_evening",
-            replace_existing=True
-        )
-
-        logger.info("📅 默认周期性巡检任务已挂载：10:00 / 20:00")
-
-    def add_cron_job(self, func, hour, minute, job_id, **kwargs):
-        """添加 Cron 类型的周期任务"""
-        self.scheduler.add_job(
-            func,
-            'cron',
-            hour=hour,
-            minute=minute,
-            id=job_id,
-            **kwargs
-        )
+    async def _run_policy(self, policy_id: str, venue_id: str) -> None:
+        global _last_watcher_run
+        try:
+            await run_watcher_policy(
+                self._db,
+                policy_id=policy_id,
+                venue_id=venue_id,
+                trigger_source="SCHEDULED",
+            )
+            _last_watcher_run = time.time()
+        except Exception as exc:
+            logger.error("定时巡检策略 {} 执行失败: {}", policy_id, exc)
 
     def add_once_job(self, func, run_at, job_id, args=None):
-        """添加一次性延迟任务（如：30分钟后如果没有闭环，则触发某逻辑）"""
         self.scheduler.add_job(
             func,
-            'date',
+            "date",
             run_date=run_at,
             id=job_id,
             args=args or [],
-            replace_existing=True
+            replace_existing=True,
         )
-        logger.info(f"📍 已排期一次性任务: {job_id} | 执行时间: {run_at}")
 
-    def shutdown(self):
-        """优雅关闭"""
-        self.scheduler.shutdown()
-        logger.warning("⏱️ 系统调度引擎已关闭")
+    def shutdown(self) -> None:
+        if self.scheduler.running:
+            self.scheduler.shutdown(wait=False)
+        logger.warning("⏱️ 巡检策略调度器已关闭")

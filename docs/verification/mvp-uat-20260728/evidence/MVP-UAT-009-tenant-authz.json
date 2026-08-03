@@ -1,0 +1,307 @@
+{
+  "uat_id": "MVP-UAT-009",
+  "name": "多租户与安全边界",
+  "result": "PASS",
+  "generated_at": "2026-07-29T08:18:48.078Z",
+  "run_suffix": "ms5tc4j0-55d68b",
+  "base_url": "http://localhost:8082/admin/",
+  "credentials": {
+    "admin_password": "[REDACTED]",
+    "manager_password": "[REDACTED]",
+    "operator_old_password": "[REDACTED]",
+    "operator_new_password": "[REDACTED]"
+  },
+  "login_rejections": {
+    "attempts": [
+      {
+        "attempt": 1,
+        "status": 401,
+        "ok": false,
+        "code": "AUTH_INVALID_CREDENTIALS",
+        "trace_id": "e7a511c8663e43b8a12335a5542172be",
+        "error_visible": true,
+        "error_text": "用户名或密码错误。"
+      },
+      {
+        "attempt": 2,
+        "status": 401,
+        "ok": false,
+        "code": "AUTH_INVALID_CREDENTIALS",
+        "trace_id": "69ba7d27cdce4eb7aac705aaa80fbc4a",
+        "error_visible": true,
+        "error_text": "用户名或密码错误。"
+      },
+      {
+        "attempt": 3,
+        "status": 401,
+        "ok": false,
+        "code": "AUTH_INVALID_CREDENTIALS",
+        "trace_id": "9901007d6bde4a69b834df002d74d592",
+        "error_visible": true,
+        "error_text": "用户名或密码错误。"
+      }
+    ],
+    "denied_audits": [
+      {
+        "venue_id": "uat-rbac-ms5tc4j0-55d68b",
+        "user_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "action": "AUTH_LOGIN",
+        "resource_type": "auth_session",
+        "resource_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "outcome": "DENIED",
+        "trace_id": "9901007d6bde4a69b834df002d74d592",
+        "metadata": {},
+        "created_at": 1785313127.4351783
+      },
+      {
+        "venue_id": "uat-rbac-ms5tc4j0-55d68b",
+        "user_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "action": "AUTH_LOGIN",
+        "resource_type": "auth_session",
+        "resource_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "outcome": "DENIED",
+        "trace_id": "69ba7d27cdce4eb7aac705aaa80fbc4a",
+        "metadata": {},
+        "created_at": 1785313127.1756997
+      },
+      {
+        "venue_id": "uat-rbac-ms5tc4j0-55d68b",
+        "user_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "action": "AUTH_LOGIN",
+        "resource_type": "auth_session",
+        "resource_id": "2f3e53bbea394d77a55e26e458ba67a8",
+        "outcome": "DENIED",
+        "trace_id": "e7a511c8663e43b8a12335a5542172be",
+        "metadata": {},
+        "created_at": 1785313126.9004762
+      }
+    ],
+    "explicit_rejection_observed": true,
+    "rate_limit_observed": false,
+    "expected_http_rejection_count": 3,
+    "expected_console_rejection_count": 3
+  },
+  "tenant_a": {
+    "venue_id": "venue-uat",
+    "resource": {
+      "type": "session",
+      "id": "uat-dl-9855b733-8a59-4c7f-b0aa-60a95b61d341",
+      "source": "existing",
+      "stage_before": "active",
+      "stage_after": "active"
+    }
+  },
+  "tenant_b": {
+    "venue_id": "uat-rbac-ms5tc4j0-55d68b",
+    "actor": {
+      "id": "3a20647038d841338b81d0888810f9d2",
+      "username": "uat-mgr-ms5tc4j0-55d68b",
+      "role": "manager"
+    },
+    "resource": {
+      "type": "session",
+      "id": "b74b6ae2-a112-4dee-9a49-bca12ebe6c1e",
+      "source": "generated",
+      "stage_before": "active",
+      "stage_after": "active"
+    }
+  },
+  "boundary_checks": {
+    "tenant_b_list_excludes_tenant_a_resource": true,
+    "tenant_b_list_includes_own_resource": true,
+    "tenant_b_to_tenant_a": {
+      "read": {
+        "status": 404,
+        "ok": false,
+        "code": "HTTP_404",
+        "trace_id": "e4aba7bc2d8c4653a8e821b21686441c"
+      },
+      "modify": {
+        "status": 404,
+        "ok": false,
+        "code": "SESSION_NOT_FOUND",
+        "trace_id": "mvp-uat-009-b-to-a-ms5tc4j0-55d68b"
+      },
+      "denial_audit": {
+        "venue_id": "uat-rbac-ms5tc4j0-55d68b",
+        "user_id": "3a20647038d841338b81d0888810f9d2",
+        "action": "SESSION_CLOSE_DENIED",
+        "resource_type": "session",
+        "resource_id": "uat-dl-9855b733-8a59-4c7f-b0aa-60a95b61d341",
+        "outcome": "DENIED",
+        "trace_id": "mvp-uat-009-b-to-a-ms5tc4j0-55d68b",
+        "metadata": {
+          "reason": "not_found_or_not_visible"
+        },
+        "created_at": 1785313124.6933045
+      }
+    },
+    "tenant_a_to_tenant_b": {
+      "read": {
+        "status": 404,
+        "ok": false,
+        "code": "HTTP_404",
+        "trace_id": "bbb36f515a874372ba53fcab63de62f7"
+      },
+      "modify": {
+        "status": 404,
+        "ok": false,
+        "code": "SESSION_NOT_FOUND",
+        "trace_id": "mvp-uat-009-a-to-b-ms5tc4j0-55d68b"
+      },
+      "denial_audit": {
+        "venue_id": "venue-uat",
+        "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+        "action": "SESSION_CLOSE_DENIED",
+        "resource_type": "session",
+        "resource_id": "b74b6ae2-a112-4dee-9a49-bca12ebe6c1e",
+        "outcome": "DENIED",
+        "trace_id": "mvp-uat-009-a-to-b-ms5tc4j0-55d68b",
+        "metadata": {
+          "reason": "not_found_or_not_visible"
+        },
+        "created_at": 1785313124.7489502
+      }
+    },
+    "tenant_a_resource_unchanged": true,
+    "tenant_b_resource_unchanged": true
+  },
+  "invalid_paths": {
+    "trace": {
+      "input": "..\\..\\session-id",
+      "result": {
+        "status": 422,
+        "ok": false,
+        "code": "REQUEST_VALIDATION_FAILED",
+        "trace_id": "74021d2952a540bfb37f63a732ad3569"
+      }
+    },
+    "session": {
+      "input": "..\\..\\uat-dl-9855b733-8a59-4c7f-b0aa-60a95b61d341",
+      "read": {
+        "status": 404,
+        "ok": false,
+        "code": "HTTP_404",
+        "trace_id": "9feeb5dfae91465f9d2d0b8fb5ff26f8"
+      },
+      "modify": {
+        "status": 404,
+        "ok": false,
+        "code": "SESSION_NOT_FOUND",
+        "trace_id": "mvp-uat-009-invalid-session-ms5tc4j0-55d68b"
+      },
+      "denial_audit": {
+        "venue_id": "uat-rbac-ms5tc4j0-55d68b",
+        "user_id": "3a20647038d841338b81d0888810f9d2",
+        "action": "SESSION_CLOSE_DENIED",
+        "resource_type": "session",
+        "resource_id": "..\\..\\uat-dl-9855b733-8a59-4c7f-b0aa-60a95b61d341",
+        "outcome": "DENIED",
+        "trace_id": "mvp-uat-009-invalid-session-ms5tc4j0-55d68b",
+        "metadata": {
+          "reason": "not_found_or_not_visible"
+        },
+        "created_at": 1785313124.7250917
+      }
+    }
+  },
+  "screenshots": [
+    "screenshots/MVP-UAT-009-tenant-b-session-boundary-1440x900.png",
+    "screenshots/MVP-UAT-009-login-rejected-1440x900.png"
+  ],
+  "runtime": {
+    "telemetry": [
+      {
+        "role": "admin",
+        "console_errors": [],
+        "expected_console_rejections": [],
+        "expected_http_rejections": [],
+        "page_errors": [],
+        "failed_requests": [],
+        "server_errors": []
+      },
+      {
+        "role": "manager",
+        "console_errors": [],
+        "expected_console_rejections": [],
+        "expected_http_rejections": [],
+        "page_errors": [],
+        "failed_requests": [],
+        "server_errors": []
+      },
+      {
+        "role": "operator",
+        "console_errors": [],
+        "expected_console_rejections": [],
+        "expected_http_rejections": [],
+        "page_errors": [],
+        "failed_requests": [],
+        "server_errors": []
+      },
+      {
+        "role": "operator-old-password-rejections",
+        "console_errors": [],
+        "expected_console_rejections": [
+          {
+            "attempt": 1,
+            "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+          },
+          {
+            "attempt": 2,
+            "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+          },
+          {
+            "attempt": 3,
+            "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+          }
+        ],
+        "expected_http_rejections": [
+          {
+            "attempt": 1,
+            "method": "POST",
+            "url": "http://localhost:8082/api/v1/auth/login",
+            "status": 401
+          },
+          {
+            "attempt": 2,
+            "method": "POST",
+            "url": "http://localhost:8082/api/v1/auth/login",
+            "status": 401
+          },
+          {
+            "attempt": 3,
+            "method": "POST",
+            "url": "http://localhost:8082/api/v1/auth/login",
+            "status": 401
+          }
+        ],
+        "page_errors": [],
+        "failed_requests": [],
+        "server_errors": []
+      },
+      {
+        "role": "operator-new-password",
+        "console_errors": [],
+        "expected_console_rejections": [],
+        "expected_http_rejections": [],
+        "page_errors": [],
+        "failed_requests": [],
+        "server_errors": []
+      }
+    ]
+  },
+  "assertions": {
+    "three_consecutive_old_password_logins_explicitly_rejected": true,
+    "rejected_logins_have_three_denied_audits": true,
+    "login_specific_rate_limit_not_claimed": true,
+    "tenant_b_cannot_list_read_or_modify_tenant_a_resource": true,
+    "tenant_a_cannot_read_or_modify_tenant_b_resource": true,
+    "both_cross_tenant_denials_have_matching_trace_and_tenant_audits": true,
+    "formal_admin_tenant_contains_release_gate_denial_audit": true,
+    "invalid_trace_path_rejected_by_validation": true,
+    "invalid_session_path_read_and_modify_rejected": true,
+    "invalid_session_modify_has_matching_denial_audit": true,
+    "tenant_a_and_tenant_b_resources_remain_unchanged": true,
+    "browser_console_page_request_and_5xx_errors_zero": true
+  }
+}

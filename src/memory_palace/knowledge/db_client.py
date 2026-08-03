@@ -9,6 +9,7 @@
 Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 """
 
+import asyncio
 import aiosqlite
 import json
 import time
@@ -17,8 +18,32 @@ from typing import Any, Dict, List, Optional
 from contextlib import asynccontextmanager
 from loguru import logger
 
+from ..core.business_ids import build_business_id
+from ..core.event_activities import append_event_activity
+
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 DB_PATH = _PROJECT_ROOT / "data" / "memory.db"
+
+
+class _SQLiteTransaction:
+    """Database interface bound to one SQLite transaction connection."""
+
+    def __init__(self, connection: aiosqlite.Connection):
+        self._connection = connection
+
+    async def execute(self, sql: str, parameters: tuple = ()) -> int:
+        cursor = await self._connection.execute(sql, parameters)
+        return cursor.rowcount
+
+    async def fetch_one(self, sql: str, parameters: tuple = ()) -> Optional[Dict[str, Any]]:
+        cursor = await self._connection.execute(sql, parameters)
+        row = await cursor.fetchone()
+        return dict(row) if row else None
+
+    async def fetch_all(self, sql: str, parameters: tuple = ()) -> List[Dict[str, Any]]:
+        cursor = await self._connection.execute(sql, parameters)
+        rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
 
 
 class AsyncDBClient:
@@ -34,6 +59,7 @@ class AsyncDBClient:
     def __init__(self, db_path: Path = DB_PATH):
         self.db_path = db_path
         self._connection: Optional[aiosqlite.Connection] = None
+        self._transaction_lock = asyncio.Lock()
 
     async def _get_connection(self) -> aiosqlite.Connection:
         """获取或创建连接"""
@@ -44,44 +70,48 @@ class AsyncDBClient:
 
     @asynccontextmanager
     async def transaction(self):
-        """事务上下文管理器"""
-        conn = await self._get_connection()
-        try:
-            yield conn
-            await conn.commit()
-        except Exception:
-            await conn.rollback()
-            raise
+        """Yield the database interface bound to one atomic transaction."""
+        async with self._transaction_lock:
+            conn = await self._get_connection()
+            await conn.execute("BEGIN")
+            try:
+                yield _SQLiteTransaction(conn)
+                await conn.commit()
+            except Exception:
+                await conn.rollback()
+                raise
 
     async def execute(self, sql: str, parameters: tuple = ()) -> int:
         """
         执行 INSERT/UPDATE/DELETE
         返回：影响行数
         """
-        async with self.transaction() as conn:
-            cursor = await conn.execute(sql, parameters)
-            return cursor.rowcount
+        async with self.transaction() as transaction:
+            return await transaction.execute(sql, parameters)
 
     async def fetch_one(self, sql: str, parameters: tuple = ()) -> Optional[Dict[str, Any]]:
         """查询单条记录"""
-        conn = await self._get_connection()
-        cursor = await conn.execute(sql, parameters)
-        row = await cursor.fetchone()
-        return dict(row) if row else None
+        async with self._transaction_lock:
+            conn = await self._get_connection()
+            cursor = await conn.execute(sql, parameters)
+            row = await cursor.fetchone()
+            return dict(row) if row else None
 
     async def fetch_all(self, sql: str, parameters: tuple = ()) -> List[Dict[str, Any]]:
         """查询多条记录"""
-        conn = await self._get_connection()
-        cursor = await conn.execute(sql, parameters)
-        rows = await cursor.fetchall()
-        return [dict(row) for row in rows]
+        async with self._transaction_lock:
+            conn = await self._get_connection()
+            cursor = await conn.execute(sql, parameters)
+            rows = await cursor.fetchall()
+            return [dict(row) for row in rows]
 
     async def close(self):
         """关闭连接"""
-        if self._connection:
-            await self._connection.close()
-            self._connection = None
-            logger.info("数据库连接已关闭")
+        async with self._transaction_lock:
+            if self._connection:
+                await self._connection.close()
+                self._connection = None
+                logger.info("数据库连接已关闭")
 
 
 # 全局单例（供 session_state.py 使用）
@@ -231,7 +261,11 @@ async def save_confirmed_event(
     event_type: str,
     severity: str,
     context_trigger_data: Dict[str, Any],
+    source_type: str = "LIVE",
     venue_id: Optional[str] = None,
+    trace_id: Optional[str] = None,
+    database=None,
+    vector_client=None,
 ) -> str:
     """
     将员工确认的事件写入 confirmed_events 表（记忆库核心写入）
@@ -245,7 +279,10 @@ async def save_confirmed_event(
     from ..tools.llm_wrapper import sanitize_llm_output
 
     event_id = str(uuid.uuid4())
+    created_at = time.time()
+    business_id = build_business_id("SJ", event_id, created_at)
     vector_doc_id = f"evt_{event_id}"
+    event_status = "OPEN"
 
     # 消毒 event_data
     cleaned, warns = sanitize_llm_output(
@@ -258,15 +295,18 @@ async def save_confirmed_event(
         severity = cleaned.get("severity", "P3")
 
     # 1. 写入结构化表
-    await db_client.execute(
+    target_db = database or db_client
+    await target_db.execute(
         """
         INSERT INTO confirmed_events (
-            event_id, push_id, from_user, raw_text, event_type, severity,
-            context_trigger_data, memory_content, vector_doc_id, confirmed_at, venue_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            event_id, business_id, push_id, from_user, raw_text, event_type, severity,
+            context_trigger_data, memory_content, vector_doc_id, confirmed_at, venue_id,
+            source_type, status, trace_id, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             event_id,
+            business_id,
             push_id,
             from_user,
             raw_text,
@@ -275,34 +315,86 @@ async def save_confirmed_event(
             json.dumps(context_trigger_data, ensure_ascii=False),
             _build_memory_content(raw_text, event_type, severity),
             vector_doc_id,
-            time.time(),
+            created_at,
             venue_id or "",
+            source_type,
+            event_status,
+            trace_id or "",
+            created_at,
+            created_at,
         ),
     )
 
-    # 2. 写入向量库（异步，不阻塞主流程）
+    # 2. 写入向量库；失败时补偿删除结构化记录
     try:
-        from .vector_store import get_vector_client
-
-        vc = get_vector_client()
+        if vector_client is None:
+            from .vector_store import get_vector_client
+            vector_client = get_vector_client()
+        vc = vector_client
         if vc is None:
-            logger.warning("[PushLogger] 向量库未初始化，跳过向量写入")
-            return
+            raise RuntimeError("向量库未初始化，不能创建可检索事件")
 
         metadata = {
             "event_type": event_type,
             "severity": severity,
             "from_user": from_user,
             "event_id": event_id,
+            "business_id": business_id,
             "venue_id": venue_id or "",
+            "title": f"{event_type}事件",
+            "source_type": source_type,
+            "source_id": event_id,
+            "version": 1,
+            "status": event_status,
         }
-        vc.upsert_experience(
-            content=_build_memory_content(raw_text, event_type, severity),
-            metadata=metadata,
-            doc_id=vector_doc_id,
+        stored = vc.upsert_experience(
+            _build_memory_content(raw_text, event_type, severity),
+            metadata,
+            vector_doc_id,
+            strict=True,
         )
-    except Exception as e:
-        logger.error(f"[PushLogger] 向量库写入失败: {e}")
+        if stored is False:
+            raise RuntimeError("向量库拒绝写入事件")
+
+        source_message = None
+        if push_id and push_id != "manual" and hasattr(target_db, "fetch_one"):
+            source_message = await target_db.fetch_one(
+                """
+                SELECT message_id, session_id, trace_id
+                FROM message_runs
+                WHERE message_id = ? AND venue_id = ?
+                """,
+                (push_id, venue_id or ""),
+            )
+        await append_event_activity(
+            target_db,
+            venue_id=venue_id or "",
+            event_id=event_id,
+            activity_type="EVENT_CREATED",
+            created_by=from_user,
+            session_id=(source_message or {}).get("session_id"),
+            message_id=(source_message or {}).get("message_id") or push_id,
+            trace_id=trace_id or (source_message or {}).get("trace_id"),
+            payload={
+                "business_id": business_id,
+                "event_type": event_type,
+                "severity": severity,
+                "source_type": source_type,
+                "summary": raw_text,
+            },
+            idempotency_key=f"event-created:{event_id}",
+            created_at=created_at,
+        )
+    except Exception:
+        try:
+            if vector_client is not None:
+                vector_client.delete_experience(vector_doc_id)
+        finally:
+            await target_db.execute(
+                "DELETE FROM confirmed_events WHERE event_id = ? AND venue_id = ?",
+                (event_id, venue_id or ""),
+            )
+        raise
 
     logger.info(f"[PushLogger] 事件写入记忆库: event_id={event_id}, type={event_type}")
     return event_id

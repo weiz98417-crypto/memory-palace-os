@@ -36,7 +36,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /install /usr/local
 
 # 创建非 root 运行用户（安全加固）
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+RUN groupadd -r appuser && useradd -r -m -d /home/appuser -g appuser appuser
 
 WORKDIR /app
 
@@ -44,8 +44,8 @@ WORKDIR /app
 COPY --chown=appuser:appuser . .
 
 # 创建数据目录（volumes 会覆盖，但保证目录存在）
-RUN mkdir -p data/logs data/chroma && \
-    chown -R appuser:appuser /app
+RUN mkdir -p data/logs data/chroma /home/appuser/.cache && \
+    chown -R appuser:appuser /app /home/appuser
 
 USER appuser
 
@@ -53,6 +53,7 @@ USER appuser
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
+    HOME=/home/appuser \
     APP_ENV=production \
     LOG_LEVEL=INFO
 

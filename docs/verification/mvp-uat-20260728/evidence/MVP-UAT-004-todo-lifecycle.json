@@ -1,0 +1,1338 @@
+{
+  "uat_id": "MVP-UAT-004",
+  "operation": "TodoWrite task execution, failure exhaustion, recovery and completion",
+  "decomposition_trace_id": "ad49af2f-b7b8-4dc5-ba76-208c6798af47",
+  "action_count": 25,
+  "actions": [
+    {
+      "action": "start",
+      "task_id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "检查游客中心消防器材",
+          "status": "RUNNING",
+          "dependencies": [],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8854592,
+          "updated_at": 1785304486.2531579,
+          "started_at": 1785304486.2531571,
+          "completed_at": null,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "c390386f365a433cbc187c400a54ba4d"
+      }
+    },
+    {
+      "action": "fail",
+      "task_id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "检查游客中心消防器材",
+          "status": "PENDING",
+          "dependencies": [],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8854592,
+          "updated_at": 1785304486.7987578,
+          "started_at": 1785304486.2531571,
+          "completed_at": null,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "926c97629ecb4579a9c70c4dc60696bb"
+      }
+    },
+    {
+      "action": "start",
+      "task_id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "检查游客中心消防器材",
+          "status": "RUNNING",
+          "dependencies": [],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8854592,
+          "updated_at": 1785304487.2679646,
+          "started_at": 1785304487.2679641,
+          "completed_at": null,
+          "attempts": 2,
+          "max_attempts": 3
+        },
+        "trace_id": "a58df53b4c9d4fbcae86f21deac945cd"
+      }
+    },
+    {
+      "action": "fail",
+      "task_id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "检查游客中心消防器材",
+          "status": "PENDING",
+          "dependencies": [],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8854592,
+          "updated_at": 1785304487.7317977,
+          "started_at": 1785304487.2679641,
+          "completed_at": null,
+          "attempts": 2,
+          "max_attempts": 3
+        },
+        "trace_id": "00e061baee91463398f1c7465ed37dfe"
+      }
+    },
+    {
+      "action": "start",
+      "task_id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "检查游客中心消防器材",
+          "status": "RUNNING",
+          "dependencies": [],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8854592,
+          "updated_at": 1785304488.1352143,
+          "started_at": 1785304488.1352139,
+          "completed_at": null,
+          "attempts": 3,
+          "max_attempts": 3
+        },
+        "trace_id": "9172c6558cdc46329f0b2544a099e0a5"
+      }
+    },
+    {
+      "action": "fail",
+      "task_id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "检查游客中心消防器材",
+          "status": "FAILED",
+          "dependencies": [],
+          "result": null,
+          "error": "UAT 注入失败 3：达到最大尝试次数，等待经理恢复",
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8854592,
+          "updated_at": 1785304488.5810792,
+          "started_at": 1785304488.1352139,
+          "completed_at": 1785304488.581083,
+          "attempts": 3,
+          "max_attempts": 3
+        },
+        "trace_id": "8fb26b8475984c38afbe359717e33966"
+      }
+    },
+    {
+      "action": "retry",
+      "task_id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "检查游客中心消防器材",
+          "status": "PENDING",
+          "dependencies": [],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8854592,
+          "updated_at": 1785304489.0701792,
+          "started_at": 1785304488.1352139,
+          "completed_at": null,
+          "attempts": 3,
+          "max_attempts": 4
+        },
+        "trace_id": "4a02091be4104487a302cb7f7f1e29bf"
+      }
+    },
+    {
+      "action": "start",
+      "task_id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "检查游客中心消防器材",
+          "status": "RUNNING",
+          "dependencies": [],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8854592,
+          "updated_at": 1785304489.532958,
+          "started_at": 1785304489.5329578,
+          "completed_at": null,
+          "attempts": 4,
+          "max_attempts": 4
+        },
+        "trace_id": "38ff57834d2a48bc85f98031bd666345"
+      }
+    },
+    {
+      "action": "complete",
+      "task_id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "检查游客中心消防器材",
+          "status": "DONE",
+          "dependencies": [],
+          "result": {
+            "summary": "现场复核完成：三处检查对象均已形成带时间戳记录"
+          },
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8854592,
+          "updated_at": 1785304489.96604,
+          "started_at": 1785304489.5329578,
+          "completed_at": 1785304489.96604,
+          "attempts": 4,
+          "max_attempts": 4
+        },
+        "trace_id": "5492bfe99a324875930c2781f80e3642"
+      }
+    },
+    {
+      "action": "start",
+      "task_id": "c2fdfd93-21c6-4f6e-b581-8a1292c830ef",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "c2fdfd93-21c6-4f6e-b581-8a1292c830ef",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "检查东区配电间",
+          "status": "RUNNING",
+          "dependencies": [],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8836155,
+          "updated_at": 1785304490.3664925,
+          "started_at": 1785304490.3664923,
+          "completed_at": null,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "67dd505cf3f5401bbd9cf7eefa6c7780"
+      }
+    },
+    {
+      "action": "complete",
+      "task_id": "c2fdfd93-21c6-4f6e-b581-8a1292c830ef",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "c2fdfd93-21c6-4f6e-b581-8a1292c830ef",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "检查东区配电间",
+          "status": "DONE",
+          "dependencies": [],
+          "result": {
+            "summary": "UAT 已完成：检查东区配电间"
+          },
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8836155,
+          "updated_at": 1785304490.83202,
+          "started_at": 1785304490.3664923,
+          "completed_at": 1785304490.83202,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "db81d3a767ee4fa9a34946bc5392bfab"
+      }
+    },
+    {
+      "action": "start",
+      "task_id": "f9fde896-b653-4470-a818-cccdb73760c5",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "f9fde896-b653-4470-a818-cccdb73760c5",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "检查北门急救通道",
+          "status": "RUNNING",
+          "dependencies": [],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8810809,
+          "updated_at": 1785304491.215911,
+          "started_at": 1785304491.2159107,
+          "completed_at": null,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "060427686bb14c12abf22cef5f89e83d"
+      }
+    },
+    {
+      "action": "complete",
+      "task_id": "f9fde896-b653-4470-a818-cccdb73760c5",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "f9fde896-b653-4470-a818-cccdb73760c5",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "检查北门急救通道",
+          "status": "DONE",
+          "dependencies": [],
+          "result": {
+            "summary": "UAT 已完成：检查北门急救通道"
+          },
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8810809,
+          "updated_at": 1785304491.6809788,
+          "started_at": 1785304491.2159107,
+          "completed_at": 1785304491.6809788,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "54c15502065e4876a25db34a6a402e51"
+      }
+    },
+    {
+      "action": "start",
+      "task_id": "98035184-8597-463f-b1fb-609222d949dd",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "98035184-8597-463f-b1fb-609222d949dd",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "汇总并记录检查问题",
+          "status": "RUNNING",
+          "dependencies": [
+            "f9fde896-b653-4470-a818-cccdb73760c5",
+            "c2fdfd93-21c6-4f6e-b581-8a1292c830ef",
+            "e7746fa4-d0ea-4ce2-bce7-7208769f22bd"
+          ],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8867323,
+          "updated_at": 1785304492.1005492,
+          "started_at": 1785304492.100549,
+          "completed_at": null,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "3a2fb22d357d4afab7bbf390c9614515"
+      }
+    },
+    {
+      "action": "complete",
+      "task_id": "98035184-8597-463f-b1fb-609222d949dd",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "98035184-8597-463f-b1fb-609222d949dd",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "汇总并记录检查问题",
+          "status": "DONE",
+          "dependencies": [
+            "f9fde896-b653-4470-a818-cccdb73760c5",
+            "c2fdfd93-21c6-4f6e-b581-8a1292c830ef",
+            "e7746fa4-d0ea-4ce2-bce7-7208769f22bd"
+          ],
+          "result": {
+            "summary": "UAT 已完成：汇总并记录检查问题"
+          },
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8867323,
+          "updated_at": 1785304492.5485187,
+          "started_at": 1785304492.100549,
+          "completed_at": 1785304492.5485187,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "cf90b9458fc04050b686d03fee2e5a89"
+      }
+    },
+    {
+      "action": "start",
+      "task_id": "cd725623-d100-49d7-8b77-e8e57461d23c",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "cd725623-d100-49d7-8b77-e8e57461d23c",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "问题分类整理",
+          "status": "RUNNING",
+          "dependencies": [
+            "98035184-8597-463f-b1fb-609222d949dd"
+          ],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8876872,
+          "updated_at": 1785304492.9676561,
+          "started_at": 1785304492.967656,
+          "completed_at": null,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "9550b28cc9654b2ca603ff723a32b6f9"
+      }
+    },
+    {
+      "action": "complete",
+      "task_id": "cd725623-d100-49d7-8b77-e8e57461d23c",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "cd725623-d100-49d7-8b77-e8e57461d23c",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "问题分类整理",
+          "status": "DONE",
+          "dependencies": [
+            "98035184-8597-463f-b1fb-609222d949dd"
+          ],
+          "result": {
+            "summary": "UAT 已完成：问题分类整理"
+          },
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8876872,
+          "updated_at": 1785304493.4309344,
+          "started_at": 1785304492.967656,
+          "completed_at": 1785304493.4309344,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "5a904737ab274417b35291d414a906aa"
+      }
+    },
+    {
+      "action": "start",
+      "task_id": "de550d1d-af79-4065-88b5-a8e8e3667355",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "de550d1d-af79-4065-88b5-a8e8e3667355",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "安排复核任务及责任人",
+          "status": "RUNNING",
+          "dependencies": [
+            "cd725623-d100-49d7-8b77-e8e57461d23c"
+          ],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8885431,
+          "updated_at": 1785304493.8338377,
+          "started_at": 1785304493.8338375,
+          "completed_at": null,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "a40971e082d546908c9261a97a2c95f7"
+      }
+    },
+    {
+      "action": "complete",
+      "task_id": "de550d1d-af79-4065-88b5-a8e8e3667355",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "de550d1d-af79-4065-88b5-a8e8e3667355",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "安排复核任务及责任人",
+          "status": "DONE",
+          "dependencies": [
+            "cd725623-d100-49d7-8b77-e8e57461d23c"
+          ],
+          "result": {
+            "summary": "UAT 已完成：安排复核任务及责任人"
+          },
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8885431,
+          "updated_at": 1785304494.2978816,
+          "started_at": 1785304493.8338375,
+          "completed_at": 1785304494.2978816,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "c58fd3cfa615438b9b5555f2f25bd158"
+      }
+    },
+    {
+      "action": "start",
+      "task_id": "c6e59eb5-d66e-4a1b-9199-3cf147fc4614",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "c6e59eb5-d66e-4a1b-9199-3cf147fc4614",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "执行复核检查",
+          "status": "RUNNING",
+          "dependencies": [
+            "de550d1d-af79-4065-88b5-a8e8e3667355"
+          ],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8895257,
+          "updated_at": 1785304494.7012167,
+          "started_at": 1785304494.7012165,
+          "completed_at": null,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "091ede7156e94ee29dcd4e9cfef848a5"
+      }
+    },
+    {
+      "action": "complete",
+      "task_id": "c6e59eb5-d66e-4a1b-9199-3cf147fc4614",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "c6e59eb5-d66e-4a1b-9199-3cf147fc4614",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "执行复核检查",
+          "status": "DONE",
+          "dependencies": [
+            "de550d1d-af79-4065-88b5-a8e8e3667355"
+          ],
+          "result": {
+            "summary": "UAT 已完成：执行复核检查"
+          },
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8895257,
+          "updated_at": 1785304495.1814206,
+          "started_at": 1785304494.7012165,
+          "completed_at": 1785304495.1814206,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "d1f134b90b094534b3d88c72aaee0e65"
+      }
+    },
+    {
+      "action": "start",
+      "task_id": "478990c7-c5dc-4133-ae76-3e56ae91bf5e",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "478990c7-c5dc-4133-ae76-3e56ae91bf5e",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "编写闭环报告",
+          "status": "RUNNING",
+          "dependencies": [
+            "c6e59eb5-d66e-4a1b-9199-3cf147fc4614"
+          ],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8904305,
+          "updated_at": 1785304495.5873032,
+          "started_at": 1785304495.587303,
+          "completed_at": null,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "b92c4365b5a7496996753f82c12c8d9e"
+      }
+    },
+    {
+      "action": "complete",
+      "task_id": "478990c7-c5dc-4133-ae76-3e56ae91bf5e",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "478990c7-c5dc-4133-ae76-3e56ae91bf5e",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "编写闭环报告",
+          "status": "DONE",
+          "dependencies": [
+            "c6e59eb5-d66e-4a1b-9199-3cf147fc4614"
+          ],
+          "result": {
+            "summary": "UAT 已完成：编写闭环报告"
+          },
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8904305,
+          "updated_at": 1785304496.0307627,
+          "started_at": 1785304495.587303,
+          "completed_at": 1785304496.0307627,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "869388322d7d496aa7a52927e5be36be"
+      }
+    },
+    {
+      "action": "start",
+      "task_id": "8899c5d0-d13b-4811-b095-5df422ce8783",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "8899c5d0-d13b-4811-b095-5df422ce8783",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "审核并提交报告",
+          "status": "RUNNING",
+          "dependencies": [
+            "478990c7-c5dc-4133-ae76-3e56ae91bf5e"
+          ],
+          "result": null,
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8913531,
+          "updated_at": 1785304496.4343715,
+          "started_at": 1785304496.4343712,
+          "completed_at": null,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "70d61dc3f721417db08f7fac07556351"
+      }
+    },
+    {
+      "action": "complete",
+      "task_id": "8899c5d0-d13b-4811-b095-5df422ce8783",
+      "status": 200,
+      "response": {
+        "task": {
+          "id": "8899c5d0-d13b-4811-b095-5df422ce8783",
+          "session_id": "uat-golden-1785230678",
+          "venue_id": "venue-uat",
+          "description": "审核并提交报告",
+          "status": "DONE",
+          "dependencies": [
+            "478990c7-c5dc-4133-ae76-3e56ae91bf5e"
+          ],
+          "result": {
+            "summary": "UAT 已完成：审核并提交报告"
+          },
+          "error": null,
+          "assigned_agent": null,
+          "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+          "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d",
+          "created_at": 1785304103.8913531,
+          "updated_at": 1785304496.898121,
+          "started_at": 1785304496.4343712,
+          "completed_at": 1785304496.898121,
+          "attempts": 1,
+          "max_attempts": 3
+        },
+        "trace_id": "b6404da187124408aca56bbaafc675ce"
+      }
+    }
+  ],
+  "final_tasks": [
+    {
+      "id": "8899c5d0-d13b-4811-b095-5df422ce8783",
+      "venue_id": "venue-uat",
+      "session_id": "uat-golden-1785230678",
+      "description": "审核并提交报告",
+      "status": "DONE",
+      "dependencies": [
+        "478990c7-c5dc-4133-ae76-3e56ae91bf5e"
+      ],
+      "result": {
+        "summary": "UAT 已完成：审核并提交报告"
+      },
+      "error": null,
+      "assigned_agent": null,
+      "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+      "created_at": 1785304103.8913531,
+      "updated_at": 1785304496.898121,
+      "started_at": 1785304496.4343712,
+      "completed_at": 1785304496.898121,
+      "attempts": 1,
+      "max_attempts": 3,
+      "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d"
+    },
+    {
+      "id": "478990c7-c5dc-4133-ae76-3e56ae91bf5e",
+      "venue_id": "venue-uat",
+      "session_id": "uat-golden-1785230678",
+      "description": "编写闭环报告",
+      "status": "DONE",
+      "dependencies": [
+        "c6e59eb5-d66e-4a1b-9199-3cf147fc4614"
+      ],
+      "result": {
+        "summary": "UAT 已完成：编写闭环报告"
+      },
+      "error": null,
+      "assigned_agent": null,
+      "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+      "created_at": 1785304103.8904305,
+      "updated_at": 1785304496.0307627,
+      "started_at": 1785304495.587303,
+      "completed_at": 1785304496.0307627,
+      "attempts": 1,
+      "max_attempts": 3,
+      "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d"
+    },
+    {
+      "id": "c6e59eb5-d66e-4a1b-9199-3cf147fc4614",
+      "venue_id": "venue-uat",
+      "session_id": "uat-golden-1785230678",
+      "description": "执行复核检查",
+      "status": "DONE",
+      "dependencies": [
+        "de550d1d-af79-4065-88b5-a8e8e3667355"
+      ],
+      "result": {
+        "summary": "UAT 已完成：执行复核检查"
+      },
+      "error": null,
+      "assigned_agent": null,
+      "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+      "created_at": 1785304103.8895257,
+      "updated_at": 1785304495.1814206,
+      "started_at": 1785304494.7012165,
+      "completed_at": 1785304495.1814206,
+      "attempts": 1,
+      "max_attempts": 3,
+      "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d"
+    },
+    {
+      "id": "de550d1d-af79-4065-88b5-a8e8e3667355",
+      "venue_id": "venue-uat",
+      "session_id": "uat-golden-1785230678",
+      "description": "安排复核任务及责任人",
+      "status": "DONE",
+      "dependencies": [
+        "cd725623-d100-49d7-8b77-e8e57461d23c"
+      ],
+      "result": {
+        "summary": "UAT 已完成：安排复核任务及责任人"
+      },
+      "error": null,
+      "assigned_agent": null,
+      "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+      "created_at": 1785304103.8885431,
+      "updated_at": 1785304494.2978816,
+      "started_at": 1785304493.8338375,
+      "completed_at": 1785304494.2978816,
+      "attempts": 1,
+      "max_attempts": 3,
+      "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d"
+    },
+    {
+      "id": "cd725623-d100-49d7-8b77-e8e57461d23c",
+      "venue_id": "venue-uat",
+      "session_id": "uat-golden-1785230678",
+      "description": "问题分类整理",
+      "status": "DONE",
+      "dependencies": [
+        "98035184-8597-463f-b1fb-609222d949dd"
+      ],
+      "result": {
+        "summary": "UAT 已完成：问题分类整理"
+      },
+      "error": null,
+      "assigned_agent": null,
+      "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+      "created_at": 1785304103.8876872,
+      "updated_at": 1785304493.4309344,
+      "started_at": 1785304492.967656,
+      "completed_at": 1785304493.4309344,
+      "attempts": 1,
+      "max_attempts": 3,
+      "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d"
+    },
+    {
+      "id": "98035184-8597-463f-b1fb-609222d949dd",
+      "venue_id": "venue-uat",
+      "session_id": "uat-golden-1785230678",
+      "description": "汇总并记录检查问题",
+      "status": "DONE",
+      "dependencies": [
+        "f9fde896-b653-4470-a818-cccdb73760c5",
+        "c2fdfd93-21c6-4f6e-b581-8a1292c830ef",
+        "e7746fa4-d0ea-4ce2-bce7-7208769f22bd"
+      ],
+      "result": {
+        "summary": "UAT 已完成：汇总并记录检查问题"
+      },
+      "error": null,
+      "assigned_agent": null,
+      "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+      "created_at": 1785304103.8867323,
+      "updated_at": 1785304492.5485187,
+      "started_at": 1785304492.100549,
+      "completed_at": 1785304492.5485187,
+      "attempts": 1,
+      "max_attempts": 3,
+      "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d"
+    },
+    {
+      "id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+      "venue_id": "venue-uat",
+      "session_id": "uat-golden-1785230678",
+      "description": "检查游客中心消防器材",
+      "status": "DONE",
+      "dependencies": [],
+      "result": {
+        "summary": "现场复核完成：三处检查对象均已形成带时间戳记录"
+      },
+      "error": null,
+      "assigned_agent": null,
+      "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+      "created_at": 1785304103.8854592,
+      "updated_at": 1785304489.96604,
+      "started_at": 1785304489.5329578,
+      "completed_at": 1785304489.96604,
+      "attempts": 4,
+      "max_attempts": 4,
+      "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d"
+    },
+    {
+      "id": "c2fdfd93-21c6-4f6e-b581-8a1292c830ef",
+      "venue_id": "venue-uat",
+      "session_id": "uat-golden-1785230678",
+      "description": "检查东区配电间",
+      "status": "DONE",
+      "dependencies": [],
+      "result": {
+        "summary": "UAT 已完成：检查东区配电间"
+      },
+      "error": null,
+      "assigned_agent": null,
+      "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+      "created_at": 1785304103.8836155,
+      "updated_at": 1785304490.83202,
+      "started_at": 1785304490.3664923,
+      "completed_at": 1785304490.83202,
+      "attempts": 1,
+      "max_attempts": 3,
+      "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d"
+    },
+    {
+      "id": "f9fde896-b653-4470-a818-cccdb73760c5",
+      "venue_id": "venue-uat",
+      "session_id": "uat-golden-1785230678",
+      "description": "检查北门急救通道",
+      "status": "DONE",
+      "dependencies": [],
+      "result": {
+        "summary": "UAT 已完成：检查北门急救通道"
+      },
+      "error": null,
+      "assigned_agent": null,
+      "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+      "created_at": 1785304103.8810809,
+      "updated_at": 1785304491.6809788,
+      "started_at": 1785304491.2159107,
+      "completed_at": 1785304491.6809788,
+      "attempts": 1,
+      "max_attempts": 3,
+      "decomposition_id": "b9f33aeccc114dcab5ce964e89f6348d"
+    }
+  ],
+  "llm_calls": [
+    {
+      "id": "c08a855ffc034e42b6bd6fca3efe47db",
+      "venue_id": "venue-uat",
+      "trace_id": "ad49af2f-b7b8-4dc5-ba76-208c6798af47",
+      "provider": "deepseek",
+      "model_name": "deepseek-v4-flash",
+      "status": "SUCCEEDED",
+      "attempt_count": 1,
+      "latency_seconds": 9.176284074783325,
+      "prompt_tokens": 219,
+      "completion_tokens": 718,
+      "total_tokens": 937,
+      "request_id": "3e37a844-8ac7-4d31-8e36-cae5becba4d2",
+      "error_type": null,
+      "error_message": null,
+      "is_mock": false,
+      "created_at": 1785304103.8791475,
+      "agent_id": "TodoWrite",
+      "agent_name": "todo_write"
+    }
+  ],
+  "decomposition_audits": [
+    {
+      "id": 220,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "TASK_DECOMPOSED",
+      "resource_type": "task_decomposition",
+      "resource_id": "b9f33aeccc114dcab5ce964e89f6348d",
+      "outcome": "SUCCEEDED",
+      "trace_id": "ad49af2f-b7b8-4dc5-ba76-208c6798af47",
+      "created_at": 1785304103.9057264,
+      "metadata": {
+        "tasks_created": 9,
+        "goal_length": 58,
+        "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+        "max_attempts": 3,
+        "agent_id": "TodoWrite"
+      }
+    },
+    {
+      "id": 219,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "TASK_CREATED",
+      "resource_type": "task",
+      "resource_id": "8899c5d0-d13b-4811-b095-5df422ce8783",
+      "outcome": "SUCCEEDED",
+      "trace_id": "ad49af2f-b7b8-4dc5-ba76-208c6798af47",
+      "created_at": 1785304103.9050877,
+      "metadata": {
+        "session_id": "uat-golden-1785230678",
+        "dependencies": [
+          "478990c7-c5dc-4133-ae76-3e56ae91bf5e"
+        ],
+        "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+        "max_attempts": 3,
+        "generated_by": "TodoWrite"
+      }
+    },
+    {
+      "id": 218,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "TASK_CREATED",
+      "resource_type": "task",
+      "resource_id": "478990c7-c5dc-4133-ae76-3e56ae91bf5e",
+      "outcome": "SUCCEEDED",
+      "trace_id": "ad49af2f-b7b8-4dc5-ba76-208c6798af47",
+      "created_at": 1785304103.904296,
+      "metadata": {
+        "session_id": "uat-golden-1785230678",
+        "dependencies": [
+          "c6e59eb5-d66e-4a1b-9199-3cf147fc4614"
+        ],
+        "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+        "max_attempts": 3,
+        "generated_by": "TodoWrite"
+      }
+    },
+    {
+      "id": 217,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "TASK_CREATED",
+      "resource_type": "task",
+      "resource_id": "c6e59eb5-d66e-4a1b-9199-3cf147fc4614",
+      "outcome": "SUCCEEDED",
+      "trace_id": "ad49af2f-b7b8-4dc5-ba76-208c6798af47",
+      "created_at": 1785304103.903449,
+      "metadata": {
+        "session_id": "uat-golden-1785230678",
+        "dependencies": [
+          "de550d1d-af79-4065-88b5-a8e8e3667355"
+        ],
+        "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+        "max_attempts": 3,
+        "generated_by": "TodoWrite"
+      }
+    },
+    {
+      "id": 216,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "TASK_CREATED",
+      "resource_type": "task",
+      "resource_id": "de550d1d-af79-4065-88b5-a8e8e3667355",
+      "outcome": "SUCCEEDED",
+      "trace_id": "ad49af2f-b7b8-4dc5-ba76-208c6798af47",
+      "created_at": 1785304103.902258,
+      "metadata": {
+        "session_id": "uat-golden-1785230678",
+        "dependencies": [
+          "cd725623-d100-49d7-8b77-e8e57461d23c"
+        ],
+        "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+        "max_attempts": 3,
+        "generated_by": "TodoWrite"
+      }
+    },
+    {
+      "id": 215,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "TASK_CREATED",
+      "resource_type": "task",
+      "resource_id": "cd725623-d100-49d7-8b77-e8e57461d23c",
+      "outcome": "SUCCEEDED",
+      "trace_id": "ad49af2f-b7b8-4dc5-ba76-208c6798af47",
+      "created_at": 1785304103.900181,
+      "metadata": {
+        "session_id": "uat-golden-1785230678",
+        "dependencies": [
+          "98035184-8597-463f-b1fb-609222d949dd"
+        ],
+        "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+        "max_attempts": 3,
+        "generated_by": "TodoWrite"
+      }
+    },
+    {
+      "id": 214,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "TASK_CREATED",
+      "resource_type": "task",
+      "resource_id": "98035184-8597-463f-b1fb-609222d949dd",
+      "outcome": "SUCCEEDED",
+      "trace_id": "ad49af2f-b7b8-4dc5-ba76-208c6798af47",
+      "created_at": 1785304103.899523,
+      "metadata": {
+        "session_id": "uat-golden-1785230678",
+        "dependencies": [
+          "f9fde896-b653-4470-a818-cccdb73760c5",
+          "c2fdfd93-21c6-4f6e-b581-8a1292c830ef",
+          "e7746fa4-d0ea-4ce2-bce7-7208769f22bd"
+        ],
+        "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+        "max_attempts": 3,
+        "generated_by": "TodoWrite"
+      }
+    },
+    {
+      "id": 213,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "TASK_CREATED",
+      "resource_type": "task",
+      "resource_id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+      "outcome": "SUCCEEDED",
+      "trace_id": "ad49af2f-b7b8-4dc5-ba76-208c6798af47",
+      "created_at": 1785304103.8988872,
+      "metadata": {
+        "session_id": "uat-golden-1785230678",
+        "dependencies": [],
+        "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+        "max_attempts": 3,
+        "generated_by": "TodoWrite"
+      }
+    },
+    {
+      "id": 212,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "TASK_CREATED",
+      "resource_type": "task",
+      "resource_id": "c2fdfd93-21c6-4f6e-b581-8a1292c830ef",
+      "outcome": "SUCCEEDED",
+      "trace_id": "ad49af2f-b7b8-4dc5-ba76-208c6798af47",
+      "created_at": 1785304103.8981602,
+      "metadata": {
+        "session_id": "uat-golden-1785230678",
+        "dependencies": [],
+        "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+        "max_attempts": 3,
+        "generated_by": "TodoWrite"
+      }
+    },
+    {
+      "id": 211,
+      "venue_id": "venue-uat",
+      "user_id": "9e5bfb15b8b54f96aa0ccc7a7ea11d36",
+      "action": "TASK_CREATED",
+      "resource_type": "task",
+      "resource_id": "f9fde896-b653-4470-a818-cccdb73760c5",
+      "outcome": "SUCCEEDED",
+      "trace_id": "ad49af2f-b7b8-4dc5-ba76-208c6798af47",
+      "created_at": 1785304103.896665,
+      "metadata": {
+        "session_id": "uat-golden-1785230678",
+        "dependencies": [],
+        "assigned_user_id": "813c0d14d40742c68bcd32d0f50aeb9d",
+        "max_attempts": 3,
+        "generated_by": "TodoWrite"
+      }
+    }
+  ],
+  "trace": {
+    "trace_id": "ad49af2f-b7b8-4dc5-ba76-208c6798af47",
+    "venue_id": "venue-uat",
+    "status": "SUCCEEDED",
+    "message_run": null,
+    "summary": {
+      "model_calls": 1,
+      "audits": 10,
+      "events": 0,
+      "tasks": 9,
+      "approvals": 0,
+      "tool_invocations": 0,
+      "watcher_runs": 0,
+      "push_logs": 0
+    },
+    "timeline": [
+      {
+        "kind": "MODEL",
+        "status": "SUCCEEDED",
+        "created_at": 1785304103.8791475,
+        "summary": "deepseek-v4-flash 模型调用",
+        "resource_id": "3e37a844-8ac7-4d31-8e36-cae5becba4d2",
+        "agent_id": "TodoWrite"
+      },
+      {
+        "kind": "TASK",
+        "status": "DONE",
+        "created_at": 1785304103.8810809,
+        "summary": "检查北门急救通道",
+        "resource_id": "f9fde896-b653-4470-a818-cccdb73760c5",
+        "agent_id": null
+      },
+      {
+        "kind": "TASK",
+        "status": "DONE",
+        "created_at": 1785304103.8836155,
+        "summary": "检查东区配电间",
+        "resource_id": "c2fdfd93-21c6-4f6e-b581-8a1292c830ef",
+        "agent_id": null
+      },
+      {
+        "kind": "TASK",
+        "status": "DONE",
+        "created_at": 1785304103.8854592,
+        "summary": "检查游客中心消防器材",
+        "resource_id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+        "agent_id": null
+      },
+      {
+        "kind": "TASK",
+        "status": "DONE",
+        "created_at": 1785304103.8867323,
+        "summary": "汇总并记录检查问题",
+        "resource_id": "98035184-8597-463f-b1fb-609222d949dd",
+        "agent_id": null
+      },
+      {
+        "kind": "TASK",
+        "status": "DONE",
+        "created_at": 1785304103.8876872,
+        "summary": "问题分类整理",
+        "resource_id": "cd725623-d100-49d7-8b77-e8e57461d23c",
+        "agent_id": null
+      },
+      {
+        "kind": "TASK",
+        "status": "DONE",
+        "created_at": 1785304103.8885431,
+        "summary": "安排复核任务及责任人",
+        "resource_id": "de550d1d-af79-4065-88b5-a8e8e3667355",
+        "agent_id": null
+      },
+      {
+        "kind": "TASK",
+        "status": "DONE",
+        "created_at": 1785304103.8895257,
+        "summary": "执行复核检查",
+        "resource_id": "c6e59eb5-d66e-4a1b-9199-3cf147fc4614",
+        "agent_id": null
+      },
+      {
+        "kind": "TASK",
+        "status": "DONE",
+        "created_at": 1785304103.8904305,
+        "summary": "编写闭环报告",
+        "resource_id": "478990c7-c5dc-4133-ae76-3e56ae91bf5e",
+        "agent_id": null
+      },
+      {
+        "kind": "TASK",
+        "status": "DONE",
+        "created_at": 1785304103.8913531,
+        "summary": "审核并提交报告",
+        "resource_id": "8899c5d0-d13b-4811-b095-5df422ce8783",
+        "agent_id": null
+      },
+      {
+        "kind": "AUDIT",
+        "status": "SUCCEEDED",
+        "created_at": 1785304103.896665,
+        "summary": "TASK_CREATED",
+        "resource_id": "f9fde896-b653-4470-a818-cccdb73760c5",
+        "agent_id": null
+      },
+      {
+        "kind": "AUDIT",
+        "status": "SUCCEEDED",
+        "created_at": 1785304103.8981602,
+        "summary": "TASK_CREATED",
+        "resource_id": "c2fdfd93-21c6-4f6e-b581-8a1292c830ef",
+        "agent_id": null
+      },
+      {
+        "kind": "AUDIT",
+        "status": "SUCCEEDED",
+        "created_at": 1785304103.8988872,
+        "summary": "TASK_CREATED",
+        "resource_id": "e7746fa4-d0ea-4ce2-bce7-7208769f22bd",
+        "agent_id": null
+      },
+      {
+        "kind": "AUDIT",
+        "status": "SUCCEEDED",
+        "created_at": 1785304103.899523,
+        "summary": "TASK_CREATED",
+        "resource_id": "98035184-8597-463f-b1fb-609222d949dd",
+        "agent_id": null
+      },
+      {
+        "kind": "AUDIT",
+        "status": "SUCCEEDED",
+        "created_at": 1785304103.900181,
+        "summary": "TASK_CREATED",
+        "resource_id": "cd725623-d100-49d7-8b77-e8e57461d23c",
+        "agent_id": null
+      },
+      {
+        "kind": "AUDIT",
+        "status": "SUCCEEDED",
+        "created_at": 1785304103.902258,
+        "summary": "TASK_CREATED",
+        "resource_id": "de550d1d-af79-4065-88b5-a8e8e3667355",
+        "agent_id": null
+      },
+      {
+        "kind": "AUDIT",
+        "status": "SUCCEEDED",
+        "created_at": 1785304103.903449,
+        "summary": "TASK_CREATED",
+        "resource_id": "c6e59eb5-d66e-4a1b-9199-3cf147fc4614",
+        "agent_id": null
+      },
+      {
+        "kind": "AUDIT",
+        "status": "SUCCEEDED",
+        "created_at": 1785304103.904296,
+        "summary": "TASK_CREATED",
+        "resource_id": "478990c7-c5dc-4133-ae76-3e56ae91bf5e",
+        "agent_id": null
+      },
+      {
+        "kind": "AUDIT",
+        "status": "SUCCEEDED",
+        "created_at": 1785304103.9050877,
+        "summary": "TASK_CREATED",
+        "resource_id": "8899c5d0-d13b-4811-b095-5df422ce8783",
+        "agent_id": null
+      },
+      {
+        "kind": "AUDIT",
+        "status": "SUCCEEDED",
+        "created_at": 1785304103.9057264,
+        "summary": "TASK_DECOMPOSED",
+        "resource_id": "b9f33aeccc114dcab5ce964e89f6348d",
+        "agent_id": null
+      }
+    ]
+  },
+  "runtime": {
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  }
+}

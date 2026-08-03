@@ -59,24 +59,37 @@ class TestVectorStore:
         doc_id = str(uuid.uuid4())
         vs.upsert_experience(
             content="暴雨红色预警时关闭玻璃栈道",
-            metadata={"event_type": "safety"},
+            metadata={"event_type": "safety", "venue_id": "venue-a"},
             doc_id=doc_id,
         )
-        results = vs.query_experience("暴雨天气怎么处理", top_k=3)
+        results = vs.query_experience("暴雨天气怎么处理", top_k=3, venue_id="venue-a")
         assert isinstance(results, list)
+
+    def test_query_requires_tenant_scope(self, vector_store):
+        """任何向量检索都必须显式绑定场地，缺失时拒绝执行。"""
+        with pytest.raises(TypeError, match="venue_id"):
+            vector_store.query_experience("暴雨天气怎么处理")
+        with pytest.raises(ValueError, match="venue_id"):
+            vector_store.query_experience("暴雨天气怎么处理", venue_id="")
 
     def test_query_with_high_threshold_filters_noise(self, vector_store):
         """高阈值过滤低相关结果"""
         vs = vector_store
-        vs.upsert_experience(content="售票系统故障处理流程", metadata={}, doc_id="s1")
+        vs.upsert_experience(
+            content="售票系统故障处理流程",
+            metadata={"venue_id": "venue-a"},
+            doc_id="s1",
+        )
         # 高阈值 (0.99) 下 mock embedding 的随机向量几乎不可能通过
-        results = vs.query_experience("无关查询", top_k=5, threshold=0.99)
+        results = vs.query_experience(
+            "无关查询", top_k=5, threshold=0.99, venue_id="venue-a"
+        )
         assert len(results) == 0
 
     def test_empty_collection_query(self, vector_store):
         """空集合查询不崩溃，返回空列表"""
         vs = vector_store
-        results = vs.query_experience("any query", top_k=5)
+        results = vs.query_experience("any query", top_k=5, venue_id="venue-a")
         assert isinstance(results, list)
 
     def test_upsert_multiple_then_query(self, vector_store):
@@ -85,10 +98,10 @@ class TestVectorStore:
         for i in range(5):
             vs.upsert_experience(
                 content=f"测试文档{i}描述了一些经验",
-                metadata={"idx": i},
+                metadata={"idx": i, "venue_id": "venue-a"},
                 doc_id=f"doc_{i}",
             )
-        results = vs.query_experience("测试文档", top_k=3)
+        results = vs.query_experience("测试文档", top_k=3, venue_id="venue-a")
         assert isinstance(results, list)
 
     def test_query_result_structure(self, vector_store):
@@ -96,10 +109,12 @@ class TestVectorStore:
         vs = vector_store
         vs.upsert_experience(
             content="游客投诉处理标准流程：倾听-记录-安抚-解决",
-            metadata={"type": "complaint"},
+            metadata={"type": "complaint", "venue_id": "venue-a"},
             doc_id="struct_test",
         )
-        results = vs.query_experience("投诉处理", top_k=1, threshold=0.0)
+        results = vs.query_experience(
+            "投诉处理", top_k=1, threshold=0.0, venue_id="venue-a"
+        )
         if len(results) > 0:
             r = results[0]
             assert "content" in r

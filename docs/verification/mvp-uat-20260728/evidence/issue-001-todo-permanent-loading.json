@@ -1,0 +1,60 @@
+{
+  "operation": "Cancel a pending Todo wait, persist it across refresh and recover by the original idempotency key",
+  "waiting": {
+    "app_status": "RUNNING",
+    "cancel_visible": true,
+    "submit_disabled": true,
+    "status_text": "模型处理中",
+    "dialog_open": true
+  },
+  "cancelled": {
+    "app_status": "CHECK_REQUIRED",
+    "stored_status": "CHECK_REQUIRED",
+    "idempotency_key": "16f8f226-9b6a-45b6-bb1d-c9b40c855fb1",
+    "trace_id": "6418a00b-b9e8-4cf8-bf16-43d6f494a7ad",
+    "note": "已停止本地等待，服务端可能仍在处理。请先核对结果，不要重复提交。",
+    "recover_visible": true,
+    "dialog_open": false
+  },
+  "restored": {
+    "app_status": "CHECK_REQUIRED",
+    "stored_status": "CHECK_REQUIRED",
+    "idempotency_key": "16f8f226-9b6a-45b6-bb1d-c9b40c855fb1",
+    "trace_id": "6418a00b-b9e8-4cf8-bf16-43d6f494a7ad",
+    "recover_visible": true
+  },
+  "recovered": {
+    "app_status": "SUCCEEDED",
+    "stored_status": "SUCCEEDED",
+    "idempotency_key": "16f8f226-9b6a-45b6-bb1d-c9b40c855fb1",
+    "trace_id": "6418a00b-b9e8-4cf8-bf16-43d6f494a7ad",
+    "tasks_created": 2,
+    "status_text": "拆解完成",
+    "result_visible": true
+  },
+  "expected_transport_events": [
+    {
+      "url": "http://localhost:8082/api/v1/admin/tasks/decompose",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "unexpected_runtime": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "serverErrors": []
+  },
+  "simulated_delayed_server_completion": true,
+  "application_server_decomposition_post_count": 0,
+  "runtime": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [
+      {
+        "url": "http://localhost:8082/api/v1/admin/tasks/decompose",
+        "error": "net::ERR_ABORTED"
+      }
+    ],
+    "serverErrors": []
+  }
+}

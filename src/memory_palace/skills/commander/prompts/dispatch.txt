@@ -5,8 +5,16 @@
 
 ### 当前事件上下文 (CONTEXT)
 - 严重等级 (Severity): {severity}
+- 事件类型 (Event Type): {event_type}
 - 事件摘要 (Summary): {summary}
 - 现场一线员工原话 (Raw Text): {raw_text}
+- 风险判断理由 (Risk Reason): {risk_reason}
+- 附件与现场补充 (Attachments): {attachment_context}
+
+### 已核验知识依据 (VERIFIED KNOWLEDGE)
+{knowledge_context}
+
+你只能引用上述已核验知识依据。不得补写不存在的 SOP、案例、专家、编号或版本；没有完全匹配的历史经验时，必须明确说明“尚未找到与本次根因完全一致的历史经验”。正式 SOP 的红线要求优先于历史案例和个人经验。
 
 ### 处置红线与标准作业程序 (SOP GUIDELINES)
 请根据当前的严重等级严格执行以下红线动作：
@@ -33,5 +41,7 @@
     "reply_text": "【此处填写直接回复给一线员工的具体行动指令，必须包含明确的动作】",
     "action_taken": "emergency_dispatch_sop",
     "required_tools": ["此处填写需要的工具，如 medical_kit, camera, security_backup"],
-    "next_step_check": "【此处填写要求员工反馈的具体核对项，例如：'请在3分钟内确认救护车是否到达'】"
+    "next_step_check": "【此处填写要求员工反馈的具体核对项，例如：'请在3分钟内确认救护车是否到达'】",
+    "risk_reason": "【基于现场原话、附件说明和上游判断给出简洁风险理由】",
+    "immediate_actions": ["【按执行顺序列出立即动作】"]
 }}

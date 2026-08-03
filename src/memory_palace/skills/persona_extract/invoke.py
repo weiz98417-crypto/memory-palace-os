@@ -25,13 +25,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from loguru import logger
 
-try:
-    from ...tools.llm_wrapper import llm_client
-except ImportError:
-    llm_client = None
-
 from ...knowledge.db_client import db_client
 from ...knowledge.vector_store import get_vector_client
+from ...tools.llm_wrapper import llm_client
 
 
 # =============================================================================
@@ -43,6 +39,8 @@ async def ask_persona(
     job_title: str,
     question: str,
     trace_id: str = "",
+    database=None,
+    persona_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     查询数字分身的经验档案并获取回答
@@ -74,12 +72,14 @@ async def ask_persona(
         question=question,
         top_k=5,
         trace_id=trace_id,
+        database=database,
+        persona_id=persona_id,
     )
 
     if not entries:
         return {
             "reply_text": "抱歉，我目前没有这个情境的相关经验。建议您联系当班主管确认处理方式。",
-            "persona_id": None,
+            "persona_id": persona_id,
             "job_title": job_title,
             "entries_used": 0,
             "source_note": "",
@@ -87,6 +87,7 @@ async def ask_persona(
 
     # 2. 生成第一人称回答
     reply_text = await _generate_first_person_reply(
+        venue_id=venue_id,
         job_title=job_title,
         question=question,
         entries=entries,
@@ -111,8 +112,10 @@ async def query_persona_logic(
     job_title: str,
     question: str,
     top_k: int = 5,
-    threshold: float = 0.5,
+    threshold: float = 0.2,
     trace_id: str = "",
+    database=None,
+    persona_id: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """
     检索最相关的逻辑条目
@@ -126,23 +129,35 @@ async def query_persona_logic(
         逻辑条目列表，每条包含 trigger/behavior/reason
     """
     # 1. 精确查找分身档案
-    persona_rows = await db_client.fetch_all(
-        "SELECT id, venue_id, job_title, logic_entries FROM personas WHERE job_title = ?",
-        (job_title,),
-    )
-
-    if venue_id:
-        # 尝试景区级别匹配
-        persona_rows.extend(
-            await db_client.fetch_all(
-                "SELECT id, venue_id, job_title, logic_entries FROM personas WHERE job_title = ? AND venue_id = ?",
-                (job_title, venue_id),
-            )
+    target_db = database or db_client
+    if persona_id and venue_id:
+        persona_rows = await target_db.fetch_all(
+            "SELECT id, venue_id, job_title, logic_entries FROM personas WHERE id = ? AND venue_id = ?",
+            (persona_id, venue_id),
+        )
+    elif persona_id:
+        persona_rows = await target_db.fetch_all(
+            "SELECT id, venue_id, job_title, logic_entries FROM personas WHERE id = ?",
+            (persona_id,),
+        )
+    elif venue_id:
+        persona_rows = await target_db.fetch_all(
+            "SELECT id, venue_id, job_title, logic_entries FROM personas WHERE job_title = ? AND venue_id = ?",
+            (job_title, venue_id),
+        )
+    else:
+        persona_rows = await target_db.fetch_all(
+            "SELECT id, venue_id, job_title, logic_entries FROM personas WHERE job_title = ?",
+            (job_title,),
         )
 
     if not persona_rows:
+        if persona_id:
+            return []
         # 2. 没有精确匹配，用向量检索兜底
-        return await _vector_search_logic(question, top_k, trace_id)
+        if not venue_id:
+            return []
+        return await _vector_search_logic(question, top_k, trace_id, venue_id)
 
     # 3. 从匹配到的档案中提取逻辑条目
     all_entries = []
@@ -204,6 +219,7 @@ async def _vector_search_logic(
     question: str,
     top_k: int,
     trace_id: str,
+    venue_id: str,
 ) -> List[Dict[str, Any]]:
     """
     向量检索兜底（当没有精确匹配时）
@@ -216,6 +232,7 @@ async def _vector_search_logic(
             text=question,
             top_k=top_k,
             threshold=0.5,
+            venue_id=venue_id,
         )
 
         entries = []
@@ -235,6 +252,7 @@ async def _vector_search_logic(
 
 
 async def _generate_first_person_reply(
+    venue_id: str,
     job_title: str,
     question: str,
     entries: List[Dict[str, Any]],
@@ -250,19 +268,11 @@ async def _generate_first_person_reply(
     4. 保持简洁，不超过100字
     """
     if not llm_client:
-        # Mock 模式：直接拼接条目
-        parts = []
-        for e in entries[:2]:
-            trigger = e.get("trigger", "")
-            behavior = e.get("behavior", "")
-            if trigger:
-                parts.append(f"当{trigger}时，我会{behavior}")
-        base = "；".join(parts) if parts else "根据我的经验，这种情况需要具体分析。"
-        return f"{base}（基于{job_title}岗位经验推断）"
+        raise RuntimeError("Persona invocation LLM 客户端未初始化，不能生成分身回答")
 
     prompt_path = Path(__file__).parent / "prompts" / "invoke.txt"
     if not prompt_path.exists():
-        return f"根据我的经验，这种情况需要具体判断。"
+        raise FileNotFoundError(f"未找到数字分身调用 Prompt: {prompt_path}")
 
     with open(prompt_path, "r", encoding="utf-8") as f:
         template = f.read()
@@ -285,14 +295,19 @@ async def _generate_first_person_reply(
         llm_res = await llm_client.ask(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            model="gpt-4o-mini",
+            model="deepseek-v4-flash",
             temperature=0.3,
             max_tokens=200,
             json_mode=False,
             trace_id=trace_id,
+            venue_id=venue_id,
+            agent_id="Persona",
+            agent_name="persona",
         )
 
         reply = llm_res.content.strip()
+        if not reply:
+            raise ValueError("Persona invocation LLM 返回了空回复")
         # 消毒回复文本
         from ...tools.llm_wrapper import INJECTION_TOKENS, _strip_control_chars
         reply = _strip_control_chars(reply)
@@ -304,4 +319,4 @@ async def _generate_first_person_reply(
 
     except Exception as e:
         logger.error(f"[Trace-{trace_id}] 分身回答生成失败: {e}")
-        return "抱歉，我暂时无法回答这个问题，请联系当班主管。"
+        raise

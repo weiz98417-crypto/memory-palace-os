@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Optional
 from loguru import logger
 
 from ...core.skill_base import BaseAgentSkill, SkillOutput, SkillValidationError
-from ...core.task_graph import task_graph, TaskStatus
+from ...core.task_graph import TaskGraph, task_graph as default_task_graph
 from ...tools.llm_wrapper import llm_client
 from .. import register_skill
 
@@ -47,7 +47,7 @@ class TodoWriteSkill(BaseAgentSkill):
 要求:
 1. 每个任务应该是一个独立的、可执行的步骤
 2. 任务之间如果有依赖关系，需要明确标注
-3. 使用 JSON 数组格式输出
+3. 使用 JSON 对象格式输出，对象中包含 tasks 数组
 4. 每个任务包含:
    - description: 任务描述
    - depends_on: 依赖任务索引列表 (可选)
@@ -55,21 +55,23 @@ class TodoWriteSkill(BaseAgentSkill):
 
 输出格式:
 ```json
-[
-  {{"description": "任务1描述", "depends_on": []}},
-  {{"description": "任务2描述", "depends_on": [0]}},
-  ...
-]
+{{
+  "tasks": [
+    {{"description": "任务1描述", "depends_on": []}},
+    {{"description": "任务2描述", "depends_on": [0]}}
+  ]
+}}
 ```
 """
 
-    def __init__(self):
+    def __init__(self, task_graph: Optional[TaskGraph] = None):
         self.base_path = Path(__file__).parent
         self.config = self._load_config()
+        self.task_graph = task_graph or default_task_graph
 
         super().__init__(
             skill_name="todo_write",
-            model_name=self.config.get("llm_config", {}).get("model", "gpt-4o-mini")
+            model_name=self.config.get("llm_config", {}).get("model", "deepseek-v4-flash")
         )
 
     def _load_config(self) -> Dict[str, Any]:
@@ -77,7 +79,7 @@ class TodoWriteSkill(BaseAgentSkill):
         config_path = self.base_path / "config.yaml"
         if not config_path.exists():
             return {
-                "llm_config": {"model": "gpt-4o-mini"},
+                "llm_config": {"model": "deepseek-v4-flash"},
                 "max_tasks": 10
             }
 
@@ -112,61 +114,138 @@ class TodoWriteSkill(BaseAgentSkill):
                 user_prompt=prompt,
                 temperature=0.3,
                 json_mode=True,
-                trace_id=trace_id
+                trace_id=trace_id,
+                venue_id=context.get("venue_id", ""),
+                agent_id="TodoWrite",
+                agent_name=self.skill_name,
             )
 
             # 解析 LLM 返回的 JSON
-            task_specs = await llm_client.parse_json(
+            decomposition = await llm_client.parse_json(
                 llm_response.content,
                 trace_id
             )
 
-            if not task_specs or not isinstance(task_specs, list):
+            if not isinstance(decomposition, dict) or not isinstance(decomposition.get("tasks"), list):
                 logger.error(f"[TodoWrite] LLM 返回格式错误: {llm_response.content[:200]}")
                 return SkillOutput(
                     success=False,
-                    error_msg="任务分解失败: LLM 返回格式错误",
+                    error_msg="任务分解失败: LLM 返回格式错误，未包含有效任务",
+                    action_taken="model_output_invalid",
                     latency_ms=0,
                     tokens_used=llm_response.tokens_used
                 )
 
-            # 创建任务图
-            created_tasks = []
-            task_id_map = {}  # index -> task_id 映射
+            max_tasks = self.config.get("max_tasks", 10)
+            raw_task_specs = decomposition["tasks"][:max_tasks]
+            validated_specs = []
 
-            for idx, spec in enumerate(task_specs[:self.config.get("max_tasks", 10)]):
-                # 消毒每个 task spec
+            for idx, raw_spec in enumerate(raw_task_specs):
                 from ...tools.llm_wrapper import sanitize_llm_output
-                spec, warns = sanitize_llm_output(spec, "task_spec", trace_id=trace_id)
-                if not spec or not spec.get("description"):
-                    logger.warning(f"[Trace-{trace_id}] task spec #{idx} rejected by sanitizer")
-                    continue
 
-                description = spec.get("description", "")
+                if not isinstance(raw_spec, dict):
+                    logger.warning(f"[Trace-{trace_id}] task spec #{idx} 不是对象")
+                    return SkillOutput(
+                        success=False,
+                        error_msg=f"任务分解失败: 第 {idx + 1} 个任务格式错误",
+                        action_taken="model_output_invalid",
+                        tokens_used=llm_response.tokens_used,
+                    )
+
+                raw_dependencies = raw_spec.get("depends_on", [])
+                if not isinstance(raw_dependencies, list) or any(
+                    not isinstance(dep_index, int) or isinstance(dep_index, bool)
+                    for dep_index in raw_dependencies
+                ):
+                    logger.warning(f"[Trace-{trace_id}] task spec #{idx} 的依赖索引格式错误")
+                    return SkillOutput(
+                        success=False,
+                        error_msg=f"任务分解失败: 第 {idx + 1} 个任务依赖格式错误",
+                        action_taken="model_output_invalid",
+                        tokens_used=llm_response.tokens_used,
+                    )
+
+                spec, warns = sanitize_llm_output(raw_spec, "task_spec", trace_id=trace_id)
+                description = (spec.get("description") or "").strip()
                 depends_on_indices = spec.get("depends_on", [])
+                if not description:
+                    logger.warning(f"[Trace-{trace_id}] task spec #{idx} rejected by sanitizer")
+                    return SkillOutput(
+                        success=False,
+                        error_msg=f"任务分解失败: 第 {idx + 1} 个任务缺少有效描述",
+                        action_taken="model_output_invalid",
+                        tokens_used=llm_response.tokens_used,
+                    )
+                if len(set(depends_on_indices)) != len(depends_on_indices) or any(
+                    dep_index < 0 or dep_index >= idx
+                    for dep_index in depends_on_indices
+                ):
+                    logger.warning(f"[Trace-{trace_id}] task spec #{idx} 包含非法依赖索引")
+                    return SkillOutput(
+                        success=False,
+                        error_msg=f"任务分解失败: 第 {idx + 1} 个任务依赖无效",
+                        action_taken="model_output_invalid",
+                        tokens_used=llm_response.tokens_used,
+                    )
 
-                # 转换为依赖 task_id
-                dep_ids = [
-                    task_id_map[idx2]
-                    for idx2 in depends_on_indices
-                    if idx2 in task_id_map
-                ]
-
-                # 创建任务
-                task = await task_graph.create_task(
-                    session_id=session_id,
-                    description=description,
-                    dependencies=dep_ids,
-                    assigned_agent=context.get("assigned_agent")
+                validated_specs.append(
+                    {
+                        "description": description,
+                        "depends_on": depends_on_indices,
+                    }
                 )
 
-                task_id_map[idx] = task.id
-                created_tasks.append(task)
-
-                logger.debug(
-                    f"[TodoWrite] 创建任务 {task.id}: {description[:30]}... "
-                    f"(deps: {len(dep_ids)})"
+            if not validated_specs:
+                return SkillOutput(
+                    success=False,
+                    error_msg="任务分解失败: LLM 未返回任何有效任务",
+                    action_taken="model_output_invalid",
+                    tokens_used=llm_response.tokens_used,
                 )
+
+            created_tasks = []
+            task_id_map = {}
+
+            try:
+                for idx, spec in enumerate(validated_specs):
+                    description = spec["description"]
+                    depends_on_indices = spec["depends_on"]
+
+                    dep_ids = [
+                        task_id_map[idx2]
+                        for idx2 in depends_on_indices
+                        if idx2 in task_id_map
+                    ]
+
+                    task = await self.task_graph.create_task(
+                        session_id=session_id,
+                        description=description,
+                        dependencies=dep_ids,
+                        assigned_agent=context.get("assigned_agent"),
+                        assigned_user_id=context.get("assigned_user_id"),
+                        max_attempts=context.get("max_attempts", 3),
+                        venue_id=context.get("venue_id", ""),
+                        event_id=context.get("event_id"),
+                        defer_activation=context.get("defer_activation", False),
+                        decomposition_id=context.get("decomposition_id"),
+                    )
+
+                    task_id_map[idx] = task.id
+                    created_tasks.append(task)
+
+                    logger.debug(
+                        f"[TodoWrite] 创建任务 {task.id}: {description[:30]}... "
+                        f"(deps: {len(dep_ids)})"
+                    )
+            except Exception as creation_error:
+                try:
+                    await self.task_graph.delete_tasks(
+                        [task.id for task in created_tasks],
+                        venue_id=context.get("venue_id", ""),
+                    )
+                except Exception as rollback_error:
+                    raise RuntimeError(f"任务创建失败且回滚失败: {rollback_error}") from creation_error
+                raise
 
             # 返回结果
             return SkillOutput(
@@ -175,7 +254,8 @@ class TodoWriteSkill(BaseAgentSkill):
                 structured_data={
                     "tasks_created": len(created_tasks),
                     "task_ids": [t.id for t in created_tasks],
-                    "task_descriptions": [t.description for t in created_tasks]
+                    "task_descriptions": [t.description for t in created_tasks],
+                    "tasks": [t.to_dict() for t in created_tasks],
                 },
                 action_taken="goal_decomposed",
                 latency_ms=0,
@@ -186,7 +266,8 @@ class TodoWriteSkill(BaseAgentSkill):
             logger.error(f"[TodoWrite] 任务分解失败: {e}")
             return SkillOutput(
                 success=False,
-                error_msg=f"任务分解失败: {str(e)}"
+                error_msg=f"任务分解失败: {str(e)}",
+                action_taken="todo_decomposition_failed",
             )
 
 
