@@ -43,17 +43,17 @@ class UATAPIState:
             {
                 "code": "SUSPEND_PASSENGER_VEHICLE",
                 "approval_required": True,
-                "approver_roles": ["manager"],
+                "approver_roles": ["admin", "manager"],
             },
             {
                 "code": "ACTIVATE_BACKUP_VEHICLE",
                 "approval_required": True,
-                "approver_roles": ["manager"],
+                "approver_roles": ["admin", "manager"],
             },
             {
                 "code": "SEND_CRITICAL_DISPATCH_ALERT",
                 "approval_required": True,
-                "approver_roles": ["manager"],
+                "approver_roles": ["admin", "manager"],
                 "delivery_channel": "WECOM_SIMULATOR_OUTBOX",
             },
         ]

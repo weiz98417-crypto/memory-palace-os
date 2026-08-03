@@ -45,6 +45,7 @@ class TestPermissionEngine:
             "SEND_CRITICAL_DISPATCH_ALERT",
         }
         for policy in policies:
+            assert set(policy["approver_roles"]) == {"admin", "manager"}
             permission = engine.get_tool_permission(policy["tool_name"])
             assert permission is not None
             assert permission.level == SensitivityLevel.APPROVAL

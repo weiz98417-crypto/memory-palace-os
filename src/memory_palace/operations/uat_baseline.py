@@ -35,7 +35,11 @@ _PROCESS_COUNT_QUERIES = {
     "tool_invocations": "SELECT COUNT(*) AS count FROM tool_invocation_logs WHERE venue_id = ?",
     "personas": "SELECT COUNT(*) AS count FROM personas WHERE venue_id = ?",
     "persona_interviews": "SELECT COUNT(*) AS count FROM persona_interviews WHERE venue_id = ?",
-    "knowledge_documents": "SELECT COUNT(*) AS count FROM knowledge_documents WHERE venue_id = ?",
+    "non_sop_knowledge_documents": """
+        SELECT COUNT(*) AS count
+        FROM knowledge_documents
+        WHERE venue_id = ? AND (source_type IS NULL OR source_type <> 'SOP')
+    """,
     "knowledge_retrieval_snapshots": "SELECT COUNT(*) AS count FROM knowledge_retrieval_snapshots WHERE venue_id = ?",
     "watcher_policies": "SELECT COUNT(*) AS count FROM watcher_policies WHERE venue_id = ?",
     "watcher_runs": "SELECT COUNT(*) AS count FROM watcher_runs WHERE venue_id = ?",
