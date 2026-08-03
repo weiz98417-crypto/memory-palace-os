@@ -167,7 +167,7 @@ async def _insert_simulator_recipient(
         INSERT INTO channel_identities (
             id, venue_id, channel, external_tenant_id, external_user_id,
             user_id, status, created_at, updated_at
-        ) VALUES (?, ?, 'WECOM', ?, ?, ?, 'ACTIVE', ?, ?)
+        ) VALUES (?, ?, 'WECOM_SIMULATOR', ?, ?, ?, 'ACTIVE', ?, ?)
         """,
         (
             f"identity-{user_id}",

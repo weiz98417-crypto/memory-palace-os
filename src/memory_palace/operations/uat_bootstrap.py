@@ -92,6 +92,7 @@ class UATBootstrapResult:
     sop_title: str
     sop_version: str
     expert_name: str
+    baseline_snapshot: dict[str, Any]
 
 
 @dataclass(frozen=True)
@@ -219,7 +220,7 @@ async def bootstrap_uat_master_data(
         if principal.get("venue_id") != UAT_VENUE_ID or principal.get("role") != "admin":
             raise UATBootstrapError("UAT 管理员未进入悦山景区或不再具有管理员角色")
 
-        await _assert_pristine_journey(api)
+        await _assert_pristine_baseline(await _capture_baseline(api))
         await api.request(
             "PUT",
             "/api/v1/admin/settings/organization_name",
@@ -248,7 +249,7 @@ async def bootstrap_uat_master_data(
                 "POST",
                 "/api/v1/channels/identities",
                 body={
-                    "channel": "WECOM",
+                    "channel": "WECOM_SIMULATOR",
                     "external_tenant_id": UAT_EXTERNAL_TENANT_ID,
                     "external_user_id": spec.external_user_id,
                     "user_id": ensured_users[spec.username]["id"],
@@ -260,6 +261,11 @@ async def bootstrap_uat_master_data(
         sop = await _ensure_published_sop(api)
         expert = await _ensure_signed_expert(api, ensured_users["zhang-jianguo"])
         await _verify_simulator_identities(api, _uat_user_specs(config.admin_username))
+        baseline_snapshot = await _capture_baseline(api)
+        _validate_ready_baseline(
+            baseline_snapshot,
+            specs=_uat_user_specs(config.admin_username),
+        )
         return UATBootstrapResult(
             organization_name=UAT_ORGANIZATION_NAME,
             venue_id=UAT_VENUE_ID,
@@ -269,6 +275,7 @@ async def bootstrap_uat_master_data(
             sop_title=sop["title"],
             sop_version=sop["version"],
             expert_name=expert["display_name"],
+            baseline_snapshot=baseline_snapshot,
         )
     finally:
         if owns_client:
@@ -361,27 +368,93 @@ async def _create_user(api: _FormalAPI, spec: _UATUserSpec, password: str) -> di
     return payload["user"]
 
 
-async def _assert_pristine_journey(api: _FormalAPI) -> None:
-    checks = (
-        ("/api/v1/sessions/", None, "会话"),
-        ("/api/v1/admin/events", "events", "事件"),
-        ("/api/v1/admin/tasks", "tasks", "任务"),
-        ("/api/v1/admin/approvals?status=ALL", None, "审批"),
-        ("/api/v1/admin/experience-interviews", "interviews", "经验访谈"),
-        ("/api/v1/admin/experience-cards", "experience_cards", "经验卡"),
-    )
-    populated = []
-    for path, key, label in checks:
-        payload = await api.request("GET", path)
-        records = payload if key is None else payload.get(key, [])
-        if not isinstance(records, list):
-            raise UATBootstrapError(f"{label}列表接口返回格式不正确")
-        if records:
-            populated.append(f"{label} {len(records)} 条")
+async def _capture_baseline(api: _FormalAPI) -> dict[str, Any]:
+    snapshot = await api.request("GET", "/api/v1/admin/uat-baseline")
+    if not isinstance(snapshot, dict):
+        raise UATBootstrapError("UAT 基线接口返回格式不正确")
+    return snapshot
+
+
+async def _assert_pristine_baseline(snapshot: dict[str, Any]) -> None:
+    counts = snapshot.get("process_counts")
+    if not isinstance(counts, dict):
+        raise UATBootstrapError("UAT 基线缺少业务过程计数")
+    populated = {
+        str(name): int(value)
+        for name, value in counts.items()
+        if isinstance(value, int) and value > 0
+    }
     if populated:
+        detail = "、".join(f"{name} {count} 条" for name, count in sorted(populated.items()))
         raise UATBootstrapError(
-            "悦山景区已经存在演示旅程过程数据，初始化不会删除业务记录：" + "、".join(populated)
+            "悦山景区已经存在演示旅程过程数据，初始化不会删除业务记录：" + detail
         )
+
+
+def _validate_ready_baseline(
+    snapshot: dict[str, Any],
+    *,
+    specs: tuple[_UATUserSpec, ...],
+) -> None:
+    channel = snapshot.get("channel")
+    if channel != {
+        "mode": "WECOM_SIMULATOR_ONLY",
+        "identity_channel": "WECOM_SIMULATOR",
+        "real_wecom_enabled": False,
+    }:
+        raise UATBootstrapError("UAT 基线渠道不是仅企微模拟器模式")
+    scope = snapshot.get("scope")
+    venue = scope.get("venue") if isinstance(scope, dict) else None
+    if (
+        not isinstance(scope, dict)
+        or scope.get("organization_name") != UAT_ORGANIZATION_NAME
+        or not isinstance(venue, dict)
+        or venue.get("id") != UAT_VENUE_ID
+        or venue.get("name") != UAT_VENUE_NAME
+        or venue.get("status") != "ACTIVE"
+    ):
+        raise UATBootstrapError("UAT 基线的组织或场地主数据不完整")
+
+    master_data = snapshot.get("master_data")
+    if not isinstance(master_data, dict):
+        raise UATBootstrapError("UAT 基线缺少主数据快照")
+    users = master_data.get("users")
+    identities = master_data.get("simulator_identities")
+    sops = master_data.get("published_sops")
+    experts = master_data.get("signed_experts")
+    rules = master_data.get("approval_rules")
+    expected_usernames = {spec.username for spec in specs}
+    if not isinstance(users, list) or {item.get("username") for item in users} != expected_usernames:
+        raise UATBootstrapError("UAT 基线必须且只能包含冻结的 7 名演示角色")
+    if (
+        not isinstance(identities, list)
+        or len(identities) != len(specs)
+        or any(item.get("channel") != "WECOM_SIMULATOR" for item in identities)
+        or {item.get("user_id") for item in identities} != {item.get("id") for item in users}
+    ):
+        raise UATBootstrapError("UAT 基线的企微模拟器身份映射不完整")
+    if not isinstance(sops, list) or not any(
+        item.get("title") == UAT_SOP_TITLE
+        and str(item.get("version")) == UAT_SOP_VERSION
+        and item.get("status") == "PUBLISHED"
+        for item in sops
+    ):
+        raise UATBootstrapError("UAT 基线缺少已发布的 2.1 版观光车 SOP")
+    if not isinstance(experts, list) or not any(
+        item.get("display_name") == "张建国" and item.get("authorization_status") == "SIGNED"
+        for item in experts
+    ):
+        raise UATBootstrapError("UAT 基线缺少张建国的已签署专家授权")
+    required_rules = {
+        "SUSPEND_PASSENGER_VEHICLE",
+        "ACTIVATE_BACKUP_VEHICLE",
+        "SEND_CRITICAL_DISPATCH_ALERT",
+    }
+    if not isinstance(rules, list) or {item.get("code") for item in rules} != required_rules:
+        raise UATBootstrapError("UAT 基线的高风险审批规则不完整")
+    counts = snapshot.get("process_counts")
+    if not isinstance(counts, dict) or not counts or any(value != 0 for value in counts.values()):
+        raise UATBootstrapError("UAT 基线仍包含业务过程数据")
 
 
 async def _ensure_published_sop(api: _FormalAPI) -> dict[str, Any]:

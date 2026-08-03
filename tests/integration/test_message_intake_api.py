@@ -27,6 +27,37 @@ from src.memory_palace.knowledge.push_logger import record_reply_delivery
 from src.memory_palace.tools.llm_wrapper import LLMClient
 
 
+async def assert_real_wecom_policy_rejection(
+    repository,
+    db_client,
+    *,
+    message_id,
+    venue_id,
+    wechat_client=None,
+):
+    message_run = await repository.get(message_id)
+    delivery = await db_client.fetch_one(
+        """
+        SELECT * FROM push_logs
+        WHERE venue_id = ? AND channel = ? AND idempotency_key = ?
+        """,
+        (venue_id, "WECOM_REPLY", f"assistant-reply:{message_id}"),
+    )
+    assert message_run["status"] == "FAILED"
+    assert message_run["retryable"] is False
+    assert message_run["delivery_status"] == "DISABLED_BY_POLICY"
+    assert message_run["delivery_error"]
+    assert message_run["delivered_at"] is None
+    assert delivery["delivery_status"] == "DISABLED_BY_POLICY"
+    assert delivery["delivery_error"] == message_run["delivery_error"]
+    assert delivery["adoption_status"] == "not_applicable"
+    if wechat_client is not None:
+        for method_name in ("send_text", "send_markdown", "send_textcard"):
+            method = getattr(wechat_client, method_name, None)
+            if method is not None and hasattr(method, "assert_not_awaited"):
+                method.assert_not_awaited()
+
+
 async def build_test_app(tmp_path):
     db_client = AsyncDBClient(tmp_path / "message-runs.db")
     await db_client.execute(
@@ -1527,7 +1558,10 @@ async def test_message_is_not_queued_when_required_audit_cannot_be_written(tmp_p
 
 
 @pytest.mark.asyncio
-async def test_wechat_gateway_uses_canonical_persistent_ingress(tmp_path, monkeypatch):
+async def test_real_wechat_gateway_is_disabled_even_with_complete_credentials(
+    tmp_path,
+    monkeypatch,
+):
     monkeypatch.setattr("src.memory_palace.core.gateway.get_wx_crypto", lambda: None)
     monkeypatch.setenv("APP_ENV", "test")
     monkeypatch.setenv("WECHAT_ALLOW_PLAINTEXT", "true")
@@ -1558,49 +1592,20 @@ async def test_wechat_gateway_uses_canonical_persistent_ingress(tmp_path, monkey
             response = await client.post("/webhook/v1/wechat", content=xml)
             duplicate = await client.post("/webhook/v1/wechat", content=xml)
 
-        assert response.status_code == 200
-        assert response.text == "success"
-        assert duplicate.status_code == 200
-        assert duplicate.text == "success"
-        assert len(queue.messages) == 1
-        queued = queue.messages[0]
-        assert queued["channel"] == "WECOM"
-        assert queued["external_message_id"] == "wx-message-001"
-        assert queued["external_conversation_id"] == "corp-west:operator-wechat"
-        assert queued["from_user"] == "operator-wechat"
-        assert queued["venue_id"] == "west-lake-park"
-        assert queued["content"] == "南门扶梯突然停运，请安排现场处置"
-        persisted = await db_client.fetch_one(
-            """
-            SELECT message_id, trace_id, session_id, user_id, venue_id, channel,
-                   external_message_id, external_conversation_id, status
-            FROM message_runs WHERE external_message_id = ?
-            """,
-            ("wx-message-001",),
-        )
-        assert persisted["message_id"] == queued["msg_id"]
-        assert persisted["trace_id"] == queued["trace_id"]
-        assert persisted["session_id"] == queued["session_id"]
-        assert persisted["user_id"] == "operator-wechat"
-        assert persisted["venue_id"] == "west-lake-park"
-        assert persisted["channel"] == "WECOM"
-        assert persisted["external_conversation_id"] == "corp-west:operator-wechat"
-        assert persisted["status"] == "QUEUED"
-        audit = await db_client.fetch_one(
-            "SELECT action, venue_id, resource_id FROM audit_logs WHERE trace_id = ?",
-            (persisted["trace_id"],),
-        )
-        assert audit == {
-            "action": "MESSAGE_RUN_CREATED",
-            "venue_id": "west-lake-park",
-            "resource_id": persisted["message_id"],
+        assert response.status_code == 503
+        assert response.text == "integration disabled"
+        assert duplicate.status_code == 503
+        assert duplicate.text == "integration disabled"
+        assert queue.messages == []
+        assert await db_client.fetch_one("SELECT COUNT(*) AS total FROM message_runs") == {
+            "total": 0
         }
     finally:
         await db_client.close()
 
 
 @pytest.mark.asyncio
-async def test_wechat_gateway_returns_retryable_error_when_queue_is_unavailable(
+async def test_real_wechat_gateway_rejects_before_queue_access(
     tmp_path,
     monkeypatch,
 ):
@@ -1633,14 +1638,9 @@ async def test_wechat_gateway_returns_retryable_error_when_queue_is_unavailable(
             response = await client.post("/webhook/v1/wechat", content=xml)
 
         assert response.status_code == 503
-        assert response.text == "queue unavailable"
-        persisted = await db_client.fetch_one(
-            "SELECT status, error FROM message_runs WHERE external_message_id = ?",
-            ("wx-message-002",),
-        )
-        assert persisted == {
-            "status": "FAILED",
-            "error": "Message intake persistence failed",
+        assert response.text == "integration disabled"
+        assert await db_client.fetch_one("SELECT COUNT(*) AS total FROM message_runs") == {
+            "total": 0
         }
     finally:
         await db_client.close()
@@ -2238,7 +2238,7 @@ async def test_simulator_reply_never_uses_real_wechat_delivery_client():
 
 
 @pytest.mark.asyncio
-async def test_wecom_missing_config_persists_delivery_failure(tmp_path):
+async def test_real_wecom_delivery_is_disabled_by_policy(tmp_path):
     db_client = AsyncDBClient(tmp_path / "wecom-delivery-failure.db")
     await init_database(db_client)
     repository = MessageRunRepository(db_client)
@@ -2290,27 +2290,12 @@ async def test_wecom_missing_config_persists_delivery_failure(tmp_path):
         )
         await asyncio.wait_for(queue.join(), timeout=1)
 
-        message_run = await db_client.fetch_one(
-            "SELECT * FROM message_runs WHERE message_id = ?",
-            ("message-wecom-delivery-01",),
+        await assert_real_wecom_policy_rejection(
+            repository,
+            db_client,
+            message_id="message-wecom-delivery-01",
+            venue_id="venue-wecom-01",
         )
-        delivery = await db_client.fetch_one(
-            """
-            SELECT * FROM push_logs
-            WHERE venue_id = ? AND channel = ? AND idempotency_key = ?
-            """,
-            (
-                "venue-wecom-01",
-                "WECOM_REPLY",
-                "assistant-reply:message-wecom-delivery-01",
-            ),
-        )
-        assert message_run["status"] == "RETRY_REQUIRED"
-        assert message_run["delivery_status"] == "CONFIGURATION_REQUIRED"
-        assert message_run["delivery_error"] == "企微回复通道尚未配置，请联系管理员。"
-        assert message_run["delivered_at"] is None
-        assert delivery["delivery_status"] == "CONFIGURATION_REQUIRED"
-        assert delivery["delivery_error"] == "企微回复通道尚未配置，请联系管理员。"
     finally:
         worker.stop()
         worker_task.cancel()
@@ -2322,7 +2307,7 @@ async def test_wecom_missing_config_persists_delivery_failure(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_structured_wecom_reply_falls_back_from_markdown_to_textcard_to_text(
+async def test_structured_real_wecom_reply_is_rejected_without_client_calls(
     tmp_path,
 ):
     db_client = AsyncDBClient(tmp_path / "wecom-structured-delivery.db")
@@ -2394,34 +2379,13 @@ async def test_structured_wecom_reply_falls_back_from_markdown_to_textcard_to_te
         )
         await asyncio.wait_for(queue.join(), timeout=1)
 
-        message_run = await repository.get("message-wecom-structured-01")
-        delivery = await db_client.fetch_one(
-            """
-            SELECT * FROM push_logs
-            WHERE venue_id = ? AND channel = ? AND idempotency_key = ?
-            """,
-            (
-                "venue-wecom-structured-01",
-                "WECOM_REPLY",
-                "assistant-reply:message-wecom-structured-01",
-            ),
+        await assert_real_wecom_policy_rejection(
+            repository,
+            db_client,
+            message_id="message-wecom-structured-01",
+            venue_id="venue-wecom-structured-01",
+            wechat_client=wechat_client,
         )
-        markdown = wechat_client.send_markdown.await_args.args[1]
-        card_args = wechat_client.send_textcard.await_args.args
-        fallback_text = wechat_client.send_text.await_args.args[1]
-
-        assert message_run["status"] == "COMPLETED"
-        assert message_run["delivery_status"] == "DELIVERED"
-        assert delivery["delivery_status"] == "DELIVERED"
-        assert wechat_client.send_markdown.await_count == 1
-        assert wechat_client.send_textcard.await_count == 1
-        assert wechat_client.send_text.await_count == 1
-        assert "复核 12 号车隔离状态" in markdown
-        assert card_args[1] == "复核 12 号车隔离状态"
-        assert "上传隔离照片并确认" in fallback_text
-        assert "sk-must-not-be-delivered" not in markdown
-        assert "sk-must-not-be-delivered" not in card_args[2]
-        assert "sk-must-not-be-delivered" not in fallback_text
     finally:
         worker.stop()
         worker_task.cancel()
@@ -2433,7 +2397,7 @@ async def test_structured_wecom_reply_falls_back_from_markdown_to_textcard_to_te
 
 
 @pytest.mark.asyncio
-async def test_wecom_delivery_retry_reuses_saved_agent_result(tmp_path):
+async def test_real_wecom_delivery_is_not_retried(tmp_path):
     db_client = AsyncDBClient(tmp_path / "wecom-delivery-retry.db")
     await init_database(db_client)
     repository = MessageRunRepository(db_client)
@@ -2541,16 +2505,14 @@ async def test_wecom_delivery_retry_reuses_saved_agent_result(tmp_path):
             ),
         )
         assert orchestrator.calls == 1
-        assert wechat_client.send_text.await_count == 2
-        assert message_run["status"] == "COMPLETED"
-        assert message_run["attempt_count"] == 2
-        assert message_run["delivery_status"] == "DELIVERED"
-        assert message_run["delivery_error"] is None
-        assert message_run["delivered_at"] is not None
+        wechat_client.send_text.assert_not_awaited()
+        assert message_run["status"] == "FAILED"
+        assert message_run["attempt_count"] == 1
+        assert message_run["delivery_status"] == "DISABLED_BY_POLICY"
         assert len(deliveries) == 1
-        assert deliveries[0]["delivery_status"] == "DELIVERED"
-        assert deliveries[0]["delivery_error"] is None
-        assert deliveries[0]["adoption_status"] == "not_applicable"
+        assert deliveries[0]["delivery_status"] == "DISABLED_BY_POLICY"
+        assert len(queue.acked) == 1
+        assert queue._queue.empty()
     finally:
         worker.stop()
         worker_task.cancel()
@@ -2698,7 +2660,6 @@ async def test_wecom_delivery_does_not_resend_after_send_succeeds_but_receipt_pe
                 },
             }
         )
-        await asyncio.wait_for(receipt_persistence_failed.wait(), timeout=1)
         await asyncio.wait_for(queue._queue.join(), timeout=1)
 
         message_run = await repository.get("message-wecom-delivery-ambiguous-01")
@@ -2714,11 +2675,13 @@ async def test_wecom_delivery_does_not_resend_after_send_succeeds_but_receipt_pe
             ),
         )
         assert orchestrator.calls == 1
-        assert wechat_client.calls == 1
-        assert message_run["status"] == "RETRY_REQUIRED"
-        assert message_run["delivery_status"] == "SENDING"
-        assert delivery["delivery_status"] == "SENDING"
-        assert delivery["delivery_claim_token"]
+        assert wechat_client.calls == 0
+        assert receipt_persistence_failed.is_set() is False
+        assert message_run["status"] == "FAILED"
+        assert message_run["delivery_status"] == "DISABLED_BY_POLICY"
+        assert delivery["delivery_status"] == "DISABLED_BY_POLICY"
+        assert delivery["delivery_claim_token"] is None
+        assert len(queue.acked) == 1
     finally:
         worker.stop()
         worker_task.cancel()
@@ -2828,9 +2791,6 @@ async def test_concurrent_wecom_workers_send_once_and_late_failure_cannot_downgr
     try:
         await queue.put({**base_message, "_redis_msg_id": "claim-worker-01"})
         await queue.put({**base_message, "_redis_msg_id": "claim-worker-02"})
-        await asyncio.wait_for(send_started.wait(), timeout=1)
-        await asyncio.wait_for(queue.dead_lettered.wait(), timeout=1)
-        release_send.set()
         await asyncio.wait_for(queue._queue.join(), timeout=1)
 
         message_run = await repository.get("message-wecom-delivery-claim-01")
@@ -2845,13 +2805,14 @@ async def test_concurrent_wecom_workers_send_once_and_late_failure_cannot_downgr
                 "assistant-reply:message-wecom-delivery-claim-01",
             ),
         )
-        assert wechat_client.calls == 1
-        assert message_run["status"] == "COMPLETED"
-        assert message_run["delivery_status"] == "DELIVERED"
-        assert message_run["delivery_error"] is None
-        assert delivery["delivery_status"] == "DELIVERED"
-        assert delivery["delivery_error"] is None
+        assert wechat_client.calls == 0
+        assert send_started.is_set() is False
+        assert queue.dead_lettered.is_set() is False
+        assert message_run["status"] == "FAILED"
+        assert message_run["delivery_status"] == "DISABLED_BY_POLICY"
+        assert delivery["delivery_status"] == "DISABLED_BY_POLICY"
         assert delivery["delivery_claim_token"] is None
+        assert sorted(queue.acked) == ["claim-worker-01", "claim-worker-02"]
     finally:
         release_send.set()
         worker.stop()
@@ -2936,7 +2897,7 @@ async def test_delivered_reply_ledger_rejects_late_failure_writes(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_recovered_wecom_delivery_reuses_result_saved_before_restart(tmp_path):
+async def test_recovered_real_wecom_delivery_stays_disabled_after_restart(tmp_path):
     db_client = AsyncDBClient(tmp_path / "wecom-delivery-recovery.db")
     await init_database(db_client)
     repository = MessageRunRepository(db_client)
@@ -3003,13 +2964,10 @@ async def test_recovered_wecom_delivery_reuses_result_saved_before_restart(tmp_p
 
         message_run = await repository.get("message-wecom-delivery-03")
         assert orchestrator.calls == 0
-        wechat_client.send_text.assert_awaited_once_with(
-            "wecom-operator-03",
-            "原任务已恢复，车辆仍保持隔离。",
-        )
-        assert message_run["status"] == "COMPLETED"
+        wechat_client.send_text.assert_not_awaited()
+        assert message_run["status"] == "FAILED"
         assert message_run["attempt_count"] == 2
-        assert message_run["delivery_status"] == "DELIVERED"
+        assert message_run["delivery_status"] == "DISABLED_BY_POLICY"
     finally:
         worker.stop()
         worker_task.cancel()
@@ -3093,7 +3051,7 @@ async def test_delivery_schema_backfills_only_completed_polling_channels(tmp_pat
 
 
 @pytest.mark.asyncio
-async def test_wecom_empty_reply_is_retryable_and_keeps_delivery_ledger(tmp_path):
+async def test_empty_real_wecom_reply_is_rejected_by_policy(tmp_path):
     db_client = AsyncDBClient(tmp_path / "wecom-empty-reply.db")
     await init_database(db_client)
     repository = MessageRunRepository(db_client)
@@ -3146,25 +3104,13 @@ async def test_wecom_empty_reply_is_retryable_and_keeps_delivery_ledger(tmp_path
         )
         await asyncio.wait_for(queue.join(), timeout=1)
 
-        message_run = await repository.get("message-wecom-delivery-04")
-        delivery = await db_client.fetch_one(
-            """
-            SELECT * FROM push_logs
-            WHERE venue_id = ? AND channel = ? AND idempotency_key = ?
-            """,
-            (
-                "venue-wecom-04",
-                "WECOM_REPLY",
-                "assistant-reply:message-wecom-delivery-04",
-            ),
+        await assert_real_wecom_policy_rejection(
+            repository,
+            db_client,
+            message_id="message-wecom-delivery-04",
+            venue_id="venue-wecom-04",
+            wechat_client=wechat_client,
         )
-        assert message_run["status"] == "RETRY_REQUIRED"
-        assert message_run["delivery_status"] == "FAILED"
-        assert message_run["delivery_error"] == "助手未生成可发送的企微回复，系统将自动重试。"
-        assert delivery["delivery_status"] == "FAILED"
-        assert delivery["delivery_error"] == "助手未生成可发送的企微回复，系统将自动重试。"
-        assert delivery["adoption_status"] == "not_applicable"
-        wechat_client.send_text.assert_not_awaited()
     finally:
         worker.stop()
         worker_task.cancel()

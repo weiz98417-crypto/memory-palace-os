@@ -10,6 +10,11 @@ from typing import Sequence
 
 from .evidence import EvidenceRun
 from .validation import validate_evidence
+from src.memory_palace.operations.uat_bootstrap import (
+    UATBootstrapConfig,
+    UATBootstrapError,
+    bootstrap_uat_master_data,
+)
 
 
 DEFAULT_OUTPUT_ROOT = Path("docs/verification/unified-agent-uat")
@@ -23,6 +28,12 @@ def _parser() -> argparse.ArgumentParser:
     init = commands.add_parser("init", help="create a new append-only evidence run")
     init.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     init.add_argument("--run-id")
+
+    bootstrap = commands.add_parser(
+        "bootstrap",
+        help="prepare UAT master data through formal APIs and record its baseline",
+    )
+    bootstrap.add_argument("--run", type=Path, required=True)
 
     record = commands.add_parser("record", help="record one sanitized UAT step from a JSON input file")
     record.add_argument("--run", type=Path, required=True)
@@ -55,6 +66,20 @@ def main(argv: Sequence[str] | None = None) -> int:
             run = EvidenceRun.create(args.output_root, run_id=args.run_id)
             _emit({"uat_run_id": run.run_id, "path": str(run.path)})
             return 0
+        if args.command == "bootstrap":
+            config = UATBootstrapConfig.from_environment()
+            result = __import__("asyncio").run(bootstrap_uat_master_data(config))
+            baseline_path = _open_run(args.run).record_baseline(result.baseline_snapshot)
+            _emit(
+                {
+                    "uat_run_id": args.run.resolve().name,
+                    "baseline": str(baseline_path),
+                    "venue_id": result.venue_id,
+                    "user_count": result.user_count,
+                    "identity_count": result.identity_count,
+                }
+            )
+            return 0
         if args.command == "record":
             payload = json.loads(args.input.read_text(encoding="utf-8"))
             if not isinstance(payload, dict):
@@ -70,7 +95,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             manifest_path = _open_run(args.run).complete(registry_path=args.registry)
             _emit({"completed": str(manifest_path)})
             return 0
-    except (FileExistsError, OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
+    except (
+        FileExistsError,
+        OSError,
+        RuntimeError,
+        UATBootstrapError,
+        ValueError,
+        json.JSONDecodeError,
+    ) as exc:
         _emit({"error": str(exc)}, stream=sys.stderr)
         return 1
     return 2

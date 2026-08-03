@@ -17,6 +17,7 @@ param(
     [string]$SecretsVolume = "memory-palace-secrets",
     [string]$ConfirmTarget,
     [string]$TargetSecretsVolume,
+    [string]$UatRun,
     [ValidateRange(1, 65535)]
     [int]$TargetHttpPort = 18080,
     [ValidateRange(1, 5000)]
@@ -54,7 +55,7 @@ Memory Palace OS MVP operations
   scripts\mvp.cmd start   -EnvFile <path> [-Project <project>] [-SecretsVolume <volume>]
   scripts\mvp.cmd status  -Project <project>
   scripts\mvp.cmd migrate -EnvFile <path> [-Project <project>] [-SecretsVolume <volume>]
-  scripts\mvp.cmd bootstrap-uat -EnvFile <path> [-Project <project>] [-SecretsVolume <volume>]
+  scripts\mvp.cmd bootstrap-uat -EnvFile <path> -UatRun <evidence-run> [-Project <project>] [-SecretsVolume <volume>]
   scripts\mvp.cmd verify  -EnvFile <path> [-Project <project>] [-SecretsVolume <volume>]
   scripts\mvp.cmd backup  -Project <source-project> [-BackupRoot <directory>]
   scripts\mvp.cmd restore <backup-id> -TargetProject <target-project> `
@@ -1236,18 +1237,85 @@ function Invoke-Migrate {
 
 function Invoke-UatBootstrap {
     $context = Get-DeploymentContext
+    if (-not $UatRun) {
+        throw "UatRun is required; initialize an append-only evidence run before bootstrap-uat."
+    }
+    $runPath = Get-FullPath -Path $UatRun
+    $evidenceRoot = Get-FullPath -Path (Join-Path $ProjectRoot "docs\verification\unified-agent-uat")
+    $expectedPrefix = $evidenceRoot.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+    $runParent = [System.IO.Path]::GetDirectoryName($runPath)
+    if (
+        -not $runPath.StartsWith($expectedPrefix, [System.StringComparison]::OrdinalIgnoreCase) -or
+        -not (Test-PathEqual -Left $runParent -Right $evidenceRoot)
+    ) {
+        throw "UatRun must be a direct evidence run under '$evidenceRoot'."
+    }
+    $runItem = Get-Item -LiteralPath $runPath -Force -ErrorAction Stop
+    if (-not $runItem.PSIsContainer -or ($runItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint)) {
+        throw "UatRun must be a real directory: $runPath"
+    }
+    if ($runItem.Name -notmatch '^UAT-\d{8}T\d{6}Z-[A-Z0-9]{8}$') {
+        throw "UatRun directory name is not a valid uat_run_id: $($runItem.Name)"
+    }
+    $manifestPath = Join-Path $runPath "manifest.json"
+    $baselinePath = Join-Path $runPath "artifacts\uat-baseline.json"
+    if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
+        throw "UatRun is missing manifest.json: $runPath"
+    }
+    if (Test-Path -LiteralPath $baselinePath) {
+        throw "UatRun already contains a baseline and cannot be overwritten: $baselinePath"
+    }
+
     $previousSecretsVolume = $env:MEMORY_PALACE_SECRETS_VOLUME
     $env:MEMORY_PALACE_SECRETS_VOLUME = $context.SecretsVolume
+    $containerRun = "/tmp/memory-palace-uat-$([guid]::NewGuid().ToString('N'))"
+    $manifestDownload = Join-Path $runPath ".manifest.bootstrap.tmp"
+    $baselineDownload = Join-Path $runPath "artifacts\.uat-baseline.bootstrap.tmp"
+    $appContainer = $null
     try {
         if (-not (Test-DeploymentSecretAvailable -Volume $context.SecretsVolume -SecretName "uat_employee_password")) {
             throw "UAT employee credential is missing from external volume '$($context.SecretsVolume)'. Run scripts\set_uat_employee_secret.ps1, then retry bootstrap-uat."
         }
         Wait-ServiceReady -ComposeProject $context.Project -Service "app"
-        Invoke-Compose -ResolvedComposeFile $context.ComposeFile -ResolvedEnvFile $context.EnvFile `
-            -ComposeProject $context.Project `
-            -Arguments @("exec", "-T", "app", "python", "scripts/bootstrap_uat.py")
+        $appContainer = Get-ServiceContainer -ComposeProject $context.Project -Service "app"
+        Invoke-Docker -Arguments @("cp", "$runPath\.", "${appContainer}:$containerRun")
+        Invoke-Docker -Arguments @(
+            "exec", "-u", "root", $appContainer,
+            "chown", "-R", "appuser:appuser", $containerRun
+        )
+        Invoke-Docker -Arguments @(
+            "exec", $appContainer, "python", "-m", "scripts.unified_agent_uat.cli",
+            "bootstrap", "--run", $containerRun
+        )
+        Invoke-Docker -Arguments @(
+            "cp", "${appContainer}:$containerRun/artifacts/uat-baseline.json", $baselineDownload
+        )
+        Invoke-Docker -Arguments @(
+            "cp", "${appContainer}:$containerRun/manifest.json", $manifestDownload
+        )
+        Get-Content -Raw -LiteralPath $baselineDownload -Encoding utf8 | ConvertFrom-Json | Out-Null
+        Get-Content -Raw -LiteralPath $manifestDownload -Encoding utf8 | ConvertFrom-Json | Out-Null
+        Move-Item -LiteralPath $baselineDownload -Destination $baselinePath
+        Move-Item -LiteralPath $manifestDownload -Destination $manifestPath -Force
+        Write-Host "UAT baseline recorded in $runPath"
     }
     finally {
+        if ($appContainer) {
+            try {
+                Invoke-Docker -Arguments @(
+                    "exec", "-u", "root", $appContainer, "rm", "-rf", $containerRun
+                )
+            }
+            catch {
+                Write-Warning "Could not remove temporary UAT evidence directory '$containerRun'."
+            }
+        }
+        if (Test-Path -LiteralPath $manifestDownload) {
+            Remove-Item -LiteralPath $manifestDownload -Force
+        }
+        if (Test-Path -LiteralPath $baselineDownload) {
+            Remove-Item -LiteralPath $baselineDownload -Force
+        }
         if ($null -eq $previousSecretsVolume) {
             Remove-Item Env:MEMORY_PALACE_SECRETS_VOLUME -ErrorAction SilentlyContinue
         }

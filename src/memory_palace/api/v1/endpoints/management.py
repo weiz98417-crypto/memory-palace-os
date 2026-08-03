@@ -26,6 +26,7 @@ from ....core.sensitive_output import (
     sanitize_public_value,
 )
 from ....core.trace_timeline import build_trace_timeline
+from ....operations.uat_baseline import collect_uat_baseline_snapshot
 from ....tools.sms_client import notification_channel_readiness
 
 
@@ -560,6 +561,16 @@ async def integration_statuses(
     db=Depends(get_request_db),
 ):
     return {"integrations": await _integration_status_rows(principal["venue_id"], db)}
+
+
+@router.get("/uat-baseline")
+async def uat_baseline(
+    principal: dict = Depends(require_roles("admin")),
+    db=Depends(get_request_db),
+):
+    """Return the read-only master-data and empty-journey UAT baseline."""
+
+    return await collect_uat_baseline_snapshot(db, venue_id=principal["venue_id"])
 
 
 async def _collect_registry_evidence(request: Request, db, venue_id: str) -> dict[str, Any]:

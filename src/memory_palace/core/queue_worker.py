@@ -43,8 +43,6 @@ from src.memory_palace.core.sensitive_output import (
     sanitize_public_value,
 )
 from src.memory_palace.knowledge.push_logger import (
-    claim_reply_delivery,
-    complete_reply_delivery,
     record_reply_delivery,
 )
 
@@ -77,6 +75,10 @@ class MessageDeliveryFailure(MessageProcessingFailure):
         self.auto_retry = auto_retry
 
 
+class MessagePolicyFailure(MessageDeliveryFailure):
+    """Terminal channel rejection that must be acknowledged without retry."""
+
+
 def _saved_result_for_delivery(run: Optional[dict], *, delivery_only: bool) -> Optional[dict]:
     if not run:
         return None
@@ -97,151 +99,11 @@ def _saved_result_for_delivery(run: Optional[dict], *, delivery_only: bool) -> O
     return None
 
 
-def _truncate_utf8(value: str, max_bytes: int) -> str:
-    encoded = value.encode("utf-8")
-    if len(encoded) <= max_bytes:
-        return value
-    return encoded[: max(0, max_bytes - 3)].decode("utf-8", errors="ignore").rstrip() + "…"
-
-
 def _public_scalar(value: object) -> str:
     if value is None or isinstance(value, (dict, list, tuple, set)):
         return ""
     sanitized = sanitize_public_value(value)
     return str(sanitized).strip() if sanitized is not None else ""
-
-
-def _wecom_business_cards(result: dict) -> list[dict]:
-    sanitized = sanitize_public_value(result.get("business_cards") or [])
-    if not isinstance(sanitized, list):
-        return []
-    return [card for card in sanitized if isinstance(card, dict)][:3]
-
-
-def _card_value(card: dict, *keys: str) -> str:
-    for key in keys:
-        value = _public_scalar(card.get(key))
-        if value:
-            return value
-    return ""
-
-
-def _card_list_value(card: dict, key: str) -> str:
-    values = card.get(key)
-    if not isinstance(values, list):
-        return ""
-    return "、".join(filter(None, (_public_scalar(value) for value in values[:5])))
-
-
-def _markdown_text(value: str) -> str:
-    escaped = value
-    for marker in ("\\", "`", "*", "_", "[", "]", "(", ")", "#", ">", "<"):
-        escaped = escaped.replace(marker, f"\\{marker}")
-    return escaped
-
-
-def _wecom_delivery_content(result: dict, reply_text: str) -> dict[str, str | bool]:
-    cards = _wecom_business_cards(result)
-    plain_sections = [reply_text] if reply_text else []
-    markdown_sections = [_markdown_text(reply_text)] if reply_text else []
-    first_title = "企业运营助手"
-    first_description = reply_text
-    first_url = "/assistant/"
-
-    for index, card in enumerate(cards):
-        title = _card_value(card, "title", "name", "subject") or "业务进展"
-        summary = _card_value(card, "summary", "description", "content", "reason")
-        facts = [
-            ("业务编号", _card_value(card, "business_code", "reference_no", "display_id")),
-            ("状态", _card_value(card, "status")),
-            ("风险等级", _card_value(card, "severity_label", "severity")),
-            ("负责人", _card_value(card, "owner_name", "assignee_name", "owner")),
-            ("地点", _card_value(card, "location_name", "location")),
-            ("下一步", _card_value(card, "next_action", "recommended_action")),
-            ("建议动作", _card_list_value(card, "immediate_actions")),
-            ("来源", _card_value(card, "source_title", "source_name")),
-            ("版本", _card_value(card, "version_label", "version")),
-        ]
-        facts = [(label, value) for label, value in facts if value]
-        plain_lines = [f"【{title}】"]
-        markdown_lines = [f"### {_markdown_text(title)}"]
-        if summary:
-            plain_lines.append(summary)
-            markdown_lines.append(_markdown_text(summary))
-        plain_lines.extend(f"{label}：{value}" for label, value in facts)
-        markdown_lines.extend(
-            f"> **{_markdown_text(label)}**：{_markdown_text(value)}"
-            for label, value in facts
-        )
-        plain_sections.append("\n".join(plain_lines))
-        markdown_sections.append("\n".join(markdown_lines))
-        if index == 0:
-            first_title = title
-            first_description = "\n".join(plain_lines[1:]) or title
-            candidate_url = _card_value(card, "employee_url", "web_url", "detail_url")
-            if candidate_url.startswith("/assistant") or candidate_url.startswith("https://"):
-                first_url = candidate_url
-
-    plain_text = _truncate_utf8("\n\n".join(filter(None, plain_sections)), 1800)
-    markdown = _truncate_utf8("\n\n".join(filter(None, markdown_sections)), 3500)
-    return {
-        "structured": bool(cards),
-        "plain_text": plain_text,
-        "markdown": markdown,
-        "card_title": _truncate_utf8(first_title, 100),
-        "card_description": _truncate_utf8(first_description or plain_text, 500),
-        "card_url": first_url,
-    }
-
-
-async def _send_wecom_delivery(
-    wechat_client: object,
-    recipient: str,
-    content: dict[str, str | bool],
-    trace_id: str,
-) -> bool:
-    if content["structured"]:
-        send_markdown = getattr(wechat_client, "send_markdown", None)
-        if callable(send_markdown):
-            try:
-                if await send_markdown(recipient, content["markdown"]):
-                    return True
-            except Exception as delivery_error:
-                logger.warning(
-                    "[Trace-{}] 企微 Markdown 回复降级 [error_type={}]",
-                    trace_id,
-                    type(delivery_error).__name__,
-                )
-
-        send_textcard = getattr(wechat_client, "send_textcard", None)
-        if callable(send_textcard):
-            try:
-                if await send_textcard(
-                    recipient,
-                    content["card_title"],
-                    content["card_description"],
-                    content["card_url"],
-                ):
-                    return True
-            except Exception as delivery_error:
-                logger.warning(
-                    "[Trace-{}] 企微文本卡片回复降级 [error_type={}]",
-                    trace_id,
-                    type(delivery_error).__name__,
-                )
-
-    send_text = getattr(wechat_client, "send_text", None)
-    if not callable(send_text):
-        return False
-    try:
-        return bool(await send_text(recipient, content["plain_text"]))
-    except Exception as delivery_error:
-        logger.error(
-            "[Trace-{}] 企微文本回复发送异常 [error_type={}]",
-            trace_id,
-            type(delivery_error).__name__,
-        )
-        return False
 
 
 def _is_duplicate(msg_id: str) -> bool:
@@ -359,6 +221,12 @@ class MessageQueueWorker:
                 error = getattr(e, "public_message", None) or public_error_message(e, context="queue") or (
                     "任务处理失败，请携带 Trace ID 排查后重试。"
                 )
+                if isinstance(e, MessagePolicyFailure):
+                    if repository:
+                        await repository.mark_failed(message.get("msg_id"), error)
+                    if redis_message_id and hasattr(backend, "ack"):
+                        await backend.ack(redis_message_id)
+                    return
                 requires_manual_retry = delivery_failure and not e.auto_retry
                 if requires_manual_retry and redis_message_id and hasattr(backend, "dead_letter"):
                     try:
@@ -554,33 +422,13 @@ class MessageQueueWorker:
         metadata = message.get("metadata") or {}
         channel = str(message.get("channel") or metadata.get("channel") or "LEGACY").upper()
         reply_text = _public_scalar(result.get("reply_text"))
-        wecom_content = _wecom_delivery_content(result, reply_text)
-        delivery_text = str(wecom_content["plain_text"]) if channel == "WECOM" else reply_text
+        delivery_text = reply_text
         trace_id = str(result.get("trace_id") or message.get("trace_id") or msg_id)
         venue_id = str(message.get("venue_id") or metadata.get("venue_id") or "")
         user_id = str(message.get("from_user") or "")
         recipient = metadata.get("external_user_id") or message.get("external_user_id") or user_id
 
         if not repository:
-            if channel in {"LEGACY", ""} and reply_text and self._container:
-                wechat_client = getattr(self._container, "wechat_client", None)
-                if wechat_client:
-                    await wechat_client.send_text(recipient, reply_text)
-            return
-
-        existing_run = await repository.get(msg_id)
-        if channel == "WECOM" and existing_run and existing_run.get("delivery_status") == "DELIVERED":
-            await record_reply_delivery(
-                message_id=msg_id,
-                trace_id=trace_id,
-                venue_id=venue_id,
-                user_id=user_id,
-                channel=channel,
-                recipient=recipient,
-                reply_text=delivery_text,
-                delivery_status="DELIVERED",
-                database=self._container.db_client,
-            )
             return
 
         if channel in {"WEB", "WECOM_SIMULATOR"}:
@@ -604,23 +452,7 @@ class MessageQueueWorker:
             await repository.mark_delivery(msg_id, "PERSISTED")
             return
 
-        if not delivery_text:
-            error = "助手未生成可发送的企微回复，系统将自动重试。"
-            await repository.mark_delivery(msg_id, "FAILED", error=error)
-            await record_reply_delivery(
-                message_id=msg_id,
-                trace_id=trace_id,
-                venue_id=venue_id,
-                user_id=user_id,
-                channel=channel,
-                recipient=recipient,
-                reply_text="",
-                delivery_status="FAILED",
-                delivery_error=error,
-                database=self._container.db_client,
-            )
-            raise MessageDeliveryFailure(error, auto_retry=True)
-
+        error = "真实企业微信投递已按项目策略禁用；请通过企微模拟器完成业务链路。"
         await record_reply_delivery(
             message_id=msg_id,
             trace_id=trace_id,
@@ -629,118 +461,12 @@ class MessageQueueWorker:
             channel=channel,
             recipient=recipient,
             reply_text=delivery_text,
-            delivery_status="PENDING",
+            delivery_status="DISABLED_BY_POLICY",
+            delivery_error=error,
             database=self._container.db_client,
         )
-
-        wechat_client = getattr(self._container, "wechat_client", None) if self._container else None
-        if not recipient or not wechat_client:
-            error = "企微回复通道尚未配置，请联系管理员。"
-            await record_reply_delivery(
-                message_id=msg_id,
-                trace_id=trace_id,
-                venue_id=venue_id,
-                user_id=user_id,
-                channel=channel,
-                recipient=recipient,
-                reply_text=delivery_text,
-                delivery_status="CONFIGURATION_REQUIRED",
-                delivery_error=error,
-                database=self._container.db_client,
-            )
-            await repository.mark_delivery(msg_id, "CONFIGURATION_REQUIRED", error=error)
-            raise MessageDeliveryFailure(error, auto_retry=False)
-
-        claim = await claim_reply_delivery(
-            message_id=msg_id,
-            trace_id=trace_id,
-            venue_id=venue_id,
-            user_id=user_id,
-            channel=channel,
-            recipient=recipient,
-            reply_text=delivery_text,
-            allow_manual_reclaim=bool(message.get("_dead_letter_retry_id")),
-            database=self._container.db_client,
-        )
-        if not claim["acquired"]:
-            existing_status = claim["delivery_status"]
-            if existing_status == "DELIVERED":
-                await repository.mark_delivery(msg_id, "DELIVERED")
-                return
-            if existing_status == "SENDING":
-                await repository.mark_delivery(msg_id, "SENDING")
-                error = "企微回复投递结果待确认，为避免重复发送，请人工确认后重试。"
-            else:
-                error = "企微回复投递权不可用，请人工确认投递状态后重试。"
-            raise MessageDeliveryFailure(error, auto_retry=False)
-
-        claim_token = str(claim["claim_token"])
-        try:
-            await repository.mark_delivery(msg_id, "SENDING")
-        except Exception:
-            await complete_reply_delivery(
-                message_id=msg_id,
-                trace_id=trace_id,
-                venue_id=venue_id,
-                channel=channel,
-                recipient=recipient,
-                reply_text=delivery_text,
-                claim_token=claim_token,
-                delivery_status="FAILED",
-                delivery_error="企微回复尚未发送，投递状态持久化失败。",
-                database=self._container.db_client,
-            )
-            raise
-
-        delivered = await _send_wecom_delivery(
-            wechat_client,
-            recipient,
-            wecom_content,
-            trace_id,
-        )
-        if not delivered:
-            error = "企微回复发送失败，系统将自动重试。"
-            finalized = await complete_reply_delivery(
-                message_id=msg_id,
-                trace_id=trace_id,
-                venue_id=venue_id,
-                channel=channel,
-                recipient=recipient,
-                reply_text=delivery_text,
-                claim_token=claim_token,
-                delivery_status="FAILED",
-                delivery_error=error,
-                database=self._container.db_client,
-            )
-            if not finalized:
-                raise MessageDeliveryFailure(
-                    "企微回复投递权已变更，请人工确认投递状态后重试。",
-                    auto_retry=False,
-                )
-            await repository.mark_delivery(msg_id, "FAILED", error=error)
-            self._dead_letter_queue.append(
-                {"msg_id": msg_id, "from_user": recipient, "error": error}
-            )
-            raise MessageDeliveryFailure(error, auto_retry=True)
-
-        finalized = await complete_reply_delivery(
-            message_id=msg_id,
-            trace_id=trace_id,
-            venue_id=venue_id,
-            channel=channel,
-            recipient=recipient,
-            reply_text=delivery_text,
-            claim_token=claim_token,
-            delivery_status="DELIVERED",
-            database=self._container.db_client,
-        )
-        if not finalized:
-            raise MessageDeliveryFailure(
-                "企微回复已发送但投递权已变更，请人工确认后重试。",
-                auto_retry=False,
-            )
-        await repository.mark_delivery(msg_id, "DELIVERED")
-        logger.info(f"[Trace-{trace_id}] 企微回复已发送 to={recipient}")
+        await repository.mark_delivery(msg_id, "DISABLED_BY_POLICY", error=error)
+        raise MessagePolicyFailure(error, auto_retry=False)
 
     # ── Redis 迁移预留接口 ────────────────────────────────────────────────────
     # 将来迁移到 Redis 时，只需重写以下两个方法，上层逻辑不变：

@@ -59,7 +59,6 @@ ACTIVITY_LABELS = {
 
 TOOL_LABELS = {
     "send_in_app_alert": "发送企业内通知",
-    "send_wechat_message": "发送企微通知",
     "send_sms": "发送短信通知",
 }
 

@@ -12,7 +12,6 @@ Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 
 import asyncio
 import json
-import os
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -117,7 +116,6 @@ class PermissionEngine:
         self._pending_approvals: Dict[str, ApprovalRequest] = {}
         self._cooldown_cache: Dict[tuple[str, str], float] = {}
         # [修复] 保存通知 task 引用防止被 GC 回收
-        self._pending_notifications: List[asyncio.Task] = []
         self._db = db_client
 
         # 注册默认工具权限
@@ -173,12 +171,6 @@ class PermissionEngine:
             SensitivityLevel.APPROVAL,
             description="发起电话呼叫"
         )
-        self.register_tool(
-            "send_wechat_message",
-            SensitivityLevel.APPROVAL,
-            description="发送微信消息"
-        )
-
         logger.info("[PermissionEngine] 默认工具权限注册完成")
 
     def register_tool(
@@ -760,27 +752,12 @@ class PermissionEngine:
         return approval
 
     async def _notify_admin(self, approval: ApprovalRequest):
-        """发送微信通知给管理员"""
-        try:
-            admin_user = os.environ.get("ADMIN_USER_ID", "admin")
-            message = self._format_approval_message(approval)
+        """Expose pending approvals through the simulator-backed approval views."""
 
-            from ..tools.wechat_client import get_wechat_client
-
-            # [修复] 保存 task 引用防止被 GC 回收
-            task = asyncio.create_task(
-                get_wechat_client().send_text(admin_user, message)
-            )
-            self._pending_notifications.append(task)
-            task.add_done_callback(
-                lambda t: self._pending_notifications.remove(t)
-                if t in self._pending_notifications else None
-            )
-
-            logger.debug(f"[PermissionEngine] 管理员通知已发送: {admin_user}")
-
-        except Exception as e:
-            logger.error(f"[PermissionEngine] 发送管理员通知失败: {e}")
+        logger.debug(
+            "[PermissionEngine] 审批已进入企微模拟器/管理后台待办: approval_id={}",
+            approval.approval_id,
+        )
 
     def _format_approval_message(self, approval: ApprovalRequest) -> str:
         """格式化审批通知消息"""

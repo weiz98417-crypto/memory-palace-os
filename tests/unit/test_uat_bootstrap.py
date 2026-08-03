@@ -39,6 +39,39 @@ class UATAPIState:
         self.settings: dict[tuple[str, str], object] = {}
         self.sops: list[dict] = []
         self.experts: list[dict] = []
+        self.approval_rules = [
+            {
+                "code": "SUSPEND_PASSENGER_VEHICLE",
+                "approval_required": True,
+                "approver_roles": ["manager"],
+            },
+            {
+                "code": "ACTIVATE_BACKUP_VEHICLE",
+                "approval_required": True,
+                "approver_roles": ["manager"],
+            },
+            {
+                "code": "SEND_CRITICAL_DISPATCH_ALERT",
+                "approval_required": True,
+                "approver_roles": ["manager"],
+                "delivery_channel": "WECOM_SIMULATOR_OUTBOX",
+            },
+        ]
+        self.process_counts = {
+            "sessions": 0,
+            "messages": 0,
+            "message_runs": 0,
+            "events": 0,
+            "tasks": 0,
+            "task_decompositions": 0,
+            "approvals": 0,
+            "push_logs": 0,
+            "tool_invocations": 0,
+            "watcher_runs": 0,
+            "watcher_findings": 0,
+            "experience_interviews": 0,
+            "experience_cards": 0,
+        }
         self.password_resets: list[str] = []
         self.calls: list[tuple[str, str]] = []
         self.next_user = 1
@@ -105,6 +138,39 @@ class UATAPIState:
         if method == "PUT" and path == "/api/v1/admin/settings/organization_name":
             self.settings[(venue_id, "organization_name")] = body["value"]
             return self.ok(request, {"key": "organization_name", "value": body["value"]})
+
+        if method == "GET" and path == "/api/v1/admin/uat-baseline":
+            return self.ok(
+                request,
+                {
+                    "captured_at": 1785751200.0,
+                    "channel": {
+                        "mode": "WECOM_SIMULATOR_ONLY",
+                        "identity_channel": "WECOM_SIMULATOR",
+                        "real_wecom_enabled": False,
+                    },
+                    "scope": {
+                        "organization_name": self.settings.get((venue_id, "organization_name")),
+                        "venue": next(item for item in self.venues if item["id"] == venue_id),
+                    },
+                    "master_data": {
+                        "users": [user for user in self.users if user["venue_id"] == venue_id],
+                        "simulator_identities": [
+                            identity
+                            for identity in self.identities.values()
+                            if identity["venue_id"] == venue_id
+                        ],
+                        "published_sops": [sop for sop in self.sops if sop["status"] == "PUBLISHED"],
+                        "signed_experts": [
+                            expert
+                            for expert in self.experts
+                            if expert["authorization_status"] == "SIGNED"
+                        ],
+                        "approval_rules": self.approval_rules,
+                    },
+                    "process_counts": self.process_counts,
+                },
+            )
 
         if method == "GET" and path == "/api/v1/sessions/":
             return self.ok(request, [])
@@ -204,6 +270,7 @@ async def test_uat_bootstrap_is_repeatable_and_uses_formal_apis() -> None:
     assert second.user_count == 7
     assert len(state.users) == 7
     assert len(state.identities) == 7
+    assert {channel for channel, _, _ in state.identities} == {"WECOM_SIMULATOR"}
     assert len(state.sops) == 1
     assert state.sops[0]["version"] == "2.1"
     assert state.sops[0]["status"] == "PUBLISHED"
@@ -211,6 +278,21 @@ async def test_uat_bootstrap_is_repeatable_and_uses_formal_apis() -> None:
     assert state.experts[0]["display_name"] == "张建国"
     assert state.experts[0]["authorization_status"] == "SIGNED"
     assert state.settings[("venue-yueshan", "organization_name")] == "悦山文旅集团"
+    assert first.baseline_snapshot["channel"] == {
+        "mode": "WECOM_SIMULATOR_ONLY",
+        "identity_channel": "WECOM_SIMULATOR",
+        "real_wecom_enabled": False,
+    }
+    assert len(first.baseline_snapshot["master_data"]["users"]) == 7
+    assert len(first.baseline_snapshot["master_data"]["simulator_identities"]) == 7
+    assert {
+        rule["code"] for rule in first.baseline_snapshot["master_data"]["approval_rules"]
+    } == {
+        "SUSPEND_PASSENGER_VEHICLE",
+        "ACTIVATE_BACKUP_VEHICLE",
+        "SEND_CRITICAL_DISPATCH_ALERT",
+    }
+    assert set(first.baseline_snapshot["process_counts"].values()) == {0}
     assert ("POST", "/api/v1/channels/identities") in state.calls
     assert all(path.startswith("/api/v1/") for _, path in state.calls)
 

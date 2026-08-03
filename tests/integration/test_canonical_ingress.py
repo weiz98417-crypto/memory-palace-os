@@ -8,6 +8,11 @@ from fastapi import FastAPI
 
 from src.memory_palace.api.auth import require_auth
 from src.memory_palace.api.v1.router import router as v1_router
+from src.memory_palace.core.canonical_ingress import (
+    CanonicalIngressError,
+    CanonicalMessageIngress,
+    IngressMessage,
+)
 from src.memory_palace.core.message_runs import MessageRunRepository
 from src.memory_palace.core.permissions import get_permission_engine
 from src.memory_palace.core.queue_worker import set_message_queue
@@ -67,7 +72,7 @@ async def _build_app(tmp_path):
             INSERT INTO channel_identities (
                 id, venue_id, channel, external_tenant_id, external_user_id,
                 user_id, status, created_at, updated_at
-            ) VALUES (?, 'venue-west', 'WECOM', 'corp-west', ?, ?, 'ACTIVE', ?, ?)
+            ) VALUES (?, 'venue-west', 'WECOM_SIMULATOR', 'corp-west', ?, ?, 'ACTIVE', ?, ?)
             """,
             (identity_id, external_user_id, user_id, now, now),
         )
@@ -595,8 +600,7 @@ async def test_real_wecom_message_remains_disabled_after_identity_mapping(tmp_pa
                 },
             )
 
-        assert mapped.status_code == 201
-        assert mapped.json()["status"] == "ACTIVE"
+        assert mapped.status_code == 422
         assert accepted.status_code == 503
         body = accepted.json()["detail"]
         assert body["code"] == "INTEGRATION_DISABLED"
@@ -608,6 +612,27 @@ async def test_real_wecom_message_remains_disabled_after_identity_mapping(tmp_pa
         ) is None
     finally:
         await db.close()
+
+
+@pytest.mark.asyncio
+async def test_canonical_ingress_does_not_support_real_wecom(tmp_path):
+    db = AsyncDBClient(tmp_path / "real-wecom-ingress-disabled.db")
+    await init_database(db)
+    ingress = CanonicalMessageIngress(db, asyncio.Queue())
+
+    with pytest.raises(CanonicalIngressError) as exc_info:
+        await ingress.accept(
+            IngressMessage(
+                channel="WECOM",
+                content="must not be accepted",
+                external_message_id="real-wecom-disabled-01",
+            ),
+            actor={"user_id": "api", "role": "api", "venue_id": "venue-west"},
+        )
+
+    assert exc_info.value.code == "CHANNEL_NOT_SUPPORTED"
+    assert await db.fetch_one("SELECT COUNT(*) AS total FROM message_runs") == {"total": 0}
+    await db.close()
 
 
 @pytest.mark.asyncio
@@ -1045,7 +1070,7 @@ async def test_event_participant_fanout_is_visible_only_in_each_frozen_simulator
                 id, venue_id, channel, external_tenant_id, external_user_id,
                 user_id, status, created_at, updated_at
             ) VALUES (
-                'identity-worker-west', 'venue-west', 'WECOM', 'corp-west',
+                'identity-worker-west', 'venue-west', 'WECOM_SIMULATOR', 'corp-west',
                 'wecom-worker-001', 'worker-west', 'ACTIVE', ?, ?
             )
             """,

@@ -4,6 +4,7 @@ import json
 from hashlib import sha256
 from datetime import datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -49,6 +50,7 @@ def test_create_run_builds_simulator_only_evidence_contract(tmp_path):
             "entrypoint": "/simulator/wecom/",
             "real_wecom_enabled": False,
         },
+        "baseline": None,
         "steps": [],
     }
 
@@ -144,6 +146,51 @@ def test_invalid_step_input_does_not_leave_partial_evidence(tmp_path):
     assert (run.path / "manifest.json").read_bytes() == manifest_before
     assert not (run.path / "steps" / "E2E-00.json").exists()
     assert not (run.path / "artifacts" / "E2E-00").exists()
+
+
+def test_run_records_one_immutable_master_data_baseline(tmp_path):
+    run = EvidenceRun.create(
+        tmp_path,
+        run_id="UAT-20260803T102000Z-BASELINE",
+        now=datetime(2026, 8, 3, 10, 20, tzinfo=timezone.utc),
+    )
+    snapshot = {
+        "schema_version": 1,
+        "captured_at": 1785752400.0,
+        "channel": {
+            "mode": "WECOM_SIMULATOR_ONLY",
+            "identity_channel": "WECOM_SIMULATOR",
+            "real_wecom_enabled": False,
+        },
+        "scope": {
+            "organization_name": "悦山文旅集团",
+            "venue": {"id": "venue-yueshan", "name": "悦山景区", "status": "ACTIVE"},
+        },
+        "master_data": {
+            "users": [{"id": "user-li-ming", "username": "li-ming"}],
+            "simulator_identities": [
+                {
+                    "id": "identity-li-ming",
+                    "channel": "WECOM_SIMULATOR",
+                    "user_id": "user-li-ming",
+                }
+            ],
+            "published_sops": [{"id": 1, "title": "观光车雨后复运与异常异响处置", "version": "2.1"}],
+            "signed_experts": [{"id": "expert-1", "display_name": "张建国"}],
+            "approval_rules": [{"code": "SEND_CRITICAL_DISPATCH_ALERT", "approval_required": True}],
+        },
+        "process_counts": {"sessions": 0, "events": 0, "tasks": 0, "approvals": 0},
+    }
+
+    baseline_path = run.record_baseline(snapshot)
+
+    assert baseline_path == run.path / "artifacts" / "uat-baseline.json"
+    assert json.loads(baseline_path.read_text(encoding="utf-8")) == snapshot
+    manifest = json.loads((run.path / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["baseline"]["path"] == "artifacts/uat-baseline.json"
+    assert manifest["baseline"]["sha256"] == sha256(baseline_path.read_bytes()).hexdigest()
+    with pytest.raises(FileExistsError, match="baseline already exists"):
+        run.record_baseline(snapshot)
 
 
 def test_validator_accepts_consistent_running_evidence_package(tmp_path):
@@ -300,6 +347,16 @@ def test_complete_seals_only_a_valid_all_passed_run(tmp_path):
     with pytest.raises(RuntimeError, match="at least one recorded step"):
         run.complete(now=datetime(2026, 8, 3, 12, 31, tzinfo=timezone.utc))
 
+    run.record_baseline(
+        {
+            "channel": {
+                "mode": "WECOM_SIMULATOR_ONLY",
+                "identity_channel": "WECOM_SIMULATOR",
+                "real_wecom_enabled": False,
+            },
+            "process_counts": {"sessions": 0, "events": 0},
+        }
+    )
     run.record_step(
         "E2E-00",
         status="PASSED",
@@ -333,3 +390,45 @@ def test_cli_initializes_and_validates_a_run(tmp_path, capsys):
     assert evidence_cli_main(["validate", "--run", str(tmp_path / run_id)]) == 0
     validation_output = json.loads(capsys.readouterr().out)
     assert validation_output == {"valid": True, "errors": []}
+
+
+def test_cli_bootstrap_records_the_formal_api_baseline(tmp_path, capsys, monkeypatch):
+    run = EvidenceRun.create(
+        tmp_path,
+        run_id="UAT-20260803T131500Z-BOOTCLI1",
+        now=datetime(2026, 8, 3, 13, 15, tzinfo=timezone.utc),
+    )
+    snapshot = {
+        "channel": {
+            "mode": "WECOM_SIMULATOR_ONLY",
+            "identity_channel": "WECOM_SIMULATOR",
+            "real_wecom_enabled": False,
+        },
+        "process_counts": {"sessions": 0, "events": 0},
+    }
+
+    async def bootstrap(_config):
+        return SimpleNamespace(
+            baseline_snapshot=snapshot,
+            venue_id="venue-yueshan",
+            user_count=7,
+            identity_count=7,
+        )
+
+    monkeypatch.setattr(
+        "scripts.unified_agent_uat.cli.UATBootstrapConfig.from_environment",
+        lambda: object(),
+    )
+    monkeypatch.setattr(
+        "scripts.unified_agent_uat.cli.bootstrap_uat_master_data",
+        bootstrap,
+    )
+
+    assert evidence_cli_main(["bootstrap", "--run", str(run.path)]) == 0
+
+    output = json.loads(capsys.readouterr().out)
+    baseline_path = Path(output["baseline"])
+    manifest = json.loads((run.path / "manifest.json").read_text(encoding="utf-8"))
+    assert baseline_path == run.path / "artifacts" / "uat-baseline.json"
+    assert json.loads(baseline_path.read_text(encoding="utf-8")) == snapshot
+    assert manifest["baseline"]["path"] == "artifacts/uat-baseline.json"

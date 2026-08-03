@@ -117,6 +117,7 @@ class EvidenceRun:
                 "entrypoint": "/simulator/wecom/",
                 "real_wecom_enabled": False,
             },
+            "baseline": None,
             "steps": [],
         }
         _write_json(run_path / "manifest.json", manifest)
@@ -207,6 +208,26 @@ class EvidenceRun:
         _write_json(manifest_path, manifest)
         return result_path
 
+    def record_baseline(self, snapshot: Mapping[str, Any]) -> Path:
+        """Write the sanitized, immutable pre-journey master-data baseline."""
+
+        manifest_path = self.path / "manifest.json"
+        manifest = _read_json(manifest_path)
+        if manifest.get("status") != "RUNNING":
+            raise RuntimeError(f"evidence run is sealed with status {manifest.get('status')}")
+        baseline_path = self.path / "artifacts" / "uat-baseline.json"
+        if manifest.get("baseline") is not None or baseline_path.exists():
+            raise FileExistsError("UAT baseline already exists")
+
+        sanitized = _redact(deepcopy(dict(snapshot)))
+        _write_json(baseline_path, sanitized)
+        manifest["baseline"] = {
+            "path": baseline_path.relative_to(self.path).as_posix(),
+            "sha256": _file_sha256(baseline_path),
+        }
+        _write_json(manifest_path, manifest)
+        return baseline_path
+
     def complete(
         self,
         *,
@@ -222,6 +243,8 @@ class EvidenceRun:
         steps = manifest.get("steps")
         if not isinstance(steps, list) or not steps:
             raise RuntimeError("evidence run requires at least one recorded step")
+        if not isinstance(manifest.get("baseline"), dict):
+            raise RuntimeError("evidence run requires a recorded UAT baseline")
         if any(not isinstance(step, dict) or step.get("status") != "PASSED" for step in steps):
             raise RuntimeError("evidence run contains a non-passing step")
 

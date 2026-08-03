@@ -68,7 +68,7 @@ async def list_simulator_identities(
                    SELECT ci.external_tenant_id
                    FROM channel_identities ci
                    WHERE ci.venue_id = u.venue_id AND ci.user_id = u.id
-                     AND ci.channel = 'WECOM' AND ci.status = 'ACTIVE'
+                     AND ci.channel = 'WECOM_SIMULATOR' AND ci.status = 'ACTIVE'
                    ORDER BY ci.updated_at DESC
                    LIMIT 1
                ) AS external_tenant_id,
@@ -76,7 +76,7 @@ async def list_simulator_identities(
                    SELECT ci.external_user_id
                    FROM channel_identities ci
                    WHERE ci.venue_id = u.venue_id AND ci.user_id = u.id
-                     AND ci.channel = 'WECOM' AND ci.status = 'ACTIVE'
+                     AND ci.channel = 'WECOM_SIMULATOR' AND ci.status = 'ACTIVE'
                    ORDER BY ci.updated_at DESC
                    LIMIT 1
                ) AS external_user_id,
@@ -84,7 +84,7 @@ async def list_simulator_identities(
                    SELECT 1
                    FROM channel_identities ci
                    WHERE ci.venue_id = u.venue_id AND ci.user_id = u.id
-                     AND ci.channel = 'WECOM' AND ci.status = 'ACTIVE'
+                     AND ci.channel = 'WECOM_SIMULATOR' AND ci.status = 'ACTIVE'
                ) THEN 'ACTIVE' ELSE 'UNBOUND' END AS wecom_binding_status
         FROM users u
         JOIN venues v ON v.id = u.venue_id AND v.status = 'ACTIVE'
@@ -96,7 +96,7 @@ async def list_simulator_identities(
               SELECT 1 FROM channel_identities bound_identity
               WHERE bound_identity.venue_id = u.venue_id
                 AND bound_identity.user_id = u.id
-                AND bound_identity.channel = 'WECOM'
+                AND bound_identity.channel = 'WECOM_SIMULATOR'
                 AND bound_identity.status = 'ACTIVE'
           )
         ORDER BY u.display_name, u.id
@@ -164,7 +164,7 @@ async def get_simulator_session_outbox(
           AND EXISTS (
               SELECT 1 FROM channel_identities ci
               WHERE ci.venue_id = c.venue_id AND ci.user_id = c.user_id
-                AND ci.channel = 'WECOM' AND ci.status = 'ACTIVE'
+                AND ci.channel = 'WECOM_SIMULATOR' AND ci.status = 'ACTIVE'
           )
         """,
         (session_id, principal["venue_id"], user_id),
@@ -294,39 +294,13 @@ async def create_wecom_message(
     principal: dict[str, str] = Depends(require_auth),
     db=Depends(get_request_db),
 ):
-    if principal.get("role") != "api":
-        raise HTTPException(
-            status_code=403,
-            detail={"code": "WECOM_ADAPTER_FORBIDDEN", "message": "Channel API access is required."},
-        )
     readiness = wechat_integration_readiness()
-    if not readiness["configured"]:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={
-                "code": "INTEGRATION_DISABLED",
-                "message": str(readiness["blocked_reason"]),
-                "missing": readiness["missing"],
-                "policy_mode": readiness["policy_mode"],
-            },
-        )
-    queue = get_message_queue()
-    if queue is None:
-        raise HTTPException(status_code=503, detail="Message queue is not ready")
-    try:
-        accepted = await CanonicalMessageIngress(db, queue).accept(
-            IngressMessage(
-                channel="WECOM",
-                content=body.content,
-                external_message_id=body.external_message_id,
-                external_conversation_id=body.external_conversation_id,
-                metadata=body.metadata or {},
-                attachments=body.attachments,
-                external_tenant_id=body.external_tenant_id,
-                external_user_id=body.external_user_id,
-            ),
-            actor=principal,
-        )
-    except CanonicalIngressError as exc:
-        _raise_ingress_error(exc)
-    return CanonicalMessageAcceptedResponse(**accepted.__dict__)
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail={
+            "code": "INTEGRATION_DISABLED",
+            "message": str(readiness["blocked_reason"]),
+            "missing": readiness["missing"],
+            "policy_mode": readiness["policy_mode"],
+        },
+    )

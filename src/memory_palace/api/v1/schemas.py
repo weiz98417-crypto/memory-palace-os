@@ -161,7 +161,7 @@ class SimulatorOutboxResponse(BaseModel):
 
 
 class ChannelIdentityCreateRequest(BaseModel):
-    channel: Literal["WECOM"] = "WECOM"
+    channel: Literal["WECOM_SIMULATOR"] = "WECOM_SIMULATOR"
     external_tenant_id: str = Field(..., min_length=1, max_length=128)
     external_user_id: str = Field(..., min_length=1, max_length=128)
     user_id: str = Field(..., min_length=1, max_length=64)

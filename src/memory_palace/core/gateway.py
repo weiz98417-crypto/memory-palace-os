@@ -15,7 +15,6 @@ import time
 import uuid
 import traceback
 import asyncio
-import xml.etree.ElementTree as ET
 from typing import Optional, Any, Dict, List
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
@@ -28,11 +27,6 @@ from pydantic import BaseModel, Field
 from loguru import logger
 
 from src.memory_palace.config.integration_readiness import wechat_integration_readiness
-from src.memory_palace.core.canonical_ingress import (
-    CanonicalIngressError,
-    CanonicalMessageIngress,
-    IngressMessage,
-)
 
 # ── 指标计数器 ────────────────────────────────────────────────────────────
 _queue_full_count: int = 0
@@ -293,24 +287,8 @@ async def verify_wechat_url(
     企微管理后台配置 Webhook 时，触发的首次 GET 验签
     """
     readiness = wechat_integration_readiness()
-    if not readiness["configured"]:
-        return PlainTextResponse("integration disabled by project policy", status_code=503)
-    crypto = get_wx_crypto()
-    if not crypto:
-        logger.error("企微加解密套件未初始化")
-        return PlainTextResponse("Crypto Not Initialized", status_code=500)
-
-    try:
-        ret, decrypted_echostr = crypto.VerifyURL(msg_signature, timestamp, nonce, echostr)
-        if ret == 0:
-            logger.success("✅ 企微 Webhook URL 验签成功！")
-            return PlainTextResponse(decrypted_echostr)
-        else:
-            logger.error(f"❌ 企微 Webhook 验签失败，错误码: {ret}")
-            return PlainTextResponse("Verification Failed", status_code=403)
-    except Exception as e:
-        logger.error(f"验签异常: {e}")
-        return PlainTextResponse("Verification Error", status_code=500)
+    logger.warning("真实企微 Webhook 验签已按项目策略禁用")
+    return PlainTextResponse(str(readiness["blocked_reason"]), status_code=503)
 
 
 @wechat_router.post("")
@@ -320,173 +298,13 @@ async def receive_wechat_message(
     timestamp: str = "",
     nonce: str = ""
 ):
-    """
-    接收企微真实业务消息。
-    设计原则：全程耗时必须 < 50ms。解密 -> 组装 -> 入队 -> return success。
-    """
-    start_time = time.time()
+    """Reject real WeCom callbacks before reading or processing request data."""
     trace_id = uuid.uuid4().hex[:8]
     from src.memory_palace.tools.trace_context import set_trace_id
     set_trace_id(trace_id)
-
-    try:
-        readiness = wechat_integration_readiness()
-        if not readiness["configured"]:
-            logger.warning(f"[Trace-{trace_id}] 企微真实渠道配置不完整，拒绝接收回调")
-            return PlainTextResponse("integration disabled", status_code=503)
-
-        # 1. 获取原始加密 XML
-        raw_xml = await request.body()
-        logger.debug(f"[Trace-{trace_id}] 收到企微推送消息，大小: {len(raw_xml)} bytes")
-
-        # 2. 解密消息
-        crypto = get_wx_crypto()
-        if crypto:
-            try:
-                ret, decrypted_xml = crypto.DecryptMsg(raw_xml, msg_signature, timestamp, nonce)
-                if ret != 0:
-                    logger.error(f"[Trace-{trace_id}] 消息解密失败，错误码: {ret}")
-                    return PlainTextResponse("success")  # 防探测
-            except Exception as e:
-                logger.error(f"[Trace-{trace_id}] 解密异常: {e}")
-                return PlainTextResponse("success")  # 防探测
-        else:
-            allow_plaintext = os.environ.get("WECHAT_ALLOW_PLAINTEXT", "false").lower() == "true"
-            app_env = os.environ.get("APP_ENV", "dev").lower()
-            if not allow_plaintext or app_env in {"prod", "production"}:
-                logger.warning(f"[Trace-{trace_id}] 企微集成未配置，拒绝明文回调")
-                return PlainTextResponse("integration disabled", status_code=503)
-            try:
-                decrypted_xml = raw_xml.decode("utf-8")
-            except UnicodeDecodeError:
-                decrypted_xml = raw_xml.decode("utf-8", errors="replace")
-
-        # 3. 解析 XML 提取关键字段
-        try:
-            xml_tree = ET.fromstring(decrypted_xml)
-        except ET.ParseError as e:
-            logger.error(f"[Trace-{trace_id}] XML 解析失败: {e}")
-            return PlainTextResponse("success")
-
-        msg_type = xml_tree.findtext("MsgType", default="unknown")
-        from_user = xml_tree.findtext("FromUserName", default="unknown")
-
-        msg_id = xml_tree.findtext("MsgId")
-        if not msg_id:
-            create_time = xml_tree.findtext("CreateTime", default=str(int(time.time())))
-            msg_id = f"EVENT_{from_user}_{create_time}"
-
-        # 4. 消息过滤 - 拦截无效事件
-        if msg_type == "event":
-            event = xml_tree.findtext("Event", default="")
-            # 过滤掉进入会话等无用事件
-            if event in ("enter_agent", "unsubscribe"):
-                logger.debug(f"[Trace-{trace_id}] 拦截无效事件: {event}")
-                return PlainTextResponse("success")
-
-        external_tenant_id = xml_tree.findtext("ToUserName", default="").strip()
-        configured_corp_id = os.environ.get("WECHAT_CORP_ID", "").strip()
-        if not external_tenant_id:
-            external_tenant_id = configured_corp_id
-        if external_tenant_id != configured_corp_id:
-            logger.warning(f"[Trace-{trace_id}] 企微回调租户与当前应用配置不一致")
-            return PlainTextResponse("identity unavailable", status_code=403)
-
-        queue = getattr(request.app.state, "message_queue", None)
-        db_client = getattr(request.app.state, "db_client", None)
-        if queue is None or db_client is None:
-            logger.error(f"[Trace-{trace_id}] 统一消息入口依赖未初始化")
-            return PlainTextResponse("queue unavailable", status_code=503)
-
-        identity_rows = await db_client.fetch_all(
-            """
-            SELECT DISTINCT venue_id
-            FROM channel_identities
-            WHERE channel = 'WECOM' AND external_tenant_id = ?
-              AND external_user_id = ? AND status = 'ACTIVE'
-            """,
-            (external_tenant_id, from_user),
-        )
-        if len(identity_rows) != 1:
-            logger.warning(f"[Trace-{trace_id}] 企微外部身份未映射或映射不唯一")
-            return PlainTextResponse("identity unavailable", status_code=403)
-
-        event = xml_tree.findtext("Event", default="").strip()
-        content = xml_tree.findtext("Content", default="").strip()
-        if not content:
-            content = f"企微消息：{event or msg_type}"
-        external_conversation_id = (
-            xml_tree.findtext("ChatId", default="").strip()
-            or xml_tree.findtext("ConversationId", default="").strip()
-            or f"{external_tenant_id}:{from_user}"
-        )
-        metadata = {
-            "source": "wechat_webhook",
-            "message_type": msg_type,
-            "event": event,
-        }
-        for xml_field, metadata_key in (
-            ("MediaId", "external_media_id"),
-            ("PicUrl", "external_picture_url"),
-            ("Format", "media_format"),
-            ("Recognition", "voice_recognition"),
-        ):
-            value = xml_tree.findtext(xml_field, default="").strip()
-            if value:
-                metadata[metadata_key] = value
-
-        try:
-            accepted = await CanonicalMessageIngress(db_client, queue).accept(
-                IngressMessage(
-                    channel="WECOM",
-                    content=content,
-                    external_message_id=msg_id,
-                    external_conversation_id=external_conversation_id,
-                    external_tenant_id=external_tenant_id,
-                    external_user_id=from_user,
-                    metadata=metadata,
-                ),
-                actor={
-                    "user_id": "wechat-gateway",
-                    "username": "wechat-gateway",
-                    "role": "api",
-                    "venue_id": identity_rows[0]["venue_id"],
-                    "auth_type": "wechat_callback",
-                },
-            )
-        except CanonicalIngressError as ingress_exc:
-            global _queue_full_count
-            _queue_full_count += 1
-            logger.error(
-                f"[Trace-{trace_id}] 企微消息统一受理失败 "
-                f"[MsgId={msg_id}, Code={ingress_exc.code}, Count={_queue_full_count}]"
-            )
-            if ingress_exc.code.startswith("CHANNEL_IDENTITY"):
-                return PlainTextResponse("identity unavailable", status_code=ingress_exc.status_code)
-            return PlainTextResponse("queue unavailable", status_code=503)
-
-        latency_ms = (time.time() - start_time) * 1000
-        if not accepted.duplicate:
-            logger.info(
-                f"[Trace-{trace_id}] 📥 消息已通过统一入口受理 "
-                f"[MsgId={msg_id}, Type={msg_type}] | "
-                f"网关耗时: {latency_ms:.1f}ms"
-            )
-        else:
-            logger.info(
-                f"[Trace-{trace_id}] 企微重复消息已幂等接收 "
-                f"[MsgId={msg_id}] | 网关耗时: {latency_ms:.1f}ms"
-            )
-
-    except Exception as e:
-        logger.error(
-            f"[Trace-{trace_id}] 网关发生未捕获异常: {e}\n"
-            f"{traceback.format_exc()}"
-        )
-        # 全局防御兜底
-        return PlainTextResponse("success")
-
-    return PlainTextResponse("success")
+    readiness = wechat_integration_readiness()
+    logger.warning(f"[Trace-{trace_id}] 真实企微回调已按项目策略禁用")
+    return PlainTextResponse("integration disabled", status_code=503)
 
 
 # ==============================================================================

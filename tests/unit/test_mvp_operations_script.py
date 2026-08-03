@@ -340,7 +340,10 @@ def test_uat_bootstrap_uses_formal_api_script_and_external_secret():
 
     assert 'SecretName "uat_employee_password"' in bootstrap_source
     assert 'scripts\\set_uat_employee_secret.ps1' in bootstrap_source
-    assert '@("exec", "-T", "app", "python", "scripts/bootstrap_uat.py")' in bootstrap_source
+    assert '"scripts.unified_agent_uat.cli"' in bootstrap_source
+    assert '"bootstrap", "--run", $containerRun' in bootstrap_source
+    assert "uat-baseline.json" in bootstrap_source
+    assert "UatRun is required" in bootstrap_source
     assert "psql" not in bootstrap_source
     assert "DELETE FROM" not in bootstrap_source
 

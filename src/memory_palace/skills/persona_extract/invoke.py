@@ -15,7 +15,7 @@
          ↓
     第一人称格式化 + 标注来源
          ↓
-    send_wechat_message()
+    返回统一助手，由企微模拟器展示
 
 Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 """

@@ -435,7 +435,7 @@ async def _resolve_employee_principal(
               FROM channel_identities ci
               WHERE ci.venue_id = u.venue_id
                 AND ci.user_id = u.id
-                AND ci.channel = 'WECOM'
+                AND ci.channel = 'WECOM_SIMULATOR'
                 AND ci.status = 'ACTIVE'
           )
         """,

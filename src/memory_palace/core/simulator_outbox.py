@@ -84,7 +84,7 @@ async def _active_recipient(
         SELECT id
         FROM channel_identities
         WHERE venue_id = ? AND user_id = ?
-          AND channel = 'WECOM' AND status = 'ACTIVE'
+          AND channel = 'WECOM_SIMULATOR' AND status = 'ACTIVE'
         ORDER BY updated_at DESC, id DESC
         LIMIT 1
         """,

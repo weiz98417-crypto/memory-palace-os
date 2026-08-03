@@ -45,7 +45,7 @@ async def _simulator_owner(db, principal: dict[str, str], user_id: str) -> dict[
           AND EXISTS (
               SELECT 1 FROM channel_identities AS identity
               WHERE identity.venue_id = employee.venue_id AND identity.user_id = employee.id
-                AND identity.channel = 'WECOM' AND identity.status = 'ACTIVE'
+                AND identity.channel = 'WECOM_SIMULATOR' AND identity.status = 'ACTIVE'
           )
         """,
         (user_id, principal["venue_id"]),

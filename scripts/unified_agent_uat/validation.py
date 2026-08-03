@@ -192,6 +192,40 @@ def _validate_registry(
             errors.append(f"journey {journey_id} is READY without current-run evidence")
 
 
+def _validate_baseline(run_path: Path, manifest: dict[str, Any], errors: list[str]) -> None:
+    baseline = manifest.get("baseline")
+    if baseline is None:
+        return
+    if not isinstance(baseline, dict):
+        errors.append("manifest baseline must be an object")
+        return
+    baseline_path = _resolve_evidence_path(
+        run_path,
+        baseline.get("path"),
+        errors,
+        "UAT baseline",
+    )
+    if baseline_path is None:
+        return
+    if baseline.get("sha256") != _sha256(baseline_path):
+        errors.append("UAT baseline checksum does not match")
+    snapshot = _load_object(baseline_path, errors)
+    if snapshot is None:
+        return
+    channel = snapshot.get("channel")
+    if channel != {
+        "mode": "WECOM_SIMULATOR_ONLY",
+        "identity_channel": "WECOM_SIMULATOR",
+        "real_wecom_enabled": False,
+    }:
+        errors.append("UAT baseline channel is not simulator-only")
+    process_counts = snapshot.get("process_counts")
+    if not isinstance(process_counts, dict) or not process_counts:
+        errors.append("UAT baseline has no process counts")
+    elif any(not isinstance(value, int) or value != 0 for value in process_counts.values()):
+        errors.append("UAT baseline contains business process data")
+
+
 def _validate_sensitive_fields(run_path: Path, errors: list[str]) -> None:
     for path in sorted(run_path.rglob("*.json")):
         value = _load_object(path, errors)
@@ -234,6 +268,7 @@ def validate_evidence(run_directory: Path, *, registry_path: Path | None = None)
         "real_wecom_enabled"
     ) is not False:
         errors.append("manifest channel must remain WECOM_SIMULATOR_ONLY with real WeCom disabled")
+    _validate_baseline(run_path, manifest, errors)
 
     steps = manifest.get("steps")
     passed_steps: set[str] = set()

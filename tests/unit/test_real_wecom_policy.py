@@ -45,6 +45,21 @@ def test_real_wecom_client_factory_never_initializes_transport(monkeypatch):
     assert wechat_module.get_wechat_client() is None
 
 
+def test_real_wecom_client_cannot_be_constructed_directly():
+    import src.memory_palace.tools.wechat_client as wechat_module
+
+    try:
+        wechat_module.WeChatWorkClient(
+            corpid="configured-corp",
+            corpsecret="configured-secret",
+            agentid=1000002,
+        )
+    except RuntimeError as exc:
+        assert "企微模拟器" in str(exc)
+    else:
+        raise AssertionError("real WeCom transport must reject direct construction")
+
+
 def test_registry_treats_real_wecom_safe_disable_as_satisfied_but_never_ready():
     registry = load_feature_registry()
     declared = next(item for item in registry["items"] if item["id"] == "MVP-INTEGRATION-WECHAT")

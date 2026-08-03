@@ -8,7 +8,6 @@
 Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
 """
 
-import os
 import time
 import yaml
 from pathlib import Path
@@ -346,60 +345,13 @@ class ContextTriggerSkill(BaseAgentSkill):
         severity: str,
         trace_id: str,
     ) -> bool:
-        """
-        触发 WeChat 推送 + 延迟确认卡片
+        """Keep the legacy direct-push seam disabled by project policy."""
 
-        流程：
-        1. 立即发送事件推送卡片
-        2. 延迟 confirm_delay_seconds 后发送确认卡片
-        """
-        try:
-            from ...tools.wechat_client import get_wechat_client
-        except ImportError:
-            logger.warning("wechat_client 未导入，跳过 WeChat 推送")
-            return False
-
-        wc = get_wechat_client()
-        if not wc:
-            logger.warning("wechat_client 未初始化，跳过 WeChat 推送")
-            return False
-
-        confirm_card_cfg = self.config.get("confirm_card", {})
-        confirm_delay = self.config.get("confirm_delay_seconds", 180)
-
-        # 生成推送卡片内容
-        push_title = f"🚨 [{severity}] {event_type}事件"
-        push_desc = raw_text[:100] + ("..." if len(raw_text) > 100 else "")
-
-        # 1. 立即发送事件推送
-        push_ok = await wc.send_textcard(
-            to_user=from_user,
-            title=push_title,
-            description=push_desc,
-            url=os.getenv("CT_PUSH_URL", "http://localhost:8000/admin"),
-            btntxt="查看详情",
+        logger.debug(
+            "[Trace-{}] ContextTrigger 直推已禁用；通知仅由企微模拟器业务链产生",
+            trace_id,
         )
-
-        if push_ok:
-            logger.info(f"[Trace-{trace_id}] 事件推送卡片已发送: to={from_user}")
-        else:
-            logger.warning(f"[Trace-{trace_id}] 事件推送卡片发送失败: to={from_user}")
-
-        # 2. 延迟发送确认卡片（asyncio task，不阻塞）
-        if push_ok and confirm_card_cfg.get("enabled", True):
-            import asyncio
-            asyncio.create_task(
-                self._send_delayed_confirm_card(
-                    to_user=from_user,
-                    event_summary=f"[{severity}] {event_type} - {raw_text[:20]}",
-                    event_type=event_type,
-                    severity=severity,
-                    delay_seconds=confirm_delay,
-                    trace_id=trace_id,
-                )
-            )
-
-        return bool(push_ok)
+        return False
 
     async def _send_delayed_confirm_card(
         self,
@@ -410,40 +362,11 @@ class ContextTriggerSkill(BaseAgentSkill):
         delay_seconds: int,
         trace_id: str,
     ) -> None:
-        """
-        延迟发送确认卡片（协程任务）
+        """Remain a no-op so old scheduled calls cannot reach real WeCom."""
 
-        Args:
-            delay_seconds: 延迟秒数
-        """
-        import asyncio
-        await asyncio.sleep(delay_seconds)
-
-        try:
-            from ...tools.wechat_client import get_wechat_client
-        except ImportError:
-            return
-
-        wc = get_wechat_client()
-        if not wc:
-            return
-
-        # 构建确认卡片内容（使用交互卡片 URL 模式）
-        base_url = os.getenv("CT_CALLBACK_URL", "http://localhost:8000/webhook/v1/callback")
-        confirm_url = f"{base_url}/confirm?user={to_user}&action=confirm"
-        supplement_url = f"{base_url}/confirm?user={to_user}&action=supplement"
-
-        ok = await wc.send_confirm_card(
-            to_user=to_user,
-            push_id="",  # push_id 由回调时传入
-            event_summary=event_summary,
-            event_type=event_type,
-            severity=severity,
-            confirm_url=confirm_url,
-            supplement_url=supplement_url,
+        logger.debug(
+            "[Trace-{}] 延迟确认卡直推已禁用；目标用户={}，延迟={}s",
+            trace_id,
+            to_user,
+            delay_seconds,
         )
-
-        if ok:
-            logger.info(f"[Trace-{trace_id}] 确认卡片已发送: to={to_user}, delay={delay_seconds}s")
-        else:
-            logger.warning(f"[Trace-{trace_id}] 确认卡片发送失败: to={to_user}")

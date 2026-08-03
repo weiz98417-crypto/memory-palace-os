@@ -16,7 +16,7 @@ from .attachments import (
 )
 
 
-SUPPORTED_CHANNELS = {"WEB", "WECOM_SIMULATOR", "WECOM"}
+SUPPORTED_CHANNELS = {"WEB", "WECOM_SIMULATOR"}
 _SESSION_NAMESPACE = uuid.UUID("6a8cae5c-7dd7-4dbc-a244-8a10792dde32")
 
 
@@ -297,7 +297,7 @@ class CanonicalMessageIngress:
                 """
                 SELECT external_tenant_id, external_user_id
                 FROM channel_identities
-                WHERE venue_id = ? AND user_id = ? AND channel = 'WECOM'
+                WHERE venue_id = ? AND user_id = ? AND channel = 'WECOM_SIMULATOR'
                   AND status = 'ACTIVE'
                 ORDER BY updated_at DESC
                 LIMIT 1
@@ -318,54 +318,6 @@ class CanonicalMessageIngress:
                 "status": row["status"],
                 "external_tenant_id": binding["external_tenant_id"],
                 "external_user_id": binding["external_user_id"],
-            }
-
-        if channel == "WECOM":
-            if actor.get("role") != "api":
-                raise CanonicalIngressError(
-                    "WECOM_ADAPTER_FORBIDDEN",
-                    "Channel API access is required.",
-                    status_code=403,
-                )
-            if not message.external_tenant_id or not message.external_user_id:
-                raise CanonicalIngressError(
-                    "CHANNEL_IDENTITY_REQUIRED",
-                    "The external tenant and user identity are required.",
-                    status_code=422,
-                )
-            row = await self._db.fetch_one(
-                """
-                SELECT u.id, u.display_name, u.role, u.venue_id,
-                       u.status AS user_status, ci.status AS identity_status
-                FROM channel_identities ci
-                JOIN users u ON u.id = ci.user_id AND u.venue_id = ci.venue_id
-                WHERE ci.venue_id = ? AND ci.channel = 'WECOM'
-                  AND ci.external_tenant_id = ? AND ci.external_user_id = ?
-                """,
-                (
-                    actor["venue_id"],
-                    message.external_tenant_id,
-                    message.external_user_id,
-                ),
-            )
-            if not row:
-                raise CanonicalIngressError(
-                    "CHANNEL_IDENTITY_NOT_FOUND",
-                    "The external identity is not mapped.",
-                    status_code=404,
-                )
-            if row["identity_status"] != "ACTIVE" or row["user_status"] != "ACTIVE":
-                raise CanonicalIngressError(
-                    "CHANNEL_IDENTITY_INACTIVE",
-                    "The external identity is inactive.",
-                    status_code=403,
-                )
-            return {
-                "user_id": row["id"],
-                "display_name": row["display_name"],
-                "role": row["role"],
-                "venue_id": row["venue_id"],
-                "status": "ACTIVE",
             }
 
         if channel != "WEB":

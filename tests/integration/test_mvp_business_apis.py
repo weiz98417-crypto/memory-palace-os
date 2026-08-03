@@ -9,6 +9,7 @@ from fastapi import FastAPI
 
 from src.memory_palace.api.v1.endpoints.admin import router as admin_router
 from src.memory_palace.api.v1.endpoints.auth import bootstrap_identity_store, router as auth_router
+from src.memory_palace.api.v1.endpoints.channels import router as channels_router
 from src.memory_palace.api.v1.endpoints.knowledge import router as knowledge_router
 from src.memory_palace.api.v1.endpoints.management import router as management_router
 from src.memory_palace.api.v1.endpoints.sessions import router as sessions_router
@@ -93,6 +94,7 @@ async def build_app(tmp_path, monkeypatch):
     app.state.task_graph = task_graph
     app.state.scheduler = scheduler
     app.include_router(auth_router, prefix="/auth")
+    app.include_router(channels_router, prefix="/channels")
     app.include_router(admin_router, prefix="/admin")
     app.include_router(management_router, prefix="/admin")
     app.include_router(workflows_router, prefix="/admin")
@@ -445,6 +447,48 @@ async def test_user_master_data_preserves_department_and_job_title(tmp_path, mon
     listed_user = next(item for item in listed.json()["users"] if item["id"] == user["id"])
     assert listed_user["department"] == "运营保障部"
     assert listed_user["job_title"] == "设备专家"
+    await database.close()
+
+
+@pytest.mark.asyncio
+async def test_uat_baseline_is_read_only_sanitized_and_simulator_only(tmp_path, monkeypatch):
+    app, database, _, _ = await build_app(tmp_path, monkeypatch)
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        admin_headers = await login(client, "mvp-admin", "Mvp-Admin-Password-2026")
+        operator = await create_user(
+            client,
+            admin_headers,
+            username="uat-operator",
+            role="operator",
+        )
+        mapped = await client.post(
+            "/channels/identities",
+            headers=admin_headers,
+            json={
+                "channel": "WECOM_SIMULATOR",
+                "external_tenant_id": "simulator-tenant-alpha",
+                "external_user_id": "simulator-uat-operator",
+                "user_id": operator["id"],
+            },
+        )
+        assert mapped.status_code == 201, mapped.text
+        snapshot = await client.get("/admin/uat-baseline", headers=admin_headers)
+
+    assert snapshot.status_code == 200, snapshot.text
+    payload = snapshot.json()
+    assert payload["channel"] == {
+        "mode": "WECOM_SIMULATOR_ONLY",
+        "identity_channel": "WECOM_SIMULATOR",
+        "real_wecom_enabled": False,
+    }
+    assert {identity["channel"] for identity in payload["master_data"]["simulator_identities"]} == {
+        "WECOM_SIMULATOR"
+    }
+    assert payload["process_counts"] and set(payload["process_counts"].values()) == {0}
+    assert "password_hash" not in snapshot.text
+    assert "Mvp-Admin-Password-2026" not in snapshot.text
     await database.close()
 
 
