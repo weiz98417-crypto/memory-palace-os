@@ -132,15 +132,12 @@ class _ExpertSpec:
 @dataclass(frozen=True)
 class _InterviewSpec:
     key: str
+    event_key: str
     expert_username: str
     title: str
     desired_interview_status: str
     desired_card_status: Optional[str]
     answers: tuple[str, str, str, str]
-
-    @property
-    def source_id(self) -> str:
-        return f"{SHOWCASE_SOURCE_PREFIX}interview:{self.key}"
 
 
 @dataclass(frozen=True)
@@ -379,6 +376,7 @@ SHOWCASE_EXPERTS = (
 SHOWCASE_INTERVIEWS = (
     _InterviewSpec(
         "vehicle-rain-reopen",
+        "shuttle-brake",
         "zhang-jianguo",
         "观光车雨后复运的三轮空载验证",
         "COMPLETED",
@@ -392,6 +390,7 @@ SHOWCASE_INTERVIEWS = (
     ),
     _InterviewSpec(
         "ropeway-bearing-noise",
+        "ropeway-power",
         "chen-yu",
         "索道驱动轮异响的停机判断",
         "COMPLETED",
@@ -405,6 +404,7 @@ SHOWCASE_INTERVIEWS = (
     ),
     _InterviewSpec(
         "east-gate-crowd-control",
+        "east-gate-crowd",
         "zhou-qi",
         "东门排队外溢前的分流信号",
         "COMPLETED",
@@ -418,6 +418,7 @@ SHOWCASE_INTERVIEWS = (
     ),
     _InterviewSpec(
         "food-complaint-escalation",
+        "food-complaint",
         "wang-fang",
         "食品安全投诉从服务问题升级为事件的条件",
         "COMPLETED",
@@ -431,6 +432,7 @@ SHOWCASE_INTERVIEWS = (
     ),
     _InterviewSpec(
         "experience-quality-review",
+        "experience-review",
         "zhao-min",
         "专家经验卡发布前的证据质量判断",
         "COMPLETED",
@@ -444,6 +446,7 @@ SHOWCASE_INTERVIEWS = (
     ),
     _InterviewSpec(
         "night-clearance-signoff",
+        "night-access",
         "chen-yu",
         "夜间设备区清场的双人签退方法",
         "COMPLETED",
@@ -457,6 +460,7 @@ SHOWCASE_INTERVIEWS = (
     ),
     _InterviewSpec(
         "peak-radio-protocol",
+        "peak-radio",
         "wang-fang",
         "高峰期对讲机信息压缩与复述",
         "IN_PROGRESS",
@@ -470,6 +474,7 @@ SHOWCASE_INTERVIEWS = (
     ),
     _InterviewSpec(
         "group-arrival-staging",
+        "group-arrival",
         "zhou-qi",
         "大型团队集中到达的落客区预排",
         "INVITED",
@@ -491,6 +496,9 @@ SHOWCASE_EVENTS = (
     _EventSpec("food-complaint", "餐饮街两组游客在相近时段反馈腹痛，其中一人已前往医务室，需封存同批次食品并核对销售记录。", "食品安全", "P1", "wang-fang"),
     _EventSpec("night-access", "闭园清场时发现西区设备夹层检修门未上锁，附近留有工具箱，现场已设置临时警戒。", "安全隐患", "P2", "chen-yu"),
     _EventSpec("lost-child", "游客服务中心接报一名 7 岁儿童在中心湖附近与家人走散，已取得衣着信息和近期照片。", "游客求助", "P1", "zhou-qi"),
+    _EventSpec("experience-review", "中心湖儿童走失事件复盘材料已汇总，但经验草稿缺少广播脱敏反例和门岗接收记录，需要知识负责人补充证据后再发布。", "复盘改进", "P2", "zhao-min"),
+    _EventSpec("peak-radio", "索道停运协同期间公共频道连续出现重复询问和位置描述不清，影响设备、客服与接驳组确认处置进展。", "协同异常", "P2", "wang-fang"),
+    _EventSpec("group-arrival", "北门落客区预计半小时内集中到达四支大型团队，共约 620 人，需要提前划分批次、集合点和备用落客区。", "客流预警", "P2", "zhou-qi"),
 )
 
 
@@ -549,6 +557,21 @@ async def _assert_simulator_only(api: _FormalAPI) -> None:
         "real_wecom_enabled": False,
     }:
         raise UATShowcaseError("展示数据只允许写入企业内部系统接入环境，当前渠道策略不符合要求")
+
+
+async def _list_all(api: _FormalAPI, path: str, key: str) -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+    offset = 0
+    while True:
+        page_path = f"{path}?limit=500" + (f"&offset={offset}" if offset else "")
+        payload = await api.request("GET", page_path)
+        page = payload.get(key) if isinstance(payload, dict) else None
+        if not isinstance(page, list):
+            raise UATShowcaseError(f"{key} 列表接口返回格式不正确")
+        items.extend(page)
+        if len(page) < 500:
+            return items
+        offset += len(page)
 
 
 async def _seed_knowledge(api: _FormalAPI) -> tuple[int, int]:
@@ -624,10 +647,9 @@ async def _seed_sops(api: _FormalAPI) -> tuple[int, int]:
 
 async def _seed_experts(api: _FormalAPI) -> tuple[dict[str, dict[str, Any]], int]:
     users_payload = await api.request("GET", "/api/v1/admin/users")
-    expert_payload = await api.request("GET", "/api/v1/admin/experts")
     users = users_payload.get("users") if isinstance(users_payload, dict) else None
-    experts = expert_payload.get("experts") if isinstance(expert_payload, dict) else None
-    if not isinstance(users, list) or not isinstance(experts, list):
+    experts = await _list_all(api, "/api/v1/admin/experts", "experts")
+    if not isinstance(users, list):
         raise UATShowcaseError("专家或用户列表接口返回格式不正确")
     users_by_username = {str(item.get("username") or "").lower(): item for item in users}
     experts_by_user_id = {item.get("user_id"): item for item in experts}
@@ -740,18 +762,25 @@ async def _advance_interview(
     return interview, existing_card, card_created
 
 
-async def _seed_experiences(api: _FormalAPI, venue_id: str) -> tuple[dict[str, int], dict[str, int]]:
+async def _seed_experiences(
+    api: _FormalAPI,
+    venue_id: str,
+    event_by_key: Mapping[str, dict[str, Any]],
+) -> tuple[dict[str, int], dict[str, int]]:
     experts, experts_created = await _seed_experts(api)
-    interview_payload = await api.request("GET", "/api/v1/admin/experience-interviews")
-    card_payload = await api.request("GET", "/api/v1/admin/experience-cards")
-    interviews = interview_payload.get("interviews") if isinstance(interview_payload, dict) else None
-    cards = card_payload.get("experience_cards") if isinstance(card_payload, dict) else None
-    if not isinstance(interviews, list) or not isinstance(cards, list):
-        raise UATShowcaseError("访谈或经验卡列表接口返回格式不正确")
-    interviews_by_source_id = {
-        str(item.get("source_event_id") or ""): item
+    interviews = await _list_all(
+        api,
+        "/api/v1/admin/experience-interviews",
+        "interviews",
+    )
+    cards = await _list_all(api, "/api/v1/admin/experience-cards", "experience_cards")
+    interviews_by_identity = {
+        (
+            str(item.get("source_event_id") or ""),
+            str(item.get("title") or ""),
+            str(item.get("expert_id") or ""),
+        ): item
         for item in interviews
-        if str(item.get("source_event_id") or "").startswith(f"{SHOWCASE_SOURCE_PREFIX}interview:")
     }
     cards_by_interview = {
         str((item.get("source") or {}).get("interview_id") or ""): item
@@ -761,7 +790,12 @@ async def _seed_experiences(api: _FormalAPI, venue_id: str) -> tuple[dict[str, i
     cards_created = 0
     for spec in SHOWCASE_INTERVIEWS:
         expert = experts[spec.expert_username]
-        interview = interviews_by_source_id.get(spec.source_id)
+        event = event_by_key.get(spec.event_key)
+        if event is None or not event.get("event_id"):
+            raise UATShowcaseError(f"展示访谈缺少来源事件：{spec.event_key}")
+        source_event_id = str(event["event_id"])
+        identity = (source_event_id, spec.title, str(expert["id"]))
+        interview = interviews_by_identity.get(identity)
         if interview is None:
             response = await api.request(
                 "POST",
@@ -769,7 +803,7 @@ async def _seed_experiences(api: _FormalAPI, venue_id: str) -> tuple[dict[str, i
                 body={
                     "expert_id": expert["id"],
                     "title": spec.title,
-                    "source_event_id": spec.source_id,
+                    "source_event_id": source_event_id,
                     "authorization_scopes": [{"scope_type": "VENUE", "scope_value": venue_id}],
                 },
             )
@@ -783,7 +817,13 @@ async def _seed_experiences(api: _FormalAPI, venue_id: str) -> tuple[dict[str, i
             existing_card=card,
         )
         cards_created += int(was_created)
-        interviews_by_source_id[spec.source_id] = interview
+        interviews_by_identity[
+            (
+                str(interview.get("source_event_id") or source_event_id),
+                spec.title,
+                str(expert["id"]),
+            )
+        ] = interview
         if card is not None:
             cards_by_interview[str(interview["id"])] = card
     counts = {
@@ -828,14 +868,57 @@ async def _advance_task(api: _FormalAPI, task: dict[str, Any], desired_status: s
 
 async def _seed_operational_targets(
     api: _FormalAPI,
+    seeded_events: Optional[tuple[dict[str, dict[str, Any]], int, int]] = None,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, int], dict[str, int]]:
+    if seeded_events is None:
+        event_by_key, events_count, events_created = await _seed_showcase_events(api)
+    else:
+        event_by_key, events_count, events_created = seeded_events
     users = await _showcase_users(api)
-    event_payload = await api.request("GET", "/api/v1/admin/events?limit=500")
-    task_payload = await api.request("GET", "/api/v1/admin/tasks?limit=500")
-    events = event_payload.get("events") if isinstance(event_payload, dict) else None
-    tasks = task_payload.get("tasks") if isinstance(task_payload, dict) else None
-    if not isinstance(events, list) or not isinstance(tasks, list):
-        raise UATShowcaseError("事件或任务列表接口返回格式不正确")
+    tasks = await _list_all(api, "/api/v1/admin/tasks", "tasks")
+
+    tasks_by_session_id = {
+        str(item.get("session_id") or ""): item
+        for item in tasks
+        if str(item.get("session_id") or "").startswith("showcase-task-")
+    }
+    task_by_key: dict[str, dict[str, Any]] = {}
+    tasks_created = 0
+    for spec in SHOWCASE_TASKS:
+        assignee = users.get(spec.assignee_username)
+        if assignee is None:
+            raise UATShowcaseError(f"缺少任务责任人账号：{spec.assignee_username}")
+        task_session_id = f"showcase-task-{spec.key}"
+        task = tasks_by_session_id.get(task_session_id)
+        if task is None:
+            dependency_ids = [str(task_by_key[key]["id"]) for key in spec.dependencies]
+            response = await api.request(
+                "POST",
+                "/api/v1/admin/tasks",
+                body={
+                    "session_id": task_session_id,
+                    "event_id": str(event_by_key[spec.event_key]["event_id"]),
+                    "description": spec.description,
+                    "dependencies": dependency_ids,
+                    "assigned_user_id": str(assignee["id"]),
+                    "assigned_agent": "TodoWrite",
+                    "max_attempts": 3,
+                },
+            )
+            task = response["task"]
+            tasks_created += 1
+        task = await _advance_task(api, task, spec.desired_status)
+        task_by_key[spec.key] = task
+    counts = {"events": events_count, "tasks": len(SHOWCASE_TASKS)}
+    created = {"events": events_created, "tasks": tasks_created}
+    return event_by_key, counts, created
+
+
+async def _seed_showcase_events(
+    api: _FormalAPI,
+) -> tuple[dict[str, dict[str, Any]], int, int]:
+    users = await _showcase_users(api)
+    events = await _list_all(api, "/api/v1/admin/events", "events")
     events_by_source_id = {
         str(item.get("push_id") or ""): item
         for item in events
@@ -871,46 +954,16 @@ async def _seed_operational_targets(
             }
             events_created += 1
         event_by_key[spec.key] = event
-
-    tasks_by_session_id = {
-        str(item.get("session_id") or ""): item
-        for item in tasks
-        if str(item.get("session_id") or "").startswith("showcase-task-")
-    }
-    task_by_key: dict[str, dict[str, Any]] = {}
-    tasks_created = 0
-    for spec in SHOWCASE_TASKS:
-        assignee = users.get(spec.assignee_username)
-        if assignee is None:
-            raise UATShowcaseError(f"缺少任务责任人账号：{spec.assignee_username}")
-        task_session_id = f"showcase-task-{spec.key}"
-        task = tasks_by_session_id.get(task_session_id)
-        if task is None:
-            dependency_ids = [str(task_by_key[key]["id"]) for key in spec.dependencies]
-            response = await api.request(
-                "POST",
-                "/api/v1/admin/tasks",
-                body={
-                    "session_id": task_session_id,
-                    "event_id": str(event_by_key[spec.event_key]["event_id"]),
-                    "description": spec.description,
-                    "dependencies": dependency_ids,
-                    "assigned_user_id": str(assignee["id"]),
-                    "assigned_agent": "TodoWrite",
-                    "max_attempts": 3,
-                },
-            )
-            task = response["task"]
-            tasks_created += 1
-        task = await _advance_task(api, task, spec.desired_status)
-        task_by_key[spec.key] = task
-    counts = {"events": len(SHOWCASE_EVENTS), "tasks": len(SHOWCASE_TASKS)}
-    created = {"events": events_created, "tasks": tasks_created}
-    return event_by_key, counts, created
+    return event_by_key, len(SHOWCASE_EVENTS), events_created
 
 
-async def _seed_watcher(api: _FormalAPI) -> tuple[dict[str, int], dict[str, int]]:
-    event_by_key, counts, created = await _seed_operational_targets(api)
+async def _seed_watcher(
+    api: _FormalAPI,
+    operational_targets: Optional[
+        tuple[dict[str, dict[str, Any]], dict[str, int], dict[str, int]]
+    ] = None,
+) -> tuple[dict[str, int], dict[str, int]]:
+    event_by_key, counts, created = operational_targets or await _seed_operational_targets(api)
     users = await _showcase_users(api)
     policy_payload = await api.request("GET", "/api/v1/admin/watcher/policies")
     run_payload = await api.request("GET", "/api/v1/admin/watcher/runs?limit=500")
@@ -1055,6 +1108,17 @@ async def seed_uat_showcase_data(
     try:
         principal = await api.login(config.admin_username, config.admin_password)
         await _assert_simulator_only(api)
+        seeded_events = None
+        operational_targets = None
+        if "watcher" in selected:
+            operational_targets = await _seed_operational_targets(api)
+            seeded_events = (
+                operational_targets[0],
+                operational_targets[1]["events"],
+                operational_targets[2]["events"],
+            )
+        elif "experiences" in selected:
+            seeded_events = await _seed_showcase_events(api)
         if "knowledge" in selected:
             counts["knowledge"], created["knowledge"] = await _seed_knowledge(api)
         if "sops" in selected:
@@ -1063,11 +1127,19 @@ async def seed_uat_showcase_data(
             venue_id = str(principal.get("venue_id") or "")
             if not venue_id:
                 raise UATShowcaseError("管理员身份缺少场地范围")
-            experience_counts, experience_created = await _seed_experiences(api, venue_id)
+            assert seeded_events is not None
+            experience_counts, experience_created = await _seed_experiences(
+                api,
+                venue_id,
+                seeded_events[0],
+            )
+            if "watcher" not in selected:
+                counts["events"] = seeded_events[1]
+                created["events"] = seeded_events[2]
             counts.update(experience_counts)
             created.update(experience_created)
         if "watcher" in selected:
-            watcher_counts, watcher_created = await _seed_watcher(api)
+            watcher_counts, watcher_created = await _seed_watcher(api, operational_targets)
             counts.update(watcher_counts)
             created.update(watcher_created)
         return UATShowcaseResult(counts=counts, created=created)

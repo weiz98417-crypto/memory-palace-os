@@ -105,13 +105,13 @@ class ShowcaseKnowledgeAPI:
         if method == "GET" and path == "/api/v1/admin/users":
             return self.ok(request, {"users": self.users})
         if method == "GET" and path == "/api/v1/admin/experts":
-            return self.ok(request, {"experts": self.experts})
+            return self.ok(request, {"experts": self._page(request, self.experts)})
         if method == "POST" and path == "/api/v1/admin/experts":
             expert = {"id": f"expert-{len(self.experts) + 1}", "status": "ACTIVE", **body}
             self.experts.append(expert)
             return self.ok(request, {"expert": expert})
         if method == "GET" and path == "/api/v1/admin/experience-interviews":
-            return self.ok(request, {"interviews": self.interviews})
+            return self.ok(request, {"interviews": self._page(request, self.interviews)})
         if method == "POST" and path == "/api/v1/admin/experience-interviews":
             expert = next(item for item in self.experts if item["id"] == body["expert_id"])
             interview = {
@@ -154,7 +154,7 @@ class ShowcaseKnowledgeAPI:
             interview["status"] = "COMPLETED"
             return self.ok(request, {"card": existing, "idempotent_replay": False})
         if method == "GET" and path == "/api/v1/admin/experience-cards":
-            return self.ok(request, {"experience_cards": self.cards})
+            return self.ok(request, {"experience_cards": self._page(request, self.cards)})
         if method == "POST" and path.endswith("/confirm") and "/experience/cards/" in path:
             card = self._card(path)
             card["status"] = "EXPERT_CONFIRMED"
@@ -168,7 +168,7 @@ class ShowcaseKnowledgeAPI:
             card["status"] = "PUBLISHED"
             return self.ok(request, {"card": card})
         if method == "GET" and path == "/api/v1/admin/events":
-            return self.ok(request, {"events": self.events})
+            return self.ok(request, {"events": self._page(request, self.events)})
         if method == "POST" and path == "/api/v1/admin/events":
             source_id = body.pop("source_id", None)
             event = {
@@ -180,7 +180,7 @@ class ShowcaseKnowledgeAPI:
             self.events.append(event)
             return self.ok(request, {"event_id": event["event_id"], "status": "created"})
         if method == "GET" and path == "/api/v1/admin/tasks":
-            return self.ok(request, {"tasks": self.tasks})
+            return self.ok(request, {"tasks": self._page(request, self.tasks)})
         if method == "POST" and path == "/api/v1/admin/tasks":
             task = {
                 "id": f"task-{len(self.tasks) + 1}",
@@ -295,6 +295,12 @@ class ShowcaseKnowledgeAPI:
         self.findings.append(finding)
         return finding
 
+    @staticmethod
+    def _page(request: httpx.Request, items: list[dict]) -> list[dict]:
+        offset = int(request.url.params.get("offset", "0"))
+        limit = int(request.url.params.get("limit", "100"))
+        return items[offset : offset + limit]
+
 
 @pytest.mark.asyncio
 async def test_showcase_knowledge_is_repeatable_and_uses_only_formal_apis() -> None:
@@ -399,9 +405,9 @@ async def test_showcase_experiences_cover_experts_interviews_and_card_states() -
         first = await seed_uat_showcase_data(config, client=client, sections=("experiences",))
         second = await seed_uat_showcase_data(config, client=client, sections=("experiences",))
 
-    assert first.created == {"experts": 5, "interviews": 8, "experience_cards": 6}
-    assert second.created == {"experts": 0, "interviews": 0, "experience_cards": 0}
-    assert second.counts == {"experts": 5, "interviews": 8, "experience_cards": 6}
+    assert first.created == {"events": 9, "experts": 5, "interviews": 8, "experience_cards": 6}
+    assert second.created == {"events": 0, "experts": 0, "interviews": 0, "experience_cards": 0}
+    assert second.counts == {"events": 9, "experts": 5, "interviews": 8, "experience_cards": 6}
     assert len(state.experts) == 5
     assert len(state.interviews) == 8
     assert len(state.cards) == 6
@@ -413,6 +419,51 @@ async def test_showcase_experiences_cover_experts_interviews_and_card_states() -
         status: sum(item["status"] == status for item in state.cards)
         for status in {"DRAFT", "EXPERT_CONFIRMED", "IN_REVIEW", "PUBLISHED"}
     } == {"DRAFT": 2, "EXPERT_CONFIRMED": 1, "IN_REVIEW": 1, "PUBLISHED": 2}
+    event_ids = {item["event_id"] for item in state.events}
+    assert event_ids
+    assert all(item["source_event_id"] in event_ids for item in state.interviews)
+
+
+@pytest.mark.asyncio
+async def test_showcase_experiences_scan_beyond_default_list_page_without_duplicates() -> None:
+    state = ShowcaseKnowledgeAPI()
+    config = UATShowcaseConfig(
+        base_url="http://uat",
+        admin_username="uat-admin",
+        admin_password="admin-secret-password",
+    )
+
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(state.response),
+        base_url=config.base_url,
+    ) as client:
+        await seed_uat_showcase_data(config, client=client, sections=("experiences",))
+        state.experts[0:0] = [
+            {"id": f"expert-filler-{index}", "user_id": f"user-filler-{index}"}
+            for index in range(500)
+        ]
+        state.interviews[0:0] = [
+            {"id": f"interview-filler-{index}", "source_event_id": f"event-filler-{index}"}
+            for index in range(500)
+        ]
+        state.cards[0:0] = [
+            {"id": f"card-filler-{index}", "source": {"interview_id": f"interview-filler-{index}"}}
+            for index in range(500)
+        ]
+        state.calls.clear()
+
+        result = await seed_uat_showcase_data(config, client=client, sections=("experiences",))
+
+    assert result.created == {"events": 0, "experts": 0, "interviews": 0, "experience_cards": 0}
+    assert len(state.experts) == 505
+    assert len(state.interviews) == 508
+    assert len(state.cards) == 506
+    assert ("GET", "/api/v1/admin/experts?limit=500") in state.calls
+    assert ("GET", "/api/v1/admin/experts?limit=500&offset=500") in state.calls
+    assert ("GET", "/api/v1/admin/experience-interviews?limit=500") in state.calls
+    assert ("GET", "/api/v1/admin/experience-interviews?limit=500&offset=500") in state.calls
+    assert ("GET", "/api/v1/admin/experience-cards?limit=500") in state.calls
+    assert ("GET", "/api/v1/admin/experience-cards?limit=500&offset=500") in state.calls
 
 
 @pytest.mark.asyncio
@@ -448,6 +499,44 @@ async def test_showcase_experiences_do_not_advance_same_title_business_interview
 
 
 @pytest.mark.asyncio
+async def test_showcase_experiences_do_not_reuse_another_interview_for_same_event() -> None:
+    state = ShowcaseKnowledgeAPI()
+    state.events.append(
+        {
+            "event_id": "event-showcase-shuttle",
+            "push_id": "showcase:event:shuttle-brake",
+            "status": "OPEN",
+        }
+    )
+    business_interview = {
+        "id": "interview-business",
+        "business_id": "FT-BUSINESS",
+        "expert_id": "expert-business",
+        "expert_user_id": "user-business",
+        "title": "2 号观光车维修责任复核",
+        "source_event_id": "event-showcase-shuttle",
+        "status": "INVITED",
+        "current_question_index": 0,
+        "turns": [],
+    }
+    state.interviews.append(business_interview)
+    config = UATShowcaseConfig(
+        base_url="http://uat",
+        admin_username="uat-admin",
+        admin_password="admin-secret-password",
+    )
+
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(state.response),
+        base_url=config.base_url,
+    ) as client:
+        result = await seed_uat_showcase_data(config, client=client, sections=("experiences",))
+
+    assert result.created["interviews"] == 8
+    assert business_interview["status"] == "INVITED"
+
+
+@pytest.mark.asyncio
 async def test_showcase_watcher_has_live_policies_runs_and_actionable_findings() -> None:
     state = ShowcaseKnowledgeAPI()
     config = UATShowcaseConfig(
@@ -463,7 +552,7 @@ async def test_showcase_watcher_has_live_policies_runs_and_actionable_findings()
         first = await seed_uat_showcase_data(config, client=client, sections=("watcher",))
         second = await seed_uat_showcase_data(config, client=client, sections=("watcher",))
 
-    assert first.created["events"] == 6
+    assert first.created["events"] == 9
     assert first.created["tasks"] == 10
     assert first.created["watcher_policies"] == 5
     assert first.created["watcher_runs"] == 5
@@ -474,7 +563,7 @@ async def test_showcase_watcher_has_live_policies_runs_and_actionable_findings()
         "watcher_runs": 0,
         "watcher_findings": 0,
     }
-    assert second.counts["events"] == 6
+    assert second.counts["events"] == 9
     assert second.counts["tasks"] == 10
     assert second.counts["watcher_policies"] == 5
     assert second.counts["watcher_runs"] == 5
@@ -554,7 +643,7 @@ async def test_showcase_watcher_does_not_reuse_same_text_business_records() -> N
     ) as client:
         result = await seed_uat_showcase_data(config, client=client, sections=("watcher",))
 
-    assert result.created["events"] == 6
+    assert result.created["events"] == 9
     assert result.created["tasks"] == 10
     assert result.created["watcher_policies"] == 5
     assert business_task["status"] == "PENDING"
