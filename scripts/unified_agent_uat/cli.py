@@ -15,6 +15,12 @@ from src.memory_palace.operations.uat_bootstrap import (
     UATBootstrapError,
     bootstrap_uat_master_data,
 )
+from src.memory_palace.operations.uat_showcase import (
+    SUPPORTED_SHOWCASE_SECTIONS,
+    UATShowcaseConfig,
+    UATShowcaseError,
+    seed_uat_showcase_data,
+)
 
 
 DEFAULT_OUTPUT_ROOT = Path("docs/verification/unified-agent-uat")
@@ -34,6 +40,17 @@ def _parser() -> argparse.ArgumentParser:
         help="prepare UAT master data through formal APIs and record its baseline",
     )
     bootstrap.add_argument("--run", type=Path, required=True)
+
+    showcase = commands.add_parser(
+        "showcase-seed",
+        help="create repeatable presentation data through formal APIs",
+    )
+    showcase.add_argument(
+        "--sections",
+        nargs="+",
+        choices=sorted(SUPPORTED_SHOWCASE_SECTIONS),
+        default=sorted(SUPPORTED_SHOWCASE_SECTIONS),
+    )
 
     record = commands.add_parser("record", help="record one sanitized UAT step from a JSON input file")
     record.add_argument("--run", type=Path, required=True)
@@ -80,6 +97,19 @@ def main(argv: Sequence[str] | None = None) -> int:
                 }
             )
             return 0
+        if args.command == "showcase-seed":
+            config = UATShowcaseConfig.from_environment()
+            result = __import__("asyncio").run(
+                seed_uat_showcase_data(config, sections=args.sections)
+            )
+            _emit(
+                {
+                    "counts": result.counts,
+                    "created": result.created,
+                    "warnings": list(result.warnings),
+                }
+            )
+            return 0
         if args.command == "record":
             payload = json.loads(args.input.read_text(encoding="utf-8"))
             if not isinstance(payload, dict):
@@ -100,6 +130,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         OSError,
         RuntimeError,
         UATBootstrapError,
+        UATShowcaseError,
         ValueError,
         json.JSONDecodeError,
     ) as exc:

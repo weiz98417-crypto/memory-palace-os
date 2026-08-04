@@ -430,7 +430,7 @@ def _validate_ready_baseline(
         "identity_channel": "WECOM_SIMULATOR",
         "real_wecom_enabled": False,
     }:
-        raise UATBootstrapError("UAT 基线渠道不是仅企微模拟器模式")
+        raise UATBootstrapError("UAT 基线渠道不是仅企业内部系统接入环境模式")
     scope = snapshot.get("scope")
     venue = scope.get("venue") if isinstance(scope, dict) else None
     if (
@@ -460,7 +460,7 @@ def _validate_ready_baseline(
         or any(item.get("channel") != "WECOM_SIMULATOR" for item in identities)
         or {item.get("user_id") for item in identities} != {item.get("id") for item in users}
     ):
-        raise UATBootstrapError("UAT 基线的企微模拟器身份映射不完整")
+        raise UATBootstrapError("UAT 基线的内部系统接入身份映射不完整")
     if not isinstance(sops, list) or not any(
         item.get("title") == UAT_SOP_TITLE
         and str(item.get("version")) == UAT_SOP_VERSION
@@ -564,7 +564,7 @@ async def _verify_simulator_identities(api: _FormalAPI, specs: tuple[_UATUserSpe
     visible = {item.get("username"): item for item in identities}
     missing = sorted(set(visible_specs) - set(visible))
     if missing:
-        raise UATBootstrapError("企微模拟器缺少已授权员工身份：" + "、".join(missing))
+        raise UATBootstrapError("企业内部系统接入环境缺少已授权员工身份：" + "、".join(missing))
     for username, spec in visible_specs.items():
         identity = visible[username]
         if (
@@ -574,4 +574,4 @@ async def _verify_simulator_identities(api: _FormalAPI, specs: tuple[_UATUserSpe
             or identity.get("job_title") != spec.job_title
             or identity.get("wecom_binding_status") != "ACTIVE"
         ):
-            raise UATBootstrapError(f"企微模拟身份 {spec.display_name} 的企业主数据不完整")
+            raise UATBootstrapError(f"内部系统接入身份 {spec.display_name} 的企业主数据不完整")

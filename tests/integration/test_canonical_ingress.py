@@ -879,7 +879,7 @@ async def test_simulator_outbox_returns_readable_controlled_action_lifecycle_wit
         assert body["user_id"] == "operator-west"
         assert len(body["items"]) == 6
         items = {item["approval_id"]: item for item in body["items"]}
-        assert items["approval-pending"]["tool_label"] == "企微模拟器通知"
+        assert items["approval-pending"]["tool_label"] == "内部系统接入通知"
         assert items["approval-pending"]["status"] == "PENDING"
         assert items["approval-pending"]["status_summary"] == "等待管理员审批"
         assert items["approval-rejected"]["status"] == "REJECTED"
@@ -896,7 +896,7 @@ async def test_simulator_outbox_returns_readable_controlled_action_lifecycle_wit
         assert items["approval-external-succeeded"]["delivery_status"] is None
         assert (
             items["approval-external-succeeded"]["status_summary"]
-            == "审批通过，动作执行成功，尚无模拟器送达记录"
+            == "审批通过，动作执行成功，尚无接入环境送达记录"
         )
         assert items["approval-resubmitted"]["supersedes_approval_id"] == "approval-rejected"
         assert items["approval-resubmitted"]["supersedes_business_id"] == "SP-20260731-002"
@@ -1180,7 +1180,7 @@ async def test_event_participant_fanout_is_visible_only_in_each_frozen_simulator
 
             approved = await client.post(
                 f"/api/v1/admin/approvals/{approval_id}/approve",
-                json={"comment": "同意发送到企微模拟器。"},
+                json={"comment": "同意发送到内部系统接入环境。"},
             )
             assert approved.status_code == 200, approved.text
 

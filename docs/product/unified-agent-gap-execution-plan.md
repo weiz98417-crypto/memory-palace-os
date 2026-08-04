@@ -2,7 +2,7 @@
 
 > 文档状态：执行中（W0、UA-100 已完成，连续 E2E 尚未开始）
 > 制定日期：2026-08-03  
-> 适用范围：统一员工助手、企微模拟器、管理后台、经验资产闭环及正式 UAT  
+> 适用范围：统一员工助手、企业内部系统接入环境、管理后台、经验资产闭环及正式 UAT
 > 验收基线：[统一员工助手与经验资产企业 MVP PRD](../../PRD-memory-palace-unified-agent-experience-mvp.md)、[页面地图](./unified-agent-page-map.md)、[完整演示旅程与可执行 UAT](./unified-agent-demo-journey.md)  
 > 代码事实基线：[Graphify 报告](../../graphify-out/GRAPH_REPORT.md)、[功能注册表](../../src/memory_palace/config/feature_registry.yaml)
 
@@ -31,7 +31,7 @@
 | 向量索引 | ChromaDB | 已发布知识与经验的向量检索 | 发布状态、`vector_doc_id`、当前版本和检索命中必须一致 |
 | 生成式能力 | DeepSeek `deepseek-v4-flash` | 8 个 Agent 的生成式步骤 | 成功旅程必须为真实调用，`is_mock = false` |
 | 页面入口 | `/assistant/`、`/simulator/wecom/`、`/admin/` | 三个入口共享正式 API、业务资源和审计链 | 不得使用动画 Demo、固定 JSON 或前端硬编码结果 |
-| 企微渠道 | `/simulator/wecom/` | 本项目唯一企微交互与验收入口 | 真实企微固定 `DISABLED_BY_POLICY`，不初始化、不入队、不发送 |
+| 内部系统接入 | `/simulator/wecom/` | 本项目唯一外部渠道交互与验收入口 | 生产外部渠道固定 `DISABLED_BY_POLICY`，不初始化、不入队、不发送 |
 
 ### 2.1 明确排除项
 
@@ -41,7 +41,8 @@
 - 不清空 PostgreSQL、Redis 或 ChromaDB 数据卷，不用删除失败记录制造干净结果。
 - 不通过数据库手工更新、Swagger 或临时脚本推进业务状态。
 - UAT 脚本只能准备主数据、驱动正式 HTTP/UI、采集只读证据和执行受控故障注入。
-- 不配置、联调、调用或验收真实企业微信；所有企微相关实现与证据进入企微模拟器。
+- 不配置、联调、调用或验收生产外部渠道；所有外部渠道相关实现与证据进入企业内部系统接入环境。
+- 产品界面统一使用“企业内部系统接入环境”，不出现“企微”或“模拟”字样；`WECOM_SIMULATOR` 与 `/simulator/wecom/` 仅作为兼容标识保留。
 
 ## 3. 当前状态快照
 
@@ -52,7 +53,7 @@
 - 构建基线：`3e5b08d3`
 - 370 个文件、4,708 个节点、10,959 条边、260 个社区
 - `diagnose multigraph` 未发现缺失端点、悬空边或重复边
-- 新增经验资产后端和企微模拟器实现已进入图谱
+- 新增经验资产后端和企业内部系统接入环境实现已进入图谱
 
 Graphify 证明当前代码图谱已经刷新，不代表目标旅程已经通过业务验收。
 
@@ -61,9 +62,9 @@ Graphify 证明当前代码图谱已经刷新，不代表目标旅程已经通�
 | 范围 | 当前实现证据 | 当前判断 |
 |---|---|---|
 | 员工入口 | `static/assistant/`、`api/v1/endpoints/assistant.py` | 正式 API 驱动的员工工作面已存在，需连续 UAT 和页面门禁 |
-| 企微模拟器 | `static/simulator/wecom/`、`api/v1/endpoints/channels.py` | 已走 Canonical Ingress 和服务端身份，需完整旅程与权限实测 |
+| 企业内部系统接入环境 | `static/simulator/wecom/`、`api/v1/endpoints/channels.py` | 已走 Canonical Ingress 和服务端身份，需完整旅程与权限实测 |
 | 任务与闭环 | `api/v1/endpoints/workflows.py`、`core/task_graph.py` | 分解、依赖、完成、关闭门禁和经验候选路径已存在，需真实四任务链验证 |
-| 审批与动作 | `core/permissions.py`、受控动作与 outbox 相关实现 | 并发终态、拒绝、批准与模拟器送达已有测试基础，需连续故事证据 |
+| 审批与动作 | `core/permissions.py`、受控动作与 outbox 相关实现 | 并发终态、拒绝、批准与接入环境送达已有测试基础，需连续故事证据 |
 | Watcher | `core/watcher_runtime.py`、`api/v1/endpoints/watcher.py` | 事件检查、策略、run、finding 和去重路径已存在，当前样本无 run |
 | 经验资产 | `api/v1/endpoints/experiences.py`、`knowledge/vector_store.py` | 访谈、确认、审核、退回、版本、发布和 Chroma 索引路径已存在，尚未完成正式发布旅程 |
 | 恢复 | `core/runtime_recovery.py`、`core/redis_queue.py` | 启动恢复及 pending/claim/ACK 代码和自动化测试已存在，尚无真实 App 重启 UAT 证据 |
@@ -76,7 +77,7 @@ Graphify 证明当前代码图谱已经刷新，不代表目标旅程已经通�
 |---|---|---|
 | 事件 `SJ-20260731-46AE854D` | `OPEN / P1` | 未完成闭环、Watcher 和经验候选 |
 | 关联任务 | 1 项，`DONE` | 目标要求四项有序依赖任务及结构化结果 |
-| 审批 | 一张 `REJECTED / NOT_EXECUTED`，一张 `APPROVED / SUCCEEDED` | 状态存在，但尚未证明属于同一完整 UAT 旅程及模拟器唯一送达 |
+| 审批 | 一张 `REJECTED / NOT_EXECUTED`，一张 `APPROVED / SUCCEEDED` | 状态存在，但尚未证明属于同一完整 UAT 旅程及接入环境唯一送达 |
 | Watcher run | 0 | `E2E-11` 未执行 |
 | 经验候选 | 0 | `E2E-12` 未形成 |
 | 访谈 `FT-20260803-B81D` | `COMPLETED`，4 轮回答 | `E2E-13` 核心数据基本具备，但缺正式证据和连续来源链 |
@@ -100,7 +101,7 @@ Graphify 证明当前代码图谱已经刷新，不代表目标旅程已经通�
 | GAP-08 | P0 | 第二名员工没有真实命中新发布经验 | 无 published version 和向量记录 | 周琪的新问题同时命中新经验与 SOP，并保存引用和采用日志 |
 | GAP-09 | P0 | 管理员无法用正式证据证明 8 Agent 全链 | 只有局部 Agent 记录 | 单一业务编号可进入完整时间线，8 Agent 和 DeepSeek 证据齐全 |
 | GAP-10 | P0 | 没有真实 App 重启恢复证据 | 只有代码和自动化测试基础 | 进程/容器 ID 变化，Redis pending 被 claim 并 ACK，业务结果唯一 |
-| GAP-11 | P1 | 页面地图门禁未逐页验证 | 页面已大量实现，无统一矩阵 | EA-01～06、AD-01～16 和模拟器按角色、状态、尺寸全部留证 |
+| GAP-11 | P1 | 页面地图门禁未逐页验证 | 页面已大量实现，无统一矩阵 | EA-01～06、AD-01～16 和接入环境按角色、状态、尺寸全部留证 |
 | GAP-12 | P1 | 13 条失败旅程未执行 | 注册表全部 BLOCKED | UAT-F01～13 分别保留失败、恢复和最终成功证据 |
 | GAP-13 | P1 | 注册表状态与实现进度脱节 | 全部 BLOCKED/evidence 空 | 只根据本次证据包逐条更新状态与 evidence 路径 |
 
@@ -118,7 +119,7 @@ Graphify 证明当前代码图谱已经刷新，不代表目标旅程已经通�
 
 ### W0：验收合同和执行骨架
 
-状态：`UA-000`、`UA-001`、`UA-002`、`UA-003` 已完成代码与自动化验证。2026-08-03 的前置加固进一步补齐了完整证据 scaffold、pristine baseline 硬门禁、PostgreSQL 一致性快照、READY 实体路径校验、baseline/manifest 可恢复写入、Worker 入口真实企微零副作用阻断，以及三类高风险动作的统一运行时策略。该状态只表示 UAT 前置骨架和主数据基线能力已具备；尚未生成正式连续旅程证据，任何 `E2E-*` 或 `UAT-F*` 均不得因此标记为 `READY`。
+状态：`UA-000`、`UA-001`、`UA-002`、`UA-003` 已完成代码与自动化验证。2026-08-03 的前置加固进一步补齐了完整证据 scaffold、pristine baseline 硬门禁、PostgreSQL 一致性快照、READY 实体路径校验、baseline/manifest 可恢复写入、Worker 入口生产外部渠道零副作用阻断，以及三类高风险动作的统一运行时策略。该状态只表示 UAT 前置骨架和主数据基线能力已具备；尚未生成正式连续旅程证据，任何 `E2E-*` 或 `UAT-F*` 均不得因此标记为 `READY`。
 
 | 任务 ID | 任务 | 依赖 | 主要影响文件 | 交付与验收 | 对应目标 |
 |---|---|---|---|---|---|
@@ -129,13 +130,13 @@ Graphify 证明当前代码图谱已经刷新，不代表目标旅程已经通�
 
 ### W1：统一入口、消息和事件
 
-状态：`UA-100` 已完成代码与自动化验证。统一诊断现可读取 App、PostgreSQL、Redis、ChromaDB、Worker、8 Agent 与 DeepSeek 的脱敏状态；DeepSeek 近期真实探针与 8 Agent 历史调用覆盖分别判定，管理员可通过正式诊断接口生成不含 Prompt/输出的真实探针证据；Agent 证据采集异常会显式降级。企微模拟器仅在当前场地全部 ACTIVE 用户具有 ACTIVE `WECOM_SIMULATOR` 身份映射时就绪，真实企微固定为 `DISABLED_BY_POLICY`，保持零初始化、零入队、零投递。App 诊断实例 ID 与启动恢复审计使用同一个值。该状态不代表 `E2E-00` 已完成正式 UAT，注册表状态和 evidence 保持不变。
+状态：`UA-100` 已完成代码与自动化验证。统一诊断现可读取 App、PostgreSQL、Redis、ChromaDB、Worker、8 Agent 与 DeepSeek 的脱敏状态；DeepSeek 近期真实探针与 8 Agent 历史调用覆盖分别判定，管理员可通过正式诊断接口生成不含 Prompt/输出的真实探针证据；Agent 证据采集异常会显式降级。企业内部系统接入环境仅在当前场地全部 ACTIVE 用户具有 ACTIVE `WECOM_SIMULATOR` 身份映射时就绪，生产外部渠道固定为 `DISABLED_BY_POLICY`，保持零初始化、零入队、零投递。App 诊断实例 ID 与启动恢复审计使用同一个值。该状态不代表 `E2E-00` 已完成正式 UAT，注册表状态和 evidence 保持不变。
 
 | 任务 ID | 任务 | 依赖 | 主要影响文件 | 交付与验收 | 对应旅程 |
 |---|---|---|---|---|---|
-| UA-100 | 运行配置和渠道真实性门禁 | UA-003 | `management.py`、诊断与渠道页面 | App、PostgreSQL、Redis、ChromaDB、Worker、8 Agent、DeepSeek 状态可读；模拟器与真实企微状态不混淆 | E2E-00 |
-| UA-101 | 服务端身份与会话恢复 | UA-100 | `channels.py`、模拟器前端、鉴权实现 | 李明身份由服务端绑定；篡改 user/venue 被拒；刷新恢复同一会话 | E2E-01、UAT-F13 |
-| UA-102 | 自由文本、真实附件和消息幂等 | UA-101 | Canonical Ingress、附件 API、Queue、模拟器 | 一次输入只生成一条消息和一个 run；附件元数据可恢复；状态经过 QUEUED/PROCESSING/COMPLETED | E2E-02、UAT-F01 |
+| UA-100 | 运行配置和渠道真实性门禁 | UA-003 | `management.py`、诊断与渠道页面 | App、PostgreSQL、Redis、ChromaDB、Worker、8 Agent、DeepSeek 状态可读；接入环境与生产外部渠道状态不混淆 | E2E-00 |
+| UA-101 | 服务端身份与会话恢复 | UA-100 | `channels.py`、接入环境前端、鉴权实现 | 李明身份由服务端绑定；篡改 user/venue 被拒；刷新恢复同一会话 | E2E-01、UAT-F13 |
+| UA-102 | 自由文本、真实附件和消息幂等 | UA-101 | Canonical Ingress、附件 API、Queue、接入环境 | 一次输入只生成一条消息和一个 run；附件元数据可恢复；状态经过 QUEUED/PROCESSING/COMPLETED | E2E-02、UAT-F01 |
 | UA-103 | 四 Agent 受理和带依据事件卡 | UA-102 | Orchestrator、ContextTrigger、Router、MemoryOps、Commander、Chroma 检索 | 生成一个 P1 事件，命中 SOP、诚实说明无精确经验；四 Agent 均为真实 DeepSeek | E2E-03 |
 | UA-104 | 同会话补充并更新原事件 | UA-103 | 消息入口、事件关联和时间线 | 第二轮消息追加到原事件；事件总数仍为 1；跨租户补充被拒 | E2E-04、UAT-F10 |
 
@@ -144,9 +145,9 @@ Graphify 证明当前代码图谱已经刷新，不代表目标旅程已经通�
 | 任务 ID | 任务 | 依赖 | 主要影响文件 | 交付与验收 | 对应旅程 |
 |---|---|---|---|---|---|
 | UA-200 | 生成并原子激活四任务图 | UA-104 | `workflows.py`、`task_graph.py`、TodoWrite、事件详情 | 四项任务、三条依赖、负责人和业务编号一致；无 STAGED 残留；重复请求不重复创建 | E2E-05、UAT-F01 |
-| UA-201 | 员工任务权限、依赖和结构化结果 | UA-200 | `assistant.py`、任务 API、员工/模拟器任务卡 | 先 409 拒绝，再按依赖解锁；结果含字段、单位、附件、提交人和时间 | E2E-06、UAT-F05 |
+| UA-201 | 员工任务权限、依赖和结构化结果 | UA-200 | `assistant.py`、任务 API、员工/接入环境任务卡 | 先 409 拒绝，再按依赖解锁；结果含字段、单位、附件、提交人和时间 | E2E-06、UAT-F05 |
 | UA-202 | 高风险动作与首次真实拒绝 | UA-201 | Permission Engine、审批 API、审批页 | 审批前无工具执行；第一张审批 REJECTED/NOT_EXECUTED，拒绝意见与补证要求可追溯 | E2E-07、E2E-08 |
-| UA-203 | 补证、重提、批准和唯一模拟器送达 | UA-202 | 审批、工具执行、outbox、模拟器 | 第二张审批 APPROVED/SUCCEEDED；supersedes 关系存在；每个收件人只有一条模拟器通知 | E2E-08、E2E-09、UAT-F06 |
+| UA-203 | 补证、重提、批准和唯一接入环境送达 | UA-202 | 审批、工具执行、outbox、接入环境 | 第二张审批 APPROVED/SUCCEEDED；supersedes 关系存在；每个收件人只有一条接入环境通知 | E2E-08、E2E-09、UAT-F06 |
 
 ### W3：Watcher、闭环与经验候选
 
@@ -160,7 +161,7 @@ Graphify 证明当前代码图谱已经刷新，不代表目标旅程已经通�
 
 | 任务 ID | 任务 | 依赖 | 主要影响文件 | 交付与验收 | 对应旅程 |
 |---|---|---|---|---|---|
-| UA-400 | 从本次候选发起专家访谈 | UA-302 | `experiences.py`、员工和模拟器经验页面 | 张建国从统一助手接受访谈；来源事件、授权和范围完整 | E2E-13 |
+| UA-400 | 从本次候选发起专家访谈 | UA-302 | `experiences.py`、员工和接入环境经验页面 | 张建国从统一助手接受访谈；来源事件、授权和范围完整 | E2E-13 |
 | UA-401 | 完成四轮访谈、恢复和专家确认 | UA-400 | PersonaExtract、访谈持久化、经验卡 UI | 四轮回答可追溯；刷新或 App 重启恢复；重复回答不重复；卡为 EXPERT_CONFIRMED | E2E-13、UAT-F07 |
 | UA-402 | 完整执行退回、修订和复审 | UA-401 | 经验审核 API、版本表、管理/员工页面 | 执行 `EXPERT_CONFIRMED -> IN_REVIEW -> DRAFT -> EXPERT_CONFIRMED -> IN_REVIEW`；旧版本不可变 | E2E-14 |
 | UA-403 | 发布经验并校验 Chroma 一致性 | UA-402 | `experiences.py`、`vector_store.py`、经验管理页面 | PostgreSQL 为 PUBLISHED，发布版本和 `vector_doc_id` 非空；Chroma 只有一个当前有效版本；索引失败不假成功 | E2E-14、UAT-F08 |
@@ -184,13 +185,13 @@ Graphify 证明当前代码图谱已经刷新，不代表目标旅程已经通�
 
 | 任务 ID | 任务 | 依赖 | 主要影响文件 | 交付与验收 | 对应目标 |
 |---|---|---|---|---|---|
-| UA-700 | 建立 EA/AD 页面验收矩阵 | UA-104、UA-203、UA-302、UA-403、UA-501、UA-602 | 三个前端入口、页面地图 | EA-01～06、模拟器、AD-01～16 均映射路由、角色、API、状态、跳转和证据 | 页面地图 |
+| UA-700 | 建立 EA/AD 页面验收矩阵 | UA-104、UA-203、UA-302、UA-403、UA-501、UA-602 | 三个前端入口、页面地图 | EA-01～06、接入环境、AD-01～16 均映射路由、角色、API、状态、跳转和证据 | 页面地图 |
 | UA-701 | 执行服务端角色与租户矩阵 | UA-700 | 鉴权、各资源 API、审计 | 员工、经理、知识负责人、管理员逐路由核验；隐藏菜单之外服务端同样拒绝越权 | UAT-F10、UAT-F11、UAT-F13 |
 | UA-702 | 执行可读性和响应式验收 | UA-700 | 三个前端入口样式和交互 | 覆盖目标桌面/移动尺寸；无技术 ID 主标题、原始 JSON、英文状态、空引用或页面横向溢出 | 页面地图、可读性门禁 |
 | UA-710 | 消息幂等与 Redis 恢复失败组 | UA-601 | UAT 驱动和证据采集 | 分别执行重复投递与 ACK 前重启，保留失败和恢复证据 | UAT-F01、F02 |
 | UA-711 | DeepSeek 与 Chroma 故障组 | UA-403 | 受控故障注入、模型/向量错误处理 | 超时/401/熔断、检索不可用、发布索引失败均不产生假成功；恢复后真实调用成功 | UAT-F03、UAT-F04、UAT-F08 |
 | UA-712 | 工作流状态故障组 | UA-301、UA-401 | 任务、审批、访谈、Watcher | 依赖、并发审批/执行、访谈恢复和 finding 去重分别通过 | UAT-F05、UAT-F06、UAT-F07、UAT-F09 |
-| UA-713 | 租户、角色和渠道故障组 | UA-701 | 鉴权、企微模拟器、真实企微禁用门禁 | 跨场地、普通员工治理接口、真实企微策略禁用和模拟器身份无映射均在入队/读取前拒绝并审计 | UAT-F10、UAT-F11、UAT-F12、UAT-F13 |
+| UA-713 | 租户、角色和渠道故障组 | UA-701 | 鉴权、企业内部系统接入环境、生产外部渠道禁用门禁 | 跨场地、普通员工治理接口、生产外部渠道策略禁用和接入身份无映射均在入队/读取前拒绝并审计 | UAT-F10、UAT-F11、UAT-F12、UAT-F13 |
 
 ### W8：单一连续 UAT 和发布判定
 
@@ -290,12 +291,12 @@ docs/verification/unified-agent-uat/<uat_run_id>/
 
 - `E2E-00` 至 `E2E-16` 全部通过并有同一连续成功 run 的证据。
 - `UAT-F01` 至 `UAT-F13` 全部在独立故障 run 中通过。
-- EA-01～06、企微模拟器和 AD-01～16 完成目标角色及响应式验收。
+- EA-01～06、企业内部系统接入环境和 AD-01～16 完成目标角色及响应式验收。
 - 8 个 Agent 均有真实 DeepSeek、结构化输出、Trace 和可解释业务作用。
 - PostgreSQL 业务状态、Chroma 当前索引和页面引用一致。
 - App 重启过程中 PostgreSQL、Redis 和 ChromaDB 未清空，消息只产生一个最终结果。
 - 功能注册表所有 READY 状态均有有效 evidence 路径。
-- 真实企微保持 `DISABLED_BY_POLICY`，所有企微业务证据只来自模拟器且不被描述为真实渠道就绪。
+- 生产外部渠道保持 `DISABLED_BY_POLICY`，所有外部渠道业务证据只来自企业内部系统接入环境且不被描述为真实渠道就绪。
 - 最终 Graphify 已包含本轮代码和文档变更，并通过图完整性诊断。
 
 在此之前，项目可以描述为“核心实现已具备、正式统一旅程尚未验收”，不能描述为“三份目标文档已经全部达到要求”。

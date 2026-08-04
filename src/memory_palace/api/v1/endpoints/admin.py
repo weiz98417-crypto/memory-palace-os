@@ -648,8 +648,8 @@ async def request_controlled_action(
                     request,
                     409,
                     exc.code,
-                    "企微模拟器收件人尚未全部就绪，未创建审批。",
-                    "请让缺失人员先进入企微模拟器建立会话，或恢复其账号与企微绑定后重试。",
+                    "内部系统接入收件人尚未全部就绪，未创建审批。",
+                    "请让缺失人员先进入企业内部系统接入环境建立会话，或恢复其账号与接入身份后重试。",
                     details={"missing_recipients": exc.missing},
                 ) from exc
         evidence_snapshot = {
@@ -1009,6 +1009,7 @@ class EventCreateRequest(BaseModel):
     severity: str
     from_user: str
     venue_id: Optional[str] = ""
+    source_id: Optional[str] = Field(None, max_length=128)
 
 
 class PersonaDeleteRequest(BaseModel):
@@ -1184,7 +1185,7 @@ async def create_event(
     event_id = None
     try:
         event_id = await save_confirmed_event(
-            push_id="manual",
+            push_id=body.source_id or "manual",
             from_user=body.from_user,
             raw_text=body.raw_text,
             event_type=body.event_type,

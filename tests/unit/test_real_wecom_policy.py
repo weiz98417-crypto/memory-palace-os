@@ -22,7 +22,7 @@ def test_real_wecom_stays_disabled_by_policy_even_when_credentials_exist(monkeyp
         "missing": [],
         "safe_disabled_verified": True,
         "policy_mode": "WECOM_SIMULATOR_ONLY",
-        "blocked_reason": "本项目仅允许企微模拟器，真实企业微信收发已按项目策略禁用。",
+        "blocked_reason": "本项目仅允许企业内部系统接入环境，生产外部渠道收发已按项目策略禁用。",
     }
 
 
@@ -55,7 +55,7 @@ def test_real_wecom_client_cannot_be_constructed_directly():
             agentid=1000002,
         )
     except RuntimeError as exc:
-        assert "企微模拟器" in str(exc)
+        assert "企业内部系统接入环境" in str(exc)
     else:
         raise AssertionError("real WeCom transport must reject direct construction")
 
@@ -63,7 +63,7 @@ def test_real_wecom_client_cannot_be_constructed_directly():
 def test_registry_treats_real_wecom_safe_disable_as_satisfied_but_never_ready():
     registry = load_feature_registry()
     declared = next(item for item in registry["items"] if item["id"] == "MVP-INTEGRATION-WECHAT")
-    assert declared["name"] == "真实企业微信安全禁用门禁"
+    assert declared["name"] == "生产外部渠道安全禁用门禁"
     assert declared["status"] == "DISABLED_BY_POLICY"
 
     snapshot = registry_snapshot(

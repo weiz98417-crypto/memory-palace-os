@@ -80,7 +80,7 @@ class MessagePolicyFailure(MessageDeliveryFailure):
 
 
 REAL_WECOM_DISABLED_ERROR = (
-    "真实企业微信投递已按项目策略禁用；请通过企微模拟器完成业务链路。"
+    "生产外部渠道投递已按项目策略禁用；请通过企业内部系统接入环境完成业务链路。"
 )
 
 

@@ -232,7 +232,7 @@ def test_todo_write_unknown_outcomes_and_logout_abort_stay_recoverable():
 def test_client_embeds_favicon_and_caps_visible_notifications():
     html = CLIENT_PATH.read_text(encoding="utf-8")
 
-    assert '<link rel="icon" href="data:image/svg+xml,' in html
+    assert '<link rel="icon" href="/admin/brand/logo-primary.svg?v=20260804-3"' in html
     assert 'while(region.children.length>=3)region.firstElementChild.remove();' in html
 
 
@@ -258,19 +258,19 @@ def test_formal_client_exposes_server_resolved_simulator_recipient_scope_and_del
     assert 'name:"recipient_scope"' in html
     assert 'value:"EVENT_PARTICIPANTS"' in html
     assert 'value:"SESSION"' in html
-    assert "事件相关人员（企微模拟器）" in html
-    assert "仅写入企微模拟器，不会发送到生产企微" in html
+    assert "事件相关人员（内部系统接入）" in html
+    assert "仅写入内部系统接入环境，不会发送到任何生产外部渠道" in html
     assert "recipient_scope:values.recipient_scope" in html
     assert "delivery.targets" in html
     assert "delivery.delivered_count" in html
     assert "delivery.target_count" in html
-    assert "已送达企微模拟器" in html
-    assert 'item.channel==="WECOM_SIMULATOR_OUTBOX"?"企微模拟器（演示）"' in html
+    assert "已送达内部系统接入环境" in html
+    assert 'item.channel==="WECOM_SIMULATOR_OUTBOX"?"内部系统接入环境（联调）"' in html
     assert 'error.code!=="SIMULATOR_RECIPIENTS_NOT_READY"' in html
     assert "error.details.missing_recipients" in html
     assert "item.display_name" in html
     assert "item.reason" in html
-    assert "批准企微模拟器通知或真实外部渠道动作后会记录在这里" in html
+    assert "批准内部系统接入通知或真实外部渠道动作后会记录在这里" in html
     assert "recipient_user_ids" not in html
     assert "recipient_session_ids" not in html
 
@@ -318,7 +318,7 @@ def test_formal_client_humanizes_event_dossier_statuses_channels_and_result_fiel
 
     assert 'OPEN:"处理中"' in html
     assert 'COMPLETED:"已完成"' in html
-    assert 'WECOM_SIMULATOR:"企微模拟器"' in html
+    assert 'WECOM_SIMULATOR:"内部系统接入环境"' in html
     assert 'shield_clearance_mm:"护板间隙（毫米）"' in html
     assert 'brake_pad_thickness_mm:"制动片厚度（毫米）"' in html
     assert 'wheel_end_temperature_c:"轮端温度（℃）"' in html
@@ -361,7 +361,7 @@ def test_formal_client_keeps_raw_approval_delivery_ids_out_of_the_business_summa
     ]
 
     assert "受控动作已完成" in approval_detail
-    assert "已收到企微模拟器通知" in approval_detail
+    assert "已收到内部系统接入通知" in approval_detail
     assert "recipientNames" in approval_detail
     assert "executionSummary" in approval_detail
 
@@ -525,5 +525,7 @@ def test_diagnostics_renders_unified_runtime_agents_and_channel_policy():
     assert 'data-action="enable-simulator-identity"' in html
     assert 'api("/channels/identities",{method:"POST"' in html
     assert 'channel:"WECOM_SIMULATOR"' in html
-    assert "真实企业微信" in html
+    assert "真实外部渠道" in html
+    assert "企微" not in html
+    assert "模拟" not in html
     assert "DISABLED_BY_POLICY" in html

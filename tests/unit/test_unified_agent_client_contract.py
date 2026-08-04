@@ -188,7 +188,9 @@ def test_employee_assistant_is_a_real_api_driven_work_surface():
 
     assert 'src="/shared/client.js"' in html
     assert 'href="/shared/base.css"' in html
-    assert 'href="/assistant/styles.css"' in html
+    assert 'href="/assistant/styles.css?v=20260804-3"' in html
+    assert html.count('src="/admin/brand/logo-primary.svg"') == 4
+    assert ">AI<" not in html
     assert 'src="/assistant/app.js"' in html
     assert "Client.auth.login" in script
     assert "Client.auth.restore" in script
@@ -358,7 +360,7 @@ def test_wecom_simulator_is_explicitly_bounded_and_reads_real_chain_state():
     styles = SIMULATOR_STYLE_PATH.read_text(encoding="utf-8")
 
     required_surfaces = {
-        "企微接入模拟环境",
+        "企业内部系统接入环境",
         'id="login-form"',
         'id="identity-select"',
         'id="simulator-message-stream"',
@@ -378,8 +380,11 @@ def test_wecom_simulator_is_explicitly_bounded_and_reads_real_chain_state():
 
     assert 'src="/shared/client.js?v=20260803-1"' in html
     assert 'href="/shared/base.css"' in html
-    assert 'href="/simulator/wecom/styles.css?v=20260803-1"' in html
-    assert 'src="/simulator/wecom/app.js?v=20260803-1"' in html
+    assert 'href="/simulator/wecom/styles.css?v=20260804-3"' in html
+    assert '<div><strong>企业运营助手</strong><span>企业内部系统接入环境</span></div>' in html
+    assert html.count('src="/admin/brand/logo-primary.svg"') == 3
+    assert ">AI<" not in html
+    assert 'src="/simulator/wecom/app.js?v=20260804-3"' in html
     assert "Client.auth.login" in script
     assert "Client.simulator.identities" in script
     assert "Client.simulator.send" in script
@@ -391,7 +396,25 @@ def test_wecom_simulator_is_explicitly_bounded_and_reads_real_chain_state():
     assert "item.supersedes_business_id" in script
     assert "替代上一张已拒绝审批" in script
     assert "item.supersedes_approval_id" not in script
-    assert 'DELIVERED: "已送达企微模拟器"' in script
+    assert 'DELIVERED: "已送达内部系统接入环境"' in script
+    assert '<img src="/admin/brand/logo-primary.svg" alt="">' in script
+    brand_message_avatar = (
+        '<span class="message-avatar brand-avatar">'
+        '<img src="/admin/brand/logo-primary.svg" alt="">'
+        '</span>'
+    )
+    assert script.count(brand_message_avatar) == 4
+    for legacy_avatar in (
+        '<span class="message-avatar">回</span>',
+        '<span class="message-avatar">经</span>',
+        '<span class="message-avatar">卡</span>',
+    ):
+        assert legacy_avatar not in script
+    assert ': "AI"' not in script
+    assert "企微" not in html
+    assert "模拟" not in html
+    assert "企微" not in script
+    assert "模拟" not in script
     assert "state.outbox = UI.arrayFrom" in script
     assert "await syncOutbox(sessionId, userId);" in script
     assert "审批回流暂不可用 · 已保留会话" in script

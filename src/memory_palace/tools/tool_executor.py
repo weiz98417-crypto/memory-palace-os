@@ -298,7 +298,7 @@ def _register_builtin_tools():
                         {
                             "display_name": "冻结收件人",
                             "reason_code": "FROZEN_TARGETS_INVALID",
-                            "reason": "审批缺少完整且一致的模拟器收件人证据",
+                            "reason": "审批缺少完整且一致的内部系统接入收件人证据",
                         }
                     ]
                 )
@@ -316,7 +316,7 @@ def _register_builtin_tools():
                     msg_id=approval_id,
                     from_user=context.get("user_id") or "system",
                     raw_text=message,
-                    event_type="企微模拟器通知",
+                    event_type="内部系统接入通知",
                     severity=severity,
                     stage1_triggered=False,
                     hit_keywords=["controlled_action", "wecom_simulator_outbox"],

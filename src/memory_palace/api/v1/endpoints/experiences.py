@@ -446,7 +446,7 @@ async def _resolve_employee_principal(
             request,
             404,
             "EXPERIENCE_ACTING_IDENTITY_NOT_FOUND",
-            "目标员工不存在、未绑定企微或已停用。",
+            "目标员工不存在、未绑定内部系统接入身份或已停用。",
             "从当前场地的已绑定员工列表中重新选择。",
         )
 

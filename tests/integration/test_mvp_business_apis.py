@@ -398,7 +398,7 @@ async def test_real_wecom_stays_policy_disabled_despite_credentials_and_legacy_d
             "policy_mode": "WECOM_SIMULATOR_ONLY",
             "real_wecom_enabled": False,
         }
-        assert "仅允许企微模拟器" in wechat["blocked_reason"]
+        assert "仅允许企业内部系统接入环境" in wechat["blocked_reason"]
         assert "test-corp-secret" not in response.text
     finally:
         await database.close()
@@ -1941,6 +1941,7 @@ async def test_manual_event_creation_records_tenant_audit(tmp_path, monkeypatch)
                 "raw_text": "东门闸机断电，现场已完成人流疏导",
                 "event_type": "设施故障",
                 "severity": "P1",
+                "source_id": "showcase:event:manual-source-test",
             },
         )
 
@@ -1951,6 +1952,7 @@ async def test_manual_event_creation_records_tenant_audit(tmp_path, monkeypatch)
         (response.json()["event_id"],),
     )
     assert event["source_type"] == "HISTORY"
+    assert event["push_id"] == "showcase:event:manual-source-test"
     audit = await database.fetch_one(
         "SELECT * FROM audit_logs WHERE action = 'EVENT_CREATED' AND resource_id = ?",
         (response.json()["event_id"],),

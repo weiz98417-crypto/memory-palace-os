@@ -9,10 +9,10 @@ from src.memory_palace.tools.wechat_client import WeChatWorkClient, get_wechat_c
 
 
 def test_direct_real_wecom_client_construction_is_rejected():
-    with pytest.raises(RuntimeError, match="企微模拟器"):
+    with pytest.raises(RuntimeError, match="企业内部系统接入环境"):
         WeChatWorkClient(corpid="configured", corpsecret="configured", agentid=10001)
 
 
 def test_real_wecom_client_factory_returns_no_transport():
     assert get_wechat_client() is None
-    assert "真实企业微信" in REAL_WECOM_BLOCKED_REASON
+    assert "生产外部渠道" in REAL_WECOM_BLOCKED_REASON

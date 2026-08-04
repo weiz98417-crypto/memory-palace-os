@@ -4,16 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#202a2f">
-  <title>企微接入模拟环境 · Memory Palace OS</title>
+  <title>企业内部系统接入环境 · Memory Palace OS</title>
   <link rel="stylesheet" href="/shared/base.css">
-  <link rel="stylesheet" href="/simulator/wecom/styles.css?v=20260803-1">
+  <link rel="stylesheet" href="/simulator/wecom/styles.css?v=20260804-3">
 </head>
 <body>
-  <section id="login-screen" class="login-stage" aria-label="企微模拟器登录">
+  <section id="login-screen" class="login-stage" aria-label="企业内部系统接入环境登录">
     <div class="login-context">
       <div class="brand-lockup">
         <div class="product-kicker">MEMORY PALACE OS</div>
-        <h1>企微接入模拟环境</h1>
+        <h1>企业内部系统接入环境</h1>
         <p>用于验证员工身份、消息受理与管理后台联动</p>
       </div>
     </div>
@@ -21,7 +21,7 @@
       <div class="login-panel">
         <div>
           <h2>登录演示账号</h2>
-          <p class="subcopy">仅有模拟器权限的经理或管理员可进入</p>
+          <p class="subcopy">仅有接入联调权限的经理或管理员可进入</p>
         </div>
         <form id="login-form" class="login-form">
           <label class="field">
@@ -33,7 +33,7 @@
             <input id="login-password" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128">
           </label>
           <p id="login-error" class="form-error" role="alert"></p>
-          <button id="login-submit" class="btn primary" type="submit">进入模拟环境</button>
+          <button id="login-submit" class="btn primary" type="submit">进入接入环境</button>
         </form>
       </div>
     </div>
@@ -42,10 +42,10 @@
   <div id="simulator-app" class="simulator-app" hidden>
     <header class="simulator-topbar">
       <div class="topbar-brand">
-        <span class="brand-mark">MP</span>
-        <div><strong>Memory Palace OS</strong><span>渠道联调工作台</span></div>
+        <span class="brand-mark" aria-hidden="true"><img src="/admin/brand/logo-primary.svg" alt=""></span>
+        <div><strong>企业运营助手</strong><span>企业内部系统接入环境</span></div>
       </div>
-      <div class="environment-badge"><span aria-hidden="true"></span>企微接入模拟环境</div>
+      <div class="environment-badge"><span aria-hidden="true"></span>企业内部系统接入环境</div>
       <div class="topbar-account">
         <span id="signed-user">演示账号</span>
         <a class="btn quiet" href="/admin/">管理后台</a>
@@ -56,8 +56,8 @@
     <main class="simulator-workspace">
       <aside class="control-panel" aria-label="演示控制">
         <div class="boundary-notice">
-          <strong>模拟环境</strong>
-          <p>消息进入正式 Agent 与数据链路；本页面不代表企微应用认证或回调联调已经完成。</p>
+          <strong>接入联调环境</strong>
+          <p>消息进入正式 Agent 与数据链路；本页面不代表任何外部渠道已经完成生产接入。</p>
         </div>
 
         <section class="control-section">
@@ -75,9 +75,9 @@
         </section>
 
         <section class="control-section">
-          <div class="section-label">模拟会话</div>
+          <div class="section-label">接入会话</div>
           <label class="field session-picker" for="session-select">
-            <span>选择该员工的企微模拟会话</span>
+            <span>选择该员工的内部系统接入会话</span>
             <select id="session-select" disabled>
               <option value="">请先选择员工身份</option>
             </select>
@@ -87,7 +87,7 @@
             <button class="btn" type="button" data-action="new-session"><span aria-hidden="true">+</span>新建会话</button>
             <button class="btn" type="button" data-action="refresh"><span aria-hidden="true">↻</span>刷新状态</button>
           </div>
-          <p id="session-summary" class="control-note">选择员工后可开始新的模拟会话。</p>
+          <p id="session-summary" class="control-note">选择员工后可开始新的接入会话。</p>
         </section>
 
         <section class="control-section quick-section">
@@ -99,14 +99,14 @@
         </section>
       </aside>
 
-      <section class="wecom-surface" aria-label="企微聊天模拟区域">
+      <section class="wecom-surface" aria-label="企业内部系统接入区域">
         <header class="wecom-head">
           <div class="wecom-title">
-            <span class="assistant-avatar">AI</span>
+            <span class="assistant-avatar"><img src="/admin/brand/logo-primary.svg" alt=""></span>
             <div><h1>企业运营助手</h1><span id="conversation-identity">等待选择员工</span></div>
           </div>
           <div class="wecom-head-meta">
-            <span class="simulation-label">SIMULATION</span>
+            <span class="simulation-label">INTERNAL ACCESS</span>
             <span id="experience-summary" class="experience-summary">经验共创：等待选择员工</span>
             <span id="outbox-summary" class="outbox-summary">审批与出站回流：0</span>
           </div>
@@ -115,7 +115,7 @@
         <div id="simulator-error" class="simulator-error" hidden></div>
         <div id="simulator-message-stream" class="wecom-messages" aria-live="polite">
           <div class="wecom-empty">
-            <span class="assistant-avatar large">AI</span>
+            <span class="assistant-avatar large"><img src="/admin/brand/logo-primary.svg" alt=""></span>
             <strong>企业运营助手</strong>
             <p>选择员工身份后发送消息</p>
           </div>
@@ -244,6 +244,6 @@
 
   <div id="toast-region" class="toast-region" aria-live="polite"></div>
   <script src="/shared/client.js?v=20260803-1"></script>
-  <script src="/simulator/wecom/app.js?v=20260803-1"></script>
+  <script src="/simulator/wecom/app.js?v=20260804-3"></script>
 </body>
 </html>

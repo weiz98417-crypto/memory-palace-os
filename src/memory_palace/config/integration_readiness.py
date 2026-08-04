@@ -14,7 +14,7 @@ WECHAT_REQUIRED_CONFIG = (
     "WECHAT_AGENT_ID",
 )
 REAL_WECOM_POLICY_MODE = "WECOM_SIMULATOR_ONLY"
-REAL_WECOM_BLOCKED_REASON = "本项目仅允许企微模拟器，真实企业微信收发已按项目策略禁用。"
+REAL_WECOM_BLOCKED_REASON = "本项目仅允许企业内部系统接入环境，生产外部渠道收发已按项目策略禁用。"
 
 
 def external_integration_readiness(required: Iterable[str]) -> dict[str, object]:

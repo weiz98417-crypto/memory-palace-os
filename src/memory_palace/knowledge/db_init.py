@@ -28,6 +28,32 @@ async def _add_sqlite_column(db, table_name, column_name, column_type):
             raise
 
 
+async def _isolate_legacy_wecom_identities(db) -> None:
+    """Move legacy PostgreSQL identity bindings into the policy-enabled channel."""
+    await db.execute(
+        """
+        UPDATE channel_identities
+        SET channel = 'WECOM_SIMULATOR'
+        WHERE channel = 'WECOM'
+          AND NOT EXISTS (
+              SELECT 1
+              FROM channel_identities AS isolated
+              WHERE isolated.venue_id = channel_identities.venue_id
+                AND isolated.channel = 'WECOM_SIMULATOR'
+                AND isolated.external_tenant_id = channel_identities.external_tenant_id
+                AND isolated.external_user_id = channel_identities.external_user_id
+          )
+        """
+    )
+    await db.execute(
+        """
+        UPDATE channel_identities
+        SET status = 'DISABLED'
+        WHERE channel = 'WECOM' AND status <> 'DISABLED'
+        """
+    )
+
+
 async def init_database(db_client=None):
     """
     初始化数据库 (异步版本)。
@@ -1664,6 +1690,8 @@ async def _init_pg(db_client):
     ]
     for ddl in migrations:
         await db_client.execute(ddl)
+
+    await _isolate_legacy_wecom_identities(db_client)
 
     await db_client.execute(
         """

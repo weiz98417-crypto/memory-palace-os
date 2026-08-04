@@ -397,10 +397,10 @@ async def _ensure_event_watcher_policy(
             check_types_json, config_json, version, created_by,
             created_at, updated_at
         ) VALUES (?, ?, '事件闭环证据检查', '闭环前聚合并检查事件全量证据',
-            '0 0 1 1 *', 0, '["SLA","TASK","SOP"]', '{}', 1, ?, ?, ?)
+            '0 0 1 1 *', ?, '["SLA","TASK","SOP"]', '{}', 1, ?, ?, ?)
         ON CONFLICT(id) DO NOTHING
         """,
-        (policy_id, venue_id, created_by, now, now),
+        (policy_id, venue_id, False, created_by, now, now),
     )
     return policy_id
 

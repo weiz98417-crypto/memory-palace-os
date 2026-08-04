@@ -506,7 +506,7 @@ async def _integration_status_rows(venue_id: str, db) -> list[dict[str, Any]]:
         },
         {
             "id": "wecom_simulator",
-            "name": "企微模拟器",
+            "name": "企业内部系统接入环境",
             "status": "SIMULATOR_READY",
             "configured": True,
             "safe_disabled_verified": True,
@@ -521,7 +521,7 @@ async def _integration_status_rows(venue_id: str, db) -> list[dict[str, Any]]:
         },
         {
             "id": "wechat",
-            "name": "真实企业微信",
+            "name": "真实外部渠道",
             "status": str(wechat_readiness["status"]),
             "configured": False,
             "safe_disabled_verified": True,

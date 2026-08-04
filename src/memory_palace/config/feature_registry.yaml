@@ -882,7 +882,7 @@ items:
 
   - <<: *defaults
     id: MVP-INTEGRATION-WECHAT
-    name: 真实企业微信安全禁用门禁
+    name: 生产外部渠道安全禁用门禁
     category: integration
     status: DISABLED_BY_POLICY
     interactive: false
@@ -896,7 +896,7 @@ items:
     tests: {unit: [tests/unit/test_real_wecom_policy.py, tests/unit/test_runtime_hardening.py], integration: [tests/integration/test_canonical_ingress.py::test_real_wecom_adapter_rejects_before_persistence_even_when_credentials_exist, tests/integration/test_canonical_ingress.py::test_simulator_channel_uses_server_bound_identity_and_canonical_ingress], browser: [], live: [], uat: [E2E-00, E2E-01, E2E-02, E2E-09, UAT-F12, UAT-F13]}
     evidence: {automated: [tests/unit/test_real_wecom_policy.py, tests/integration/test_canonical_ingress.py::test_real_wecom_adapter_rejects_before_persistence_even_when_credentials_exist], browser: [], live: [], uat: []}
     external_config: []
-    blocked_reason: 本项目仅允许企微模拟器；真实企业微信回调、入站和出站均按项目策略禁用，不存在 READY 路径。
+    blocked_reason: 本项目仅允许企业内部系统接入环境；生产外部渠道回调、入站和出站均按项目策略禁用，不存在 READY 路径。
     references: *agent_refs
 
   - <<: *defaults
@@ -939,7 +939,7 @@ items:
 
 uat_journeys:
   - {id: E2E-00, name: 管理员确认运行配置和渠道真实性, covers: [MVP-BIZ-001, MVP-BIZ-002, MVP-BIZ-019, MVP-BIZ-020, MVP-PLATFORM-AUTHZ, MVP-PLATFORM-HEALTH, MVP-INTEGRATION-DEEPSEEK, MVP-INTEGRATION-WECHAT, MVP-INTEGRATION-SMS, MVP-INTEGRATION-VOICE], status: BLOCKED, evidence: []}
-  - {id: E2E-01, name: 打开企微助手并确认身份, covers: [MVP-BIZ-001, MVP-BIZ-007, MVP-BIZ-019, MVP-PLATFORM-AUTHZ], status: BLOCKED, evidence: []}
+  - {id: E2E-01, name: 打开企业内部系统接入环境并确认身份, covers: [MVP-BIZ-001, MVP-BIZ-007, MVP-BIZ-019, MVP-PLATFORM-AUTHZ], status: BLOCKED, evidence: []}
   - {id: E2E-02, name: 发送自由文本和现场附件, covers: [MVP-BIZ-003, MVP-BIZ-007, MVP-PLATFORM-REDIS], status: BLOCKED, evidence: []}
   - {id: E2E-03, name: 完成智能受理并返回事件、SOP 和处置建议, covers: [MVP-BIZ-003, MVP-BIZ-005, MVP-BIZ-011, MVP-BIZ-013, ContextTrigger, Router, Commander, MemoryOps, MVP-PLATFORM-CHROMA, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
   - {id: E2E-04, name: 在同一会话补充现场信息, covers: [MVP-BIZ-004, MVP-BIZ-005, MVP-BIZ-007], status: BLOCKED, evidence: []}
@@ -947,7 +947,7 @@ uat_journeys:
   - {id: E2E-06, name: 验证任务依赖、员工权限并回填检修证据, covers: [MVP-BIZ-008, MVP-PLATFORM-AUTHZ], status: BLOCKED, evidence: []}
   - {id: E2E-07, name: 创建高风险动作审批, covers: [MVP-BIZ-009], status: BLOCKED, evidence: []}
   - {id: E2E-08, name: 拒绝审批、补充试车证据并重新提交, covers: [MVP-BIZ-008, MVP-BIZ-009], status: BLOCKED, evidence: []}
-  - {id: E2E-09, name: 批准动作并送达到企微模拟器, covers: [MVP-BIZ-009, MVP-BIZ-010], status: BLOCKED, evidence: []}
+  - {id: E2E-09, name: 批准动作并送达到企业内部系统接入环境, covers: [MVP-BIZ-009, MVP-BIZ-010], status: BLOCKED, evidence: []}
   - {id: E2E-10, name: 完成任务并验证闭环门禁, covers: [MVP-BIZ-006, MVP-BIZ-008, MVP-BIZ-009, MVP-BIZ-018], status: BLOCKED, evidence: []}
   - {id: E2E-11, name: 运行 Watcher 合规检查, covers: [MVP-BIZ-017, MVP-BIZ-018, Watcher, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
   - {id: E2E-12, name: 关闭事件并生成待审核经验候选, covers: [MVP-BIZ-005, MVP-BIZ-006, MVP-BIZ-018, PersonaExtract, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
@@ -966,5 +966,5 @@ uat_journeys:
   - {id: UAT-F09, name: Watcher 重复运行 finding 去重, covers: [MVP-BIZ-017, MVP-BIZ-018, Watcher], status: BLOCKED, evidence: []}
   - {id: UAT-F10, name: 跨场地全链路读取拒绝, covers: [MVP-BIZ-001, MVP-BIZ-005, MVP-BIZ-007, MVP-BIZ-008, MVP-BIZ-014, MVP-BIZ-016, MVP-BIZ-019, MVP-PLATFORM-AUTHZ], status: BLOCKED, evidence: []}
   - {id: UAT-F11, name: 普通员工越权治理接口拒绝, covers: [MVP-BIZ-009, MVP-BIZ-014, MVP-BIZ-016, MVP-PLATFORM-AUTHZ], status: BLOCKED, evidence: []}
-  - {id: UAT-F12, name: 真实企微按项目策略安全禁用, covers: [MVP-BIZ-020, MVP-INTEGRATION-WECHAT, MVP-INTEGRATION-SMS, MVP-INTEGRATION-VOICE], status: BLOCKED, evidence: []}
-  - {id: UAT-F13, name: 模拟器身份无映射或已停用, covers: [MVP-BIZ-003, MVP-BIZ-007, MVP-BIZ-019, MVP-PLATFORM-AUTHZ, MVP-INTEGRATION-WECHAT], status: BLOCKED, evidence: []}
+  - {id: UAT-F12, name: 生产外部渠道按项目策略安全禁用, covers: [MVP-BIZ-020, MVP-INTEGRATION-WECHAT, MVP-INTEGRATION-SMS, MVP-INTEGRATION-VOICE], status: BLOCKED, evidence: []}
+  - {id: UAT-F13, name: 接入环境身份无映射或已停用, covers: [MVP-BIZ-003, MVP-BIZ-007, MVP-BIZ-019, MVP-PLATFORM-AUTHZ, MVP-INTEGRATION-WECHAT], status: BLOCKED, evidence: []}

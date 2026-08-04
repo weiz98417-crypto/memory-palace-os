@@ -210,7 +210,7 @@ FEATURE_REQUIREMENTS: dict[str, tuple[Requirement, ...]] = {
         ("fact", "llm_calls.event_dossier_visible", "DeepSeek 调用已同步进入事件卷宗"),
     ),
     "MVP-INTEGRATION-WECHAT": (
-        ("integration", "wechat.safe_disabled_verified", "真实企业微信按项目策略安全禁用"),
+        ("integration", "wechat.safe_disabled_verified", "生产外部渠道按项目策略安全禁用"),
     ),
     "MVP-INTEGRATION-SMS": (
         ("integration", "sms.live_verified", "短信供应商沙箱发送成功证据"),
@@ -532,7 +532,7 @@ def _apply_runtime_evidence(registry: dict[str, Any], evidence: dict[str, Any]) 
             item["safe_disabled_verified"] = True
             item["status"] = "DISABLED_BY_POLICY"
             item["blocked_reason"] = integration.get("blocked_reason") or (
-                "本项目仅允许企微模拟器，真实企业微信收发已按项目策略禁用。"
+                "本项目仅允许企业内部系统接入环境，生产外部渠道收发已按项目策略禁用。"
             )
         elif not missing:
             item["status"] = "READY"

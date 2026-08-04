@@ -311,7 +311,7 @@
     var name = identity.display_name || identity.username || "企业员工";
     var profile = [identity.job_title || roleLabel(identity.role), identity.department, identity.venue_name]
       .filter(Boolean).join(" · ");
-    var binding = identity.wecom_binding_status === "ACTIVE" ? "企微身份已绑定" : "企微身份未绑定";
+    var binding = identity.wecom_binding_status === "ACTIVE" ? "接入身份已绑定" : "接入身份未绑定";
     summary.innerHTML = '<span class="identity-avatar">' + UI.escapeHTML(name.slice(0, 1)) + '</span><div><strong>' +
       UI.escapeHTML(name) + "</strong><span>" + UI.escapeHTML(profile + " · " + binding) + "</span></div>";
     byId("conversation-identity").textContent = name + " · " + (identity.job_title || roleLabel(identity.role)) +
@@ -320,7 +320,7 @@
     send.disabled = state.submitting;
     attachmentFile.disabled = state.submitting;
     attachmentNote.disabled = state.submitting;
-    byId("delivery-status").textContent = state.sessionId ? "会话已恢复，可以继续发送" : "可以开始新的模拟会话";
+    byId("delivery-status").textContent = state.sessionId ? "会话已恢复，可以继续发送" : "可以开始新的接入会话";
   }
 
   function renderIdentityOptions() {
@@ -358,10 +358,10 @@
       return;
     }
     if (state.sessionsLoading) {
-      select.innerHTML = '<option value="">正在读取企微模拟会话…</option>';
+      select.innerHTML = '<option value="">正在读取内部系统接入会话…</option>';
       select.value = "";
       select.disabled = true;
-      status.textContent = "正在同步当前员工的企微模拟会话。";
+      status.textContent = "正在同步当前员工的内部系统接入会话。";
       return;
     }
     if (error) {
@@ -375,7 +375,7 @@
       select.innerHTML = '<option value="">暂无历史会话</option>';
       select.value = "";
       select.disabled = true;
-      status.textContent = "该员工暂无企微模拟会话；发送第一条消息后会自动创建。";
+      status.textContent = "该员工暂无内部系统接入会话；发送第一条消息后会自动创建。";
       return;
     }
     select.innerHTML = ['<option value="">新会话（发送后创建）</option>'].concat(
@@ -387,7 +387,7 @@
     select.value = state.sessionId || "";
     select.disabled = state.submitting;
     status.textContent = state.sessionId
-      ? "已恢复当前员工的企微模拟会话，共 " + state.sessions.length + " 条。"
+      ? "已恢复当前员工的内部系统接入会话，共 " + state.sessions.length + " 条。"
       : "已准备新会话；发送第一条消息后建立正式会话。";
   }
 
@@ -495,7 +495,7 @@
       renderIdentity();
       if (!state.identities.length) {
         select.innerHTML = '<option value="">当前租户没有可用员工身份</option>';
-        byId("delivery-status").textContent = "没有可用于模拟的员工身份";
+        byId("delivery-status").textContent = "没有可用于接入联调的员工身份";
         renderExperienceSummary();
         renderMessages();
         return;
@@ -612,17 +612,17 @@
   function updateSessionSummary() {
     var identity = selectedIdentity();
     if (!identity) {
-      byId("session-summary").textContent = "选择员工后可开始新的模拟会话。";
+      byId("session-summary").textContent = "选择员工后可开始新的接入会话。";
       return;
     }
     byId("session-summary").textContent = state.sessionId
-      ? "正在查看 " + (identity.display_name || identity.username || "当前员工") + " 的已受理模拟会话。"
+      ? "正在查看 " + (identity.display_name || identity.username || "当前员工") + " 的已受理接入会话。"
       : "将以 " + (identity.display_name || identity.username || "当前员工") + " 身份创建新会话。";
   }
 
   function channelLabel(value) {
     var code = String(value || "").toUpperCase();
-    if (code === "WECOM_SIMULATOR") return "企微模拟渠道";
+    if (code === "WECOM_SIMULATOR") return "内部系统接入渠道";
     if (code === "WEB") return "网页员工助手";
     return value ? "企业消息渠道" : "尚未产生";
   }
@@ -797,8 +797,12 @@
     var senderLabel = role === "user"
       ? (message.optimistic ? name + " · " + UI.statusLabel(message.status) : name)
       : name;
-    return '<article class="wecom-message ' + role + '"><span class="message-avatar">' +
-      UI.escapeHTML(role === "user" ? name.slice(0, 1) : "AI") + '</span><div class="message-stack"><span class="sender-name">' +
+    var avatarClass = role === "user" ? "message-avatar" : "message-avatar brand-avatar";
+    var avatarHTML = role === "user"
+      ? UI.escapeHTML(name.slice(0, 1))
+      : '<img src="/admin/brand/logo-primary.svg" alt="">';
+    return '<article class="wecom-message ' + role + '"><span class="' + avatarClass + '">' +
+      avatarHTML + '</span><div class="message-stack"><span class="sender-name">' +
       UI.escapeHTML(senderLabel) + '</span><div class="wecom-bubble ' + (!content && !terminal ? "pending" : "") + '">' +
       UI.escapeHTML(text) + "</div>" + attachmentsHTML +
       (cards.length ? '<div class="wecom-business-cards">' + cards.map(renderCard).join("") + "</div>" : "") + recoveryHTML +
@@ -807,13 +811,13 @@
 
   function deliveryStatusLabel(value) {
     var labels = {
-      DELIVERED: "已送达企微模拟器",
+      DELIVERED: "已送达内部系统接入环境",
       FAILED: "送达失败",
       SENDING: "正在送达",
       PENDING: "等待送达",
       RECORDED: "已写入出站账本"
     };
-    return labels[UI.statusCode(value)] || "尚无模拟器送达记录";
+    return labels[UI.statusCode(value)] || "尚无接入环境送达记录";
   }
 
   function renderOutboxFact(label, value) {
@@ -831,11 +835,11 @@
         ? "替代上一张已拒绝审批 " + supersedesBusinessId
         : ""),
       renderOutboxFact("当前进展", item.status_summary),
-      renderOutboxFact("送达状态", item.delivery_status ? deliveryStatusLabel(item.delivery_status) : "尚无模拟器送达记录"),
+      renderOutboxFact("送达状态", item.delivery_status ? deliveryStatusLabel(item.delivery_status) : "尚无接入环境送达记录"),
       renderOutboxFact("审批意见", item.review_comment),
       renderOutboxFact("失败原因", failure)
     ].filter(Boolean).join("");
-    return '<article class="wecom-message assistant outbox"><span class="message-avatar">回</span>' +
+    return '<article class="wecom-message assistant outbox"><span class="message-avatar brand-avatar"><img src="/admin/brand/logo-primary.svg" alt=""></span>' +
       '<div class="message-stack"><span class="sender-name">受控动作回执 · 来自真实审批与出站账本</span>' +
       '<section class="wecom-outbox-card ' + statusClass(item.status) + '"><header><strong>' +
       UI.escapeHTML(item.tool_label || "受控通知") + '</strong><span class="status-pill ' + statusClass(item.status) + '">' +
@@ -899,7 +903,7 @@
       ["访谈编号", interview.business_id || interview.id],
       ["来源事件", safeBusinessCode(interview.source_event_id)]
     ]);
-    return '<article class="wecom-message assistant experience-message"><span class="message-avatar">经</span>' +
+    return '<article class="wecom-message assistant experience-message"><span class="message-avatar brand-avatar"><img src="/admin/brand/logo-primary.svg" alt=""></span>' +
       '<div class="message-stack"><span class="sender-name">企业运营助手 · 经验共创</span>' +
       '<section class="experience-timeline-card"><header><span>专家访谈邀请</span><span class="status-pill ' +
       experienceStatusClass(status) + '">' + UI.escapeHTML(UI.statusLabel(status)) + '</span></header>' +
@@ -925,7 +929,7 @@
       ["授权范围", scopes.map(experienceScopeLabel).join("、")]
     ]);
     var actionLabel = status === "DRAFT" ? "检查并确认草稿" : "查看经验卡";
-    return '<article class="wecom-message assistant experience-message"><span class="message-avatar">卡</span>' +
+    return '<article class="wecom-message assistant experience-message"><span class="message-avatar brand-avatar"><img src="/admin/brand/logo-primary.svg" alt=""></span>' +
       '<div class="message-stack"><span class="sender-name">企业运营助手 · 经验资产</span>' +
       '<section class="experience-timeline-card"><header><span>人类可读经验卡 · 第 ' + version + ' 版</span><span class="status-pill ' +
       experienceStatusClass(status) + '">' + UI.escapeHTML(UI.statusLabel(status)) + '</span></header>' +
@@ -941,7 +945,7 @@
 
   function renderExperienceError() {
     if (!state.experience.error) return "";
-    return '<article class="wecom-message assistant experience-message"><span class="message-avatar">经</span>' +
+    return '<article class="wecom-message assistant experience-message"><span class="message-avatar brand-avatar"><img src="/admin/brand/logo-primary.svg" alt=""></span>' +
       '<div class="message-stack"><span class="sender-name">企业运营助手 · 经验共创</span>' +
       '<section class="wecom-recovery-card failed"><strong>经验共创暂时未同步</strong><p>' +
       UI.escapeHTML(UI.errorView(state.experience.error).message) + '</p><button class="btn" type="button" data-action="reload-experience">重新同步经验任务</button></section></div></article>';
@@ -1077,7 +1081,7 @@
     var identity = selectedIdentity();
     byId("interview-dialog-title").textContent = readableTitle(interview.title, "专家经验访谈");
     byId("interview-identity-note").textContent =
-      "当前模拟身份：" + displayText(identity && (identity.display_name || identity.username), "企业员工") +
+      "当前接入身份：" + displayText(identity && (identity.display_name || identity.username), "企业员工") +
       "。访谈原话会作为不可变来源证据保存。";
     byId("interview-progress").innerHTML =
       '<div class="progress-label"><span class="status-pill ' + experienceStatusClass(status) + '">' +
@@ -1949,7 +1953,7 @@
       byId("login-error").textContent = UI.errorView(error).message;
     } finally {
       button.disabled = false;
-      button.textContent = "进入模拟环境";
+      button.textContent = "进入接入环境";
     }
   }
 

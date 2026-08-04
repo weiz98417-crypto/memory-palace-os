@@ -10,7 +10,7 @@ from .sensitive_output import public_error_message, sanitize_public_value
 
 _TOOL_LABELS = {
     "send_alert": "告警广播",
-    "send_in_app_alert": "企微模拟器通知",
+    "send_in_app_alert": "内部系统接入通知",
     "send_sms": "短信通知",
 }
 _SIMULATOR_DELIVERY_CHANNELS = {"IN_APP", "WECOM_SIMULATOR_OUTBOX"}
@@ -25,7 +25,7 @@ class SimulatorRecipientsNotReady(RuntimeError):
     code = "SIMULATOR_RECIPIENTS_NOT_READY"
 
     def __init__(self, missing: list[dict[str, Any]]):
-        super().__init__("企微模拟器收件人尚未就绪")
+        super().__init__("内部系统接入收件人尚未就绪")
         self.missing = missing
 
 
@@ -94,7 +94,7 @@ async def _active_recipient(
         return None, {
             **readable,
             "reason_code": "WECOM_IDENTITY_INACTIVE",
-            "reason": "员工没有可用的企微身份绑定",
+            "reason": "员工没有可用的内部系统接入身份绑定",
         }
 
     if session_id:
@@ -129,7 +129,7 @@ async def _active_recipient(
         return None, {
             **readable,
             "reason_code": "SIMULATOR_SESSION_MISSING",
-            "reason": "员工尚未开启可用的企微模拟器会话",
+            "reason": "员工尚未开启可用的内部系统接入会话",
         }
     return {
         **readable,
@@ -274,7 +274,7 @@ def _approval_status(approval: dict[str, Any], push: dict[str, Any] | None) -> t
     if execution_status == "SUCCEEDED":
         if delivery_status == "DELIVERED":
             return "SUCCEEDED", "审批通过，动作已执行并送达"
-        return "SUCCEEDED", "审批通过，动作执行成功，尚无模拟器送达记录"
+        return "SUCCEEDED", "审批通过，动作执行成功，尚无接入环境送达记录"
     return "EXECUTING", "审批已通过，动作执行中"
 
 
