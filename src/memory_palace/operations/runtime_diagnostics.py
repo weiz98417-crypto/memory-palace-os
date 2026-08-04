@@ -77,12 +77,14 @@ async def collect_runtime_diagnostics(
 
 async def run_deepseek_probe(
     llm_client: Any,
+    db: Any,
     *,
     venue_id: str,
     trace_id: str,
 ) -> dict[str, Any]:
     """Run one live model connectivity probe and return only safe metadata."""
 
+    probe_started_at = time.time()
     response = await llm_client.ask(
         system_prompt="You are a runtime connectivity probe. Reply with READY only.",
         user_prompt="Verify that the configured model can answer this request.",
@@ -98,12 +100,38 @@ async def run_deepseek_probe(
     is_mock = bool(getattr(response, "is_mock", False))
     if is_mock or model_name != REQUIRED_GENERATIVE_MODEL:
         raise RuntimeError("DeepSeek probe did not return live required-model evidence")
+    evidence_row = await db.fetch_one(
+        """
+        SELECT provider, model_name, status, is_mock, request_id, trace_id, created_at
+        FROM llm_call_logs
+        WHERE venue_id = ?
+          AND trace_id = ?
+          AND agent_id = ?
+          AND created_at >= ?
+        ORDER BY created_at DESC
+        LIMIT 1
+        """,
+        (venue_id, trace_id, DEEPSEEK_DIAGNOSTIC_AGENT_ID, probe_started_at),
+    )
+    evidence = _public_model_evidence(evidence_row)
+    request_id = str(getattr(response, "request_id", "") or "").strip()
+    if not (
+        request_id
+        and evidence
+        and evidence["provider"] == "deepseek"
+        and evidence["model_name"] == REQUIRED_GENERATIVE_MODEL
+        and evidence["status"] == "SUCCEEDED"
+        and evidence["is_mock"] is False
+        and evidence["trace_id"] == trace_id
+        and evidence["request_id"] == request_id
+    ):
+        raise RuntimeError("DeepSeek probe evidence was not persisted")
     return {
         "status": "READY",
         "provider": "deepseek",
         "model": model_name,
         "is_mock": False,
-        "request_id": getattr(response, "request_id", None),
+        "request_id": request_id,
         "trace_id": trace_id,
         "latency_seconds": float(getattr(response, "latency_seconds", 0.0) or 0.0),
     }
@@ -170,15 +198,11 @@ async def _deepseek_status(db: Any, *, venue_id: str) -> dict[str, Any]:
             SELECT provider, model_name, status, is_mock, request_id, trace_id, created_at
             FROM llm_call_logs
             WHERE venue_id = ?
-              AND provider = 'deepseek'
-              AND model_name = ?
-              AND status = 'SUCCEEDED'
-              AND NOT COALESCE(is_mock, FALSE)
-              AND created_at >= ?
+              AND agent_id = ?
             ORDER BY created_at DESC
             LIMIT 1
             """,
-            (venue_id, REQUIRED_GENERATIVE_MODEL, cutoff),
+            (venue_id, DEEPSEEK_DIAGNOSTIC_AGENT_ID),
         )
     except Exception as exc:
         row = None
@@ -346,6 +370,11 @@ async def _agent_statuses(
         )
     registered_agent_count = sum(1 for agent in result if agent["registered"])
     verified_agent_count = sum(1 for agent in result if agent["status"] == "LIVE_VERIFIED")
+    collection["status"] = (
+        "healthy"
+        if collection["status"] == "healthy" and registered_agent_count == len(_AGENTS)
+        else "unhealthy"
+    )
     return result, {
         **collection,
         "registered_agent_count": registered_agent_count,

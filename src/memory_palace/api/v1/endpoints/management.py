@@ -604,6 +604,7 @@ async def deepseek_diagnostics_probe(
     try:
         result = await run_deepseek_probe(
             llm_client,
+            db,
             venue_id=principal["venue_id"],
             trace_id=trace_id,
         )

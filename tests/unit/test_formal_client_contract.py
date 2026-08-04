@@ -514,5 +514,16 @@ def test_diagnostics_renders_unified_runtime_agents_and_channel_policy():
     assert "diagnostics.channels" in html
     assert 'data-action="deepseek-probe"' in html
     assert 'api("/admin/diagnostics/deepseek-probe",{method:"POST"})' in html
+    assert 'id="diagnostic-blockers"' in html
+    assert "主旅程不得开始" in html
+    assert "修复：" in html
+    assert 'action:"diagnostics-users"' in html
+    assert 'action:"diagnostics-refresh"' in html
+    assert "agentCoverage.error_type" in html
+    assert "Agent 证据采集异常" in html
+    assert "检查 PostgreSQL 与模型调用日志" in html
+    assert 'data-action="enable-simulator-identity"' in html
+    assert 'api("/channels/identities",{method:"POST"' in html
+    assert 'channel:"WECOM_SIMULATOR"' in html
     assert "真实企业微信" in html
     assert "DISABLED_BY_POLICY" in html

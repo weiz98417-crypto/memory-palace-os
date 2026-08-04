@@ -9,6 +9,7 @@ from fastapi import FastAPI
 
 from src.memory_palace.api.auth import create_token
 from src.memory_palace.api.v1.endpoints.management import router as management_router
+from src.memory_palace.operations import runtime_diagnostics
 from src.memory_palace.skills import _auto_register_skills
 
 
@@ -39,7 +40,7 @@ class DiagnosticsDatabaseStub:
                 "status": "ACTIVE",
             }
         if "FROM llm_call_logs" in sql:
-            assert parameters[:2] == ("venue-alpha", "deepseek-v4-flash")
+            assert parameters == ("venue-alpha", "RuntimeDiagnostics")
             return {
                 "provider": "deepseek",
                 "model_name": "deepseek-v4-flash",
@@ -138,6 +139,23 @@ class BrokenAgentEvidenceDatabaseStub(ProbeOnlyDiagnosticsDatabaseStub):
         return await super().fetch_all(sql, parameters)
 
 
+class FailedLatestProbeDatabaseStub(ProbeOnlyDiagnosticsDatabaseStub):
+    async def fetch_one(self, sql: str, parameters: tuple = ()):
+        if "FROM llm_call_logs" in sql:
+            assert parameters == ("venue-alpha", "RuntimeDiagnostics")
+            assert "status = 'SUCCEEDED'" not in sql
+            return {
+                "provider": "deepseek",
+                "model_name": "deepseek-v4-flash",
+                "status": "FAILED",
+                "is_mock": False,
+                "request_id": None,
+                "trace_id": "failed-probe-trace",
+                "created_at": time.time(),
+            }
+        return await super().fetch_one(sql, parameters)
+
+
 class DeepSeekProbeClientStub:
     def __init__(self):
         self.kwargs = None
@@ -160,9 +178,40 @@ class MockDeepSeekProbeClientStub(DeepSeekProbeClientStub):
         return response
 
 
+class MissingRequestIdDeepSeekProbeClientStub(DeepSeekProbeClientStub):
+    async def ask(self, **kwargs):
+        response = await super().ask(**kwargs)
+        response.request_id = None
+        return response
+
+
 class ProbeEndpointDatabaseStub(DiagnosticsDatabaseStub):
-    def __init__(self):
+    def __init__(
+        self,
+        *,
+        probe_evidence_persisted: bool = True,
+        probe_request_id: str | None = "probe-request",
+    ):
         self.executed: list[tuple[str, tuple]] = []
+        self.probe_evidence_persisted = probe_evidence_persisted
+        self.probe_request_id = probe_request_id
+
+    async def fetch_one(self, sql: str, parameters: tuple = ()):
+        if "FROM llm_call_logs" in sql:
+            assert parameters[:3] == ("venue-alpha", "probe-trace", "RuntimeDiagnostics")
+            assert isinstance(parameters[3], float)
+            if not self.probe_evidence_persisted:
+                return None
+            return {
+                "provider": "deepseek",
+                "model_name": "deepseek-v4-flash",
+                "status": "SUCCEEDED",
+                "is_mock": False,
+                "request_id": self.probe_request_id,
+                "trace_id": "probe-trace",
+                "created_at": time.time(),
+            }
+        return await super().fetch_one(sql, parameters)
 
     async def execute(self, sql: str, parameters: tuple = ()):
         self.executed.append((sql, parameters))
@@ -374,6 +423,66 @@ async def test_deepseek_readiness_is_independent_from_eight_agent_call_coverage(
 
 
 @pytest.mark.asyncio
+async def test_latest_failed_diagnostic_probe_blocks_deepseek_readiness(monkeypatch):
+    monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "diagnostic-deepseek-secret")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    monkeypatch.delenv("MOCK_LLM", raising=False)
+    _auto_register_skills()
+
+    app = FastAPI(version="1.2.3")
+    app.state.db_client = FailedLatestProbeDatabaseStub()
+    app.state.message_queue = QueueStub()
+    app.state.message_worker = WorkerStub()
+    app.state.vector_store = VectorStoreStub()
+    app.state.runtime_instance_id = "app-instance-uat"
+    app.include_router(management_router, prefix="/admin")
+
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/admin/diagnostics", headers=_access_header(role="admin"))
+
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["status"] == "degraded"
+    assert payload["deepseek"]["status"] == "BLOCKED"
+    assert payload["deepseek"]["live_verified"] is False
+    assert payload["deepseek"]["evidence"]["status"] == "FAILED"
+
+
+@pytest.mark.asyncio
+async def test_missing_agent_registration_degrades_without_conflating_call_coverage(monkeypatch):
+    monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "diagnostic-deepseek-secret")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    monkeypatch.delenv("MOCK_LLM", raising=False)
+    _auto_register_skills()
+    registered = set(runtime_diagnostics.list_skill_names()) - {"watcher"}
+    monkeypatch.setattr(runtime_diagnostics, "list_skill_names", lambda: sorted(registered))
+
+    app = FastAPI(version="1.2.3")
+    app.state.db_client = DiagnosticsDatabaseStub()
+    app.state.message_queue = QueueStub()
+    app.state.message_worker = WorkerStub()
+    app.state.vector_store = VectorStoreStub()
+    app.state.runtime_instance_id = "app-instance-uat"
+    app.include_router(management_router, prefix="/admin")
+
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/admin/diagnostics", headers=_access_header(role="admin"))
+
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["status"] == "degraded"
+    assert payload["agent_coverage"]["status"] == "unhealthy"
+    assert payload["agent_coverage"]["registered_agent_count"] == 7
+    assert payload["agent_coverage"]["verified_agent_count"] == 7
+    watcher = next(agent for agent in payload["agents"] if agent["id"] == "Watcher")
+    assert watcher["status"] == "UNREGISTERED"
+
+
+@pytest.mark.asyncio
 async def test_wecom_simulator_blocks_when_active_users_lack_active_identity_mapping(monkeypatch):
     monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
     monkeypatch.setenv("DEEPSEEK_API_KEY", "diagnostic-deepseek-secret")
@@ -495,6 +604,48 @@ async def test_deepseek_probe_rejects_mock_evidence(monkeypatch):
     assert response.status_code == 503
     assert response.json()["detail"]["code"] == "DEEPSEEK_PROBE_FAILED"
     assert "private-probe-output-must-not-leak" not in response.text
+
+
+@pytest.mark.asyncio
+async def test_deepseek_probe_fails_when_success_evidence_was_not_persisted(monkeypatch):
+    monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
+    database = ProbeEndpointDatabaseStub(probe_evidence_persisted=False)
+    app = FastAPI(version="1.2.3")
+    app.state.db_client = database
+    app.state.container = SimpleNamespace(llm_client=DeepSeekProbeClientStub())
+    app.include_router(management_router, prefix="/admin")
+
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/admin/diagnostics/deepseek-probe",
+            headers={**_access_header(role="admin"), "X-Trace-ID": "probe-trace"},
+        )
+
+    assert response.status_code == 503
+    assert response.json()["detail"]["code"] == "DEEPSEEK_PROBE_FAILED"
+    assert any("FAILED" in parameters for _sql, parameters in database.executed)
+
+
+@pytest.mark.asyncio
+async def test_deepseek_probe_rejects_evidence_without_request_id(monkeypatch):
+    monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
+    database = ProbeEndpointDatabaseStub(probe_request_id=None)
+    app = FastAPI(version="1.2.3")
+    app.state.db_client = database
+    app.state.container = SimpleNamespace(llm_client=MissingRequestIdDeepSeekProbeClientStub())
+    app.include_router(management_router, prefix="/admin")
+
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/admin/diagnostics/deepseek-probe",
+            headers={**_access_header(role="admin"), "X-Trace-ID": "probe-trace"},
+        )
+
+    assert response.status_code == 503
+    assert response.json()["detail"]["code"] == "DEEPSEEK_PROBE_FAILED"
+    assert any("FAILED" in parameters for _sql, parameters in database.executed)
 
 
 @pytest.mark.asyncio

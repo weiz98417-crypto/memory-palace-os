@@ -173,6 +173,9 @@ textarea.control{min-height:104px;resize:vertical}
 .metric-label{color:var(--muted);font-size:11px;margin-bottom:7px}
 .metric-value{font-size:27px;line-height:1.1;font-weight:780;font-variant-numeric:tabular-nums}
 .metric-note{color:var(--subtle);font-size:11px;margin-top:5px}
+.diagnostic-blockers{margin:0 0 14px;border-block:1px solid #713740;background:#241923}
+.diagnostic-blocker{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 14px;border-bottom:1px solid rgba(113,55,64,.55)}
+.diagnostic-blocker:last-child{border-bottom:0}.diagnostic-blocker strong{display:block;font-size:12px;color:#ffbec2}.diagnostic-blocker p{margin:3px 0 0;color:var(--muted);font-size:11px}
 .layout-2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,.65fr);gap:14px}
 .layout-equal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .panel{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--radius);overflow:hidden}
@@ -333,6 +336,7 @@ dialog::backdrop{background:rgba(3,7,17,.78)}
   .tenant-chip{display:none}
   .workspace{padding:14px}
   .page-head{flex-direction:column}
+  .diagnostic-blocker{align-items:flex-start;flex-direction:column}
   .trace-panel .panel-head{align-items:flex-start;flex-direction:column}
   .trace-search{width:100%;min-width:0}
   .actions{justify-content:flex-start}
@@ -583,6 +587,7 @@ dialog::backdrop{background:rgba(3,7,17,.78)}
         <section id="view-diagnostics" class="view">
           <div class="page-head"><div><h2>运维诊断</h2><p>查看健康、队列、死信、模型调用、审计和 Agent 注册；运行时操作均使用正式 API。</p></div><div class="actions"><button class="btn" type="button" data-action="deepseek-probe">验证 DeepSeek</button><button class="btn" type="button" data-action="reload-config">重载配置</button></div></div>
           <div id="health-metrics" class="metric-grid"></div>
+          <div id="diagnostic-blockers" class="diagnostic-blockers hidden" aria-label="影响：主旅程不得开始" aria-live="polite"></div>
           <div class="panel">
             <div class="panel-head"><div><h3>App 启动与恢复</h3><span>真实启动记录、任务图恢复和 Redis pending 回收结果</span></div><span>最近 20 次</span></div>
             <div id="recovery-run-list" class="panel-body feed"><div class="empty"><strong>正在读取恢复记录</strong>诊断页只展示持久化的安全计数和 Trace。</div></div>
@@ -1000,7 +1005,8 @@ var App={
       "close-session":this.closeSession,"view-task":this.openTask,"unblock-task":this.unblockTask,"new-interview":this.newInterview,
       "view-experience-interview":this.viewExperienceInterview,"view-experience-card":this.viewExperienceCard,
       "submit-experience-card":this.submitExperienceCard,"reject-experience-card":this.rejectExperienceCard,
-      "publish-experience-card":this.publishExperienceCard,"deprecate-experience-card":this.deprecateExperienceCard
+      "publish-experience-card":this.publishExperienceCard,"deprecate-experience-card":this.deprecateExperienceCard,
+      "enable-simulator-identity":this.enableSimulatorIdentity
     };
     var handlers={
       logout:this.logout,menu:this.toggleMenu,refresh:this.refreshCurrent,
@@ -1008,7 +1014,7 @@ var App={
       "new-knowledge":this.newKnowledge,"knowledge-import":this.importKnowledge,"knowledge-rebuild":this.rebuildKnowledge,
       "new-expert":this.newExpert,
       "new-policy":this.newPolicy,"new-sop":this.newSop,"new-user":this.newUser,"new-venue":this.newVenue,
-      "deepseek-probe":this.runDeepseekProbe,"reload-config":this.reloadConfig,"close-details":this.closeDetails,
+      "deepseek-probe":this.runDeepseekProbe,"diagnostics-refresh":this.loadDiagnostics,"diagnostics-users":this.openDiagnosticUsers,"reload-config":this.reloadConfig,"close-details":this.closeDetails,
       "cancel-task-decomposition":this.cancelTaskDecomposition,"recover-task-decomposition":this.recoverTaskDecomposition
     };
     if(idHandlers[action]){idHandlers[action].call(this,id);return}
@@ -1742,11 +1748,12 @@ var App={
   loadManagement:async function(){var result=await Promise.all([api("/admin/users"),api("/admin/venues")]);this.state.users=result[0].users||[];this.state.venues=result[1].venues||[];this.renderManagement()},
   renderManagement:function(){
     byId("user-count").textContent=this.state.users.length+" 个";byId("venue-count").textContent=this.state.venues.length+" 个";
-    byId("users-table").innerHTML=this.state.users.length?this.state.users.map(function(user){var next=user.status==="ACTIVE"?"DISABLED":"ACTIVE";return '<tr><td><div class="cell-title">'+escapeHtml(user.display_name)+'</div><div class="cell-sub">'+escapeHtml(user.username)+'</div></td><td>'+escapeHtml(roleNames[user.role]||user.role)+'</td><td class="mono">'+escapeHtml(user.venue_id)+'</td><td>'+badge(user.status)+'</td><td><div class="record-actions"><button class="btn small" onclick="App.toggleUser(\''+escapeHtml(user.id)+'\',\''+next+'\')">'+(next==="ACTIVE"?"启用":"停用")+'</button><button class="btn small" onclick="App.resetPassword(\''+escapeHtml(user.id)+'\')">重置密码</button></div></td></tr>'}).join(""):emptyRow(5,"暂无用户","");
+    byId("users-table").innerHTML=this.state.users.length?this.state.users.map(function(user){var next=user.status==="ACTIVE"?"DISABLED":"ACTIVE",simulatorAction=user.status==="ACTIVE"?'<button class="btn small" type="button" data-action="enable-simulator-identity" data-id="'+escapeHtml(user.id)+'">启用模拟器身份</button>':"";return '<tr><td><div class="cell-title">'+escapeHtml(user.display_name)+'</div><div class="cell-sub">'+escapeHtml(user.username)+'</div></td><td>'+escapeHtml(roleNames[user.role]||user.role)+'</td><td class="mono">'+escapeHtml(user.venue_id)+'</td><td>'+badge(user.status)+'</td><td><div class="record-actions">'+simulatorAction+'<button class="btn small" onclick="App.toggleUser(\''+escapeHtml(user.id)+'\',\''+next+'\')">'+(next==="ACTIVE"?"启用":"停用")+'</button><button class="btn small" onclick="App.resetPassword(\''+escapeHtml(user.id)+'\')">重置密码</button></div></td></tr>'}).join(""):emptyRow(5,"暂无用户","");
     byId("venues-table").innerHTML=this.state.venues.length?this.state.venues.map(function(venue){var next=venue.status==="ACTIVE"?"DISABLED":"ACTIVE";return '<tr><td class="cell-title">'+escapeHtml(venue.name)+'</td><td class="mono">'+escapeHtml(venue.id)+'</td><td>'+badge(venue.status)+'</td><td><button class="btn small" onclick="App.toggleVenue(\''+escapeHtml(venue.id)+'\',\''+next+'\')">'+(next==="ACTIVE"?"启用":"停用")+'</button></td></tr>'}).join(""):emptyRow(4,"暂无场地","");
   },
   newUser:function(){byId("user-form").reset();byId("user-venue").innerHTML=this.state.venues.filter(function(venue){return venue.status==="ACTIVE"}).map(function(venue){return '<option value="'+escapeHtml(venue.id)+'">'+escapeHtml(venue.name)+'</option>'}).join("");openDialog("user-dialog")},
   createUser:async function(event){event.preventDefault();try{await api("/admin/users",{method:"POST",body:{username:byId("user-username").value.trim(),display_name:byId("user-display-name").value.trim(),password:byId("user-password").value,role:byId("user-role").value,venue_id:byId("user-venue").value}});closeDialog("user-dialog");notify("用户已创建","success");await this.loadManagement()}catch(error){notify(error.message,"error")}},
+  enableSimulatorIdentity:async function(id){var user=this.state.users.find(function(item){return item.id===id});if(!user||user.status!=="ACTIVE")return;if(!await confirmAction({title:"启用企微模拟器身份",description:"仅为该用户创建企微模拟器身份映射；此操作不会配置、初始化或调用真实企业微信。",submitLabel:"确认启用"}))return;try{await api("/channels/identities",{method:"POST",body:{channel:"WECOM_SIMULATOR",external_tenant_id:"simulator-tenant:"+user.venue_id,external_user_id:"simulator-user:"+user.id,user_id:user.id,status:"ACTIVE"}});notify("企微模拟器身份已启用","success");await this.loadManagement()}catch(error){notify(error.message,"error")}},
   toggleUser:async function(id,status){if(!await confirmAction({title:status==="ACTIVE"?"启用用户":"停用用户",description:"用户状态将立即变更并记录审计日志。",submitLabel:"确认变更",danger:status!=="ACTIVE"}))return;try{await api("/admin/users/"+encodeURIComponent(id),{method:"PATCH",body:{status:status}});notify("用户状态已更新","success");await this.loadManagement()}catch(error){notify(error.message,"error")}},
   resetPassword:async function(id){var values=await requestInput({title:"重置用户密码",description:"密码重置后，该用户的旧刷新令牌会立即撤销。",submitLabel:"确认重置",danger:true,fields:[{name:"password",label:"新密码",type:"password",required:true,minLength:8,maxLength:128,autocomplete:"new-password",span:2}]});if(!values)return;try{await api("/admin/users/"+encodeURIComponent(id)+"/reset-password",{method:"POST",body:{password:values.password}});notify("密码已重置，旧刷新令牌已撤销","success")}catch(error){notify(error.message,"error")}},
   newVenue:function(){byId("venue-form").reset();openDialog("venue-dialog")},
@@ -1786,6 +1793,12 @@ var App={
     metrics.push('<div class="metric"><div class="metric-label">Agent 覆盖</div><div class="metric-value" style="font-size:17px">'+diagnosticBadge(agentCoverage.status||"unhealthy")+'</div><div class="metric-note">已注册 '+escapeHtml(agentCoverage.registered_agent_count||0)+' / '+escapeHtml(agentCoverage.required_agent_count||0)+' · 真实调用 '+escapeHtml(agentCoverage.verified_agent_count||0)+' / '+escapeHtml(agentCoverage.required_agent_count||0)+'</div></div>');
     [{key:"wecom_simulator",label:"企微模拟器"},{key:"real_wecom",label:"真实企业微信"}].forEach(function(definition){var channel=channels[definition.key]||{},note=definition.key==="wecom_simulator"?"ACTIVE 用户 "+(channel.active_user_count||0)+" · 已映射 "+(channel.mapped_active_user_count||0)+" · 缺失 "+(channel.unmapped_active_user_count||0):"策略 "+(channel.policy_mode||"WECOM_SIMULATOR_ONLY")+" · 未初始化 / 未入队 / 未投递";metrics.push('<div class="metric"><div class="metric-label">'+definition.label+'</div><div class="metric-value" style="font-size:17px">'+diagnosticBadge(channel.status)+'</div><div class="metric-note">'+escapeHtml(note)+'</div></div>')});
     byId("health-metrics").innerHTML=metrics.join("");
+    var issues=[];
+    Object.keys(runtime).forEach(function(key){var item=runtime[key]||{};if(item.status!=="healthy")issues.push({title:(componentLabels[key]||key)+" 异常",impact:"主旅程不得开始，依赖该组件的业务处理暂停。",recovery:"恢复运行依赖后重新检查。",action:"diagnostics-refresh",label:"重新检查"})});
+    if(deepseek.status!=="READY")issues.push({title:"DeepSeek 未就绪",impact:"主旅程不得开始，8 Agent 的生成式步骤不可验收。",recovery:"检查模型配置并运行一次真实探针。",action:"deepseek-probe",label:"验证 DeepSeek"});
+    if(agentCoverage.status!=="healthy"){var agentEvidenceFailed=Boolean(agentCoverage.error_type);issues.push({title:agentEvidenceFailed?"Agent 证据采集异常":"Agent 注册不完整",impact:agentEvidenceFailed?"主旅程不得开始，Agent 的真实调用状态当前不可确认。":"主旅程不得开始，缺失 Agent 对应的业务步骤不可用。",recovery:agentEvidenceFailed?"检查 PostgreSQL 与模型调用日志（"+agentCoverage.error_type+"）后重新检查。":"部署或重启 App 恢复注册后重新检查。",action:"diagnostics-refresh",label:"重新检查"})}
+    var simulator=channels.wecom_simulator||{};if(simulator.status!=="SIMULATOR_READY")issues.push({title:"企微模拟器主数据不完整",impact:"主旅程不得开始，模拟器会话与通知不可验收。",recovery:"前往用户与场地补齐 ACTIVE 用户的模拟器身份映射。",action:"diagnostics-users",label:"用户与场地"});
+    var blockerNode=byId("diagnostic-blockers");blockerNode.classList.toggle("hidden",issues.length===0);blockerNode.innerHTML=issues.map(function(issue){return '<div class="diagnostic-blocker"><div><strong>'+escapeHtml(issue.title)+'</strong><p>影响：'+escapeHtml(issue.impact)+' 修复：'+escapeHtml(issue.recovery)+'</p></div><button class="btn small" type="button" data-action="'+escapeHtml(issue.action)+'">'+escapeHtml(issue.label)+'</button></div>'}).join("");
     byId("recovery-run-list").innerHTML=recoveryRuns.length?recoveryRuns.map(function(item){var trace=item.trace||[],counts=["任务图恢复 "+escapeHtml(item.task_graph_recovered_count||0),"任务状态重置 "+escapeHtml(item.task_graph_reset_count||0),"审批中断 "+escapeHtml(item.approval_interrupted_count||0),"Watcher 中断 "+escapeHtml(item.watcher_interrupted_count||0),"Redis 回收 "+escapeHtml(item.redis_claimed_count||0),"ACK "+escapeHtml(item.redis_acked_count||0)];var phases=trace.length?trace.map(function(entry){return '<div>'+escapeHtml(entry.phase||"恢复阶段")+' · '+escapeHtml(entry.status||"状态待确认")+'</div>'}).join(""):"暂无分阶段记录";return '<div class="feed-item"><strong>'+formatTime(item.started_at)+' · '+badge(item.status)+'</strong><p>'+counts.join(" · ")+'</p><div class="cell-sub">Redis '+escapeHtml(item.redis_status||"未记录")+' · App '+escapeHtml(item.app_version||"版本待确认")+'</div>'+(item.error_summary?'<div class="cell-sub error-state">'+escapeHtml(item.error_summary)+'</div>':"")+'<details class="technical-details"><summary>查看启动实例与恢复 Trace</summary><dl class="detail-list"><dt>实例 ID</dt><dd class="mono">'+escapeHtml(item.instance_id||"暂无")+'</dd><dt>Trace ID</dt><dd class="mono">'+escapeHtml(item.trace_id||"暂无")+'</dd><dt>完成时间</dt><dd>'+formatTime(item.completed_at)+'</dd><dt>阶段</dt><dd>'+phases+'</dd></dl></details></div>'}).join(""):'<div class="empty"><strong>暂无持久化恢复记录</strong>App 下一次正式启动后会在这里记录恢复结果。</div>';
     byId("queue-summary").textContent="pending "+(queue.pending||0)+" · dead "+(queue.dead_letter_depth||0);
     var letters=dead.dead_letters||[];byId("dead-letter-list").innerHTML=letters.length?letters.map(function(item){var id=item.id||item.message_id||item.redis_message_id;return '<div class="feed-item"><strong>'+escapeHtml(id||"dead-letter")+' '+badge("FAILED")+'</strong><p>'+escapeHtml(item.error||item.reason||"执行失败")+'</p><button class="btn small" onclick="App.retryDeadLetter(\''+escapeHtml(id)+'\')">重试</button></div>'}).join(""):'<div class="empty"><strong>没有死信</strong>当前队列无需人工恢复。</div>';
@@ -1818,6 +1831,7 @@ var App={
   retryDeadLetter:async function(id){if(!id)return;try{await api("/admin/dead-letters/"+encodeURIComponent(id)+"/retry",{method:"POST"});notify("死信已重新入队","success");await this.loadDiagnostics()}catch(error){notify(error.message,"error")}},
   reloadSkill:async function(name){if(!await confirmAction({title:"热重载 Agent",description:"重新加载 "+name+" 的运行时代码和配置。",submitLabel:"确认重载"}))return;try{await api("/skills/"+encodeURIComponent(name)+"/reload",{method:"POST"});notify("Agent 已热重载","success");await this.loadDiagnostics()}catch(error){notify(error.message,"error")}},
   runDeepseekProbe:async function(){if(!await confirmAction({title:"验证 DeepSeek",description:"执行一次真实模型连通性探针并记录脱敏证据。",submitLabel:"开始验证"}))return;try{await api("/admin/diagnostics/deepseek-probe",{method:"POST"});notify("DeepSeek 真实探针已通过","success");await this.loadDiagnostics()}catch(error){notify(error.message,"error")}},
+  openDiagnosticUsers:function(){return this.navigate("management")},
   reloadConfig:async function(){if(!await confirmAction({title:"重载运行时配置",description:"重新读取非敏感运行时配置，当前登录会话保持不变。",submitLabel:"确认重载"}))return;try{await api("/admin/config/reload",{method:"POST"});notify("配置已重载","success");await this.loadDiagnostics()}catch(error){notify(error.message,"error")}}
 };
 
