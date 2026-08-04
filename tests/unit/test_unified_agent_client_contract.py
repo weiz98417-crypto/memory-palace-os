@@ -380,7 +380,7 @@ def test_wecom_simulator_is_explicitly_bounded_and_reads_real_chain_state():
 
     assert 'src="/shared/client.js?v=20260803-1"' in html
     assert 'href="/shared/base.css"' in html
-    assert 'href="/simulator/wecom/styles.css?v=20260804-3"' in html
+    assert 'href="/simulator/wecom/styles.css?v=20260804-4"' in html
     assert '<div><strong>企业运营助手</strong><span>企业内部系统接入环境</span></div>' in html
     assert html.count('src="/admin/brand/logo-primary.svg"') == 3
     assert ">AI<" not in html
@@ -447,6 +447,21 @@ def test_wecom_simulator_is_explicitly_bounded_and_reads_real_chain_state():
     assert "state.outboxUnavailable = true;" in sync_outbox
     assert "timeoutMs: 15000" in sync_outbox
     assert "showError" not in sync_outbox
+
+
+def test_wecom_simulator_keeps_grid_rows_stable_when_the_error_region_is_hidden():
+    styles = SIMULATOR_STYLE_PATH.read_text(encoding="utf-8")
+
+    expected_rows = {
+        ".wecom-head {": 1,
+        ".simulator-error {": 2,
+        ".wecom-messages {": 3,
+        ".wecom-composer {": 4,
+    }
+    for selector, row in expected_rows.items():
+        start = styles.index(selector)
+        rule = styles[start : styles.index("}", start)]
+        assert f"grid-row: {row};" in rule
 
 
 def test_followup_messages_bind_to_the_latest_open_event_in_both_clients():

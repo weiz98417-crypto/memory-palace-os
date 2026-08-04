@@ -259,6 +259,7 @@ body {
 
 .wecom-head {
   display: flex;
+  grid-row: 1;
   min-height: 64px;
   align-items: center;
   justify-content: space-between;
@@ -338,6 +339,7 @@ body {
 }
 
 .simulator-error {
+  grid-row: 2;
   margin: 10px 12px 0;
   padding: 10px 11px;
   border: 1px solid #efb0a8;
@@ -363,6 +365,7 @@ body {
 }
 
 .wecom-messages {
+  grid-row: 3;
   min-height: 0;
   overflow-y: auto;
   padding: 20px 16px 28px;
@@ -1071,6 +1074,7 @@ body {
 }
 
 .wecom-composer {
+  grid-row: 4;
   padding: 10px 12px 12px;
   border-top: 1px solid #d3dade;
   background: #ffffff;
