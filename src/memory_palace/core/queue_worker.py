@@ -37,6 +37,7 @@ from loguru import logger
 
 from src.memory_palace.core.message_runs import MessageRunRepository
 from src.memory_palace.core.orchestrator import Orchestrator
+from src.memory_palace.core.queue_protocol import MessageQueueProtocol
 from src.memory_palace.core.redis_queue import MAX_RETRIES
 from src.memory_palace.core.sensitive_output import (
     public_error_message,
@@ -143,7 +144,7 @@ class MessageQueueWorker:
 
     def __init__(
         self,
-        queue: asyncio.Queue,
+        queue: MessageQueueProtocol,
         concurrency: int = 5,           # 并发处理的消息数（文旅场景不需要太高）
         orchestrator: Optional[Orchestrator] = None,
         container = None,               # AppContainer (optional)
@@ -550,15 +551,15 @@ class MessageQueueWorker:
 # 队列访问函数（供 API 端点使用）
 # ─────────────────────────────────────────────────────────────────────────────
 
-_global_queue: Optional[asyncio.Queue] = None
+_global_queue: Optional[MessageQueueProtocol] = None
 
 
-def set_message_queue(queue: asyncio.Queue) -> None:
+def set_message_queue(queue: MessageQueueProtocol) -> None:
     """设置全局消息队列（main.py lifespan 中调用）"""
     global _global_queue
     _global_queue = queue
 
 
-def get_message_queue() -> Optional[asyncio.Queue]:
+def get_message_queue() -> Optional[MessageQueueProtocol]:
     """获取全局消息队列"""
     return _global_queue

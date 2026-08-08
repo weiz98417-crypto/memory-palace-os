@@ -116,6 +116,8 @@ def test_failed_step_is_redacted_and_seals_the_run_without_overwriting_evidence(
                 "diagnostics": {
                     "channel": "wecom-simulator",
                     "authorization": "Bearer should-not-leak",
+                    "external_ref": "/api/v1/assistant/attachments/private/content",
+                    "thumbnail_url": "/api/v1/assistant/attachments/private/thumbnail",
                     "nested": {"password": "should-not-leak-either"},
                 }
             },
@@ -129,6 +131,8 @@ def test_failed_step_is_redacted_and_seals_the_run_without_overwriting_evidence(
         (run.path / "artifacts" / "E2E-00" / "diagnostics.json").read_text(encoding="utf-8")
     )
     assert artifact["authorization"] == "<redacted>"
+    assert artifact["external_ref"] == "<redacted>"
+    assert artifact["thumbnail_url"] == "<redacted>"
     assert artifact["nested"]["password"] == "<redacted>"
     all_evidence = "\n".join(
         path.read_text(encoding="utf-8")
@@ -487,7 +491,14 @@ def test_validator_rejects_sensitive_values_even_after_checksums_are_updated(tmp
     result = json.loads(result_path.read_text(encoding="utf-8"))
     artifact_path = run.path / result["artifacts"][0]["path"]
     artifact_path.write_text(
-        json.dumps({"authorization": "Bearer leaked-token"}, indent=2) + "\n",
+        json.dumps(
+            {
+                "authorization": "Bearer leaked-token",
+                "external_ref": "/api/v1/assistant/attachments/private/content",
+            },
+            indent=2,
+        )
+        + "\n",
         encoding="utf-8",
     )
     result["artifacts"][0]["sha256"] = sha256(artifact_path.read_bytes()).hexdigest()
@@ -501,6 +512,7 @@ def test_validator_rejects_sensitive_values_even_after_checksums_are_updated(tmp
 
     assert report.valid is False
     assert any("sensitive field" in error and "authorization" in error for error in report.errors)
+    assert any("sensitive field" in error and "external_ref" in error for error in report.errors)
 
 
 def test_validator_rejects_ready_registry_entry_without_current_run_evidence(tmp_path):
@@ -738,6 +750,69 @@ def test_cli_bootstrap_records_the_formal_api_baseline(tmp_path, capsys, monkeyp
     assert baseline_path == run.path / "artifacts" / "uat-baseline.json"
     assert json.loads(baseline_path.read_text(encoding="utf-8")) == snapshot
     assert manifest["baseline"]["path"] == "artifacts/uat-baseline.json"
+
+
+def test_cli_executes_selected_formal_journey_steps_with_an_explicit_attachment(
+    tmp_path,
+    capsys,
+    monkeypatch,
+):
+    run = EvidenceRun.create(
+        tmp_path,
+        run_id="UAT-20260804T130000Z-EXECUTE1",
+        now=datetime(2026, 8, 4, 13, 0, tzinfo=timezone.utc),
+    )
+    attachment_path = tmp_path / "right-rear-wheel.png"
+    attachment_path.write_bytes(b"\x89PNG\r\n\x1a\nformal-uat-image")
+    config = SimpleNamespace(base_url="http://127.0.0.1:8082")
+    captured = {}
+
+    async def execute(active_config, active_run, step_ids, *, attachment_path, **_kwargs):
+        captured.update(
+            {
+                "config": active_config,
+                "run": active_run,
+                "step_ids": list(step_ids),
+                "attachment_path": attachment_path,
+            }
+        )
+        return [active_run.path / "steps" / f"{step_id}.json" for step_id in step_ids]
+
+    monkeypatch.setattr(
+        "scripts.unified_agent_uat.cli.UATJourneyConfig.from_environment",
+        lambda: config,
+    )
+    monkeypatch.setattr("scripts.unified_agent_uat.cli.run_uat_steps", execute)
+
+    assert evidence_cli_main(
+        [
+            "execute",
+            "--run",
+            str(run.path),
+            "--steps",
+            "E2E-00",
+            "E2E-01",
+            "E2E-02",
+            "--attachment",
+            str(attachment_path),
+        ]
+    ) == 0
+
+    output = json.loads(capsys.readouterr().out)
+    assert output == {
+        "uat_run_id": run.run_id,
+        "recorded": [
+            str(run.path / "steps" / "E2E-00.json"),
+            str(run.path / "steps" / "E2E-01.json"),
+            str(run.path / "steps" / "E2E-02.json"),
+        ],
+    }
+    assert captured == {
+        "config": config,
+        "run": EvidenceRun(path=run.path.resolve(), run_id=run.run_id),
+        "step_ids": ["E2E-00", "E2E-01", "E2E-02"],
+        "attachment_path": attachment_path,
+    }
 
 
 def test_bootstrap_uat_wrapper_runs_directly_outside_repository(tmp_path):

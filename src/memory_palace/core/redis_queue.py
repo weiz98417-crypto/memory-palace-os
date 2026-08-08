@@ -3,7 +3,7 @@ from collections import deque
 import json
 import os
 import hashlib
-from typing import Any, Awaitable, Callable, Dict, Mapping
+from typing import Any, Awaitable, Callable, Dict, Mapping, Optional
 
 import redis.asyncio as redis
 from loguru import logger
@@ -278,13 +278,13 @@ class RedisStreamsQueue:
             "message_id": message.get("msg_id", ""),
         }
 
-    async def put(self, message: Dict[str, Any]) -> bool:
+    async def put(self, message: Dict[str, Any]) -> Optional[str]:
         await self._ensure_client()
         payload = json.dumps(message, ensure_ascii=False)
         business_message_id = str(message.get("msg_id") or "")
         if not business_message_id:
-            await self._client.xadd(STREAM_KEY, {"data": payload})
-            return True
+            stream_message_id = await self._client.xadd(STREAM_KEY, {"data": payload})
+            return str(_decode_redis_text(stream_message_id))
         dedup_digest = hashlib.sha256(business_message_id.encode()).hexdigest()
         dedup_key = f"memory_palace:dedup:{dedup_digest}"
         dedup_ttl = max(1, int(os.environ.get("REDIS_DEDUP_TTL_SECONDS", "300")))
@@ -302,7 +302,11 @@ class RedisStreamsQueue:
             payload,
             dedup_ttl,
         )
-        return stream_message_id is not None
+        return (
+            str(_decode_redis_text(stream_message_id))
+            if stream_message_id is not None
+            else None
+        )
 
     async def retry(self, message: Dict[str, Any], source_message_id: str) -> str:
         """Atomically enqueue the next attempt and acknowledge the failed attempt."""

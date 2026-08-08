@@ -7,11 +7,11 @@ class InMemoryQueue:
     """Wraps asyncio.Queue to implement MessageQueueProtocol."""
 
     def __init__(self, maxsize: int = 10000):
-        self._queue: asyncio.Queue = asyncio.Queue(maxsize=maxsize)
+        self._queue: asyncio.Queue[Dict[str, Any]] = asyncio.Queue(maxsize=maxsize)
 
-    async def put(self, message: Dict[str, Any]) -> bool:
+    async def put(self, message: Dict[str, Any]) -> str:
         await self._queue.put(message)
-        return True
+        return f"memory:{message.get('msg_id') or self._queue.qsize()}"
 
     async def get(self) -> Dict[str, Any]:
         return await self._queue.get()

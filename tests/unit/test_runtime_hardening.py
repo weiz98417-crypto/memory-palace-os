@@ -334,8 +334,8 @@ async def test_redis_queue_put_deduplicates_business_message_ids():
     first = await queue.put(message)
     duplicate = await queue.put(message)
 
-    assert first is True
-    assert duplicate is False
+    assert first == "1700000000200-0"
+    assert duplicate is None
     assert queue._client.keys[0] == queue._client.keys[1]
 
 

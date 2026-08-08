@@ -31,9 +31,11 @@ _SENSITIVE_KEYS = {
     "api_key",
     "authorization",
     "cookie",
+    "external_ref",
     "password",
     "refresh_token",
     "secret",
+    "thumbnail_url",
     "token",
     "access_token",
 }

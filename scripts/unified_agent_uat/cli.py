@@ -3,12 +3,19 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import sys
 from pathlib import Path
 from typing import Sequence
 
 from .evidence import EvidenceRun
+from .journey import (
+    SUPPORTED_UAT_STEPS,
+    UATJourneyConfig,
+    UATJourneyError,
+    run_uat_steps,
+)
 from .validation import validate_evidence
 from src.memory_palace.operations.uat_bootstrap import (
     UATBootstrapConfig,
@@ -40,6 +47,23 @@ def _parser() -> argparse.ArgumentParser:
         help="prepare UAT master data through formal APIs and record its baseline",
     )
     bootstrap.add_argument("--run", type=Path, required=True)
+
+    execute = commands.add_parser(
+        "execute",
+        help="execute formal HTTP-driven UAT steps and record immutable evidence",
+    )
+    execute.add_argument("--run", type=Path, required=True)
+    execute.add_argument(
+        "--steps",
+        nargs="+",
+        choices=SUPPORTED_UAT_STEPS,
+        required=True,
+    )
+    execute.add_argument(
+        "--attachment",
+        type=Path,
+        help="explicit PNG attachment required by E2E-02",
+    )
 
     showcase = commands.add_parser(
         "showcase-seed",
@@ -84,29 +108,49 @@ def main(argv: Sequence[str] | None = None) -> int:
             _emit({"uat_run_id": run.run_id, "path": str(run.path)})
             return 0
         if args.command == "bootstrap":
-            config = UATBootstrapConfig.from_environment()
-            result = __import__("asyncio").run(bootstrap_uat_master_data(config))
-            baseline_path = _open_run(args.run).record_baseline(result.baseline_snapshot)
+            bootstrap_config = UATBootstrapConfig.from_environment()
+            bootstrap_result = asyncio.run(bootstrap_uat_master_data(bootstrap_config))
+            baseline_path = _open_run(args.run).record_baseline(
+                bootstrap_result.baseline_snapshot
+            )
             _emit(
                 {
                     "uat_run_id": args.run.resolve().name,
                     "baseline": str(baseline_path),
-                    "venue_id": result.venue_id,
-                    "user_count": result.user_count,
-                    "identity_count": result.identity_count,
+                    "venue_id": bootstrap_result.venue_id,
+                    "user_count": bootstrap_result.user_count,
+                    "identity_count": bootstrap_result.identity_count,
+                }
+            )
+            return 0
+        if args.command == "execute":
+            journey_config = UATJourneyConfig.from_environment()
+            run = _open_run(args.run)
+            recorded = asyncio.run(
+                run_uat_steps(
+                    journey_config,
+                    run,
+                    args.steps,
+                    attachment_path=args.attachment,
+                )
+            )
+            _emit(
+                {
+                    "uat_run_id": run.run_id,
+                    "recorded": [str(path) for path in recorded],
                 }
             )
             return 0
         if args.command == "showcase-seed":
-            config = UATShowcaseConfig.from_environment()
-            result = __import__("asyncio").run(
-                seed_uat_showcase_data(config, sections=args.sections)
+            showcase_config = UATShowcaseConfig.from_environment()
+            showcase_result = asyncio.run(
+                seed_uat_showcase_data(showcase_config, sections=args.sections)
             )
             _emit(
                 {
-                    "counts": result.counts,
-                    "created": result.created,
-                    "warnings": list(result.warnings),
+                    "counts": showcase_result.counts,
+                    "created": showcase_result.created,
+                    "warnings": list(showcase_result.warnings),
                 }
             )
             return 0
@@ -130,6 +174,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         OSError,
         RuntimeError,
         UATBootstrapError,
+        UATJourneyError,
         UATShowcaseError,
         ValueError,
         json.JSONDecodeError,

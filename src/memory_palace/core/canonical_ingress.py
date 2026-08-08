@@ -9,11 +9,14 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Optional
 
+from loguru import logger
+
 from .attachments import (
     AttachmentError,
     link_message_attachments,
     prepare_message_attachments,
 )
+from .queue_protocol import MessageQueueProtocol
 
 
 SUPPORTED_CHANNELS = {"WEB", "WECOM_SIMULATOR"}
@@ -61,7 +64,7 @@ class AcceptedMessage:
 class CanonicalMessageIngress:
     """Resolve identity, persist one message run, then enqueue one payload."""
 
-    def __init__(self, db: Any, queue: Any) -> None:
+    def __init__(self, db: Any, queue: MessageQueueProtocol) -> None:
         self._db = db
         self._queue = queue
 
@@ -213,7 +216,7 @@ class CanonicalMessageIngress:
                 session_id=session_id,
                 channel=channel,
             )
-            await self._queue.put(
+            enqueue_receipt = await self._queue.put(
                 {
                     "msg_id": message_id,
                     "trace_id": trace_id,
@@ -229,6 +232,9 @@ class CanonicalMessageIngress:
                     "metadata": metadata,
                 }
             )
+            if not enqueue_receipt:
+                raise RuntimeError("Message queue rejected a newly persisted message")
+            stream_message_id = enqueue_receipt
         except Exception as exc:
             await self._db.execute(
                 """
@@ -243,6 +249,27 @@ class CanonicalMessageIngress:
                 "The message could not be accepted.",
                 status_code=503,
             ) from exc
+
+        try:
+            await self._write_enqueued_audit(
+                venue_id=venue_id,
+                user_id=actor["user_id"],
+                message_id=message_id,
+                trace_id=trace_id,
+                session_id=session_id,
+                channel=channel,
+                stream_message_id=stream_message_id,
+            )
+        except Exception as exc:
+            logger.bind(
+                venue_id=venue_id,
+                message_id=message_id,
+                trace_id=trace_id,
+                stream_message_id=stream_message_id,
+                error_type=type(exc).__name__,
+            ).exception(
+                "Message was enqueued but the enqueue audit could not be persisted"
+            )
 
         return AcceptedMessage(
             message_id=message_id,
@@ -450,6 +477,43 @@ class CanonicalMessageIngress:
                 trace_id,
                 json.dumps(
                     {"session_id": session_id, "status": "QUEUED", "channel": channel},
+                    ensure_ascii=False,
+                ),
+                time.time(),
+            ),
+        )
+
+    async def _write_enqueued_audit(
+        self,
+        *,
+        venue_id: str,
+        user_id: str,
+        message_id: str,
+        trace_id: str,
+        session_id: str,
+        channel: str,
+        stream_message_id: str,
+    ) -> None:
+        await self._db.execute(
+            """
+            INSERT INTO audit_logs (
+                venue_id, user_id, action, resource_type, resource_id,
+                outcome, trace_id, metadata_json, created_at
+            ) VALUES (?, ?, 'MESSAGE_ENQUEUED', 'message_run', ?,
+                      'SUCCEEDED', ?, ?, ?)
+            """,
+            (
+                venue_id,
+                user_id,
+                message_id,
+                trace_id,
+                json.dumps(
+                    {
+                        "session_id": session_id,
+                        "status": "QUEUED",
+                        "channel": channel,
+                        "stream_message_id": stream_message_id,
+                    },
                     ensure_ascii=False,
                 ),
                 time.time(),

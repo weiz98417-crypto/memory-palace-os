@@ -20,6 +20,25 @@ from src.memory_palace.knowledge.db_client import AsyncDBClient
 from src.memory_palace.knowledge.db_init import init_database
 
 
+class TraceableQueue(asyncio.Queue):
+    async def put(self, item):
+        await super().put(item)
+        return f"test-stream-{self.qsize()}-0"
+
+
+class EnqueuedAuditFailureDB:
+    def __init__(self, delegate):
+        self._delegate = delegate
+
+    async def execute(self, sql, parameters=()):
+        if "MESSAGE_ENQUEUED" in sql:
+            raise RuntimeError("audit storage unavailable")
+        return await self._delegate.execute(sql, parameters)
+
+    def __getattr__(self, name):
+        return getattr(self._delegate, name)
+
+
 async def _build_app(tmp_path):
     db = AsyncDBClient(tmp_path / "canonical-ingress.db")
     await init_database(db)
@@ -77,7 +96,7 @@ async def _build_app(tmp_path):
             (identity_id, external_user_id, user_id, now, now),
         )
 
-    queue = asyncio.Queue()
+    queue = TraceableQueue()
     set_message_queue(queue)
     app = FastAPI()
     app.state.db_client = db
@@ -373,6 +392,62 @@ async def test_simulator_attachment_upload_survives_message_replay_and_history_r
             (accepted.json()["message_id"],),
         )
         assert len(links) == 1
+        audits = await db.fetch_all(
+            "SELECT * FROM audit_logs WHERE trace_id = ? ORDER BY created_at, action",
+            (accepted.json()["trace_id"],),
+        )
+        assert {item["action"] for item in audits} == {
+            "MESSAGE_RUN_CREATED",
+            "MESSAGE_ENQUEUED",
+        }
+        enqueued_audit = next(
+            item for item in audits if item["action"] == "MESSAGE_ENQUEUED"
+        )
+        assert json.loads(enqueued_audit["metadata_json"])["stream_message_id"] == (
+            "test-stream-1-0"
+        )
+    finally:
+        await db.close()
+
+
+@pytest.mark.asyncio
+async def test_message_remains_queued_when_post_enqueue_audit_write_fails(tmp_path):
+    app, queue, db = await _build_app(tmp_path)
+    app.state.db_client = EnqueuedAuditFailureDB(db)
+    app.state.test_principal = {
+        "user_id": "manager-west",
+        "username": "manager-west",
+        "role": "manager",
+        "venue_id": "venue-west",
+        "auth_type": "test",
+    }
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+
+    try:
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            accepted = await client.post(
+                "/api/v1/channels/simulator/messages",
+                json={
+                    "user_id": "operator-west",
+                    "content": "Vehicle 12 has been isolated for a wheel inspection.",
+                    "external_message_id": "sim-audit-degraded-001",
+                    "external_conversation_id": "sim-audit-degraded-conversation-001",
+                },
+            )
+
+        assert accepted.status_code == 202, accepted.text
+        assert queue.qsize() == 1
+        message_id = accepted.json()["message_id"]
+        message_run = await db.fetch_one(
+            "SELECT status, error FROM message_runs WHERE message_id = ?",
+            (message_id,),
+        )
+        assert message_run == {"status": "QUEUED", "error": None}
+        audits = await db.fetch_all(
+            "SELECT action FROM audit_logs WHERE trace_id = ? ORDER BY created_at",
+            (accepted.json()["trace_id"],),
+        )
+        assert [item["action"] for item in audits] == ["MESSAGE_RUN_CREATED"]
     finally:
         await db.close()
 
