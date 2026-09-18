@@ -65,9 +65,14 @@ async def init_database(db_client=None):
         await _init_pg(db_client)
         from .attachment_schema import init_attachment_schema
         from .experience_schema import init_experience_schema
+        from .vector_schema import init_vector_schema, verify_vector_schema
+        from ..scenic.schema import init_scenic_schema
 
         await init_experience_schema(db_client)
         await init_attachment_schema(db_client)
+        await init_vector_schema(db_client)
+        await verify_vector_schema(db_client)
+        await init_scenic_schema(db_client)
         return
 
     db_path = getattr(db_client, "db_path", None) or (_PROJECT_ROOT / "data" / "memory.db")
@@ -1097,10 +1102,12 @@ async def init_database(db_client=None):
 
     from .attachment_schema import init_attachment_schema
     from .experience_schema import init_experience_schema
+    from ..scenic.schema import init_scenic_schema
 
     if db_client is not None:
         await init_experience_schema(db_client)
         await init_attachment_schema(db_client)
+        await init_scenic_schema(db_client)
     else:
         from .db_client import AsyncDBClient
 
@@ -1108,6 +1115,7 @@ async def init_database(db_client=None):
         try:
             await init_experience_schema(experience_db)
             await init_attachment_schema(experience_db)
+            await init_scenic_schema(experience_db)
         finally:
             await experience_db.close()
 

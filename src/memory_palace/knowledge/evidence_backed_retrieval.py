@@ -80,13 +80,24 @@ class _CandidateDecision:
 class EvidenceBackedKnowledgeRetriever:
     """Retrieve candidates, verify relational truth, and persist evidence first."""
 
-    schema_version = 1
+    schema_version = 2
 
-    def __init__(self, *, database: Any, vector_store: Any = None):
+    def __init__(
+        self,
+        *,
+        database: Any,
+        vector_store: Any = None,
+        reranker: Any = None,
+    ):
         if database is None:
             raise ValueError("database is required")
         self._database = database
         self._vector_store = vector_store
+        if reranker is None:
+            from .reranking import build_reranker_backend
+
+            reranker = build_reranker_backend()
+        self._reranker = reranker
 
     async def retrieve(self, request: RetrievalRequest) -> RetrievalResult:
         started_at = time.time()
@@ -290,13 +301,46 @@ class EvidenceBackedKnowledgeRetriever:
             for index, (decision, _, _) in enumerate(evaluations)
             if decision.selected and decision.document and decision.reference
         ]
+        if eligible:
+            reranked, rerank_meta = self._rerank(
+                request,
+                [
+                    {
+                        "index": index,
+                        "text": _rerank_text(evaluations[index][1]),
+                    }
+                    for index in eligible
+                ],
+            )
+            attempt.update(rerank_meta)
+            rerank_order = [
+                int(item["index"]) for item in reranked if item.get("index") is not None
+            ]
+            scores = {
+                int(item["index"]): item.get("rerank_score")
+                for item in reranked
+                if item.get("index") is not None
+            }
+            ordered_eligible = [index for index in rerank_order if index in eligible]
+            remaining = [index for index in eligible if index not in ordered_eligible]
+            for index in ordered_eligible:
+                if scores.get(index) is not None:
+                    evaluations[index][1]["rerank_score"] = scores[index]
+            eligible = ordered_eligible + remaining
+        def _final_score(index: int) -> float:
+            hit_record = evaluations[index][1]
+            rerank_score = hit_record.get("rerank_score")
+            if rerank_score is not None:
+                return float(rerank_score)
+            return max(
+                evaluations[index][2],
+                float(hit_record.get("lexical_score") or 0.0),
+            )
+
         eligible.sort(
             key=lambda index: (
                 _source_priority(evaluations[index][0].reference or {}),
-                -max(
-                    evaluations[index][2],
-                    float(evaluations[index][1].get("lexical_score") or 0.0),
-                ),
+                -_final_score(index),
             )
         )
         selected_indexes = set(eligible[: request.top_k])
@@ -304,7 +348,12 @@ class EvidenceBackedKnowledgeRetriever:
         documents: list[dict[str, Any]] = []
         references: list[dict[str, Any]] = []
 
-        for index, (decision, hit_record, _) in enumerate(evaluations):
+        # Hits, documents and references must come out in the final ranked order so the
+        # evidence trail shows what the reranker actually decided. Rejected candidates
+        # still appear, after the selected ones.
+        rejected_indexes = [index for index in range(len(evaluations)) if index not in eligible]
+        for index in eligible + rejected_indexes:
+            decision, hit_record, _ = evaluations[index]
             vector_doc_id = str(hit_record.get("vector_doc_id") or "")
             selected = index in selected_indexes and vector_doc_id not in selected_vector_ids
             rejection_reason = decision.rejection_reason
@@ -689,6 +738,18 @@ class EvidenceBackedKnowledgeRetriever:
             ) from None
         return snapshot_id
 
+    def _rerank(
+        self, request: RetrievalRequest, candidates: list[dict[str, Any]]
+    ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+        from .reranking import rerank_candidates
+
+        return rerank_candidates(
+            self._reranker,
+            request.query,
+            candidates,
+            top_n=max(8, int(request.top_k)),
+        )
+
     def _backend_name(self) -> str:
         if self._vector_store is None:
             return "unavailable"
@@ -843,3 +904,17 @@ def _experience_content(row: dict[str, Any]) -> str:
         if isinstance(decoded, list):
             parts.extend(str(item).strip() for item in decoded if str(item).strip())
     return "\n".join(part for part in parts if part)
+
+
+def _rerank_text(hit_record: dict[str, Any]) -> str:
+    for key in ("text", "content", "summary", "title"):
+        value = hit_record.get(key)
+        if value:
+            return str(value)
+    metadata = hit_record.get("metadata")
+    if isinstance(metadata, dict):
+        for key in ("text", "content", "summary", "title", "source_id"):
+            value = metadata.get(key)
+            if value:
+                return str(value)
+    return ""

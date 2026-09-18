@@ -1,0 +1,4 @@
+# Opt-in rollback runtime for LocalEmbeddingBackend (ADR-0020).
+# Only needed when SCENIC_TEI_EMBEDDING_URL is unset and the local
+# sentence-transformers path must serve embeddings instead of TEI.
+sentence-transformers>=3.0.0

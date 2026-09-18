@@ -133,7 +133,7 @@ _TABLE_STATEMENTS = (
         status TEXT NOT NULL DEFAULT 'DRAFT',
         index_status TEXT NOT NULL DEFAULT 'NOT_INDEXED',
         extraction_status TEXT NOT NULL DEFAULT 'PENDING',
-        extraction_model TEXT NOT NULL DEFAULT 'deepseek-v4-flash',
+        extraction_model TEXT NOT NULL DEFAULT 'deepseek-flash',
         extraction_trace_id TEXT,
         extraction_error TEXT,
         retryable BOOLEAN NOT NULL DEFAULT TRUE,
@@ -152,7 +152,7 @@ _TABLE_STATEMENTS = (
         UNIQUE (venue_id, source_event_id),
         CHECK (status = 'DRAFT'),
         CHECK (index_status = 'NOT_INDEXED'),
-        CHECK (extraction_model = 'deepseek-v4-flash'),
+        CHECK (extraction_model = 'deepseek-flash'),
         CHECK (extraction_status IN ('PENDING', 'EXTRACTING', 'SUCCEEDED', 'FAILED'))
     )
     """,
@@ -170,7 +170,7 @@ _TABLE_STATEMENTS = (
         started_at DOUBLE PRECISION NOT NULL,
         completed_at DOUBLE PRECISION,
         UNIQUE (venue_id, candidate_id, attempt_number),
-        CHECK (model_name = 'deepseek-v4-flash'),
+        CHECK (model_name = 'deepseek-flash'),
         CHECK (status IN ('RUNNING', 'SUCCEEDED', 'FAILED'))
     )
     """,

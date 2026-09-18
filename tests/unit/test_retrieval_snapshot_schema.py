@@ -16,6 +16,19 @@ class RecordingPostgresDatabase:
     async def fetch_all(self, sql, parameters=()):
         return []
 
+    async def fetch_one(self, sql, parameters=()):
+        if "pg_extension" in sql:
+            return {"extversion": "0.8.1"}
+        if "vector_index_versions" in sql:
+            return {
+                "index_name": "knowledge_vectors_bge_m3_v1",
+                "model_name": "BAAI/bge-m3",
+                "model_version": "local-bge-m3-1024-v1",
+                "dimension": 1024,
+                "status": "READY",
+            }
+        return None
+
 
 @pytest.mark.asyncio
 async def test_sqlite_initialization_creates_retrieval_snapshot_table_and_indexes(tmp_path):

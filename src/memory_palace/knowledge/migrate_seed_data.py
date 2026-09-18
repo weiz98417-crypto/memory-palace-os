@@ -47,6 +47,7 @@ async def _migrate_v1_to_v2_async():
         logger.warning("旧库记录为空。")
         return
 
+    venue_id = os.environ.get("DEFAULT_VENUE_ID", "venue-hq")
     # 2. 映射并注入新库 (SQL + Vector)
     # 使用 db_manager 的 session_scope 保证整批迁移要么全成功，要么全失败
     with db_manager.session_scope() as session:
@@ -64,11 +65,13 @@ async def _migrate_v1_to_v2_async():
             )
             session.add(new_incident)
 
-            # B. 映射到 ChromaDB 向量库 (重铸记忆)
+            # B. 映射到 PostgreSQL pgvector 向量索引（重铸记忆）
             get_vector_client().upsert_experience(
                 content=row.get('raw_text', ''),
                 metadata={
                     "case_id": case_id,
+                    "venue_id": venue_id,
+                    "source_type": "CASE",
                     "type": row.get('event_type', 'unknown'),
                     "source": "v1_migration",
                 },

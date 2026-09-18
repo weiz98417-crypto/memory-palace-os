@@ -1,279 +1,405 @@
-"""
-embedding_client.py · 统一 Embedding 接口
-==========================================
-职责：
-  - 对上层（vector_store.py）暴露唯一接口：embed_text() / embed_batch()
-  - 优先使用本地 bge-m3（sentence-transformers），零网络依赖，隐私安全
-  - 本地加载失败时自动降级到远程 API（兼容 OpenAI embedding 协议）
-  - 自动检测 CUDA / MPS / CPU，无需手动配置
-  - 单例模式：模型只加载一次，避免重复占用显存/内存
+"""Embedding adapters for the pgvector index.
 
-依赖：
-  pip install sentence-transformers torch
-  （降级模式额外需要：openai 或 httpx）
+Two interchangeable runtimes sit behind `EmbeddingBackend`:
 
-使用示例：
-  from src.memory_palace.tools.embedding_client import get_embedding_client
-  client = get_embedding_client()
-  vec = await client.embed_text("景区厕所被投诉")
-  vecs = await client.embed_batch(["文本1", "文本2"])
+- `LocalEmbeddingBackend`: local sentence-transformers, kept only as the explicit
+  rollback path (it needs the opt-in torch extra).
+- `TEIEmbeddingBackend`: bge-m3 served by text-embeddings-inference over HTTP. This is
+  the production runtime, which is why the app image no longer ships torch (ADR-0020).
+
+Both must return 1024-dimensional, L2-normalized vectors for the same text.
 """
+
+from __future__ import annotations
 
 import asyncio
+import json
+import math
 import os
 import time
 from functools import lru_cache
-from typing import Optional
+from typing import Protocol
 
 from loguru import logger
 
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 常量
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DEFAULT_LOCAL_MODEL = "BAAI/bge-m3"
+# ADR-0020: the local runtime and the TEI runtime must share one revision.
+DEFAULT_LOCAL_MODEL_REVISION = "5617a9f61b028005a4858fdac845db406aefb181"
+EMBEDDING_DIMENSION = 1024
+LOCAL_BATCH_SIZE = 16
+MAX_TEXT_LENGTH = 8192
+DEFAULT_CPU_THREADS = 4
+DEFAULT_TEI_BATCH_SIZE = 16
+TEI_NORM_TOLERANCE = 1e-5
 
-DEFAULT_LOCAL_MODEL  = "BAAI/bge-m3"
-EMBEDDING_DIMENSION  = 1024          # bge-m3 输出维度
-LOCAL_BATCH_SIZE     = 32            # 本地推理批次大小（显存不足时调小）
-MAX_TEXT_LENGTH      = 8192          # bge-m3 最大 token 数（超出截断）
+
+def _cpu_thread_budget() -> int:
+    """Return the bounded CPU thread budget for the embedding runtime."""
+
+    raw = os.environ.get("EMBEDDING_CPU_THREADS", "").strip()
+    if raw:
+        try:
+            threads = int(raw)
+        except ValueError as exc:
+            raise RuntimeError("EMBEDDING_CPU_THREADS must be a positive integer") from exc
+        if threads < 1:
+            raise RuntimeError("EMBEDDING_CPU_THREADS must be a positive integer")
+        return threads
+    return min(DEFAULT_CPU_THREADS, os.cpu_count() or 1)
 
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 设备检测
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+def _configure_cpu_threads() -> int:
+    """Pin OpenMP/BLAS threads before torch is imported.
 
-def _detect_device() -> str:
+    The CPU torch runtime used by this project raises a native access violation on some
+    hosts when it is allowed to use every logical core, so the thread budget is applied to
+    the process environment before the first torch import and mirrored onto torch itself.
     """
-    自动检测最优推理设备：CUDA > MPS (Apple Silicon) > CPU
-    """
+
+    threads = _cpu_thread_budget()
+    for variable in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
+        os.environ.setdefault(variable, str(threads))
+    return threads
+
+
+CPU_THREADS = _configure_cpu_threads()
+
+
+def _model_dimension(model) -> int:
+    getter = getattr(model, "get_embedding_dimension", None)
+    if getter is None:
+        getter = model.get_sentence_embedding_dimension
+    return int(getter())
+
+
+def _pin_torch_threads() -> None:
+    """Apply the CPU thread budget to an already imported torch runtime."""
+
     try:
         import torch
-        if torch.cuda.is_available():
-            device = "cuda"
-            gpu_name = torch.cuda.get_device_name(0)
-            vram_gb  = torch.cuda.get_device_properties(0).total_memory / 1e9
-            logger.info(f"🎮 检测到 CUDA GPU: {gpu_name} ({vram_gb:.1f}GB 显存)")
-        elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-            device = "mps"
-            logger.info("🍎 检测到 Apple MPS (Apple Silicon)")
-        else:
-            device = "cpu"
-            logger.info("🖥️  未检测到 GPU，使用 CPU 推理（bge-m3 约 1-3s/条）")
-        return device
     except ImportError:
-        logger.warning("⚠️  torch 未安装，无法检测设备，默认 CPU")
+        return
+    try:
+        torch.set_num_threads(CPU_THREADS)
+    except Exception:  # pragma: no cover - defensive: torch may reject late calls
+        logger.warning("could not pin torch CPU threads to {}", CPU_THREADS)
+
+
+def _detect_device() -> str:
+    requested = os.environ.get("EMBEDDING_DEVICE", "auto").strip().lower()
+    if requested not in {"auto", "cpu", "cuda"}:
+        raise RuntimeError("EMBEDDING_DEVICE must be auto, cpu, or cuda")
+    if requested == "cpu":
+        _pin_torch_threads()
         return "cpu"
+    try:
+        import torch
+    except ImportError:
+        if requested == "cuda":
+            raise RuntimeError("CUDA embedding requested but torch is unavailable")
+        _pin_torch_threads()
+        return "cpu"
+    if requested == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("CUDA embedding requested but CUDA is unavailable")
+    if torch.cuda.is_available():
+        return "cuda"
+    _pin_torch_threads()
+    return "cpu"
 
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 本地 Embedding 后端（sentence-transformers）
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 class LocalEmbeddingBackend:
-    """
-    使用 sentence-transformers 在本地加载 bge-m3。
-    首次调用时懒加载模型（避免 import 时就占用资源）。
-    """
+    """Lazy, offline-only SentenceTransformer adapter (rollback runtime)."""
 
-    def __init__(self, model_name: str = DEFAULT_LOCAL_MODEL):
+    def __init__(
+        self,
+        model_name: str = DEFAULT_LOCAL_MODEL,
+        revision: str = DEFAULT_LOCAL_MODEL_REVISION,
+    ) -> None:
         self.model_name = model_name
-        self._model     = None          # 懒加载
-        self._device    = _detect_device()
+        self.revision = revision
+        self.device = _detect_device()
+        self._model = None
 
     def _load_model(self):
-        """懒加载模型（线程安全由调用方保证——asyncio 单线程）"""
         if self._model is not None:
-            return
-
-        logger.info(f"⏳ 正在加载本地 embedding 模型: {self.model_name} ...")
-        t0 = time.time()
-
+            return self._model
         try:
             from sentence_transformers import SentenceTransformer
-        except ImportError:
+        except ImportError as exc:
             raise RuntimeError(
-                "sentence-transformers 未安装。\n"
-                "请执行: pip install sentence-transformers"
-            )
-
+                "sentence-transformers is required for the local bge-m3 rollback path; "
+                "install requirements-scenic-agent-local-embeddings.txt and rebuild the "
+                "image with LOCAL_EMBEDDINGS=true, or configure SCENIC_TEI_EMBEDDING_URL"
+            ) from exc
+        started = time.time()
         self._model = SentenceTransformer(
             self.model_name,
-            device=self._device,
+            device=self.device,
+            local_files_only=True,
+            revision=self.revision,
         )
-        elapsed = time.time() - t0
+        dimension = _model_dimension(self._model)
+        if dimension != EMBEDDING_DIMENSION:
+            self._model = None
+            raise RuntimeError(
+                f"bge-m3 model dimension must be {EMBEDDING_DIMENSION}, got {dimension}"
+            )
         logger.info(
-            f"✅ 模型加载完成 [{self.model_name}] "
-            f"设备={self._device} 耗时={elapsed:.1f}s"
+            "local bge-m3 loaded: model={} device={} elapsed={:.1f}s",
+            self.model_name,
+            self.device,
+            time.time() - started,
         )
+        return self._model
 
     def embed_batch_sync(self, texts: list[str]) -> list[list[float]]:
-        """
-        同步批量 embedding（在线程池中调用，不阻塞事件循环）。
-        bge-m3 推荐加前缀 "Represent this sentence: " 提升召回质量。
-        """
-        self._load_model()
-
-        # bge 系列对查询/文档前缀敏感，统一加通用前缀
-        processed = [f"Represent this sentence: {t[:MAX_TEXT_LENGTH]}" for t in texts]
-
-        vectors = self._model.encode(
-            processed,
-            batch_size=LOCAL_BATCH_SIZE,
-            show_progress_bar=False,
-            normalize_embeddings=True,   # 归一化，便于余弦相似度计算
-            convert_to_numpy=True,
-        )
-        return [v.tolist() for v in vectors]
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 远程 API 降级后端（OpenAI 协议兼容）
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-class RemoteEmbeddingBackend:
-    """
-    调用兼容 OpenAI embedding 协议的远程接口（硅基流动、智谱、本地 Ollama 等）。
-    仅在本地模型加载失败时作为降级兜底。
-    """
-
-    def __init__(self):
-        from src.memory_palace.config.app_settings import settings
-        self.api_key  = settings.LLM_API_KEY
-        self.base_url = settings.LLM_BASE_URL.rstrip("/")
-        # 远程 embedding 模型名（可在 settings 中单独配置，默认复用 LLM 的 base_url）
-        self.model    = os.environ.get("EMBED_REMOTE_MODEL", "BAAI/bge-m3")
-        logger.warning(
-            f"⚠️  本地模型不可用，已切换至远程 embedding API: "
-            f"{self.base_url} [{self.model}]"
-        )
-
-    async def embed_batch_async(self, texts: list[str]) -> list[list[float]]:
-        """异步批量调用远程 embedding 接口"""
-        import httpx
-
-        url     = f"{self.base_url}/embeddings"
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type":  "application/json",
-        }
-        payload = {"model": self.model, "input": texts}
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(url, headers=headers, json=payload)
-            resp.raise_for_status()
-            data = resp.json()
-
-        # OpenAI 协议返回格式：data[].embedding
-        return [item["embedding"] for item in data["data"]]
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 统一客户端（对外暴露的唯一入口）
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-class EmbeddingClient:
-    """
-    统一 Embedding 客户端。
-    - 优先本地 bge-m3（sentence-transformers）
-    - 本地失败自动降级远程 API
-    - 所有对外接口均为 async，内部用线程池跑同步推理
-    """
-
-    def __init__(self):
-        from src.memory_palace.config.app_settings import settings
-        model_name = settings.EMBED_MODEL or DEFAULT_LOCAL_MODEL
-
-        self._local:  Optional[LocalEmbeddingBackend]  = None
-        self._remote: Optional[RemoteEmbeddingBackend] = None
-        self._use_remote = False
-
-        # 尝试初始化本地后端
-        try:
-            self._local = LocalEmbeddingBackend(model_name)
-            logger.info(f"📦 Embedding 后端: 本地模式 [{model_name}]")
-        except Exception as e:
-            logger.error(f"❌ 本地 embedding 初始化失败: {e}，将使用远程 API")
-            self._use_remote = True
-            self._remote = RemoteEmbeddingBackend()
-
-    # ── 核心接口 ──────────────────────────────────────────────────────────────
-
-    async def embed_text(self, text: str) -> list[float]:
-        """
-        单条文本 embedding。
-        返回长度为 1024 的 float 列表（bge-m3 维度）。
-        """
-        if not text or not text.strip():
-            raise ValueError("embed_text: 输入文本不能为空")
-
-        results = await self.embed_batch([text])
-        return results[0]
-
-    async def embed_batch(self, texts: list[str]) -> list[list[float]]:
-        """
-        批量文本 embedding。
-        自动过滤空字符串，保持返回顺序与输入一致。
-        """
         if not texts:
             return []
-
-        # 过滤并记录空文本位置，最后补零向量还原顺序
-        valid_indices = [i for i, t in enumerate(texts) if t and t.strip()]
-        valid_texts   = [texts[i] for i in valid_indices]
-
-        if not valid_texts:
-            return [[0.0] * EMBEDDING_DIMENSION] * len(texts)
-
-        t0 = time.time()
-
-        if self._use_remote:
-            vectors = await self._remote.embed_batch_async(valid_texts)
-        else:
-            # 本地推理是同步阻塞的，放到线程池避免阻塞 asyncio 事件循环
-            loop    = asyncio.get_event_loop()
-            vectors = await loop.run_in_executor(
-                None,
-                self._local.embed_batch_sync,
-                valid_texts,
-            )
-
-        elapsed_ms = (time.time() - t0) * 1000
-        logger.debug(
-            f"🔢 Embedding 完成 {len(valid_texts)} 条 "
-            f"耗时={elapsed_ms:.0f}ms "
-            f"后端={'远程API' if self._use_remote else '本地'}"
+        model = self._load_model()
+        vectors = model.encode(
+            [text[:MAX_TEXT_LENGTH] for text in texts],
+            batch_size=LOCAL_BATCH_SIZE,
+            normalize_embeddings=True,
+            convert_to_numpy=True,
+            show_progress_bar=False,
         )
-
-        # 还原完整结果（空文本位置补零向量）
-        zero_vec = [0.0] * EMBEDDING_DIMENSION
-        result   = [zero_vec] * len(texts)
-        for idx, vec in zip(valid_indices, vectors):
-            result[idx] = vec
-
+        result = [vector.astype("float32").tolist() for vector in vectors]
+        if any(len(vector) != EMBEDDING_DIMENSION for vector in result):
+            raise RuntimeError("bge-m3 returned an invalid vector dimension")
         return result
 
-    # ── 便捷属性 ──────────────────────────────────────────────────────────────
+    def probe(self) -> dict[str, object]:
+        model = self._load_model()
+        return {
+            "status": "READY",
+            "model": self.model_name,
+            "revision": self.revision,
+            "device": self.device,
+            "dimension": _model_dimension(model),
+        }
+
+
+class EmbeddingBackend(Protocol):
+    """The seam the vector store depends on; the runtime behind it may change."""
+
+    model_name: str
+
+    def embed_batch_sync(self, texts: list[str]) -> list[list[float]]: ...
+
+    def probe(self) -> dict[str, object]: ...
+
+
+def _positive_int_env(name: str, default: int) -> int:
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return default
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise RuntimeError(f"{name} must be a positive integer") from exc
+    if value < 1:
+        raise RuntimeError(f"{name} must be a positive integer")
+    return value
+
+
+def _vector_number(value: object) -> float:
+    try:
+        number = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError("TEI returned a non-numeric vector component") from exc
+    if not math.isfinite(number):
+        raise RuntimeError("TEI returned a non-finite vector component")
+    return number
+
+
+class TEIEmbeddingBackend:
+    """bge-m3 served by text-embeddings-inference over HTTP.
+
+    The vector dimension, normalization and text-length semantics stay identical to the
+    local sentence-transformers backend, so callers cannot tell the two apart.
+    """
+
+    model_name = "BAAI/bge-m3"
+
+    def __init__(
+        self,
+        *,
+        base_url: str,
+        revision: str = DEFAULT_LOCAL_MODEL_REVISION,
+        timeout: float | None = None,
+        batch_size: int | None = None,
+        max_text_length: int = MAX_TEXT_LENGTH,
+        transport=None,
+    ) -> None:
+        self.base_url = str(base_url).rstrip("/")
+        self.revision = revision
+        self.timeout = float(
+            timeout
+            if timeout is not None
+            else os.environ.get("TEI_EMBEDDING_TIMEOUT", "20")
+        )
+        self.batch_size = int(
+            batch_size
+            if batch_size is not None
+            else _positive_int_env("TEI_MAX_CLIENT_BATCH_SIZE", DEFAULT_TEI_BATCH_SIZE)
+        )
+        self.max_text_length = max_text_length
+        self._transport = transport
+
+    def _client(self):
+        if self._transport is not None:
+            return self._transport
+        try:
+            import httpx
+        except ImportError as exc:  # pragma: no cover - httpx is a hard dependency
+            raise RuntimeError("httpx is required for the TEI embedding backend") from exc
+        return httpx.Client(timeout=self.timeout)
+
+    def embed_batch_sync(self, texts: list[str]) -> list[list[float]]:
+        if not texts:
+            return []
+        prepared = [str(text)[: self.max_text_length] for text in texts]
+        vectors: list[list[float]] = []
+        client = self._client()
+        owns_client = self._transport is None
+        try:
+            for start in range(0, len(prepared), self.batch_size):
+                chunk = prepared[start : start + self.batch_size]
+                vectors.extend(self._embed_chunk(client, chunk))
+        finally:
+            if owns_client:
+                close = getattr(client, "close", None)
+                if callable(close):
+                    close()
+
+        if len(vectors) != len(texts):
+            raise RuntimeError(
+                f"TEI returned {len(vectors)} vectors for {len(texts)} inputs"
+            )
+        return vectors
+
+    def _embed_chunk(self, client, chunk: list[str]) -> list[list[float]]:
+        try:
+            response = client.post(f"{self.base_url}/embed", json={"inputs": chunk})
+            response.raise_for_status()
+        except Exception as exc:
+            raise RuntimeError(f"TEI embedding request failed: {type(exc).__name__}") from exc
+        try:
+            payload = response.json()
+        except (json.JSONDecodeError, ValueError) as exc:
+            raise RuntimeError("TEI embedding response was not valid JSON") from exc
+        if not isinstance(payload, list):
+            raise RuntimeError("TEI embedding response must be a list of vectors")
+        if len(payload) != len(chunk):
+            raise RuntimeError(
+                f"TEI returned {len(payload)} vectors for {len(chunk)} inputs"
+            )
+        return [self._validated_vector(vector) for vector in payload]
+
+    @staticmethod
+    def _validated_vector(raw: object) -> list[float]:
+        if not isinstance(raw, list) or len(raw) != EMBEDDING_DIMENSION:
+            size = len(raw) if isinstance(raw, list) else 0
+            raise RuntimeError(
+                f"TEI returned {size} dimensions; expected {EMBEDDING_DIMENSION}"
+            )
+        vector = [_vector_number(value) for value in raw]
+        norm = math.sqrt(sum(value * value for value in vector))
+        if abs(norm - 1) > TEI_NORM_TOLERANCE:
+            raise RuntimeError("TEI returned a vector that is not normalized")
+        return vector
+
+    def probe(self) -> dict[str, object]:
+        """Report what the service actually serves.
+
+        TEI's `/info` does not publish the embedding dimension, so the dimension is
+        measured with one real embed call instead of being assumed. A probe that cannot
+        measure 1024 normalized dimensions is a failure, not a warning.
+        """
+
+        client = self._client()
+        owns_client = self._transport is None
+        try:
+            try:
+                info_response = client.get(f"{self.base_url}/info")
+                info_response.raise_for_status()
+                info = info_response.json()
+            except Exception as exc:
+                raise RuntimeError(
+                    f"TEI embedding probe failed: {type(exc).__name__}"
+                ) from exc
+            vectors = self._embed_chunk(client, ["dimension probe"])
+        finally:
+            if owns_client:
+                close = getattr(client, "close", None)
+                if callable(close):
+                    close()
+        if not isinstance(info, dict):
+            raise RuntimeError("TEI embedding probe returned an unexpected payload")
+        dimension = len(vectors[0]) if vectors else 0
+        if dimension != EMBEDDING_DIMENSION:
+            raise RuntimeError(
+                f"TEI embedding service returns {dimension} dimensions; "
+                f"expected {EMBEDDING_DIMENSION}"
+            )
+        model_type = info.get("model_type")
+        pooling = None
+        if isinstance(model_type, dict):
+            embedding = model_type.get("embedding")
+            if isinstance(embedding, dict):
+                pooling = embedding.get("pooling")
+        return {
+            "status": "READY",
+            "model": str(
+                info.get("model_id") or info.get("served_model_name") or self.model_name
+            ),
+            "revision": self.revision,
+            "dimension": dimension,
+            "pooling": pooling,
+            "max_input_length": info.get("max_input_length"),
+        }
+
+
+def build_embedding_backend() -> EmbeddingBackend:
+    """Pick the TEI adapter when a URL is configured, else the local rollback runtime."""
+
+    base_url = os.environ.get("SCENIC_TEI_EMBEDDING_URL", "").strip()
+    if base_url:
+        return TEIEmbeddingBackend(base_url=base_url)
+    return LocalEmbeddingBackend(os.environ.get("BGE_M3_MODEL_PATH", DEFAULT_LOCAL_MODEL))
+
+
+class EmbeddingClient:
+    def __init__(self, backend: EmbeddingBackend | None = None) -> None:
+        self.backend = backend or build_embedding_backend()
+
+    async def embed_text(self, text: str) -> list[float]:
+        vectors = await self.embed_batch([text])
+        return vectors[0]
+
+    async def embed_batch(self, texts: list[str]) -> list[list[float]]:
+        return await asyncio.to_thread(self.backend.embed_batch_sync, texts)
 
     @property
     def dimension(self) -> int:
-        """返回向量维度，供 ChromaDB 初始化时使用"""
         return EMBEDDING_DIMENSION
 
-    @property
-    def backend_mode(self) -> str:
-        return "remote_api" if self._use_remote else "local_bge_m3"
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 单例工厂
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 @lru_cache(maxsize=1)
 def get_embedding_client() -> EmbeddingClient:
-    """
-    全局单例，模型只加载一次。
-    测试时可通过 get_embedding_client.cache_clear() 重置。
-    """
     return EmbeddingClient()
 
-    
+
+__all__ = [
+    "DEFAULT_LOCAL_MODEL",
+    "DEFAULT_LOCAL_MODEL_REVISION",
+    "EMBEDDING_DIMENSION",
+    "EmbeddingBackend",
+    "EmbeddingClient",
+    "LocalEmbeddingBackend",
+    "MAX_TEXT_LENGTH",
+    "TEIEmbeddingBackend",
+    "build_embedding_backend",
+    "get_embedding_client",
+]

@@ -8,6 +8,7 @@
 
 import uuid
 import asyncio
+import os
 from loguru import logger
 from src.memory_palace.tools.db_client import db_manager, SOPDocument
 from src.memory_palace.knowledge.vector_store import get_vector_client
@@ -48,10 +49,11 @@ async def _seed_knowledge_base_async():
         }
     ]
 
+    venue_id = os.environ.get("DEFAULT_VENUE_ID", "venue-hq")
     for case in historical_cases:
         get_vector_client().upsert_experience(
             content=case["content"],
-            metadata=case["meta"],
+            metadata={**case["meta"], "venue_id": venue_id, "source_type": "CASE"},
             doc_id=f"SEED_{uuid.uuid4().hex[:8]}"
         )
 

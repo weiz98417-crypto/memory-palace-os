@@ -1,0 +1,20 @@
+# Opt-in rollback overlay (ADR-0020).
+#
+# The default app image is torch-free: production embeddings come from TEI over HTTP.
+# Only use this overlay when TEI cannot serve embeddings and the local
+# sentence-transformers runtime must take over. It adds torch back to the image, which
+# is exactly the coupling the Agent trunk removed, so it must never be the default.
+#
+#   docker compose -p memory-palace-scenic --env-file .env \
+#     -f deploy/docker-compose.yml \
+#     -f deploy/docker-compose.local-embeddings.yml up -d app nginx
+#
+# It also requires SCENIC_TEI_EMBEDDING_URL to be set to an empty value.
+
+services:
+  app:
+    environment:
+      SCENIC_TEI_EMBEDDING_URL: ""
+    build:
+      args:
+        LOCAL_EMBEDDINGS: "true"

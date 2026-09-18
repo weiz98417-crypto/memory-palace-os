@@ -1,52 +1,45 @@
-"""
-tools/__init__.py - 工具集成层导出
-"""
-from .wechat_crypto import WXBizMsgCrypt, MockWeChatCrypto, WeChatCryptoError, create_wechat_crypto
-from .llm_wrapper import LLMClient, LLMResponse, llm_client
-from .circuit_breaker import CircuitBreaker, CircuitBreakerOpen
-from .embedding_client import EmbeddingClient, get_embedding_client
-from .wechat_client import WeChatWorkClient as WeChatClient
-from .sms_client import send_alert, send_sms, send_voice_call
-from .logger_config import setup_logging as setup_logger
-from .time_utils import get_now, parse_to_datetime, calculate_elapsed_minutes, format_for_log, is_business_hours, get_relative_time_desc
+"""Tool adapters with lazy imports to keep optional runtimes isolated."""
 
-__all__ = [
-    # 加解密
-    "WXBizMsgCrypt",
-    "MockWeChatCrypto",
-    "WeChatCryptoError",
-    "create_wechat_crypto",
-    # LLM
-    "LLMClient",
-    "LLMResponse",
-    "llm_client",
-    # 熔断器
-    "CircuitBreaker",
-    "CircuitBreakerOpen",
-    # Embedding
-    "EmbeddingClient",
-    "get_embedding_client",
-    # 企微客户端
-    "WeChatClient",
-    # 短信告警
-    "send_alert",
-    "send_sms",
-    "send_voice_call",
-    # 日志
-    "setup_logger",
-    # 时间工具
-    "get_now",
-    "parse_to_datetime",
-    "calculate_elapsed_minutes",
-    "format_for_log",
-    "is_business_hours",
-    "get_relative_time_desc",
-]
+from __future__ import annotations
+
+from importlib import import_module
+
+
+_EXPORTS = {
+    "WXBizMsgCrypt": ("wechat_crypto", "WXBizMsgCrypt"),
+    "MockWeChatCrypto": ("wechat_crypto", "MockWeChatCrypto"),
+    "WeChatCryptoError": ("wechat_crypto", "WeChatCryptoError"),
+    "create_wechat_crypto": ("wechat_crypto", "create_wechat_crypto"),
+    "LLMClient": ("llm_wrapper", "LLMClient"),
+    "LLMResponse": ("llm_wrapper", "LLMResponse"),
+    "llm_client": ("llm_wrapper", "llm_client"),
+    "CircuitBreaker": ("circuit_breaker", "CircuitBreaker"),
+    "CircuitBreakerOpen": ("circuit_breaker", "CircuitBreakerOpen"),
+    "EmbeddingClient": ("embedding_client", "EmbeddingClient"),
+    "get_embedding_client": ("embedding_client", "get_embedding_client"),
+    "WeChatClient": ("wechat_client", "WeChatWorkClient"),
+    "send_alert": ("sms_client", "send_alert"),
+    "send_sms": ("sms_client", "send_sms"),
+    "send_voice_call": ("sms_client", "send_voice_call"),
+    "setup_logger": ("logger_config", "setup_logging"),
+    "get_now": ("time_utils", "get_now"),
+    "parse_to_datetime": ("time_utils", "parse_to_datetime"),
+    "calculate_elapsed_minutes": ("time_utils", "calculate_elapsed_minutes"),
+    "format_for_log": ("time_utils", "format_for_log"),
+    "is_business_hours": ("time_utils", "is_business_hours"),
+    "get_relative_time_desc": ("time_utils", "get_relative_time_desc"),
+}
+
+__all__ = list(_EXPORTS)
 
 
 def __getattr__(name):
     if name in {"db_manager", "DatabaseManager"}:
-        from .db_client import DatabaseManager, db_manager
-
-        return {"db_manager": db_manager, "DatabaseManager": DatabaseManager}[name]
+        module = import_module(".db_client", __name__)
+        return getattr(module, name)
+    if name in _EXPORTS:
+        module_name, attribute_name = _EXPORTS[name]
+        return getattr(import_module(f".{module_name}", __name__), attribute_name)
+    if name == "tool_executor":
+        return import_module(".tool_executor", __name__)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
