@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "jsx": "preserve",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@memory-palace/api-client": ["packages/api-client/src/index.ts"],
+      "@memory-palace/design-tokens": ["packages/design-tokens/src/index.ts"],
+      "@memory-palace/domain-ui": ["packages/domain-ui/src/index.ts"]
+    },
+    "types": ["vite/client", "node", "vitest/globals"]
+  },
+  "include": [
+    "apps/**/*.ts",
+    "apps/**/*.vue",
+    "packages/**/*.ts",
+    "packages/**/*.vue",
+    "scripts/**/*.mjs",
+    "vite.shared.ts",
+    "vitest.config.ts"
+  ]
+}

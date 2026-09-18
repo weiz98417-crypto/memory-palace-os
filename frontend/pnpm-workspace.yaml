@@ -1,0 +1,7 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+allowBuilds:
+  vue-demi: true
+minimumReleaseAgeExclude:
+  - element-plus@2.14.6

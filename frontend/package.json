@@ -1,0 +1,47 @@
+{
+  "name": "memory-palace-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=24.15.0 <25",
+    "pnpm": "11.19.0"
+  },
+  "scripts": {
+    "build": "pnpm openapi:check && pnpm build:apps",
+    "build:apps": "pnpm --filter @memory-palace/console --filter @memory-palace/field --filter @memory-palace/integration --filter @memory-palace/operations build",
+    "dev:console": "pnpm --filter @memory-palace/console dev",
+    "dev:field": "pnpm --filter @memory-palace/field dev",
+    "dev:integration": "pnpm --filter @memory-palace/integration dev",
+    "dev:operations": "pnpm --filter @memory-palace/operations dev",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "typecheck": "vue-tsc --noEmit",
+    "openapi:generate": "node scripts/generate-openapi-types.mjs",
+    "openapi:check": "node scripts/generate-openapi-types.mjs --check",
+    "accept": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+  },
+  "dependencies": {
+    "@tanstack/vue-query": "5.103.1",
+    "element-plus": "2.14.6",
+    "pinia": "4.0.3",
+    "vue": "3.5.43",
+    "vue-router": "5.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.6.1",
+    "@vitejs/plugin-vue": "6.0.9",
+    "@vue/test-utils": "2.5.1",
+    "eslint": "10.10.0",
+    "eslint-plugin-vue": "10.11.0",
+    "jsdom": "30.1.0",
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.70.0",
+    "vite": "8.3.0",
+    "vitest": "5.0.1",
+    "vue-tsc": "3.3.11"
+  }
+}

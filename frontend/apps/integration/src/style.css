@@ -1,0 +1,42 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--mp-color-canvas);
+}
+
+.entry-mark {
+  padding: 16px;
+  color: var(--mp-color-mute);
+  font-family: var(--mp-font-mono);
+  font-size: 12px;
+}
+
+.foundation-card {
+  max-width: 720px;
+  padding: 24px;
+  border: 1px solid var(--mp-color-hairline);
+  border-radius: var(--mp-radius-lg);
+  background: var(--mp-color-surface);
+}
+
+.foundation-card h1 {
+  margin: 8px 0 12px;
+  color: var(--mp-color-ink);
+  font-size: 32px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--mp-color-ai);
+  font-family: var(--mp-font-mono);
+  font-size: 12px;
+}

@@ -6,6 +6,12 @@ data/
 !data/.gitkeep
 backups/
 
+# Frontend
+node_modules/
+/static/client/
+/frontend/coverage/
+/frontend/static/
+
 # Python
 __pycache__/
 *.pyc
