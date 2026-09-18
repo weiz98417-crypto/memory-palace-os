@@ -253,6 +253,7 @@ async def build_event_dossier(
     )
     scenic_evidence_rows = []
     scenic_knowledge_rows = []
+    scenic_retrieval_rows = []
     if scenic_incident:
         scenic_evidence_rows = await database.fetch_all(
             """
@@ -274,6 +275,53 @@ async def build_event_dossier(
             """,
             (venue_id, scenic_incident["incident_id"]),
         )
+        scenic_retrieval_rows = await database.fetch_all(
+            """
+            SELECT id, request_json, response_json, created_at, updated_at
+            FROM scenic_commands
+            WHERE venue_id = ? AND command_type = 'RETRIEVE_SOP' AND status = 'SUCCEEDED'
+            ORDER BY created_at ASC, id ASC
+            """,
+            (venue_id,),
+        )
+
+    scenic_gap_rows = []
+    for retrieval in scenic_retrieval_rows:
+        response = _decode_json(retrieval.get("response_json"), {})
+        if response.get("evidence_status") != "NO_EVIDENCE" or response.get("hits"):
+            continue
+        request_payload = _decode_json(retrieval.get("request_json"), {})
+        retrieval_incident_id = (request_payload.get("payload") or {}).get(
+            "incident_id"
+        )
+        if retrieval_incident_id != scenic_incident["incident_id"]:
+            continue
+        scenic_gap_rows.append(
+            {
+                "command_id": retrieval.get("id"),
+                "query": (request_payload.get("payload") or {}).get("query"),
+                "missing_reason": response.get("missing_reason") or "NO_VERIFIED_SOP",
+                "created_at": retrieval.get("updated_at") or retrieval.get("created_at"),
+            }
+        )
+
+    if scenic_gap_rows and not scenic_knowledge_rows:
+        blockers = closure_conditions["blockers"]
+        if not any(blocker.get("code") == "NO_VERIFIED_SOP" for blocker in blockers):
+            blockers.append(
+                {
+                    "code": "NO_VERIFIED_SOP",
+                    "message": "没有核验通过的 SOP，事件不能通过关闭门禁。",
+                    "resource_type": "scenic_retrieval",
+                    "resource_id": scenic_gap_rows[-1].get("command_id"),
+                    "status": "NO_EVIDENCE",
+                }
+            )
+            closure_conditions["ready"] = False
+            closure_conditions["blocker_count"] = len(blockers)
+            closure_conditions["blocker_counts"]["NO_VERIFIED_SOP"] = (
+                closure_conditions["blocker_counts"].get("NO_VERIFIED_SOP", 0) + 1
+            )
 
     scenic_attachments = await attachment_records(
         database,
@@ -839,6 +887,25 @@ async def build_event_dossier(
                     "activity_type": "KNOWLEDGE_RETRIEVED",
                     "knowledge_hit_id": hit.get("id"),
                     "vector_doc_id": hit.get("vector_doc_id"),
+                },
+            }
+        )
+    for gap in scenic_gap_rows:
+        journey_timeline.append(
+            {
+                "label": "未命中已核验 SOP",
+                "summary": (
+                    f"检索“{gap.get('query') or '当前业务问题'}”没有命中已发布 SOP；"
+                    "关闭门禁仍要求核验知识依据。"
+                ),
+                "actor_name": "企业运营助手",
+                "business_id": event.get("business_id"),
+                "created_at": gap.get("created_at"),
+                "technical": {
+                    "activity_type": "KNOWLEDGE_ABSENT",
+                    "command_id": gap.get("command_id"),
+                    "missing_reason": gap.get("missing_reason"),
+                    "query": gap.get("query"),
                 },
             }
         )

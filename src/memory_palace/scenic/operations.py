@@ -272,22 +272,21 @@ class ScenicAreaOperations:
         command_type = command.kind.strip().upper()
         if not command.idempotency_key.strip():
             raise ValueError("idempotency_key is required")
-        request_hash = hashlib.sha256(
-            json.dumps(
-                {"type": command_type, "payload": command.payload},
-                ensure_ascii=False,
-                sort_keys=True,
-                separators=(",", ":"),
-            ).encode("utf-8")
-        ).hexdigest()
+        request_json = json.dumps(
+            {"type": command_type, "payload": command.payload},
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        request_hash = hashlib.sha256(request_json.encode("utf-8")).hexdigest()
         command_id = uuid.uuid4().hex
         now = time.time()
         await self.database.execute(
             """
             INSERT INTO scenic_commands (
                 id, venue_id, command_type, idempotency_key, request_hash,
-                status, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, 'PROCESSING', ?, ?)
+                status, request_json, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, 'PROCESSING', ?, ?, ?)
             ON CONFLICT (venue_id, idempotency_key) DO NOTHING
             """,
             (
@@ -296,6 +295,7 @@ class ScenicAreaOperations:
                 command_type,
                 command.idempotency_key,
                 request_hash,
+                request_json if command_type == "RETRIEVE_SOP" else None,
                 now,
                 now,
             ),
@@ -989,21 +989,25 @@ class ScenicAreaOperations:
                     "rerank_model": rerank_meta.get("rerank_model"),
                 }
             )
-        if not verified:
-            raise ScenicCommandConflict("pgvector returned no verified published SOP")
+        evidence_status = "GROUNDED" if verified else "NO_EVIDENCE"
+        missing_reason = None if verified else "NO_VERIFIED_SOP"
+        event_payload = {
+            "query": query,
+            "hits": verified,
+            "evidence_status": evidence_status,
+            "backend": getattr(self.vector_store, "backend_mode", "postgresql_pgvector"),
+            "rerank_status": rerank_meta.get("rerank_status"),
+            "rerank_model": rerank_meta.get("rerank_model"),
+        }
+        if missing_reason:
+            event_payload["missing_reason"] = missing_reason
         await self._record_event(
             actor.venue_id,
             incident["run_id"],
             "SOP_RETRIEVED",
             "scenic_incident",
             incident["incident_id"],
-            {
-                "query": query,
-                "hits": verified,
-                "backend": getattr(self.vector_store, "backend_mode", "postgresql_pgvector"),
-                "rerank_status": rerank_meta.get("rerank_status"),
-                "rerank_model": rerank_meta.get("rerank_model"),
-            },
+            event_payload,
             float(await self._simulation_time(actor.venue_id)),
         )
         await self._audit(actor, "SCENIC_SOP_RETRIEVED", "scenic_incident", incident["incident_id"], idempotency_key)
@@ -1011,14 +1015,18 @@ class ScenicAreaOperations:
             venue_id=actor.venue_id, incident_id=incident["incident_id"]
         )
         lifecycle = await self._maybe_triage(incident)
-        return {
+        result = {
             "incident_id": incident["incident_id"],
             "backend": str(getattr(self.vector_store, "backend_mode", "postgresql_pgvector")),
             "model_name": str(getattr(self.vector_store, "model_name", "BAAI/bge-m3")),
             "dimension": 1024,
             "hits": verified,
+            "evidence_status": evidence_status,
             "lifecycle": lifecycle,
         }
+        if missing_reason:
+            result["missing_reason"] = missing_reason
+        return result
 
     async def _command_decide_advice(self, actor, payload, idempotency_key):
         self._require_roles(actor, "manager", "admin")

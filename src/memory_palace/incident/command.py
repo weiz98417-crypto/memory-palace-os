@@ -450,6 +450,13 @@ class PydanticAIIncidentCommand:
                 + list(request.knowledge.experience_hits)
             )
         }
+        if not verified_source_ids and not verified_vector_ids:
+            return MemoryOpsOutput(
+                evidence_status="NO_EVIDENCE",
+                advice_text=NO_EVIDENCE_TEXT,
+                confidence=0.0,
+                absence_reason="\u672a\u547d\u4e2d\u5df2\u53d1\u5e03\u4f9d\u636e",
+            )
         accepted = [
             citation
             for citation in advice.citations
@@ -474,15 +481,6 @@ class PydanticAIIncidentCommand:
     def _unavailable_advice(
         self, degradations: list[AgentDegradation]
     ) -> MemoryOpsOutput:
-        has_retrieval_failure = any(
-            degradation.code in {"RETRIEVAL_FAILED"} for degradation in degradations
-        )
-        if has_retrieval_failure:
-            return MemoryOpsOutput(
-                evidence_status="RETRIEVAL_FAILED",
-                advice_text=RETRIEVAL_FAILED_TEXT,
-                confidence=0.0,
-            )
         if not degradations:
             return MemoryOpsOutput(
                 evidence_status="NO_EVIDENCE",
@@ -491,8 +489,8 @@ class PydanticAIIncidentCommand:
                 absence_reason="\u672a\u547d\u4e2d\u5df2\u53d1\u5e03\u4f9d\u636e",
             )
         return MemoryOpsOutput(
-            evidence_status="NO_EVIDENCE",
-            advice_text=NO_EVIDENCE_TEXT,
+            evidence_status="RETRIEVAL_FAILED",
+            advice_text=RETRIEVAL_FAILED_TEXT,
             confidence=0.0,
             absence_reason="\u6a21\u578b\u5efa\u8bae\u4e0d\u53ef\u7528",
         )

@@ -15,6 +15,10 @@ from src.memory_palace.incident.model_policy import (
     LLMCallLogFailureCounter,
 )
 from src.memory_palace.knowledge.db_client import AsyncDBClient
+from src.memory_palace.skills.memory_ops.contracts import (
+    NO_EVIDENCE_TEXT,
+    RETRIEVAL_FAILED_TEXT,
+)
 from src.memory_palace.knowledge.db_init import init_database
 from tests.unit.test_incident_command import (
     Registry,
@@ -89,7 +93,8 @@ async def test_exhausted_daily_quota_degrades_without_calling_the_provider(
     assert [d.code for d in result.degradations] == ["QUOTA_EXCEEDED"] * 3
     assert all(agent.calls == 0 for agent in agents.values())
     assert result.advice is not None
-    assert result.advice.advice_text == "\u6ca1\u6709\u4f9d\u636e"
+    assert result.advice.advice_text == RETRIEVAL_FAILED_TEXT
+    assert result.advice.advice_text != NO_EVIDENCE_TEXT
     await database.close()
 
 

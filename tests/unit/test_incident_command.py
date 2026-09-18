@@ -355,6 +355,29 @@ async def test_citation_outside_verified_knowledge_is_downgraded_never_shown():
 
 
 @pytest.mark.asyncio
+async def test_memory_ops_unavailable_is_model_failure_not_no_evidence():
+    command = _command(
+        {
+            AgentRole.CONTEXT_TRIGGER: ScriptedAgent([_context()]),
+            AgentRole.ROUTER: ScriptedAgent([_routing()]),
+            AgentRole.MEMORY_OPS: ScriptedAgent(
+                [RuntimeError("provider unavailable")]
+            ),
+            AgentRole.COMMANDER: ScriptedAgent([_advice()]),
+        }
+    )
+
+    result = await command.execute(_request())
+
+    assert result.outcome == "DEGRADED"
+    assert result.advice is not None
+    assert result.advice.evidence_status == "RETRIEVAL_FAILED"
+    assert result.advice.advice_text == RETRIEVAL_FAILED_TEXT
+    assert result.advice.advice_text != NO_EVIDENCE_TEXT
+    assert result.advice.citations == []
+
+
+@pytest.mark.asyncio
 async def test_single_agent_failure_only_degrades_that_step_and_keeps_business_moving():
     recorder = SpyRecorder()
     command = _command(

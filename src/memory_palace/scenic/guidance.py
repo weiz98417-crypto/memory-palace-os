@@ -75,9 +75,18 @@ def project_advice(activities: list[dict[str, Any]]) -> dict[str, Any] | None:
             status = str(payload.get("state") or "PENDING")
         elif activity_type == "ADVICE_READY":
             status = str(payload.get("state") or "READY")
-            evidence_status = str(payload.get("evidence_status") or "GROUNDED")
-            advice_text = str(payload.get("advice") or payload.get("summary") or "")
-            citations = list(payload.get("citations") or [])
+            artifact = payload.get("advice") if isinstance(payload.get("advice"), dict) else {}
+            evidence_status = str(
+                payload.get("evidence_status")
+                or artifact.get("evidence_status")
+                or "GROUNDED"
+            )
+            advice_text = str(
+                payload.get("advice")
+                if isinstance(payload.get("advice"), str)
+                else artifact.get("advice_text") or payload.get("summary") or ""
+            )
+            citations = list(payload.get("citations") or artifact.get("citations") or [])
             call_refs = [str(item) for item in payload.get("call_refs") or []]
             trace_id = str(row.get("trace_id") or "") or None
         elif activity_type == "ADVICE_FAILED":
@@ -237,7 +246,7 @@ def build_next_actions(
                 role_required=["operator", "manager", "admin"],
             )
         ]
-    if not (incident.get("knowledge_hits") or []):
+    if not (incident.get("knowledge_hits") or []) and not advice:
         return [
             _action(
                 "RETRIEVE_SOP",
