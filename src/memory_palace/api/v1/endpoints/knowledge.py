@@ -77,7 +77,7 @@ def _vector_store(request: Request):
             503,
             "VECTOR_STORE_NOT_READY",
             "知识向量服务尚未就绪。",
-            "请联系管理员检查 ChromaDB 和 Embedding 配置。",
+            "请联系管理员检查 PostgreSQL pgvector 与本地 bge-m3 配置。",
             retryable=True,
         )
     return vector_store
@@ -416,6 +416,34 @@ async def import_knowledge(
     batch_id = uuid.uuid4().hex
     created: list[tuple[str, str]] = []
     now = time.time()
+    # 同一来源在多个检索主题下会重复出现；向量表按 (venue_id, source_type, source_id)
+    # 唯一约束，重复导入必须给出明确冲突而不是 500，也不允许把整批数据回滚掉。
+    seen_source_ids: set[str] = set()
+    for entry in body.entries:
+        source_id = (entry.source_id or "").strip()
+        if not source_id:
+            continue
+        if source_id in seen_source_ids:
+            raise api_error(
+                request,
+                409,
+                "KNOWLEDGE_DUPLICATE_SOURCE_ID",
+                f"同一批次内来源标识重复：{source_id}",
+                "按来源去重后重新提交。",
+            )
+        seen_source_ids.add(source_id)
+        existing = await db.fetch_one(
+            "SELECT id FROM knowledge_documents WHERE venue_id = ? AND source_id = ?",
+            (principal["venue_id"], source_id),
+        )
+        if existing:
+            raise api_error(
+                request,
+                409,
+                "KNOWLEDGE_SOURCE_ALREADY_IMPORTED",
+                f"该来源已导入：{source_id}",
+                "跳过已导入来源，或先在知识库中删除后重试。",
+            )
     try:
         for entry in body.entries:
             knowledge_id = uuid.uuid4().hex

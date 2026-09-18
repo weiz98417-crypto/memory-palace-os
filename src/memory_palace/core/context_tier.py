@@ -134,7 +134,7 @@ class ContextCompressor:
         hot_size: int = 10,
         warm_batch: int = 20,
         cold_trigger: int = 50,
-        summarization_model: str = "deepseek-v4-flash"
+        summarization_model: str = "deepseek-flash"
     ):
         self.hot_size = hot_size
         self.warm_batch = warm_batch
@@ -342,7 +342,7 @@ class ContextCompressor:
                 system_prompt="你是一个叙事分析师。",
                 user_prompt=prompt,
                 temperature=0.3,
-                model="deepseek-v4-flash",
+                model="deepseek-flash",
                 trace_id=f"narrative_{session_id}",
                 venue_id=venue_id,
             )

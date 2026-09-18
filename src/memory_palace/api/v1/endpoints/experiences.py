@@ -1200,7 +1200,7 @@ async def complete_interview(
             trace_id=trace_id,
             metadata={
                 "agent": "PersonaExtract",
-                "model": "deepseek-v4-flash",
+                "model": "deepseek-flash",
                 "error": str(exc)[:500],
                 **acting_metadata,
             },
@@ -1224,7 +1224,7 @@ async def complete_interview(
             trace_id=trace_id,
             metadata={
                 "agent": "PersonaExtract",
-                "model": "deepseek-v4-flash",
+                "model": "deepseek-flash",
                 "error_type": type(exc).__name__,
                 **acting_metadata,
             },
@@ -1340,7 +1340,7 @@ async def complete_interview(
                         "interview_id": interview_id,
                         "version": 1,
                         "agent": "PersonaExtract",
-                        "model": "deepseek-v4-flash",
+                        "model": "deepseek-flash",
                         **acting_metadata,
                     },
                 )
@@ -1351,7 +1351,7 @@ async def complete_interview(
         "card": card_payload,
         "trace_id": trace_id,
         "idempotent_replay": False,
-        "extraction": {"agent": "PersonaExtract", "model": "deepseek-v4-flash"},
+        "extraction": {"agent": "PersonaExtract", "model": "deepseek-flash"},
     }
 
 

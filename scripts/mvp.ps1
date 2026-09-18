@@ -22,7 +22,7 @@ param(
     [int]$TargetHttpPort = 18080,
     [ValidateRange(1, 5000)]
     [int]$Tail = 200,
-    [ValidateSet("app", "postgres", "redis", "chromadb", "nginx")]
+    [ValidateSet("app", "postgres", "redis", "nginx")]
     [string[]]$Service,
     [switch]$Force,
     [switch]$StartApplication,
@@ -33,11 +33,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 $ScriptVersion = "2.1.0"
-$ManifestSchema = "memory-palace-mvp-backup/v2"
+$ManifestSchema = "memory-palace-mvp-backup/v3"
 $ArchiveImage = "alpine:3.20.10"
 $PostgresArtifactName = "postgres.dump"
-$ChromaArtifactName = "chroma-data.tar.gz"
-$EmbeddingArtifactName = "embedding-cache.tar.gz"
 $ManifestName = "manifest.json"
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 if (-not $BackupRoot) {
@@ -70,8 +68,8 @@ Memory Palace OS MVP operations
 
 Restore never accepts an arbitrary archive path. BackupId must name a direct child
 of BackupRoot. Exact target confirmation is always required. Existing target
-resources additionally require -Force. By default restore starts only PostgreSQL,
-Redis, and ChromaDB; -StartApplication explicitly enables App and Nginx startup.
+resources additionally require -Force. By default restore starts only PostgreSQL
+and Redis; -StartApplication explicitly enables App and Nginx startup.
 Deployment commands default to external volume 'memory-palace-secrets'; use the
 same explicit -SecretsVolume for install, start, migrate, verify, logs, upgrade,
 restart-app, and stop when the deployment uses a project-specific volume.
@@ -707,13 +705,10 @@ function Invoke-Backup {
     }
 
     $postgresContainer = Get-ServiceContainer -ComposeProject $Project -Service "postgres"
-    $chromaContainer = Get-ServiceContainer -ComposeProject $Project -Service "chromadb"
     $appContainers = @(Get-ServiceContainers -ComposeProject $Project -Service "app")
     if ($appContainers.Count -gt 1) {
         throw "Backup requires exactly one App container; project '$Project' has $($appContainers.Count). Run doctor and resolve duplicate writers first."
     }
-    $chromaVolume = Get-ProjectVolume -ComposeProject $Project -Volume "chroma-data"
-    $embeddingVolume = Get-ProjectVolume -ComposeProject $Project -Volume "embedding-cache"
     $postgresState = Get-DockerOutput -Arguments @("inspect", "--format", "{{.State.Status}}", $postgresContainer)
     if ($postgresState -ne "running") {
         throw "PostgreSQL must be running before backup; current state: $postgresState"
@@ -721,7 +716,6 @@ function Invoke-Backup {
 
     New-Item -ItemType Directory -Path $partialDirectory | Out-Null
     $runningAppContainers = @()
-    $chromaWasRunning = $false
     $backupError = $null
     try {
         foreach ($appContainer in $appContainers) {
@@ -729,13 +723,9 @@ function Invoke-Backup {
                 $runningAppContainers += $appContainer
             }
         }
-        $chromaWasRunning = (Get-DockerOutput -Arguments @("inspect", "--format", "{{.State.Running}}", $chromaContainer)) -eq "true"
 
         foreach ($appContainer in $runningAppContainers) {
             Invoke-Docker -Arguments @("stop", $appContainer)
-        }
-        if ($chromaWasRunning) {
-            Invoke-Docker -Arguments @("stop", $chromaContainer)
         }
 
         $containerDump = "/tmp/memory-palace-$BackupId.dump"
@@ -757,33 +747,11 @@ function Invoke-Backup {
             }
         }
 
-        Invoke-VolumeArchive `
-            -Volume $chromaVolume `
-            -DestinationDirectory $partialDirectory `
-            -ArtifactName $ChromaArtifactName
-        Invoke-VolumeArchive `
-            -Volume $embeddingVolume `
-            -DestinationDirectory $partialDirectory `
-            -ArtifactName $EmbeddingArtifactName
     }
     catch {
         $backupError = $_
     }
     finally {
-        if ($chromaWasRunning) {
-            try {
-                Invoke-Docker -Arguments @("start", $chromaContainer)
-                Wait-ContainerReady -Container $chromaContainer
-            }
-            catch {
-                if (-not $backupError) {
-                    $backupError = $_
-                }
-                else {
-                    Write-Warning "ChromaDB could not be restarted after backup failure: $($_.Exception.Message)"
-                }
-            }
-        }
         foreach ($appContainer in $runningAppContainers) {
             try {
                 Invoke-Docker -Arguments @("start", $appContainer)
@@ -806,24 +774,12 @@ function Invoke-Backup {
 
     try {
         $postgresArtifact = Join-Path $partialDirectory $PostgresArtifactName
-        $chromaArtifact = Join-Path $partialDirectory $ChromaArtifactName
-        $embeddingArtifact = Join-Path $partialDirectory $EmbeddingArtifactName
-        if (-not (Test-Path -LiteralPath $postgresArtifact -PathType Leaf) -or
-            -not (Test-Path -LiteralPath $chromaArtifact -PathType Leaf) -or
-            -not (Test-Path -LiteralPath $embeddingArtifact -PathType Leaf)) {
-            throw "Backup did not produce all required artifacts."
+        if (-not (Test-Path -LiteralPath $postgresArtifact -PathType Leaf)) {
+            throw "Backup did not produce the PostgreSQL artifact."
         }
-        Test-VolumeArchiveEntries `
-            -BackupDirectory $partialDirectory `
-            -ArtifactName $ChromaArtifactName `
-            -Label "Chroma"
-        Test-VolumeArchiveEntries `
-            -BackupDirectory $partialDirectory `
-            -ArtifactName $EmbeddingArtifactName `
-            -Label "Embedding cache"
 
         $services = [ordered]@{}
-        foreach ($service in @("app", "postgres", "redis", "chromadb", "nginx")) {
+        foreach ($service in @("app", "postgres", "redis", "nginx")) {
             $services[$service] = Get-ServiceManifest -ComposeProject $Project -Service $service
         }
 
@@ -844,25 +800,11 @@ function Invoke-Backup {
                 postgres = Get-DockerOutput -Arguments @("exec", $postgresContainer, "postgres", "--version")
                 services = $services
             }
-            source_storage = [ordered]@{
-                chroma_volume = $chromaVolume
-                embedding_cache_volume = $embeddingVolume
-            }
             artifacts = [ordered]@{
                 postgres = [ordered]@{
                     file = $PostgresArtifactName
                     bytes = (Get-Item -LiteralPath $postgresArtifact).Length
                     sha256 = (Get-FileHash -LiteralPath $postgresArtifact -Algorithm SHA256).Hash.ToLowerInvariant()
-                }
-                chroma = [ordered]@{
-                    file = $ChromaArtifactName
-                    bytes = (Get-Item -LiteralPath $chromaArtifact).Length
-                    sha256 = (Get-FileHash -LiteralPath $chromaArtifact -Algorithm SHA256).Hash.ToLowerInvariant()
-                }
-                embedding_cache = [ordered]@{
-                    file = $EmbeddingArtifactName
-                    bytes = (Get-Item -LiteralPath $embeddingArtifact).Length
-                    sha256 = (Get-FileHash -LiteralPath $embeddingArtifact -Algorithm SHA256).Hash.ToLowerInvariant()
                 }
             }
         }
@@ -932,16 +874,12 @@ function Read-VerifiedManifest {
     if ("$($manifest.source.compose_file_sha256)" -notmatch '^[a-fA-F0-9]{64}$') {
         throw "Manifest contains an invalid Compose file checksum."
     }
-    if ($manifest.artifacts.postgres.file -cne $PostgresArtifactName -or
-        $manifest.artifacts.chroma.file -cne $ChromaArtifactName -or
-        $manifest.artifacts.embedding_cache.file -cne $EmbeddingArtifactName) {
+    if ($manifest.artifacts.postgres.file -cne $PostgresArtifactName) {
         throw "Manifest contains unexpected artifact names."
     }
 
     foreach ($artifact in @(
-        @{ Name = "PostgreSQL"; File = $PostgresArtifactName; Metadata = $manifest.artifacts.postgres },
-        @{ Name = "Chroma"; File = $ChromaArtifactName; Metadata = $manifest.artifacts.chroma },
-        @{ Name = "Embedding cache"; File = $EmbeddingArtifactName; Metadata = $manifest.artifacts.embedding_cache }
+        @{ Name = "PostgreSQL + pgvector"; File = $PostgresArtifactName; Metadata = $manifest.artifacts.postgres }
     )) {
         if ("$($artifact.Metadata.sha256)" -notmatch '^[a-fA-F0-9]{64}$') {
             throw "$($artifact.Name) artifact contains an invalid checksum."
@@ -997,7 +935,7 @@ function Invoke-Install {
         else {
             Invoke-Docker -Arguments @("pull", $ArchiveImage)
             Invoke-Compose -ResolvedComposeFile $context.ComposeFile -ResolvedEnvFile $context.EnvFile `
-                -ComposeProject $context.Project -Arguments @("pull", "postgres", "redis", "chromadb", "nginx")
+                -ComposeProject $context.Project -Arguments @("pull", "postgres", "redis", "nginx")
         }
         Invoke-Compose -ResolvedComposeFile $context.ComposeFile -ResolvedEnvFile $context.EnvFile `
             -ComposeProject $context.Project -Arguments @("build", "app")
@@ -1190,8 +1128,8 @@ function Invoke-Start {
         }
 
         Invoke-Compose -ResolvedComposeFile $context.ComposeFile -ResolvedEnvFile $context.EnvFile `
-            -ComposeProject $context.Project -Arguments @("up", "-d", "postgres", "redis", "chromadb")
-        foreach ($service in @("postgres", "redis", "chromadb")) {
+            -ComposeProject $context.Project -Arguments @("up", "-d", "postgres", "redis")
+        foreach ($service in @("postgres", "redis")) {
             Wait-ServiceReady -ComposeProject $context.Project -Service $service
         }
 
@@ -1494,7 +1432,7 @@ function Invoke-RestartApp {
     try {
         $beforeApp = Get-ServiceRuntimeIdentity -ComposeProject $context.Project -Service "app"
         $dependencyBefore = @{}
-        foreach ($service in @("postgres", "redis", "chromadb", "nginx")) {
+        foreach ($service in @("postgres", "redis", "nginx")) {
             $dependencyBefore[$service] = Get-ServiceRuntimeIdentity `
                 -ComposeProject $context.Project -Service $service
         }
@@ -1507,7 +1445,7 @@ function Invoke-RestartApp {
         if ($beforeApp.ProcessId -eq $afterApp.ProcessId -and $beforeApp.StartedAt -eq $afterApp.StartedAt) {
             throw "App runtime identity did not change after restart-app."
         }
-        foreach ($service in @("postgres", "redis", "chromadb", "nginx")) {
+        foreach ($service in @("postgres", "redis", "nginx")) {
             $before = $dependencyBefore[$service]
             $after = Get-ServiceRuntimeIdentity -ComposeProject $context.Project -Service $service
             if ($before.Container -ne $after.Container -or
@@ -1519,7 +1457,7 @@ function Invoke-RestartApp {
 
         Write-Host "App runtime before: container=$($beforeApp.Container) pid=$($beforeApp.ProcessId) started=$($beforeApp.StartedAt)"
         Write-Host "App runtime after:  container=$($afterApp.Container) pid=$($afterApp.ProcessId) started=$($afterApp.StartedAt)"
-        Write-Host "restart-app result: PASS; PostgreSQL, Redis, ChromaDB, Nginx, and data volumes were not restarted or cleared."
+        Write-Host "restart-app result: PASS; PostgreSQL (including pgvector), Redis, Nginx, and data volumes were not restarted or cleared."
         Write-Host "Diagnostics: open /admin/diagnostics through the deployment HTTP endpoint."
     }
     finally {
@@ -1589,15 +1527,15 @@ function Invoke-Upgrade {
         else {
             Invoke-Docker -Arguments @("pull", $ArchiveImage)
             Invoke-Compose -ResolvedComposeFile $context.ComposeFile -ResolvedEnvFile $context.EnvFile `
-                -ComposeProject $context.Project -Arguments @("pull", "postgres", "redis", "chromadb", "nginx")
+                -ComposeProject $context.Project -Arguments @("pull", "postgres", "redis", "nginx")
         }
         Invoke-Compose -ResolvedComposeFile $context.ComposeFile -ResolvedEnvFile $context.EnvFile `
             -ComposeProject $context.Project -Arguments @("build", "app")
         Register-ReleaseImage -Context $context -Release $release
 
         Invoke-Compose -ResolvedComposeFile $context.ComposeFile -ResolvedEnvFile $context.EnvFile `
-            -ComposeProject $context.Project -Arguments @("up", "-d", "postgres", "redis", "chromadb")
-        foreach ($service in @("postgres", "redis", "chromadb")) {
+            -ComposeProject $context.Project -Arguments @("up", "-d", "postgres", "redis")
+        foreach ($service in @("postgres", "redis")) {
             Wait-ServiceReady -ComposeProject $context.Project -Service $service
         }
         Invoke-PostgresMigration -Context $context
@@ -1671,12 +1609,9 @@ function Invoke-Restore {
         }
 
         Invoke-Compose -ResolvedComposeFile $resolvedComposeFile -ResolvedEnvFile $resolvedEnvFile `
-            -ComposeProject $TargetProject -Arguments @("create", "postgres", "redis", "chromadb")
+            -ComposeProject $TargetProject -Arguments @("create", "postgres", "redis")
 
         $postgresContainer = Get-ServiceContainer -ComposeProject $TargetProject -Service "postgres"
-        $chromaContainer = Get-ServiceContainer -ComposeProject $TargetProject -Service "chromadb"
-        $chromaVolume = Get-ProjectVolume -ComposeProject $TargetProject -Volume "chroma-data"
-        $embeddingVolume = New-ProjectVolume -ComposeProject $TargetProject -Volume "embedding-cache"
 
         Invoke-Docker -Arguments @("start", $postgresContainer)
         Wait-ContainerReady -Container $postgresContainer
@@ -1700,20 +1635,9 @@ function Invoke-Restore {
             }
         }
 
-        Expand-VolumeArchive `
-            -Volume $chromaVolume `
-            -BackupDirectory $backupDirectory `
-            -ArtifactName $ChromaArtifactName `
-            -Label "Chroma"
-        Expand-VolumeArchive `
-            -Volume $embeddingVolume `
-            -BackupDirectory $backupDirectory `
-            -ArtifactName $EmbeddingArtifactName `
-            -Label "Embedding cache"
         Invoke-Compose -ResolvedComposeFile $resolvedComposeFile -ResolvedEnvFile $resolvedEnvFile `
-            -ComposeProject $TargetProject -Arguments @("up", "-d", "postgres", "redis", "chromadb")
+            -ComposeProject $TargetProject -Arguments @("up", "-d", "postgres", "redis")
         Wait-ContainerReady -Container $postgresContainer
-        Wait-ContainerReady -Container $chromaContainer
 
         if ($StartApplication) {
             Initialize-RestoreApplicationSecret -Volume $TargetSecretsVolume
@@ -1760,7 +1684,7 @@ function Write-ProjectStatus {
     Assert-ProjectName -Name $ComposeProject -ParameterName "Project"
     $versions = Test-DockerEnvironment
     $rows = @()
-    foreach ($service in @("app", "postgres", "redis", "chromadb", "nginx")) {
+    foreach ($service in @("app", "postgres", "redis", "nginx")) {
         $rows += @(Get-ContainerStatusRows -ComposeProject $ComposeProject -Service $service)
     }
 
@@ -1783,7 +1707,7 @@ function Invoke-Doctor {
         throw "Doctor found 1 blocking failure."
     }
 
-    foreach ($service in @("app", "postgres", "redis", "chromadb", "nginx")) {
+    foreach ($service in @("app", "postgres", "redis", "nginx")) {
         $statuses = @(Get-ContainerStatusRows -ComposeProject $Project -Service $service)
         if ($statuses.Count -ne 1) {
             $checks += [pscustomobject]@{
@@ -1802,7 +1726,7 @@ function Invoke-Doctor {
         }
     }
 
-    foreach ($volume in @("pg-data", "chroma-data", "embedding-cache")) {
+    foreach ($volume in @("pg-data")) {
         $name = Get-ProjectVolume -ComposeProject $Project -Volume $volume -AllowMissing
         $checks += [pscustomobject]@{
             Check = "volume:$volume"
@@ -1812,9 +1736,8 @@ function Invoke-Doctor {
     }
 
     $dependencyChecks = @(
-        @{ Service = "postgres"; Command = @("sh", "-c", 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"') },
-        @{ Service = "redis"; Command = @("redis-cli", "ping") },
-        @{ Service = "chromadb"; Command = @("curl", "-fsS", "http://localhost:8000/api/v1/heartbeat") }
+        @{ Service = "postgres"; Command = @("sh", "-c", 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" && psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT extversion FROM pg_extension WHERE extname = ''vector''"') },
+        @{ Service = "redis"; Command = @("redis-cli", "ping") }
     )
     foreach ($dependency in $dependencyChecks) {
         $containers = @(Get-ServiceContainers -ComposeProject $Project -Service $dependency.Service)

@@ -115,7 +115,7 @@ class Validators:
     @staticmethod
     def is_model_name(value: str) -> bool:
         """验证模型名称"""
-        return value == "deepseek-v4-flash"
+        return value == "deepseek-flash"
 
     @staticmethod
     def is_aes_key(value: str) -> bool:
@@ -200,9 +200,9 @@ class EnvValidator:
             description="企业 MVP 唯一生成式模型",
             level=ValidationLevel.ERROR,
             required=False,
-            default="deepseek-v4-flash",
+            default="deepseek-flash",
             validator=Validators.is_model_name,
-            error_message="LLM_DEFAULT_MODEL 必须为 deepseek-v4-flash",
+            error_message="LLM_DEFAULT_MODEL 必须为 deepseek-flash",
         ))
 
         # 数据库配置

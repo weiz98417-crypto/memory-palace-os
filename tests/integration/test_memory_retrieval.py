@@ -1,94 +1,40 @@
-"""
-RAG 链路集成测试 (Memory Retrieval)
+"""RAG interface integration coverage using the PostgreSQL pgvector seam."""
 
-验证: 向量库 upsert → query 完整回路，mock embedding 绕过外部依赖
-
-Copyright (c) 2026 ZhouWei & Team. All Rights Reserved.
-"""
-
-import uuid
-import numpy as np
-import chromadb
-import pytest
+from src.memory_palace.knowledge.vector_store import get_vector_client
+from tests.pgvector_fake import build_fake_pgvector_store
 
 
-class MockEmbeddingFunction(chromadb.EmbeddingFunction):
-    """返回确定性向量 (1536 维)"""
+def test_upsert_query_and_global_client_roundtrip(monkeypatch):
+    store, _database = build_fake_pgvector_store()
+    monkeypatch.setattr(
+        "src.memory_palace.knowledge.vector_store._vector_client",
+        store,
+    )
+    content = "2024 年同类票务纠纷通过核实身份后补差价解决。"
+    store.upsert_experience(
+        content,
+        {"case_id": "HIST_999", "date": "2024-05", "venue_id": "venue-a"},
+        "history-999",
+        strict=True,
+    )
+    results = store.query_experience(
+        content,
+        top_k=3,
+        threshold=0.99,
+        venue_id="venue-a",
+        strict=True,
+    )
+    assert results[0]["content"] == content
+    assert get_vector_client() is store
 
-    def name(self):
-        return "mock"
 
-    def __call__(self, input):
-        if isinstance(input, str):
-            input = [input]
-        vectors = []
-        rng = np.random.RandomState(42)
-        for text in input:
-            rng.seed(abs(hash(text)) % (2**31))
-            vectors.append(rng.randn(1536).astype(np.float32).tolist())
-        return vectors
-
-
-class TestMemoryRetrieval:
-
-    @pytest.fixture(autouse=True)
-    def setup(self, monkeypatch):
-        """注入测试用 vector_store 替换全局 get_vector_client"""
-        from src.memory_palace.knowledge.vector_store import PalaceVectorStore
-
-        self.vs = object.__new__(PalaceVectorStore)
-        self.vs.emb_fn = MockEmbeddingFunction()
-        self.vs._client = chromadb.EphemeralClient()
-        self.vs.collection = self.vs._client.get_or_create_collection(
-            name=f"test_mem_{uuid.uuid4().hex[:8]}",
-            embedding_function=self.vs.emb_fn,
-            metadata={"hnsw:space": "cosine"},
-        )
-        monkeypatch.setattr(
-            "src.memory_palace.knowledge.vector_store.get_vector_client",
-            lambda: self.vs,
-        )
-        yield
-        self.vs.close()
-
-    def test_upsert_and_query_roundtrip(self):
-        """写入后可召回并验证内容一致性"""
-        doc_id = str(uuid.uuid4())
-        test_content = "2024年曾发生同类票务纠纷，处理方案是核实身份后通过补差价升舱解决。"
-        self.vs.upsert_experience(
-            content=test_content,
-            metadata={"case_id": "HIST_999", "date": "2024-05", "venue_id": "venue-a"},
-            doc_id=doc_id,
-        )
-        results = self.vs.query_experience(
-            "票价纠纷", top_k=3, threshold=0.0, venue_id="venue-a"
-        )
-        assert isinstance(results, list)
-
-    def test_irrelevant_query_filtered_by_threshold(self):
-        """高阈值下无关查询被过滤"""
-        self.vs.upsert_experience(
-            content="售票系统故障处理流程",
-            metadata={"type": "ticketing", "venue_id": "venue-a"},
-            doc_id="irrel_1",
-        )
-        results = self.vs.query_experience(
-            "xyzzygibberish unrelated garbage query",
-            top_k=3,
-            threshold=0.99,
-            venue_id="venue-a",
-        )
-        assert len(results) == 0
-
-    def test_get_vector_client_returns_patched_instance(self):
-        """get_vector_client 返回 fixture 注入的实例"""
-        from src.memory_palace.knowledge.vector_store import get_vector_client
-
-        vs = get_vector_client()
-        assert vs is not None
-        assert vs is self.vs
-
-    def test_collection_is_accessible(self):
-        """向量集合可用"""
-        count = self.vs.collection.count()
-        assert count >= 0
+def test_delete_removes_pgvector_document():
+    store, _database = build_fake_pgvector_store()
+    store.upsert_experience(
+        "售票系统故障处理流程",
+        {"venue_id": "venue-a"},
+        "ticketing-delete",
+        strict=True,
+    )
+    assert store.delete_experience("ticketing-delete", strict=True) is True
+    assert store.verify_documents(["ticketing-delete"])["document_count"] == 0

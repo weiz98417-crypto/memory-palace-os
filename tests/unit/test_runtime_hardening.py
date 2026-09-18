@@ -18,7 +18,7 @@ from src.memory_palace.tools.db_client import _resolve_database_uri
 def test_config_override_logs_redact_sensitive_values():
     assert ConfigManager._format_override_value("jwt.secret", "sensitive") == "<redacted>"
     assert ConfigManager._format_override_value("provider.api.key", "sensitive") == "<redacted>"
-    assert ConfigManager._format_override_value("llm.default.model", "deepseek-v4-flash") == "deepseek-v4-flash"
+    assert ConfigManager._format_override_value("llm.default.model", "deepseek-flash") == "deepseek-flash"
 
 
 @pytest.mark.asyncio
@@ -339,39 +339,24 @@ async def test_redis_queue_put_deduplicates_business_message_ids():
     assert queue._client.keys[0] == queue._client.keys[1]
 
 
-def test_vector_store_uses_remote_chroma_in_production(monkeypatch):
-    import src.memory_palace.knowledge.vector_store as vector_store_module
+def test_vector_store_uses_postgresql_pgvector_in_production():
+    from tests.pgvector_fake import build_fake_pgvector_store
 
-    captured = {}
+    store, _database = build_fake_pgvector_store()
 
-    class FakeCollection:
-        pass
-
-    class FakeClient:
-        def get_or_create_collection(self, **kwargs):
-            captured["collection"] = kwargs
-            return FakeCollection()
-
-        def heartbeat(self):
-            return 1700000000000000000
-
-    def fake_http_client(*, host, port, ssl):
-        captured["connection"] = {"host": host, "port": port, "ssl": ssl}
-        return FakeClient()
-
-    embedding_function = object()
-    monkeypatch.setenv("APP_ENV", "prod")
-    monkeypatch.setenv("CHROMA_HOST", "chromadb")
-    monkeypatch.setenv("CHROMA_PORT", "8000")
-    monkeypatch.setenv("CHROMA_SSL", "false")
-    monkeypatch.setattr(vector_store_module.chromadb, "HttpClient", fake_http_client)
-
-    store = PalaceVectorStore(embedding_function=embedding_function)
-
-    assert store.backend_mode == "remote_http"
-    assert store.health()["status"] == "healthy"
-    assert captured["connection"] == {"host": "chromadb", "port": 8000, "ssl": False}
-    assert captured["collection"]["embedding_function"] is embedding_function
+    assert store.backend_mode == "postgresql_pgvector"
+    assert store.dimension == 1024
+    assert store.health() == {
+        "status": "healthy",
+        "backend": "postgresql_pgvector",
+        "extension_version": "0.8.1",
+        "index_name": "knowledge_vectors_bge_m3_v1",
+        "model": "BAAI/bge-m3",
+        "dimension": 1024,
+        "index_status": "READY",
+        "device": "test",
+        "model_runtime": {"status": "READY", "device": "custom", "dimension": 1024},
+    }
 
 
 def test_vector_store_factory_does_not_hide_production_connection_failure(monkeypatch):
@@ -379,13 +364,13 @@ def test_vector_store_factory_does_not_hide_production_connection_failure(monkey
 
     class FailingVectorStore:
         def __init__(self):
-            raise RuntimeError("Chroma unavailable")
+            raise RuntimeError("pgvector unavailable")
 
     monkeypatch.setenv("APP_ENV", "prod")
     monkeypatch.setattr(vector_store_module, "_vector_client", None)
     monkeypatch.setattr(vector_store_module, "PalaceVectorStore", FailingVectorStore)
 
-    with pytest.raises(RuntimeError, match="Chroma unavailable"):
+    with pytest.raises(RuntimeError, match="pgvector unavailable"):
         vector_store_module.get_vector_client()
 
 
@@ -416,6 +401,8 @@ def test_tools_package_does_not_eagerly_import_legacy_database_client():
         env=env,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
 
@@ -465,15 +452,19 @@ def test_deepseek_secret_rotation_is_atomic_and_helper_is_isolated():
     assert "docker restart $containerIds" in script
 
 
-def test_docker_runtime_provides_persistent_writable_embedding_cache():
+def test_docker_runtime_mounts_prepared_bge_m3_cache_read_only():
     project_root = Path(__file__).resolve().parents[2]
     dockerfile = (project_root / "deploy" / "Dockerfile").read_text(encoding="utf-8")
     compose = yaml.safe_load((project_root / "deploy" / "docker-compose.yml").read_text(encoding="utf-8"))
 
     assert "useradd -r -m -d /home/appuser -g appuser appuser" in dockerfile
     assert "HOME=/home/appuser" in dockerfile
-    assert "embedding-cache:/home/appuser/.cache" in compose["services"]["app"]["volumes"]
-    assert "embedding-cache" in compose["volumes"]
+    assert (
+        "${BGE_M3_CACHE_DIR:?BGE_M3_CACHE_DIR is required}:/models/huggingface:ro"
+        in compose["services"]["app"]["volumes"]
+    )
+    assert compose["services"]["app"]["environment"]["HF_HOME"] == "/models/huggingface"
+    assert "embedding-cache" not in compose["volumes"]
 
 
 def test_wechat_client_ignores_deployment_environment_by_policy(monkeypatch):

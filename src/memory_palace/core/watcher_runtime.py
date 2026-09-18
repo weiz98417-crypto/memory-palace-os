@@ -16,7 +16,7 @@ from .event_closure import calculate_event_closure_conditions
 from .sensitive_output import public_error_message, sanitize_public_value
 
 
-EVENT_WATCHER_MODEL = "deepseek-v4-flash"
+EVENT_WATCHER_MODEL = "deepseek-flash"
 _EVENT_POLICY_NAMESPACE = uuid.UUID("684ef953-2a28-47cc-8ddb-490b20918b46")
 
 
@@ -1037,7 +1037,7 @@ async def run_watcher_policy(
             "finding_count": len(findings),
             "summary": summary,
             "findings": findings,
-            "model": "deepseek-v4-flash" if targets else None,
+            "model": "deepseek-flash" if targets else None,
         }
     except asyncio.CancelledError:
         await asyncio.shield(

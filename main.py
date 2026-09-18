@@ -24,7 +24,7 @@ from pathlib import Path
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
@@ -32,6 +32,19 @@ load_dotenv()
 
 # ── 内部模块 ──────────────────────────────────────────────────────────────────
 from src.memory_palace.config.env_validator import validate_env  # P0: 启动校验
+from src.memory_palace.incident.call_records import LLMCallLogRecorder
+from src.memory_palace.incident.command import (
+    IncidentCommandConfig,
+    PydanticAIIncidentCommand,
+)
+from src.memory_palace.incident.model_policy import DatabaseModelPreflight
+from src.memory_palace.incident.runtime import build_incident_agent_registry
+from src.memory_palace.scenic.advice_dispatch import InProcessAdviceDispatcher
+from src.memory_palace.scenic.advice_runs import (
+    AdviceRunRepository,
+    AdviceWorker,
+    InMemoryAdviceQueue,
+)
 from src.memory_palace.tools.logger_config import setup_logger  # 日志初始化
 
 
@@ -137,12 +150,119 @@ async def lifespan(app: FastAPI):
     vector_store = app_container.vector_store
     vector_health = vector_store.health() if vector_store else {"status": "unhealthy"}
     if vector_health.get("status") != "healthy":
-        raise RuntimeError("ChromaDB 未通过启动健康检查")
-    logger.info("✅ ChromaDB 向量知识库已连接")
+        raise RuntimeError(f"PostgreSQL pgvector / bge-m3 未通过启动健康检查: {vector_health}")
+    logger.info("✅ PostgreSQL pgvector 与本地 bge-m3 已连接")
+
+    # —— 景区态势深模块：PostgreSQL 事实、Redis Streams 实时唤醒 ——
+    from src.memory_palace.config.secrets import read_secret
+    from src.memory_palace.scenic.operations import ScenicAreaOperations
+    from src.memory_palace.scenic.realtime import RedisSituationBus, ScenicSimulationRuntime
+
+    scenic_password = read_secret("SCENIC_ACCOUNT_PASSWORD")
+    if len(scenic_password) < 12:
+        raise RuntimeError("SCENIC_ACCOUNT_PASSWORD 或 SCENIC_ACCOUNT_PASSWORD_FILE 必须提供至少 12 位密码")
+    scenic_bus = RedisSituationBus()
+    advice_repository = AdviceRunRepository(app_container.db_client)
+    advice_queue = InMemoryAdviceQueue()
+    incident_command = PydanticAIIncidentCommand(
+        agent_registry=build_incident_agent_registry(),
+        call_recorder=LLMCallLogRecorder(app_container.db_client),
+        config=IncidentCommandConfig.from_env(),
+        preflight=DatabaseModelPreflight(app_container.db_client),
+    )
+    scenic_operations = ScenicAreaOperations(
+        database=app_container.db_client,
+        vector_store=vector_store,
+        task_graph=app_container.task_graph,
+        permission_engine=app_container.permission_engine,
+        publisher=scenic_bus.publish,
+        advice_repository=advice_repository,
+    )
+    # The sink is built from the app's own database and SSE publisher rather than from
+    # the operations object, so the worker path and the API path share one implementation
+    # and neither can silently drop an advice-ready signal.
+    from src.memory_palace.scenic.advice_sink import DatabaseAdviceSink
+
+    advice_sink = DatabaseAdviceSink(
+        app_container.db_client, publisher=scenic_bus.publish
+    )
+    advice_worker = AdviceWorker(
+        repository=advice_repository,
+        queue=advice_queue,
+        incident_command=incident_command,
+        sink=advice_sink,
+    )
+    # Durable dispatch when Hatchet is configured; the in-process dispatcher stays the
+    # default for the native stack so a local run needs no extra services.
+    hatchet_token_configured = bool(
+        os.environ.get("HATCHET_CLIENT_TOKEN", "").strip()
+        or os.environ.get("HATCHET_CLIENT_TOKEN_FILE", "").strip()
+    )
+    if hatchet_token_configured:
+        from src.memory_palace.scenic.advice_dispatch import HatchetAdviceDispatcher
+        from src.memory_palace.scenic.hatchet_workflow import build_workflow
+
+        advice_workflow, hatchet_client = build_workflow(worker=advice_worker)
+        advice_dispatcher = HatchetAdviceDispatcher(advice_workflow)
+
+        async def _push_advice_decision(
+            *, incident_id, advice_run_id, decision, decided_by,
+            reason_code=None, reason_text=None,
+        ):
+            from src.memory_palace.scenic.hatchet_workflow import ADVICE_DECISION_EVENT_KEY
+
+            await hatchet_client.event.aio_push(
+                ADVICE_DECISION_EVENT_KEY,
+                {
+                    "decision": decision,
+                    "decided_by": decided_by,
+                    "reason_code": reason_code,
+                    "reason_text": reason_text,
+                    "advice_run_id": advice_run_id,
+                },
+                scope=incident_id,
+            )
+
+        advice_decision_publisher = _push_advice_decision
+        logger.info("advice dispatch: hatchet durable workflow")
+    else:
+        advice_dispatcher = InProcessAdviceDispatcher(advice_worker)
+        advice_decision_publisher = None
+        logger.info("advice dispatch: in-process queue")
+    # Injected after construction: ScenicAreaOperations is built before the worker that
+    # resumes the durable wait, so this cannot be a constructor argument.
+    scenic_operations.advice_decision_publisher = advice_decision_publisher
+    scenic_operations.advice_dispatcher = advice_dispatcher
+    await scenic_operations.bootstrap(
+        venue_id=os.environ.get("DEFAULT_VENUE_ID", "venue-hq"),
+        venue_name=os.environ.get("DEFAULT_VENUE_NAME", "示范景区运营中心"),
+        account_password=scenic_password,
+    )
+    scenic_runtime = ScenicSimulationRuntime(scenic_operations)
+    scenic_runtime.start()
+    logger.info("✅ 景区态势、模拟时钟与预置业务账号已就绪")
 
     worker = MessageQueueWorker(queue=runtime_queue, container=app_container, queue_backend=runtime_queue)
     consumer_task = asyncio.create_task(worker.start(), name="queue-consumer")
     logger.info("✅ 异步消息队列消费者已启动")
+
+    async def _advice_consumer():
+        while True:
+            try:
+                finalized = await advice_worker.run_once()
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:  # keep the consumer alive
+                logger.warning(f"建议队列消费失败：{type(exc).__name__}")
+                await asyncio.sleep(1.0)
+                continue
+            if finalized is None:
+                await asyncio.sleep(0.5)
+
+    advice_consumer_task = asyncio.create_task(
+        _advice_consumer(), name="advice-consumer"
+    )
+    logger.info("✅ 建议运行队列消费者已启动")
 
     # —— 启动定时任务调度器（Watcher 鹰眼巡检）——
     scheduler = TaskScheduler(container=app_container)
@@ -151,7 +271,7 @@ async def lifespan(app: FastAPI):
 
     # —— 注册健康检查器 ——
     try:
-        from src.memory_palace.core.health import get_health_registry
+        from src.memory_palace.core.health import get_health_registry, register_configured_http_checks
 
         registry = get_health_registry()
         # PG check
@@ -175,6 +295,7 @@ async def lifespan(app: FastAPI):
                 )
             except Exception:
                 pass
+        register_configured_http_checks(registry)
         logger.info("✅ 健康检查器已注册")
     except Exception as e:
         logger.debug(f"健康检查器注册跳过: {e}")
@@ -187,6 +308,14 @@ async def lifespan(app: FastAPI):
     app.state.container = app_container
     app.state.scheduler = scheduler
     app.state.runtime_instance_id = runtime_instance_id
+    app.state.scenic_operations = scenic_operations
+    app.state.scenic_situation_bus = scenic_bus
+    app.state.scenic_simulation_runtime = scenic_runtime
+    app.state.advice_repository = advice_repository
+    app.state.advice_queue = advice_queue
+    app.state.advice_worker = advice_worker
+    app.state.advice_dispatcher = advice_dispatcher
+    app.state.incident_command = incident_command
 
     yield  # ← FastAPI 在此处理请求
 
@@ -204,6 +333,11 @@ async def lifespan(app: FastAPI):
         )
 
     # 停止领取新消息并取消阻塞中的消费循环。
+    advice_consumer_task.cancel()
+    try:
+        await advice_consumer_task
+    except asyncio.CancelledError:
+        pass
     worker.stop()
     consumer_task.cancel()
     try:
@@ -232,6 +366,8 @@ async def lifespan(app: FastAPI):
     try:
         from src.memory_palace.knowledge.vector_store import close_vector_client
 
+        await scenic_runtime.stop()
+        await scenic_bus.close()
         await runtime_queue.close()
         await app_container.db_client.close()
         close_vector_client()
@@ -258,6 +394,14 @@ app = FastAPI(
 from src.memory_palace.api.errors import install_error_handlers
 
 install_error_handlers(app)
+
+# 反向代理后方运行时必须显式信任代理头，否则 request.client.host 永远是入口容器的 IP，
+# 运行准备入口的“仅本机/受信入口”判断和审计日志都会失真。只有部署方明确开启时才生效。
+if os.environ.get("TRUST_PROXY_HEADERS", "").strip().lower() in {"1", "true", "yes", "on"}:
+    from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+    logger.info("✅ 已信任反向代理转发头（TRUST_PROXY_HEADERS）")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -365,13 +509,48 @@ else:
         StaticFiles(directory="static/simulator/wecom", html=True),
         name="wecom_simulator_static",
     )
+    @app.get("/operations/scenic", include_in_schema=False)
+    async def scenic_operations_redirect():
+        return RedirectResponse(url="/operations/scenic/", status_code=302)
+
+    app.mount(
+        "/operations/scenic",
+        StaticFiles(directory="static/operations/scenic", html=True),
+        name="scenic_operations_static",
+    )
+    app.mount(
+        "/operations/evaluation",
+        StaticFiles(directory="static/operations/evaluation", html=True),
+        name="operations_evaluation_static",
+    )
     app.mount("/shared", StaticFiles(directory="static/shared"), name="client_shared_static")
     app.mount("/admin", StaticFiles(directory="static", html=True), name="admin_static")
+
+
+@app.get("/product", include_in_schema=False)
+async def product_promotion_redirect():
+    return RedirectResponse(url="/product/", status_code=302)
+
+
+app.mount(
+    "/product",
+    StaticFiles(directory="static/product", html=True),
+    name="product_promotion_static",
+)
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 5. 健康检查（运维必备，容器探针用）
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+@app.get("/ready", tags=["运维"])
+async def readiness_check():
+    """Readiness probe for PostgreSQL, Redis and configured Agent runtime services."""
+    from src.memory_palace.core.health import build_readiness_response, get_health_registry
+
+    status_code, payload = await build_readiness_response(get_health_registry(), version=app.version)
+    return JSONResponse(payload, status_code=status_code)
+
+
 @app.get("/health", tags=["运维"])
 async def health_check():
     """

@@ -1731,6 +1731,19 @@ async def test_sqlite_and_postgres_schema_include_controlled_action_migrations(t
             self.statements.append(sql)
             return 0
 
+        async def fetch_one(self, sql, parameters=()):
+            if "pg_extension" in sql:
+                return {"extversion": "0.8.1"}
+            if "vector_index_versions" in sql:
+                return {
+                    "index_name": "knowledge_vectors_bge_m3_v1",
+                    "model_name": "BAAI/bge-m3",
+                    "model_version": "local-bge-m3-1024-v1",
+                    "dimension": 1024,
+                    "status": "READY",
+                }
+            return None
+
     postgres = RecordingPostgres()
     await init_database(postgres)
     ddl = "\n".join(postgres.statements)
@@ -1968,6 +1981,19 @@ async def test_sqlite_and_postgres_schema_include_event_workflow_relationships(t
         async def execute(self, sql, parameters=()):
             self.statements.append(sql)
             return 0
+
+        async def fetch_one(self, sql, parameters=()):
+            if "pg_extension" in sql:
+                return {"extversion": "0.8.1"}
+            if "vector_index_versions" in sql:
+                return {
+                    "index_name": "knowledge_vectors_bge_m3_v1",
+                    "model_name": "BAAI/bge-m3",
+                    "model_version": "local-bge-m3-1024-v1",
+                    "dimension": 1024,
+                    "status": "READY",
+                }
+            return None
 
     postgres = RecordingPostgres()
     await init_database(postgres)

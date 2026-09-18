@@ -554,7 +554,7 @@ def _retryable_candidate_failure(trace_id: str) -> dict[str, Any]:
         "retryable": True,
         "extraction": {
             "status": "FAILED",
-            "model": "deepseek-v4-flash",
+            "model": "deepseek-flash",
             "trace_id": trace_id,
             "attempt_count": 0,
             "error": "经验候选生成失败，可从事件卷宗重试。",
@@ -582,7 +582,7 @@ async def _record_candidate_generation_failure(
             trace_id=trace_id,
             metadata={
                 "retryable": True,
-                "model": "deepseek-v4-flash",
+                "model": "deepseek-flash",
                 "error_type": type(error).__name__,
             },
         )
@@ -922,7 +922,7 @@ async def retry_event_experience_candidate(
             "candidate_id": (result.get("candidate") or {}).get("id"),
             "outcome": result["outcome"],
             "retryable": result["retryable"],
-            "model": "deepseek-v4-flash",
+            "model": "deepseek-flash",
         },
     )
     return {**result, "trace_id": trace_id}
@@ -1780,6 +1780,9 @@ async def start_task(
         trace_id=trace_id,
         summary="任务已开始执行。",
     )
+    scenic_operations = getattr(request.app.state, "scenic_operations", None)
+    if scenic_operations is not None and task.event_id:
+        await scenic_operations.reconcile_event(principal["venue_id"], task.event_id)
     return {"task": task.to_dict(), "trace_id": trace_id}
 
 
@@ -1821,6 +1824,9 @@ async def complete_task(
         summary=str(result_summary or "任务已完成并提交现场结果。"),
         extra_payload={"result": body.result},
     )
+    scenic_operations = getattr(request.app.state, "scenic_operations", None)
+    if scenic_operations is not None and task.event_id:
+        await scenic_operations.reconcile_event(principal["venue_id"], task.event_id)
     return {"task": task.to_dict(), "trace_id": trace_id}
 
 

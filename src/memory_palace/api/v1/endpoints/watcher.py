@@ -112,7 +112,7 @@ async def check_event_before_closure(
             trace_id=exc.trace_id,
             metadata={
                 "run_id": exc.run_id,
-                "model": "deepseek-v4-flash",
+                "model": "deepseek-flash",
                 "error_type": type(exc.__cause__).__name__ if exc.__cause__ else type(exc).__name__,
             },
         )

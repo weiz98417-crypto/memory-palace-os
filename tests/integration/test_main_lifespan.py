@@ -10,6 +10,7 @@ from fastapi import FastAPI
 @pytest.mark.asyncio
 async def test_lifespan_uses_one_instance_id_for_recovery_and_runtime_diagnostics(monkeypatch):
     monkeypatch.setenv("DEMO_MODE", "true")
+    monkeypatch.setenv("SCENIC_ACCOUNT_PASSWORD", "Scenic-Test-Password-2026!")
     main = importlib.import_module("main")
     monkeypatch.setattr(main, "_DEMO_MODE", False)
 
@@ -71,6 +72,30 @@ async def test_lifespan_uses_one_instance_id_for_recovery_and_runtime_diagnostic
         def register(self, *_args, **_kwargs):
             return None
 
+    class ScenicOperationsStub:
+        def __init__(self, **_kwargs):
+            pass
+
+        async def bootstrap(self, **_kwargs):
+            return None
+
+    class ScenicBusStub:
+        async def publish(self, *_args, **_kwargs):
+            return None
+
+        async def close(self):
+            return None
+
+    class ScenicRuntimeStub:
+        def __init__(self, _operations):
+            pass
+
+        def start(self):
+            return None
+
+        async def stop(self):
+            return None
+
     captured_recovery: dict[str, object] = {}
 
     async def recover_application_runtime(_db, **kwargs):
@@ -89,6 +114,8 @@ async def test_lifespan_uses_one_instance_id_for_recovery_and_runtime_diagnostic
     auth_module = importlib.import_module("src.memory_palace.api.v1.endpoints.auth")
     health_module = importlib.import_module("src.memory_palace.core.health")
     vector_module = importlib.import_module("src.memory_palace.knowledge.vector_store")
+    scenic_operations_module = importlib.import_module("src.memory_palace.scenic.operations")
+    scenic_realtime_module = importlib.import_module("src.memory_palace.scenic.realtime")
 
     monkeypatch.setattr(container_module, "AppContainer", ContainerStub)
     monkeypatch.setattr(queue_worker_module, "MessageQueueWorker", WorkerStub)
@@ -100,9 +127,11 @@ async def test_lifespan_uses_one_instance_id_for_recovery_and_runtime_diagnostic
     monkeypatch.setattr(auth_module, "bootstrap_identity_store", no_op_async)
     monkeypatch.setattr(health_module, "get_health_registry", HealthRegistryStub)
     monkeypatch.setattr(vector_module, "close_vector_client", lambda: None)
+    monkeypatch.setattr(scenic_operations_module, "ScenicAreaOperations", ScenicOperationsStub)
+    monkeypatch.setattr(scenic_realtime_module, "RedisSituationBus", ScenicBusStub)
+    monkeypatch.setattr(scenic_realtime_module, "ScenicSimulationRuntime", ScenicRuntimeStub)
 
     app = FastAPI(version="1.2.3")
     async with main.lifespan(app):
         assert app.state.runtime_instance_id
         assert captured_recovery["instance_id"] == app.state.runtime_instance_id
-

@@ -269,7 +269,7 @@ async def test_management_api_enforces_roles_and_records_changes(tmp_path, monke
         assert deepseek["status"] == "BLOCKED"
         assert deepseek["configured"] is True
         assert deepseek["live_verified"] is False
-        assert deepseek["model"] == "deepseek-v4-flash"
+        assert deepseek["model"] == "deepseek-flash"
         assert "test-key-not-a-real-secret" not in integrations.text
 
         await database.execute(
@@ -285,7 +285,7 @@ async def test_management_api_enforces_roles_and_records_changes(tmp_path, monke
                 "venue-alpha",
                 "trace-integration-live-1",
                 "deepseek",
-                "deepseek-v4-flash",
+                "deepseek-flash",
                 "SUCCEEDED",
                 1,
                 0.8,
@@ -580,7 +580,7 @@ async def test_feature_registry_consumes_current_tenant_runtime_evidence(tmp_pat
 @pytest.mark.asyncio
 async def test_feature_registry_accepts_distinct_live_trace_per_agent(tmp_path, monkeypatch):
     monkeypatch.setenv("DEEPSEEK_API_KEY", "test-key-not-a-real-secret")
-    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-flash")
     app, database, _, _ = await build_app(tmp_path, monkeypatch)
     now = time.time()
     agent_ids = (
@@ -599,7 +599,7 @@ async def test_feature_registry_accepts_distinct_live_trace_per_agent(tmp_path, 
             INSERT INTO llm_call_logs (
                 id, venue_id, trace_id, agent_id, agent_name, provider, model_name, status,
                 attempt_count, latency_seconds, total_tokens, request_id, is_mock, created_at
-            ) VALUES (?, ?, ?, ?, ?, 'deepseek', 'deepseek-v4-flash', 'SUCCEEDED', ?, ?, ?, ?, 0, ?)
+            ) VALUES (?, ?, ?, ?, ?, 'deepseek', 'deepseek-flash', 'SUCCEEDED', ?, ?, ?, ?, 0, ?)
             """,
             (
                 f"llm-agent-{index}",
@@ -639,7 +639,7 @@ async def test_feature_registry_accepts_distinct_live_trace_per_agent(tmp_path, 
 @pytest.mark.asyncio
 async def test_feature_registry_accepts_completed_message_agent_chain_from_api(tmp_path, monkeypatch):
     monkeypatch.setenv("DEEPSEEK_API_KEY", "test-key-not-a-real-secret")
-    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-flash")
     app, database, _, _ = await build_app(tmp_path, monkeypatch)
     trace_id = "trace-message-agent-chain"
     now = time.time()
@@ -677,7 +677,7 @@ async def test_feature_registry_accepts_completed_message_agent_chain_from_api(t
             INSERT INTO llm_call_logs (
                 id, venue_id, trace_id, agent_id, agent_name, provider, model_name, status,
                 attempt_count, latency_seconds, total_tokens, request_id, is_mock, created_at
-            ) VALUES (?, 'venue-alpha', ?, ?, ?, 'deepseek', 'deepseek-v4-flash',
+            ) VALUES (?, 'venue-alpha', ?, ?, ?, 'deepseek', 'deepseek-flash',
                       'SUCCEEDED', 1, 0.2, 20, ?, 0, ?)
             """,
             (
@@ -695,7 +695,7 @@ async def test_feature_registry_accepts_completed_message_agent_chain_from_api(t
             INSERT INTO llm_call_logs (
                 id, venue_id, trace_id, agent_id, agent_name, provider, model_name, status,
                 attempt_count, latency_seconds, total_tokens, request_id, is_mock, created_at
-            ) VALUES (?, 'venue-alpha', ?, ?, ?, 'deepseek', 'deepseek-v4-flash',
+            ) VALUES (?, 'venue-alpha', ?, ?, ?, 'deepseek', 'deepseek-flash',
                       'SUCCEEDED', 1, 0.2, 20, ?, 0, ?)
             """,
             (
@@ -1369,7 +1369,7 @@ async def test_admin_health_does_not_claim_unconfigured_deepseek_is_healthy(tmp_
 
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     monkeypatch.delenv("DEEPSEEK_API_KEY_FILE", raising=False)
-    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-flash")
     monkeypatch.delenv("MOCK_LLM", raising=False)
     app, database, _, _ = await build_app(tmp_path, monkeypatch)
     app.state.message_queue = QueueStub()
@@ -1394,7 +1394,7 @@ async def test_admin_health_requires_successful_live_llm_evidence_for_healthy(tm
             return {"connected": True, "pending": 0, "dead_letter_depth": 0}
 
     monkeypatch.setenv("DEEPSEEK_API_KEY", "test-key-not-a-real-secret")
-    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-flash")
     monkeypatch.delenv("MOCK_LLM", raising=False)
     app, database, _, _ = await build_app(tmp_path, monkeypatch)
     app.state.message_queue = QueueStub()
@@ -1411,7 +1411,7 @@ async def test_admin_health_requires_successful_live_llm_evidence_for_healthy(tm
             "venue-alpha",
             "trace-health-1",
             "deepseek",
-            "deepseek-v4-flash",
+            "deepseek-flash",
             "SUCCEEDED",
             1,
             0.82,
@@ -2280,7 +2280,7 @@ async def test_watcher_run_preserves_model_violation_reason_and_severity_level(t
         violation_reason = "P1 事件已超过 10 分钟 SLA，且现场未反馈闸机断电隔离结果。"
 
         async def return_model_audit(**kwargs):
-            assert kwargs["model"] == "deepseek-v4-flash"
+            assert kwargs["model"] == "deepseek-flash"
             return LLMResponse(
                 content=json.dumps(
                     {
@@ -2298,7 +2298,7 @@ async def test_watcher_run_preserves_model_violation_reason_and_severity_level(t
                     ensure_ascii=False,
                 ),
                 tokens_used=128,
-                model_name="deepseek-v4-flash",
+                model_name="deepseek-flash",
                 latency_seconds=0.01,
                 is_mock=False,
             )
@@ -2354,7 +2354,7 @@ async def test_watcher_policy_reuses_matching_open_finding_across_runs(tmp_path,
         violation_reason = "P1 事件已超过 10 分钟 SLA，现场仍未反馈隔离结果。"
 
         async def return_same_model_audit(**kwargs):
-            assert kwargs["model"] == "deepseek-v4-flash"
+            assert kwargs["model"] == "deepseek-flash"
             return LLMResponse(
                 content=json.dumps(
                     {
@@ -2376,7 +2376,7 @@ async def test_watcher_policy_reuses_matching_open_finding_across_runs(tmp_path,
                     ensure_ascii=False,
                 ),
                 tokens_used=128,
-                model_name="deepseek-v4-flash",
+                model_name="deepseek-flash",
                 latency_seconds=0.01,
                 is_mock=False,
             )
@@ -2571,7 +2571,7 @@ async def test_trace_timeline_aggregates_only_current_tenant_evidence(tmp_path, 
         INSERT INTO llm_call_logs (
             id, venue_id, trace_id, provider, model_name, status,
             attempt_count, latency_seconds, request_id, is_mock, created_at
-        ) VALUES (?, ?, ?, 'deepseek', 'deepseek-v4-flash', 'SUCCEEDED', 1, ?, ?, 0, ?)
+        ) VALUES (?, ?, ?, 'deepseek', 'deepseek-flash', 'SUCCEEDED', 1, ?, ?, 0, ?)
         """,
         ("llm-trace-alpha", "venue-alpha", "trace-alpha", 0.42, "request-trace-alpha", now + 0.4),
     )
@@ -2790,7 +2790,7 @@ async def test_admin_operational_outputs_do_not_expose_sensitive_runtime_values(
             status, attempt_count, latency_seconds, prompt_tokens,
             completion_tokens, total_tokens, request_id, error_type,
             error_message, is_mock, created_at
-        ) VALUES (?, ?, ?, ?, ?, 'deepseek', 'deepseek-v4-flash', 'FAILED',
+        ) VALUES (?, ?, ?, ?, ?, 'deepseek', 'deepseek-flash', 'FAILED',
             2, ?, 12, 0, 12, ?, 'AuthenticationError', ?, 0, ?)
         """,
         (
@@ -2906,7 +2906,7 @@ async def test_admin_operational_outputs_do_not_expose_sensitive_runtime_values(
     }
     assert llm_call["trace_id"] == "trace-sensitive-output"
     assert llm_call["status"] == "FAILED"
-    assert llm_call["model_name"] == "deepseek-v4-flash"
+    assert llm_call["model_name"] == "deepseek-flash"
     assert llm_call["latency_seconds"] == 0.37
     assert llm_call["error_summary"] == "模型服务鉴权失败，请检查模型凭据后重试。"
 

@@ -10,7 +10,7 @@ Memory Palace OS - 企业微信智能调度平台
   - skills/   特种智能体包（Router、Commander、MemoryOps、Persona、Watcher）
   - tools/    原子工具层（LLM、WeChat、向量库、熔断器等）
   - config/   配置管理（settings.yaml、registry.yaml）
-  - knowledge/ 知识库层（SQLAlchemy + ChromaDB）
+  - knowledge/ 知识库层（PostgreSQL + pgvector）
   - metrics/  指标与可观测性
   - api/      REST API（v1/v2）
 

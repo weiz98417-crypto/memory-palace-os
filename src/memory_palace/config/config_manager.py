@@ -133,7 +133,7 @@ class ConfigManager:
         应用环境变量覆盖
 
         支持的格式：
-            MEMORY_PALACE_LLM_DEFAULT_MODEL=deepseek-v4-flash
+            MEMORY_PALACE_LLM_DEFAULT_MODEL=deepseek-flash
             MEMORY_PALACE_LLM__TIMEOUT=60  (双下划线表示嵌套)
             MEMORY_PALACE_SYSTEM__LOG_LEVEL=DEBUG
         """
@@ -256,7 +256,7 @@ class ConfigManager:
         设置配置值
 
         用法：
-            config.set('llm.default_model', 'deepseek-v4-flash')
+            config.set('llm.default_model', 'deepseek-flash')
         """
         self._set_nested(key, value)
 

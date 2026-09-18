@@ -1,11 +1,11 @@
 """Employee-facing assistant endpoints."""
 
 import json
-from typing import Annotated, Optional
+from typing import Annotated, Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from loguru import logger
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints
 
 from ...audit import request_trace_id, write_audit
 from ...auth import get_request_db, require_auth
@@ -41,6 +41,7 @@ class AssistantTaskCompleteRequest(BaseModel):
         str,
         StringConstraints(strip_whitespace=True, min_length=2, max_length=4000),
     ]
+    result: dict[str, Any] = Field(default_factory=dict)
 
 
 class AssistantTaskBlockRequest(BaseModel):
@@ -273,6 +274,31 @@ async def start_assistant_task(
             "任务当前不可开始。",
             "刷新任务详情，确认任务处于待执行状态。",
         )
+    if row.get("event_id"):
+        approval_gate = await db.fetch_one(
+            """
+            SELECT approval.status, approval.execution_status
+            FROM scenic_incidents AS incident
+            JOIN approval_requests AS approval
+              ON approval.approval_id = incident.decision_approval_id
+             AND approval.venue_id = incident.venue_id
+            WHERE incident.venue_id = ?
+              AND incident.event_id = ?
+              AND incident.repair_task_id = ?
+            """,
+            (principal["venue_id"], row["event_id"], task_id),
+        )
+        if approval_gate and (
+            approval_gate["status"] != "APPROVED"
+            or approval_gate["execution_status"] != "SUCCEEDED"
+        ):
+            raise api_error(
+                request,
+                409,
+                "TASK_APPROVAL_REQUIRED",
+                "该检修任务必须等待车辆处置审批完成。",
+                "请由值班经理批准并执行审批后再开始任务。",
+            )
     graph = await _get_task_graph(request, db)
     task = await graph.start_task(task_id, agent_name=row.get("assigned_agent"))
     if not task or task.status != TaskStatus.RUNNING:
@@ -304,6 +330,9 @@ async def start_assistant_task(
         summary="任务已开始执行。",
         extra_payload={"entry": "assistant_work"},
     )
+    scenic_operations = getattr(request.app.state, "scenic_operations", None)
+    if scenic_operations is not None and task.event_id:
+        await scenic_operations.reconcile_event(principal["venue_id"], task.event_id)
     return {"task": task.to_dict(), "trace_id": trace_id}
 
 
@@ -326,7 +355,17 @@ async def complete_assistant_task(
         )
     summary = body.summary.strip()
     graph = await _get_task_graph(request, db)
-    task = await graph.complete_task(task_id, result={"summary": summary})
+    structured_result = dict(body.result)
+    structured_result["summary"] = summary
+    if len(json.dumps(structured_result, ensure_ascii=False)) > 8000:
+        raise api_error(
+            request,
+            422,
+            "TASK_RESULT_TOO_LARGE",
+            "结构化现场结果过长。",
+            "精简检查项后重新提交。",
+        )
+    task = await graph.complete_task(task_id, result=structured_result)
     if not task:
         raise api_error(
             request,
@@ -357,9 +396,12 @@ async def complete_assistant_task(
         summary=summary,
         extra_payload={
             "entry": "assistant_work",
-            "result": {"summary": summary},
+            "result": structured_result,
         },
     )
+    scenic_operations = getattr(request.app.state, "scenic_operations", None)
+    if scenic_operations is not None and task.event_id:
+        await scenic_operations.reconcile_event(principal["venue_id"], task.event_id)
     return {"task": task.to_dict(), "trace_id": trace_id}
 
 

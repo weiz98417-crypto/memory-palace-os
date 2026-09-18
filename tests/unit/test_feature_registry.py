@@ -389,7 +389,7 @@ def test_business_ready_cannot_bypass_empty_browser_live_or_uat_evidence(tmp_pat
             "EVENT_CREATED": [{"action": "EVENT_CREATED", "trace_id": "trace-event"}],
         },
         "facts": {"events.total": 1},
-        "runtime": {"chromadb": "healthy"},
+        "runtime": {"pgvector": "healthy"},
     }
 
     snapshot = registry_snapshot(path, evidence=evidence)
@@ -474,7 +474,7 @@ def test_runtime_snapshot_does_not_promote_database_facts_without_delivery_evide
         "runtime": {
             "database": "healthy",
             "queue": "healthy",
-            "chromadb": "healthy",
+            "pgvector": "healthy",
             "scheduler": "healthy",
         },
         "integrations": {
@@ -535,7 +535,7 @@ def test_deepseek_status_requires_configuration_and_non_mock_live_success_eviden
                     "status": "READY",
                     "evidence": {
                         "provider": "deepseek",
-                        "model_name": "deepseek-v4-flash",
+                        "model_name": "deepseek-flash",
                         "status": "SUCCEEDED",
                         "is_mock": False,
                         "trace_id": "trace-live-deepseek",
@@ -579,7 +579,7 @@ def test_uat_journey_becomes_ready_only_when_every_covered_item_is_ready(tmp_pat
             "sessions.total": 1,
             "sessions.closed": 1,
         },
-        "runtime": {"chromadb": "healthy"},
+        "runtime": {"pgvector": "healthy"},
     }
 
     snapshot = registry_snapshot(path, evidence=evidence)
@@ -610,7 +610,7 @@ def test_uat_journey_stays_blocked_without_declared_acceptance_evidence(tmp_path
             "sessions.total": 1,
             "sessions.closed": 1,
         },
-        "runtime": {"chromadb": "healthy"},
+        "runtime": {"pgvector": "healthy"},
     }
 
     snapshot = registry_snapshot(path, evidence=evidence)

@@ -399,7 +399,7 @@ class UnavailableVectorStore(DeterministicVectorStore):
             }
         )
         if strict:
-            raise RuntimeError("simulated Chroma outage")
+            raise RuntimeError("simulated vector backend outage")
         return []
 
 
@@ -1368,7 +1368,7 @@ async def test_vector_hit_without_explicit_authorization_never_invokes_persona(
             "FAILED",
             "不可用",
             "尚未找到",
-            id="chroma-query-failure",
+            id="vector-query-failure",
         ),
         pytest.param(
             lambda: None,
@@ -3050,6 +3050,19 @@ async def test_delivery_schema_backfills_only_completed_polling_channels(tmp_pat
         async def execute(self, sql, parameters=()):
             self.statements.append(sql)
             return 0
+
+        async def fetch_one(self, sql, parameters=()):
+            if "pg_extension" in sql:
+                return {"extversion": "0.8.1"}
+            if "vector_index_versions" in sql:
+                return {
+                    "index_name": "knowledge_vectors_bge_m3_v1",
+                    "model_name": "BAAI/bge-m3",
+                    "model_version": "local-bge-m3-1024-v1",
+                    "dimension": 1024,
+                    "status": "READY",
+                }
+            return None
 
     postgres = RecordingPostgres()
     await init_database(postgres)

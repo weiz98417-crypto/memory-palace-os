@@ -1011,7 +1011,7 @@ async def test_completed_interview_is_extracted_server_side_from_persisted_answe
         assert body["card"]["title"] == "雨后观光车轮端间歇性金属异响判断"
         assert body["card"]["extraction_trace_id"] == body["trace_id"]
         assert body["extraction"]["agent"] == "PersonaExtract"
-        assert body["extraction"]["model"] == "deepseek-v4-flash"
+        assert body["extraction"]["model"] == "deepseek-flash"
 
         extractor = app.state.experience_draft_extractor
         assert len(extractor.calls) == 1
@@ -1242,7 +1242,7 @@ async def test_failed_extraction_preserves_answers_is_audited_and_can_be_retried
         assert len(audit_logs) == 1
         assert audit_logs[0]["outcome"] == "FAILED"
         assert audit_logs[0]["metadata"]["agent"] == "PersonaExtract"
-        assert audit_logs[0]["metadata"]["model"] == "deepseek-v4-flash"
+        assert audit_logs[0]["metadata"]["model"] == "deepseek-flash"
     finally:
         await db.close()
 

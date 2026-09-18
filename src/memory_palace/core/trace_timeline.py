@@ -177,7 +177,7 @@ async def build_trace_timeline(
             )
         )
     for model_call in model_calls:
-        model_name = model_call.get("model_name") or "deepseek-v4-flash"
+        model_name = model_call.get("model_name") or "deepseek-flash"
         timeline.append(
             _timeline_item(
                 "MODEL",

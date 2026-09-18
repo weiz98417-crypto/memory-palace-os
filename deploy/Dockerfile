@@ -2,6 +2,7 @@
 # Stage 1: builder — 安装依赖，不污染最终镜像
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ARG PYTHON_BASE_IMAGE=python:3.11-slim
+ARG LOCAL_EMBEDDINGS=false
 
 FROM ${PYTHON_BASE_IMAGE} AS builder
 
@@ -14,9 +15,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # 先复制依赖文件，利用 Docker 层缓存
-COPY requirements.txt .
+COPY requirements.txt requirements-scenic-agent-local-embeddings.txt .
+ARG LOCAL_EMBEDDINGS=false
 RUN pip install --upgrade pip && \
-    pip install --prefix=/install --no-cache-dir -r requirements.txt
+    pip install --prefix=/install --no-cache-dir -r requirements.txt && \
+    if [ "$LOCAL_EMBEDDINGS" = "true" ]; then \
+        pip install --prefix=/install --no-cache-dir -r requirements-scenic-agent-local-embeddings.txt; \
+    fi
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -44,7 +49,7 @@ WORKDIR /app
 COPY --chown=appuser:appuser . .
 
 # 创建数据目录（volumes 会覆盖，但保证目录存在）
-RUN mkdir -p data/logs data/chroma /home/appuser/.cache && \
+RUN mkdir -p data/logs /models/huggingface && \
     chown -R appuser:appuser /app /home/appuser
 
 USER appuser

@@ -95,7 +95,7 @@ class BaseAgentSkill(abc.ABC):
         <任务 prompt 内容>
     """
 
-    def __init__(self, skill_name: str, model_name: str = "deepseek-v4-flash"):
+    def __init__(self, skill_name: str, model_name: str = "deepseek-flash"):
         self.skill_name = skill_name
         self.model_name = model_name
         self._prompt_cache: dict[str, str] = {}

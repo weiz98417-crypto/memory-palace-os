@@ -8,6 +8,7 @@ health.py · 健康检查模块
   4. 返回结构化健康状态，便于监控系统集成
 """
 
+import os
 import time
 import asyncio
 import traceback
@@ -19,6 +20,7 @@ from collections import defaultdict
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+import httpx
 from loguru import logger
 
 
@@ -131,6 +133,58 @@ class BaseHealthChecker:
         """执行检查"""
         raise NotImplementedError
 
+
+class HTTPHealthChecker(BaseHealthChecker):
+    """Checks an HTTP readiness endpoint without exposing response bodies."""
+
+    timeout = 3.0
+
+    def __init__(
+        self,
+        *,
+        name: str,
+        url: str,
+        required: bool,
+        client_factory: Optional[Callable[..., Any]] = None,
+    ):
+        self.name = name
+        self.url = url.strip()
+        self.required = required
+        self.client_factory = client_factory or httpx.AsyncClient
+
+    async def check(self) -> DependencyCheckResult:
+        if not self.url:
+            return DependencyCheckResult(
+                name=self.name,
+                status=CheckStatus.SKIP,
+                message="未配置，跳过检查",
+            )
+
+        failure_status = CheckStatus.FAIL if self.required else CheckStatus.WARN
+        try:
+            async with self.client_factory(timeout=self.timeout, follow_redirects=True) as client:
+                response = await client.get(self.url)
+            status_code = int(getattr(response, "status_code", 0) or 0)
+            if 200 <= status_code < 300:
+                return DependencyCheckResult(
+                    name=self.name,
+                    status=CheckStatus.PASS,
+                    message="HTTP 健康检查通过",
+                    details={"url": self.url, "status_code": status_code},
+                )
+            return DependencyCheckResult(
+                name=self.name,
+                status=failure_status,
+                message="HTTP 健康检查未通过",
+                details={"url": self.url, "status_code": status_code},
+            )
+        except Exception as exc:
+            return DependencyCheckResult(
+                name=self.name,
+                status=failure_status,
+                error=f"{type(exc).__name__}: {exc}",
+                details={"url": self.url},
+            )
 
 class HealthCheckerRegistry:
     """健康检查器注册表"""
@@ -354,23 +408,25 @@ class RedisHealthChecker(BaseHealthChecker):
     async def check(self) -> DependencyCheckResult:
         try:
             result = await self.redis_check_func()
-
-            if result.get("connected"):
+            connected = bool(result.get("connected")) if isinstance(result, dict) else bool(result)
+            details = {}
+            if isinstance(result, dict):
+                details = {
+                    "used_memory": result.get("used_memory", 0),
+                    "connected_clients": result.get("connected_clients", 0),
+                }
+            if connected:
                 return DependencyCheckResult(
                     name=self.name,
                     status=CheckStatus.PASS,
                     message="Redis 连接正常",
-                    details={
-                        "used_memory": result.get("used_memory", 0),
-                        "connected_clients": result.get("connected_clients", 0)
-                    }
+                    details=details,
                 )
-            else:
-                return DependencyCheckResult(
-                    name=self.name,
-                    status=CheckStatus.FAIL,
-                    message="Redis 连接失败"
-                )
+            return DependencyCheckResult(
+                name=self.name,
+                status=CheckStatus.FAIL,
+                message="Redis 连接失败",
+            )
 
         except Exception as e:
             return DependencyCheckResult(
@@ -501,6 +557,30 @@ class SkillsRegistryHealthChecker(BaseHealthChecker):
 
 _health_registry: Optional[HealthCheckerRegistry] = None
 
+_CONFIGURED_HTTP_CHECKS = (
+    ("tei_embedding", "SCENIC_TEI_EMBEDDING_HEALTH_URL", True),
+    ("tei_reranker", "SCENIC_TEI_RERANKER_HEALTH_URL", False),
+    ("hatchet", "HATCHET_HEALTH_URL", False),
+    ("jaeger", "JAEGER_HEALTH_URL", False),
+)
+
+
+def register_configured_http_checks(
+    registry: HealthCheckerRegistry,
+    environment: Optional[Dict[str, str]] = None,
+) -> None:
+    """Register optional runtime endpoints; empty URLs remain visible as SKIP."""
+    values = os.environ if environment is None else environment
+    for name, env_key, required in _CONFIGURED_HTTP_CHECKS:
+        registry.register(
+            name,
+            HTTPHealthChecker(
+                name=name,
+                url=str(values.get(env_key) or ""),
+                required=required,
+            ),
+        )
+
 
 def get_health_registry() -> HealthCheckerRegistry:
     """获取健康检查注册表"""
@@ -552,6 +632,24 @@ def aggregate_status(checks: List[DependencyCheckResult]) -> HealthStatus:
         return HealthStatus.DEGRADED
     else:
         return HealthStatus.HEALTHY
+
+
+async def build_readiness_response(
+    registry: HealthCheckerRegistry,
+    *,
+    version: str = "1.0.0",
+) -> tuple[int, Dict[str, Any]]:
+    checks = await registry.check_all()
+    status = aggregate_status(checks)
+    response = HealthCheckResponse(
+        status=status,
+        timestamp=time.time(),
+        version=version,
+        uptime_seconds=registry.get_uptime(),
+        checks=checks,
+    )
+    status_code = 200 if status in (HealthStatus.HEALTHY, HealthStatus.DEGRADED) else 503
+    return status_code, response.to_dict()
 
 
 @router.get("/live")
@@ -683,6 +781,7 @@ __all__ = [
 
     # 检查器
     "BaseHealthChecker",
+    "HTTPHealthChecker",
     "HealthCheckerRegistry",
     "MessageQueueHealthChecker",
     "DatabaseHealthChecker",
@@ -696,10 +795,10 @@ __all__ = [
     "get_health_registry",
     "create_health_response",
     "aggregate_status",
+    "build_readiness_response",
     "init_health_checks",
+    "register_configured_http_checks",
 
     # 路由
     "router",
 ]
-
-    

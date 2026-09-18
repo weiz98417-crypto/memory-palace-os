@@ -154,7 +154,7 @@ class TestContextCompressor:
         assert [summary.summary for summary in ctx.warm_summaries] == ["游客咨询闭园流程并确认完成"]
         assert [message.content for message in ctx.hot_messages] == ["按闭园 SOP 执行"]
         assert client.ask.await_args.kwargs["venue_id"] == "venue-a"
-        assert client.ask.await_args.kwargs["model"] == "deepseek-v4-flash"
+        assert client.ask.await_args.kwargs["model"] == "deepseek-flash"
 
     @pytest.mark.asyncio
     async def test_warm_summary_failure_preserves_hot_messages(self, monkeypatch):

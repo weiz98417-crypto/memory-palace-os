@@ -135,7 +135,7 @@ async def health_check(
     db=Depends(get_request_db),
 ):
     """返回基于真实依赖和最近模型证据的健康状态。"""
-    components = {"db": "unknown", "llm": "unknown", "queue": "unknown", "chromadb": "unknown"}
+    components = {"db": "unknown", "llm": "unknown", "queue": "unknown", "pgvector": "unknown"}
 
     try:
         ok = await db.fetch_one("SELECT 1 AS ok")
@@ -184,11 +184,11 @@ async def health_check(
     vector_store = getattr(request.app.state, "vector_store", None)
     if vector_store is not None and hasattr(vector_store, "health"):
         try:
-            components["chromadb"] = vector_store.health().get("status", "unhealthy")
+            components["pgvector"] = vector_store.health().get("status", "unhealthy")
         except Exception:
-            components["chromadb"] = "unhealthy"
+            components["pgvector"] = "unhealthy"
     else:
-        components["chromadb"] = "unhealthy"
+        components["pgvector"] = "unhealthy"
 
     overall = "healthy" if all(v == "healthy" for v in components.values()) else "degraded"
     return HealthResponse(
@@ -850,7 +850,12 @@ async def approve_request(
     """
     from ....core.permissions import get_permission_engine
 
-    engine = get_permission_engine()
+    scenic_operations = getattr(request.app.state, "scenic_operations", None)
+    engine = (
+        scenic_operations.permission_engine
+        if scenic_operations is not None
+        else get_permission_engine()
+    )
     engine.set_database(db)
     comment = body.comment if body else None
     approval = await db.fetch_one(
@@ -910,6 +915,8 @@ async def approve_request(
             "execution_error": row.get("execution_error") if row else None,
         },
     )
+    if scenic_operations is not None and row and row.get("event_id"):
+        await scenic_operations.reconcile_event(admin_user["venue_id"], row["event_id"])
     return {
         "approved": True,
         "approval_id": approval_id,
@@ -1178,7 +1185,7 @@ async def create_event(
             503,
             "VECTOR_STORE_UNAVAILABLE",
             "向量知识库尚未就绪。",
-            "检查 ChromaDB 配置和健康状态后重试。",
+            "检查 PostgreSQL pgvector 与本地 bge-m3 状态后重试。",
             retryable=True,
         )
 
@@ -1244,7 +1251,7 @@ async def create_event(
             503,
             "EVENT_CREATE_FAILED",
             "事件创建未完成。",
-            "检查数据库和 ChromaDB 状态后重试。",
+            "检查 PostgreSQL、pgvector 与本地 bge-m3 状态后重试。",
             retryable=True,
         ) from exc
 

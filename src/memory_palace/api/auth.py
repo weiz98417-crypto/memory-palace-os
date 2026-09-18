@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import base64
 import hashlib
 import hmac
 import os
-import secrets
 import time
 import uuid
 from typing import Any, Callable, Optional
@@ -17,61 +15,11 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from loguru import logger
 
 from ..core.tenant import set_venue_id
+from ..core.passwords import hash_password, verify_password
 
 
 security = HTTPBearer(auto_error=False)
 ALLOWED_ROLES = {"admin", "manager", "operator", "api"}
-_SCRYPT_N = 2**14
-_SCRYPT_R = 8
-_SCRYPT_P = 1
-
-
-def hash_password(password: str) -> str:
-    """Hash a password with scrypt and a per-password random salt."""
-    if not 8 <= len(password) <= 128:
-        raise ValueError("密码长度必须为 8-128 个字符")
-    salt = secrets.token_bytes(16)
-    digest = hashlib.scrypt(
-        password.encode("utf-8"),
-        salt=salt,
-        n=_SCRYPT_N,
-        r=_SCRYPT_R,
-        p=_SCRYPT_P,
-        dklen=32,
-    )
-    return "$".join(
-        (
-            "scrypt",
-            str(_SCRYPT_N),
-            str(_SCRYPT_R),
-            str(_SCRYPT_P),
-            base64.urlsafe_b64encode(salt).decode("ascii"),
-            base64.urlsafe_b64encode(digest).decode("ascii"),
-        )
-    )
-
-
-def verify_password(password: str, encoded: str) -> bool:
-    """Verify a password without exposing parsing or timing details."""
-    try:
-        algorithm, n_value, r_value, p_value, salt_value, digest_value = encoded.split("$", 5)
-        if algorithm != "scrypt":
-            return False
-        salt = base64.urlsafe_b64decode(salt_value.encode("ascii"))
-        expected = base64.urlsafe_b64decode(digest_value.encode("ascii"))
-        actual = hashlib.scrypt(
-            password.encode("utf-8"),
-            salt=salt,
-            n=int(n_value),
-            r=int(r_value),
-            p=int(p_value),
-            dklen=len(expected),
-        )
-        return hmac.compare_digest(actual, expected)
-    except (ValueError, TypeError):
-        return False
-
-
 def _jwt_secret() -> str:
     secret = os.environ.get("MEMORY_PALACE_JWT_SECRET", "")
     if len(secret) < 32:

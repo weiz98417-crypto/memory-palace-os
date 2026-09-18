@@ -39,11 +39,28 @@ class DiagnosticsDatabaseStub:
                 "venue_id": "venue-alpha",
                 "status": "ACTIVE",
             }
+        if "diagnostics_latest_real_call" in sql:
+            return {
+                "provider": "deepseek",
+                "model_name": "deepseek-flash",
+                "status": "SUCCEEDED",
+                "is_mock": False,
+                "request_id": "latest-request",
+                "trace_id": "latest-trace",
+                "prompt_tokens": 100,
+                "completion_tokens": 28,
+                "total_tokens": 128,
+                "latency_seconds": 0.75,
+                "agent_id": "Router",
+                "created_at": time.time(),
+            }
+        if "diagnostics_token_usage" in sql:
+            return {"used_tokens": 128}
         if "FROM llm_call_logs" in sql:
             assert parameters == ("venue-alpha", "RuntimeDiagnostics")
             return {
                 "provider": "deepseek",
-                "model_name": "deepseek-v4-flash",
+                "model_name": "deepseek-flash",
                 "status": "SUCCEEDED",
                 "is_mock": False,
                 "request_id": "latest-request",
@@ -61,16 +78,18 @@ class DiagnosticsDatabaseStub:
         return None
 
     async def fetch_all(self, sql: str, parameters: tuple = ()):
+        if "diagnostics_circuit" in sql:
+            return [{"status": "SUCCEEDED", "created_at": time.time()}]
         if "FROM llm_call_logs" not in sql:
             return []
-        assert parameters == ("venue-alpha", "deepseek-v4-flash")
+        assert parameters == ("venue-alpha", "deepseek-flash")
         now = time.time()
         return [
             {
                 "agent_id": agent_id,
                 "agent_name": agent_id,
                 "provider": "deepseek",
-                "model_name": "deepseek-v4-flash",
+                "model_name": "deepseek-flash",
                 "status": "SUCCEEDED",
                 "is_mock": False,
                 "request_id": f"request-{index}",
@@ -92,7 +111,7 @@ class ProbeOnlyDiagnosticsDatabaseStub(DiagnosticsDatabaseStub):
         if "FROM llm_call_logs" in sql:
             return {
                 "provider": "deepseek",
-                "model_name": "deepseek-v4-flash",
+                "model_name": "deepseek-flash",
                 "status": "SUCCEEDED",
                 "is_mock": False,
                 "request_id": "probe-request",
@@ -117,7 +136,7 @@ class MissingSimulatorIdentityDatabaseStub(DiagnosticsDatabaseStub):
         if "FROM llm_call_logs" in sql:
             return {
                 "provider": "deepseek",
-                "model_name": "deepseek-v4-flash",
+                "model_name": "deepseek-flash",
                 "status": "SUCCEEDED",
                 "is_mock": False,
                 "request_id": "probe-request",
@@ -146,7 +165,7 @@ class FailedLatestProbeDatabaseStub(ProbeOnlyDiagnosticsDatabaseStub):
             assert "status = 'SUCCEEDED'" not in sql
             return {
                 "provider": "deepseek",
-                "model_name": "deepseek-v4-flash",
+                "model_name": "deepseek-flash",
                 "status": "FAILED",
                 "is_mock": False,
                 "request_id": None,
@@ -164,7 +183,7 @@ class DeepSeekProbeClientStub:
         self.kwargs = kwargs
         return SimpleNamespace(
             content="private-probe-output-must-not-leak",
-            model_name="deepseek-v4-flash",
+            model_name="deepseek-flash",
             is_mock=False,
             request_id="probe-request",
             latency_seconds=0.125,
@@ -204,7 +223,7 @@ class ProbeEndpointDatabaseStub(DiagnosticsDatabaseStub):
                 return None
             return {
                 "provider": "deepseek",
-                "model_name": "deepseek-v4-flash",
+                "model_name": "deepseek-flash",
                 "status": "SUCCEEDED",
                 "is_mock": False,
                 "request_id": self.probe_request_id,
@@ -247,9 +266,10 @@ class VectorStoreStub:
     def health(self):
         return {
             "status": "healthy",
-            "backend": "chromadb_http",
-            "heartbeat": 123,
-            "url": "http://credential@chromadb.internal",
+            "backend": "postgresql_pgvector",
+            "index_name": "knowledge_vectors_bge_m3_v1",
+            "model": "BAAI/bge-m3",
+            "dimension": 1024,
         }
 
 
@@ -270,7 +290,7 @@ def _access_header(*, role: str) -> dict[str, str]:
 async def test_runtime_diagnostics_reports_unified_safe_operational_status(monkeypatch):
     monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
     monkeypatch.setenv("DEEPSEEK_API_KEY", "diagnostic-deepseek-secret")
-    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-flash")
     monkeypatch.delenv("MOCK_LLM", raising=False)
     monkeypatch.setenv("WECHAT_CORP_SECRET", "real-wecom-secret-must-not-leak")
     _auto_register_skills()
@@ -305,7 +325,13 @@ async def test_runtime_diagnostics_reports_unified_safe_operational_status(monke
             "lag": 2,
             "dead_letter_depth": 0,
         },
-        "chromadb": {"status": "healthy", "backend": "chromadb_http"},
+        "pgvector": {
+            "status": "healthy",
+            "backend": "postgresql_pgvector",
+            "index_name": "knowledge_vectors_bge_m3_v1",
+            "model": "BAAI/bge-m3",
+            "dimension": 1024,
+        },
         "worker": {
             "status": "healthy",
             "running": True,
@@ -334,7 +360,7 @@ async def test_runtime_diagnostics_reports_unified_safe_operational_status(monke
     assert payload["deepseek"] == {
         "status": "READY",
         "provider": "deepseek",
-        "model": "deepseek-v4-flash",
+        "model": "deepseek-flash",
         "configured": True,
         "mock_enabled": False,
         "live_verified": True,
@@ -342,7 +368,7 @@ async def test_runtime_diagnostics_reports_unified_safe_operational_status(monke
         "evidence_collection": {"status": "healthy"},
         "evidence": {
             "provider": "deepseek",
-            "model_name": "deepseek-v4-flash",
+            "model_name": "deepseek-flash",
             "status": "SUCCEEDED",
             "is_mock": False,
             "request_id": "latest-request",
@@ -363,6 +389,33 @@ async def test_runtime_diagnostics_reports_unified_safe_operational_status(monke
         "active_user_count": 8,
         "mapped_active_user_count": 8,
         "unmapped_active_user_count": 0,
+    }
+    assert payload["model_runtime"]["status"] == "READY"
+    assert payload["model_runtime"]["latest_real_call"]["model_name"] == "deepseek-flash"
+    assert payload["model_runtime"]["latest_real_call"]["total_tokens"] == 128
+    assert payload["token_quota"] == {
+        "status": "NORMAL",
+        "limit_tokens": 20000000,
+        "used_tokens": 128,
+        "remaining_tokens": 19999872,
+        "usage_percent": 0.001,
+        "window": "UTC_DAY",
+    }
+    assert payload["circuit_breaker"] == {
+        "state": "CLOSED",
+        "source": "llm_call_logs",
+        "consecutive_failures": 0,
+        "failure_threshold": 3,
+        "recovery_timeout_seconds": 60,
+        "retry_after_seconds": None,
+    }
+    assert payload["observability"] == {
+        "business_evidence_source": "llm_call_logs",
+        "jaeger": {
+            "status": "OPTIONAL_NOT_CONFIGURED",
+            "ui_url": None,
+            "business_impact_on_unavailable": "none",
+        },
     }
     assert payload["channels"]["real_wecom"] == {
         "status": "DISABLED_BY_POLICY",
@@ -391,7 +444,7 @@ async def test_runtime_diagnostics_reports_unified_safe_operational_status(monke
 async def test_deepseek_readiness_is_independent_from_eight_agent_call_coverage(monkeypatch):
     monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
     monkeypatch.setenv("DEEPSEEK_API_KEY", "diagnostic-deepseek-secret")
-    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-flash")
     monkeypatch.delenv("MOCK_LLM", raising=False)
     _auto_register_skills()
 
@@ -426,7 +479,7 @@ async def test_deepseek_readiness_is_independent_from_eight_agent_call_coverage(
 async def test_latest_failed_diagnostic_probe_blocks_deepseek_readiness(monkeypatch):
     monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
     monkeypatch.setenv("DEEPSEEK_API_KEY", "diagnostic-deepseek-secret")
-    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-flash")
     monkeypatch.delenv("MOCK_LLM", raising=False)
     _auto_register_skills()
 
@@ -454,7 +507,7 @@ async def test_latest_failed_diagnostic_probe_blocks_deepseek_readiness(monkeypa
 async def test_missing_agent_registration_degrades_without_conflating_call_coverage(monkeypatch):
     monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
     monkeypatch.setenv("DEEPSEEK_API_KEY", "diagnostic-deepseek-secret")
-    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-flash")
     monkeypatch.delenv("MOCK_LLM", raising=False)
     _auto_register_skills()
     registered = set(runtime_diagnostics.list_skill_names()) - {"watcher"}
@@ -486,7 +539,7 @@ async def test_missing_agent_registration_degrades_without_conflating_call_cover
 async def test_wecom_simulator_blocks_when_active_users_lack_active_identity_mapping(monkeypatch):
     monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
     monkeypatch.setenv("DEEPSEEK_API_KEY", "diagnostic-deepseek-secret")
-    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-flash")
     monkeypatch.delenv("MOCK_LLM", raising=False)
     _auto_register_skills()
 
@@ -519,7 +572,7 @@ async def test_wecom_simulator_blocks_when_active_users_lack_active_identity_map
 async def test_agent_evidence_collection_failure_is_sanitized_and_degrades_diagnostics(monkeypatch):
     monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
     monkeypatch.setenv("DEEPSEEK_API_KEY", "diagnostic-deepseek-secret")
-    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-flash")
     monkeypatch.delenv("MOCK_LLM", raising=False)
     _auto_register_skills()
 
@@ -572,7 +625,7 @@ async def test_admin_can_run_a_sanitized_real_deepseek_probe(monkeypatch):
     assert response.json() == {
         "status": "READY",
         "provider": "deepseek",
-        "model": "deepseek-v4-flash",
+        "model": "deepseek-flash",
         "is_mock": False,
         "request_id": "probe-request",
         "trace_id": "probe-trace",
@@ -580,7 +633,7 @@ async def test_admin_can_run_a_sanitized_real_deepseek_probe(monkeypatch):
     }
     assert llm_client.kwargs["venue_id"] == "venue-alpha"
     assert llm_client.kwargs["agent_id"] == "RuntimeDiagnostics"
-    assert llm_client.kwargs["model"] == "deepseek-v4-flash"
+    assert llm_client.kwargs["model"] == "deepseek-flash"
     assert database.executed
     assert "private-probe-output-must-not-leak" not in response.text
 
@@ -674,7 +727,7 @@ async def test_runtime_diagnostics_degrades_when_deepseek_secret_file_is_unreada
     monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     monkeypatch.setenv("DEEPSEEK_API_KEY_FILE", str(tmp_path / "missing-secret"))
-    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-flash")
     monkeypatch.delenv("MOCK_LLM", raising=False)
     _auto_register_skills()
 
@@ -701,7 +754,7 @@ async def test_runtime_diagnostics_degrades_when_deepseek_secret_file_is_unreada
 async def test_runtime_diagnostics_does_not_report_sqlite_as_healthy_postgresql(monkeypatch):
     monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
     monkeypatch.setenv("DEEPSEEK_API_KEY", "diagnostic-deepseek-secret")
-    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-flash")
     monkeypatch.delenv("MOCK_LLM", raising=False)
     _auto_register_skills()
 
@@ -721,3 +774,71 @@ async def test_runtime_diagnostics_does_not_report_sqlite_as_healthy_postgresql(
     payload = response.json()
     assert payload["status"] == "degraded"
     assert payload["runtime"]["postgresql"] == {"status": "unhealthy"}
+
+@pytest.mark.asyncio
+async def test_runtime_diagnostics_surfaces_exhausted_quota_and_open_circuit(monkeypatch):
+    monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET", "diagnostics-test-secret-with-32-characters")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "diagnostic-deepseek-secret")
+    monkeypatch.setenv("LLM_DEFAULT_MODEL", "deepseek-flash")
+    monkeypatch.setenv("SCENIC_AGENT_DAILY_TOKEN_LIMIT", "100000")
+    monkeypatch.setenv("JAEGER_UI_URL", "http://127.0.0.1:16686")
+    monkeypatch.delenv("MOCK_LLM", raising=False)
+    _auto_register_skills()
+
+    class QuotaAndCircuitDatabaseStub(DiagnosticsDatabaseStub):
+        async def fetch_one(self, sql: str, parameters: tuple = ()):
+            if "diagnostics_latest_real_call" in sql:
+                return {
+                    "provider": "deepseek",
+                    "model_name": "deepseek-flash",
+                    "status": "SUCCEEDED",
+                    "is_mock": False,
+                    "request_id": "latest-request",
+                    "trace_id": "latest-trace",
+                    "prompt_tokens": 80,
+                    "completion_tokens": 20,
+                    "total_tokens": 100,
+                    "latency_seconds": 1.25,
+                    "agent_id": "Router",
+                    "created_at": time.time(),
+                }
+            if "diagnostics_token_usage" in sql:
+                return {"used_tokens": 100000}
+            return await super().fetch_one(sql, parameters)
+
+        async def fetch_all(self, sql: str, parameters: tuple = ()):
+            if "diagnostics_circuit" in sql:
+                now = time.time()
+                return [
+                    {"status": "FAILED", "created_at": now},
+                    {"status": "FAILED", "created_at": now - 1},
+                    {"status": "FAILED", "created_at": now - 2},
+                ]
+            return await super().fetch_all(sql, parameters)
+
+    app = FastAPI(version="1.2.3")
+    app.state.db_client = QuotaAndCircuitDatabaseStub()
+    app.state.message_queue = QueueStub()
+    app.state.message_worker = WorkerStub()
+    app.state.vector_store = VectorStoreStub()
+    app.state.runtime_instance_id = "app-instance-uat"
+    app.include_router(management_router, prefix="/admin")
+
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/admin/diagnostics", headers=_access_header(role="admin"))
+
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["status"] == "degraded"
+    assert payload["model_runtime"]["status"] == "DEGRADED"
+    assert payload["token_quota"]["status"] == "EXHAUSTED"
+    assert payload["token_quota"]["remaining_tokens"] == 0
+    assert payload["circuit_breaker"]["state"] == "OPEN"
+    assert payload["circuit_breaker"]["consecutive_failures"] == 3
+    assert payload["circuit_breaker"]["retry_after_seconds"] > 0
+    assert payload["observability"]["jaeger"] == {
+        "status": "CONFIGURED",
+        "ui_url": "http://127.0.0.1:16686",
+        "business_impact_on_unavailable": "none",
+    }

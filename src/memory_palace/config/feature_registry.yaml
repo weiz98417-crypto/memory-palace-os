@@ -33,7 +33,7 @@ x-defaults: &defaults
     browser: []
     live: []
     uat: []
-  backup_restore: Covered by PostgreSQL, Redis, ChromaDB and volume restore verification.
+  backup_restore: Covered by PostgreSQL, Redis, pgvector and model-cache verification.
   external_config: []
   known_limitations: []
   blocked_reason: 静态注册表不预判运行环境；仅在 Live 证据聚合通过后自动提升为 READY。
@@ -137,7 +137,7 @@ items:
     entrypoints: [client:/events]
     apis: [POST /admin/events]
     services: [confirmed-event-saga]
-    data_dependencies: [PostgreSQL.confirmed_events, ChromaDB.memory_palace_experiences]
+    data_dependencies: [PostgreSQL.confirmed_events, PostgreSQL.knowledge_vectors]
     audit_events: [EVENT_CREATED, EVENT_CREATE_FAILED]
     error_codes: [VECTOR_STORE_UNAVAILABLE, EVENT_CREATE_FAILED]
     tests:
@@ -344,9 +344,9 @@ items:
     category: business
     entrypoints: [client:/knowledge]
     apis: [POST /admin/knowledge/search, GET /admin/knowledge, "GET /admin/knowledge/{knowledge_id}"]
-    services: [knowledge-query, ChromaDB]
+    services: [knowledge-query, PostgreSQL pgvector, local bge-m3]
     agents: [MemoryOps]
-    data_dependencies: [PostgreSQL.knowledge_documents, ChromaDB.memory_palace_experiences]
+    data_dependencies: [PostgreSQL.knowledge_documents, PostgreSQL.knowledge_vectors]
     audit_events: [KNOWLEDGE_CREATED, KNOWLEDGE_UPDATED]
     error_codes: [VECTOR_STORE_NOT_READY, KNOWLEDGE_NOT_FOUND]
     tests:
@@ -374,8 +374,8 @@ items:
     entrypoints: [client:/knowledge]
     roles: [admin, manager]
     apis: [POST /admin/knowledge, "PUT /admin/knowledge/{knowledge_id}", "DELETE /admin/knowledge/{knowledge_id}", POST /admin/knowledge/import, POST /admin/knowledge/rebuild-index]
-    services: [knowledge-saga, ChromaDB]
-    data_dependencies: [PostgreSQL.knowledge_documents, ChromaDB.memory_palace_experiences]
+    services: [knowledge-saga, PostgreSQL pgvector, local bge-m3]
+    data_dependencies: [PostgreSQL.knowledge_documents, PostgreSQL.knowledge_vectors]
     audit_events: [KNOWLEDGE_CREATED, KNOWLEDGE_UPDATED, KNOWLEDGE_DELETED, KNOWLEDGE_IMPORTED, KNOWLEDGE_INDEX_REBUILT]
     error_codes: [KNOWLEDGE_NOT_FOUND, VECTOR_STORE_NOT_READY, KNOWLEDGE_WRITE_FAILED]
     tests:
@@ -403,8 +403,8 @@ items:
     entrypoints: [client:/sops]
     roles: [admin, manager]
     apis: [GET /admin/sops, POST /admin/sops, "PUT /admin/sops/{sop_id}", "POST /admin/sops/{sop_id}/submit", "POST /admin/sops/{sop_id}/publish", "POST /admin/sops/{sop_id}/reject"]
-    services: [sop-saga, ChromaDB]
-    data_dependencies: [PostgreSQL.sop_documents, PostgreSQL.sop_versions, PostgreSQL.knowledge_documents, ChromaDB.memory_palace_experiences]
+    services: [sop-saga, PostgreSQL pgvector, local bge-m3]
+    data_dependencies: [PostgreSQL.sop_documents, PostgreSQL.sop_versions, PostgreSQL.knowledge_documents, PostgreSQL.knowledge_vectors]
     audit_events: [SOP_CREATED, SOP_UPDATED, SOP_SUBMITTED, SOP_PUBLISHED, SOP_PUBLISH_FAILED, SOP_REJECTED]
     error_codes: [SOP_NOT_FOUND, SOP_STATE_INVALID, SOP_PUBLISH_FAILED]
     tests:
@@ -490,9 +490,9 @@ items:
     entrypoints: [admin:/experience, assistant:/, assistant:/experience]
     roles: [admin, manager, operator]
     apis: [GET /admin/experience-cards, "GET /admin/experience-cards/{card_id}", "POST /admin/experience-cards/{card_id}/submit", "POST /admin/experience-cards/{card_id}/reject", "POST /admin/experience-cards/{card_id}/publish", "POST /admin/experience-cards/{card_id}/deprecate", POST /assistant/messages, POST /assistant/experience/search, "POST /assistant/experience/cards/{card_id}/feedback"]
-    services: [experience-governance, experience-search, experience-usage-ledger, ChromaDB, LLMClient]
+    services: [experience-governance, experience-search, experience-usage-ledger, PostgreSQL pgvector, local bge-m3, LLMClient]
     agents: [MemoryOps, Persona]
-    data_dependencies: [PostgreSQL.experience_cards, PostgreSQL.experience_card_versions, PostgreSQL.experience_reviews, PostgreSQL.experience_authorizations, PostgreSQL.experience_usage_logs, PostgreSQL.llm_call_logs, ChromaDB.memory_palace_experiences]
+    data_dependencies: [PostgreSQL.experience_cards, PostgreSQL.experience_card_versions, PostgreSQL.experience_reviews, PostgreSQL.experience_authorizations, PostgreSQL.experience_usage_logs, PostgreSQL.llm_call_logs, PostgreSQL.knowledge_vectors]
     audit_events: [EXPERIENCE_REJECTED, EXPERIENCE_PUBLISHED, LLM_CALL]
     error_codes: [EXPERIENCE_NOT_FOUND, EXPERIENCE_SELF_REVIEW, EXPERIENCE_NOT_PUBLISHABLE, EXPERIENCE_INDEX_WRITE_FAILED, EXPERIENCE_PUBLISH_CONFLICT, VECTOR_STORE_NOT_READY, LLM_UNAVAILABLE]
     tests:
@@ -706,9 +706,9 @@ items:
     category: agent
     entrypoints: [POST /messages/, POST /admin/knowledge/search]
     apis: [POST /messages/, POST /admin/knowledge/search]
-    services: [LLMClient, ChromaDB]
+    services: [LLMClient, PostgreSQL pgvector, local bge-m3]
     agents: [MemoryOps]
-    data_dependencies: [PostgreSQL.knowledge_documents, ChromaDB.memory_palace_experiences, PostgreSQL.llm_call_logs]
+    data_dependencies: [PostgreSQL.knowledge_documents, PostgreSQL.knowledge_vectors, PostgreSQL.llm_call_logs]
     audit_events: [LLM_CALL]
     error_codes: [LLM_UNAVAILABLE, VECTOR_STORE_NOT_READY, AGENT_FAILED]
     tests: {unit: [tests/unit/test_agent_truthfulness.py], integration: [tests/integration/test_mvp_business_apis.py], browser: [], live: [], uat: [MVP-UAT-002, MVP-UAT-005]}
@@ -829,14 +829,14 @@ items:
     references: *agent_refs
 
   - <<: *defaults
-    id: MVP-PLATFORM-CHROMA
-    name: ChromaDB 知识向量存储
+    id: MVP-PLATFORM-PGVECTOR
+    name: PostgreSQL pgvector 知识向量存储
     category: infrastructure
     entrypoints: [admin:/health, client:/knowledge]
     roles: [admin, manager]
     apis: [POST /admin/knowledge/search, POST /admin/knowledge/rebuild-index]
-    services: [ChromaDB]
-    data_dependencies: [ChromaDB.memory_palace_experiences]
+    services: [PostgreSQL pgvector, local bge-m3]
+    data_dependencies: [PostgreSQL.knowledge_vectors, PostgreSQL.vector_index_versions]
     audit_events: [KNOWLEDGE_INDEX_REBUILT, EVENT_CREATE_FAILED]
     error_codes: [VECTOR_STORE_NOT_READY, EVENT_CREATE_FAILED]
     tests: {unit: [tests/unit/test_runtime_hardening.py], integration: [tests/integration/test_mvp_business_apis.py], browser: [], live: [], uat: [MVP-UAT-008]}
@@ -876,7 +876,7 @@ items:
     error_codes: [LLM_UNAVAILABLE, AGENT_FAILED]
     tests: {unit: [tests/unit/test_llm_model_policy.py, tests/unit/test_agent_truthfulness.py], integration: [tests/integration/test_event_dossier.py::test_event_dossier_is_human_readable_and_keeps_technical_ids_folded], browser: [], live: [], uat: [E2E-00, E2E-03, E2E-05, E2E-11, E2E-12, E2E-13, E2E-15, UAT-F03]}
     evidence: {automated: [tests/unit/test_llm_model_policy.py, tests/integration/test_event_dossier.py::test_event_dossier_is_human_readable_and_keeps_technical_ids_folded], browser: [], live: [], uat: []}
-    external_config: [DEEPSEEK_API_KEY, LLM_DEFAULT_MODEL=deepseek-v4-flash]
+    external_config: [DEEPSEEK_API_KEY, LLM_DEFAULT_MODEL=deepseek-flash]
     blocked_reason: Deployment secret and Live DeepSeek evidence must both be present before this integration can become READY.
     references: *agent_refs
 
@@ -941,7 +941,7 @@ uat_journeys:
   - {id: E2E-00, name: 管理员确认运行配置和渠道真实性, covers: [MVP-BIZ-001, MVP-BIZ-002, MVP-BIZ-019, MVP-BIZ-020, MVP-PLATFORM-AUTHZ, MVP-PLATFORM-HEALTH, MVP-INTEGRATION-DEEPSEEK, MVP-INTEGRATION-WECHAT, MVP-INTEGRATION-SMS, MVP-INTEGRATION-VOICE], status: BLOCKED, evidence: []}
   - {id: E2E-01, name: 打开企业内部系统接入环境并确认身份, covers: [MVP-BIZ-001, MVP-BIZ-007, MVP-BIZ-019, MVP-PLATFORM-AUTHZ], status: BLOCKED, evidence: []}
   - {id: E2E-02, name: 发送自由文本和现场附件, covers: [MVP-BIZ-003, MVP-BIZ-007, MVP-PLATFORM-REDIS], status: BLOCKED, evidence: []}
-  - {id: E2E-03, name: 完成智能受理并返回事件、SOP 和处置建议, covers: [MVP-BIZ-003, MVP-BIZ-005, MVP-BIZ-011, MVP-BIZ-013, ContextTrigger, Router, Commander, MemoryOps, MVP-PLATFORM-CHROMA, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
+  - {id: E2E-03, name: 完成智能受理并返回事件、SOP 和处置建议, covers: [MVP-BIZ-003, MVP-BIZ-005, MVP-BIZ-011, MVP-BIZ-013, ContextTrigger, Router, Commander, MemoryOps, MVP-PLATFORM-PGVECTOR, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
   - {id: E2E-04, name: 在同一会话补充现场信息, covers: [MVP-BIZ-004, MVP-BIZ-005, MVP-BIZ-007], status: BLOCKED, evidence: []}
   - {id: E2E-05, name: 使用 TodoWrite 生成可执行任务图, covers: [MVP-BIZ-008, TodoWrite, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
   - {id: E2E-06, name: 验证任务依赖、员工权限并回填检修证据, covers: [MVP-BIZ-008, MVP-PLATFORM-AUTHZ], status: BLOCKED, evidence: []}
@@ -952,17 +952,17 @@ uat_journeys:
   - {id: E2E-11, name: 运行 Watcher 合规检查, covers: [MVP-BIZ-017, MVP-BIZ-018, Watcher, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
   - {id: E2E-12, name: 关闭事件并生成待审核经验候选, covers: [MVP-BIZ-005, MVP-BIZ-006, MVP-BIZ-018, PersonaExtract, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
   - {id: E2E-13, name: 专家通过统一助手完成经验访谈, covers: [MVP-BIZ-014, MVP-BIZ-015, PersonaExtract, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
-  - {id: E2E-14, name: 审核、退回、修订并发布经验, covers: [MVP-BIZ-014, MVP-BIZ-015, MVP-BIZ-016, PersonaExtract, MVP-PLATFORM-CHROMA], status: BLOCKED, evidence: []}
-  - {id: E2E-15, name: 再次复用经验并完成后台全链路审计, covers: [MVP-BIZ-002, MVP-BIZ-005, MVP-BIZ-010, MVP-BIZ-011, MVP-BIZ-012, MVP-BIZ-013, MVP-BIZ-016, Router, MemoryOps, Persona, MVP-PLATFORM-CHROMA, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
-  - {id: E2E-16, name: 真实重启 App 并恢复处理中会话, covers: [MVP-BIZ-007, MVP-BIZ-008, MVP-BIZ-020, MVP-PLATFORM-POSTGRES, MVP-PLATFORM-REDIS, MVP-PLATFORM-CHROMA, MVP-PLATFORM-HEALTH], status: BLOCKED, evidence: []}
+  - {id: E2E-14, name: 审核、退回、修订并发布经验, covers: [MVP-BIZ-014, MVP-BIZ-015, MVP-BIZ-016, PersonaExtract, MVP-PLATFORM-PGVECTOR], status: BLOCKED, evidence: []}
+  - {id: E2E-15, name: 再次复用经验并完成后台全链路审计, covers: [MVP-BIZ-002, MVP-BIZ-005, MVP-BIZ-010, MVP-BIZ-011, MVP-BIZ-012, MVP-BIZ-013, MVP-BIZ-016, Router, MemoryOps, Persona, MVP-PLATFORM-PGVECTOR, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
+  - {id: E2E-16, name: 真实重启 App 并恢复处理中会话, covers: [MVP-BIZ-007, MVP-BIZ-008, MVP-BIZ-020, MVP-PLATFORM-POSTGRES, MVP-PLATFORM-REDIS, MVP-PLATFORM-PGVECTOR, MVP-PLATFORM-HEALTH], status: BLOCKED, evidence: []}
   - {id: UAT-F01, name: 重复消息与业务幂等, covers: [MVP-BIZ-003, MVP-BIZ-007, MVP-BIZ-008, TodoWrite], status: BLOCKED, evidence: []}
   - {id: UAT-F02, name: Worker 在 ACK 前重启恢复, covers: [MVP-BIZ-007, MVP-BIZ-008, MVP-PLATFORM-REDIS, MVP-PLATFORM-HEALTH], status: BLOCKED, evidence: []}
   - {id: UAT-F03, name: DeepSeek 超时、401 与熔断恢复, covers: [MVP-BIZ-003, MVP-BIZ-006, MVP-BIZ-015, MVP-BIZ-018, ContextTrigger, Router, Commander, MemoryOps, Persona, PersonaExtract, TodoWrite, Watcher, MVP-INTEGRATION-DEEPSEEK], status: BLOCKED, evidence: []}
-  - {id: UAT-F04, name: ChromaDB 检索不可用, covers: [MVP-BIZ-011, MVP-BIZ-012, MVP-BIZ-013, MVP-BIZ-016, MemoryOps, Persona, MVP-PLATFORM-CHROMA], status: BLOCKED, evidence: []}
+  - {id: UAT-F04, name: pgvector 或 bge-m3 检索不可用, covers: [MVP-BIZ-011, MVP-BIZ-012, MVP-BIZ-013, MVP-BIZ-016, MemoryOps, Persona, MVP-PLATFORM-PGVECTOR], status: BLOCKED, evidence: []}
   - {id: UAT-F05, name: 未完成依赖时拒绝后续任务, covers: [MVP-BIZ-008], status: BLOCKED, evidence: []}
   - {id: UAT-F06, name: 审批并发与动作执行失败, covers: [MVP-BIZ-009, MVP-BIZ-010], status: BLOCKED, evidence: []}
   - {id: UAT-F07, name: 访谈刷新与重启恢复, covers: [MVP-BIZ-015, PersonaExtract], status: BLOCKED, evidence: []}
-  - {id: UAT-F08, name: 经验发布索引失败, covers: [MVP-BIZ-016, MVP-PLATFORM-CHROMA], status: BLOCKED, evidence: []}
+  - {id: UAT-F08, name: 经验发布索引失败, covers: [MVP-BIZ-016, MVP-PLATFORM-PGVECTOR], status: BLOCKED, evidence: []}
   - {id: UAT-F09, name: Watcher 重复运行 finding 去重, covers: [MVP-BIZ-017, MVP-BIZ-018, Watcher], status: BLOCKED, evidence: []}
   - {id: UAT-F10, name: 跨场地全链路读取拒绝, covers: [MVP-BIZ-001, MVP-BIZ-005, MVP-BIZ-007, MVP-BIZ-008, MVP-BIZ-014, MVP-BIZ-016, MVP-BIZ-019, MVP-PLATFORM-AUTHZ], status: BLOCKED, evidence: []}
   - {id: UAT-F11, name: 普通员工越权治理接口拒绝, covers: [MVP-BIZ-009, MVP-BIZ-014, MVP-BIZ-016, MVP-PLATFORM-AUTHZ], status: BLOCKED, evidence: []}

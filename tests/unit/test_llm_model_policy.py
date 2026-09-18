@@ -13,14 +13,14 @@ def test_llm_client_defaults_to_required_deepseek_model(monkeypatch):
 
     client = LLMClient()
 
-    assert REQUIRED_GENERATIVE_MODEL == "deepseek-v4-flash"
+    assert REQUIRED_GENERATIVE_MODEL == "deepseek-flash"
     assert client.default_model == REQUIRED_GENERATIVE_MODEL
 
 
 def test_llm_client_rejects_conflicting_model_configuration(monkeypatch):
     monkeypatch.setenv("LLM_DEFAULT_MODEL", "gpt-4o")
 
-    with pytest.raises(ValueError, match="deepseek-v4-flash"):
+    with pytest.raises(ValueError, match="deepseek-flash"):
         LLMClient()
 
 

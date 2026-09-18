@@ -1,2 +1,1 @@
-"""API v1 endpoints"""
-from . import messages, skills, sessions, admin
+"""Formal v1 endpoint modules."""

@@ -26,7 +26,7 @@ services:
       DEMO_MODE: "false"
       DEEPSEEK_API_KEY_FILE: /run/memory-palace-secrets/deepseek_api_key
       DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
-      LLM_DEFAULT_MODEL: deepseek-v4-flash
+      LLM_DEFAULT_MODEL: deepseek-flash
       MEMORY_PALACE_JWT_SECRET: ${MEMORY_PALACE_JWT_SECRET:?MEMORY_PALACE_JWT_SECRET is required}
       MEMORY_PALACE_API_KEYS: ${MEMORY_PALACE_API_KEYS:-}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
@@ -34,8 +34,13 @@ services:
       ADMIN_DISPLAY_NAME: ${ADMIN_DISPLAY_NAME:-系统管理员}
       MEMORY_PALACE_UAT_BASE_URL: http://localhost:8000
       UAT_EMPLOYEE_PASSWORD_FILE: /run/memory-palace-secrets/uat_employee_password
+      SCENIC_ACCOUNT_PASSWORD_FILE: /run/memory-palace-secrets/scenic_account_password
       DEFAULT_VENUE_ID: ${DEFAULT_VENUE_ID:-venue-hq}
       DEFAULT_VENUE_NAME: ${DEFAULT_VENUE_NAME:-示范景区运营中心}
+      # App runs behind nginx only; trust its forwarding headers and the ingress host that
+      # is allowed to drive the protected simulation-preparation entry.
+      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-true}
+      SCENIC_PREP_ALLOWED_HOSTS: ${SCENIC_PREP_ALLOWED_HOSTS:-}
       WECHAT_CORP_ID: ${WECHAT_CORP_ID:-}
       WECHAT_CORP_SECRET: ${WECHAT_CORP_SECRET:-}
       WECHAT_AGENT_ID: ${WECHAT_AGENT_ID:-}
@@ -47,21 +52,38 @@ services:
       VOICE_PROVIDER: ${VOICE_PROVIDER:-}
       VOICE_API_KEY: ${VOICE_API_KEY:-}
       ALERT_PHONES: ${ALERT_PHONES:-}
-
-      CHROMA_HOST: chromadb
-      CHROMA_PORT: "8000"
+      BGE_M3_MODEL_PATH: BAAI/bge-m3
+      EMBEDDING_DEVICE: ${EMBEDDING_DEVICE:-cpu}
+      EMBEDDING_CPU_THREADS: ${EMBEDDING_CPU_THREADS:-4}
+      HF_HOME: /models/huggingface
       DATABASE_URL: postgresql://${POSTGRES_USER:-mp_user}@postgres:5432/${POSTGRES_DB:-memory_palace}
       PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       REDIS_URL: redis://redis:6379/0
       USE_REDIS: "true"
       LOG_DIR: /app/data/logs
       ATTACHMENT_STORAGE_DIR: /app/data/attachments
+      SCENIC_TEI_EMBEDDING_URL: ${SCENIC_TEI_EMBEDDING_URL:-http://tei-embedding:80}
+      SCENIC_TEI_EMBEDDING_HEALTH_URL: ${SCENIC_TEI_EMBEDDING_HEALTH_URL:-http://tei-embedding:80/health}
+      SCENIC_TEI_RERANKER_URL: ${SCENIC_TEI_RERANKER_URL:-}
+      # Hatchet client: present => the API dispatches advice runs as durable
+      # workflows instead of an in-process queue (see main.py).
+      HATCHET_CLIENT_HOST_PORT: ${HATCHET_CLIENT_HOST_PORT:-hatchet-engine:7077}
+      HATCHET_CLIENT_SERVER_URL: ${HATCHET_CLIENT_SERVER_URL:-http://hatchet-api:8080}
+      HATCHET_CLIENT_TLS_STRATEGY: ${HATCHET_CLIENT_TLS_STRATEGY:-none}
+      HATCHET_CLIENT_TOKEN_FILE: ${HATCHET_CLIENT_TOKEN_FILE:-/tokens/worker}
+      TEI_EMBEDDING_TIMEOUT: ${TEI_EMBEDDING_TIMEOUT:-20}
+      TEI_RERANKER_TIMEOUT: ${TEI_RERANKER_TIMEOUT:-20}
+      TEI_MAX_CLIENT_BATCH_SIZE: ${TEI_MAX_CLIENT_BATCH_SIZE:-16}
+      SCENIC_TEI_RERANKER_HEALTH_URL: ${SCENIC_TEI_RERANKER_HEALTH_URL:-}
+      HATCHET_HEALTH_URL: ${HATCHET_HEALTH_URL:-}
+      JAEGER_HEALTH_URL: ${JAEGER_HEALTH_URL:-}
     volumes:
       - app-logs:/app/data/logs
       - attachment-data:/app/data/attachments
       - workspaces-data:/app/data/workspaces
-      - embedding-cache:/home/appuser/.cache
+      - ${BGE_M3_CACHE_DIR:?BGE_M3_CACHE_DIR is required}:/models/huggingface:ro
       - app-secrets:/run/memory-palace-secrets:ro
+      - hatchet-tokens:/tokens:ro
     depends_on:
       attachment-init:
         condition: service_completed_successfully
@@ -69,11 +91,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      chromadb:
+      tei-embedding:
         condition: service_healthy
     networks:
       - data-plane
       - egress
+      - agent-plane
     expose:
       - "8000"
     healthcheck:
@@ -81,12 +104,386 @@ services:
       interval: 15s
       timeout: 5s
       retries: 8
+      start_period: 180s
+    security_opt:
+      - no-new-privileges:true
+
+  tei-embedding:
+    # Co-resident by default: the app image is torch-free (ADR-0020), so embeddings
+    # must come from TEI. Turning this off requires the explicit local-embeddings
+    # overlay and a rebuild with LOCAL_EMBEDDINGS=true.
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.4
+    restart: unless-stopped
+    command:
+      - --model-id
+      - BAAI/bge-m3
+      - --huggingface-hub-cache
+      - /data/hub
+      - --tokenization-workers
+      - "4"
+      - --max-concurrent-requests
+      - "32"
+      - --max-batch-tokens
+      - "2048"
+      - --max-client-batch-size
+      - "16"
+    volumes:
+      - ${BGE_M3_CACHE_DIR:?BGE_M3_CACHE_DIR is required}:/data:ro
+    ports:
+      - "127.0.0.1:${TEI_EMBEDDING_PORT:-18000}:80"
+    networks:
+      - agent-plane
+      - egress
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:80/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+    security_opt:
+      - no-new-privileges:true
+
+  tei-reranker:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.4
+    profiles: ["tei-reranker"]
+    restart: unless-stopped
+    command:
+      - --model-id
+      - /data/bge-reranker-base-onnx
+      - --tokenization-workers
+      - "4"
+      - --max-concurrent-requests
+      - "32"
+      - --max-batch-tokens
+      - "1024"
+      - --max-client-batch-size
+      - "32"
+    volumes:
+      - ${TEI_RERANKER_MODEL_DIR:-D:/memory-palace-models/tei/bge-reranker-base-onnx}:/data:ro
+    ports:
+      - "127.0.0.1:${TEI_RERANKER_PORT:-18001}:80"
+    networks:
+      - agent-plane
+      - egress
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:80/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
       start_period: 30s
     security_opt:
       - no-new-privileges:true
 
+  tei-reranker-v2:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.4
+    profiles: ["rerank-v2"]
+    restart: unless-stopped
+    command:
+      - --model-id
+      - BAAI/bge-reranker-v2-m3
+      - --huggingface-hub-cache
+      - /data/hub
+      - --tokenization-workers
+      - "4"
+      - --max-concurrent-requests
+      - "16"
+      - --max-batch-tokens
+      - "1024"
+      - --max-client-batch-size
+      - "16"
+    volumes:
+      - ${BGE_M3_CACHE_DIR:?BGE_M3_CACHE_DIR is required}:/data:ro
+    ports:
+      - "127.0.0.1:${TEI_RERANKER_PORT:-18001}:80"
+    networks:
+      - agent-plane
+      - egress
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:80/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    security_opt:
+      - no-new-privileges:true
+
+  hatchet-postgres:
+    image: postgres:15.6
+    profiles: ["agent-runtime"]
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${HATCHET_POSTGRES_DB:-hatchet}
+      POSTGRES_USER: ${HATCHET_POSTGRES_USER:-hatchet}
+      POSTGRES_PASSWORD: ${HATCHET_POSTGRES_PASSWORD:-hatchet-local}
+    command: ["postgres", "-c", "max_connections=100"]
+    volumes:
+      - hatchet-pg-data:/var/lib/postgresql/data
+    networks:
+      - agent-plane
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${HATCHET_POSTGRES_USER:-hatchet} -d ${HATCHET_POSTGRES_DB:-hatchet}"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+    security_opt:
+      - no-new-privileges:true
+
+  hatchet-migrate:
+    image: ghcr.io/hatchet-dev/hatchet/hatchet-migrate:v0.107.1
+    profiles: ["agent-runtime"]
+    restart: "no"
+    command: ["/hatchet/hatchet-migrate"]
+    environment:
+      DATABASE_URL: postgresql://${HATCHET_POSTGRES_USER:-hatchet}:${HATCHET_POSTGRES_PASSWORD:-hatchet-local}@hatchet-postgres:5432/${HATCHET_POSTGRES_DB:-hatchet}?sslmode=disable
+    depends_on:
+      hatchet-postgres:
+        condition: service_healthy
+    networks:
+      - agent-plane
+    security_opt:
+      - no-new-privileges:true
+
+  hatchet-admin:
+    image: ghcr.io/hatchet-dev/hatchet/hatchet-admin:v0.107.1
+    profiles: ["agent-runtime"]
+    restart: "no"
+    command: ["/hatchet/hatchet-admin", "quickstart", "--skip", "certs", "--generated-config-dir", "/config", "--overwrite=false"]
+    environment:
+      DATABASE_URL: postgresql://${HATCHET_POSTGRES_USER:-hatchet}:${HATCHET_POSTGRES_PASSWORD:-hatchet-local}@hatchet-postgres:5432/${HATCHET_POSTGRES_DB:-hatchet}?sslmode=disable
+      SERVER_PORT: "8080"
+      SERVER_URL: ${HATCHET_SERVER_URL:-http://localhost:8091}
+      SERVER_AUTH_COOKIE_DOMAIN: localhost
+      SERVER_AUTH_COOKIE_INSECURE: "true"
+      SERVER_GRPC_PORT: "7077"
+      SERVER_GRPC_BROADCAST_ADDRESS: hatchet-engine:7077
+      SERVER_GRPC_INSECURE: "true"
+      SERVER_MSGQUEUE_KIND: postgres
+      SERVER_OBSERVABILITY_ENABLED: "true"
+    volumes:
+      - hatchet-config:/config
+    depends_on:
+      hatchet-migrate:
+        condition: service_completed_successfully
+    networks:
+      - agent-plane
+    security_opt:
+      - no-new-privileges:true
+
+  hatchet-token:
+    image: ghcr.io/hatchet-dev/hatchet/hatchet-admin:v0.107.1
+    profiles: ["agent-runtime"]
+    restart: "no"
+    command:
+      - /bin/sh
+      - -c
+      - /hatchet/hatchet-admin token create --config /config --name scenic-agent-prototype --expiresIn 720h > /tokens/worker
+    environment:
+      DATABASE_URL: postgresql://${HATCHET_POSTGRES_USER:-hatchet}:${HATCHET_POSTGRES_PASSWORD:-hatchet-local}@hatchet-postgres:5432/${HATCHET_POSTGRES_DB:-hatchet}?sslmode=disable
+      SERVER_AUTH_COOKIE_DOMAIN: localhost
+      SERVER_GRPC_INSECURE: "true"
+    volumes:
+      - hatchet-config:/config:ro
+      - hatchet-tokens:/tokens
+    depends_on:
+      hatchet-admin:
+        condition: service_completed_successfully
+    networks:
+      - agent-plane
+    security_opt:
+      - no-new-privileges:true
+
+  scenic-agent-prototype:
+    image: memory-palace-scenic-agent-prototype:local
+    profiles: ["agent-runtime"]
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.agent-prototype
+      args:
+        BASE_IMAGE: memory-palace-scenic-app:latest
+    command: ["python", "-m", "scripts.scenic_agent_prototype.worker"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mp_user}@postgres:5432/${POSTGRES_DB:-memory_palace}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      DEEPSEEK_API_KEY_FILE: /run/memory-palace-secrets/deepseek_api_key
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
+      SCENIC_AGENT_MODEL: ${SCENIC_AGENT_MODEL:-deepseek-flash}
+      SCENIC_TEI_EMBEDDING_URL: ${SCENIC_TEI_EMBEDDING_URL:-http://tei-embedding:80}
+      HATCHET_CLIENT_HOST_PORT: hatchet-engine:7077
+      HATCHET_CLIENT_SERVER_URL: http://hatchet-api:8080
+      HATCHET_CLIENT_TLS_STRATEGY: none
+      HATCHET_CLIENT_TOKEN_FILE: /tokens/worker
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://jaeger:4317}
+      SCENIC_ACCOUNT_PASSWORD_FILE: /run/memory-palace-secrets/scenic_account_password
+      SCENIC_E2E_BASE_URL: ${SCENIC_E2E_BASE_URL:-http://nginx}
+    volumes:
+      - app-secrets:/run/memory-palace-secrets:ro
+      - hatchet-tokens:/tokens:ro
+      - ../artifacts/scenic-agent-prototype:/evidence
+    depends_on:
+      hatchet-token:
+        condition: service_completed_successfully
+      hatchet-engine:
+        condition: service_healthy
+    networks:
+      - data-plane
+      - agent-plane
+      - egress
+    security_opt:
+      - no-new-privileges:true
+
+  scenic-agent-worker:
+    # Production Hatchet worker: executes the durable advice workflow. Business state
+    # stays in PostgreSQL; Hatchet only owns runtime history and the human interrupt.
+    image: memory-palace-scenic-app:latest
+    profiles: ["agent-runtime"]
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+    command: ["python", "-m", "scripts.scenic_agent.worker"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mp_user}@postgres:5432/${POSTGRES_DB:-memory_palace}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      DEEPSEEK_API_KEY_FILE: /run/memory-palace-secrets/deepseek_api_key
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
+      SCENIC_AGENT_MODEL: ${SCENIC_AGENT_MODEL:-deepseek-flash}
+      SCENIC_AGENT_DAILY_TOKEN_LIMIT: ${SCENIC_AGENT_DAILY_TOKEN_LIMIT:-20000000}
+      SCENIC_TEI_EMBEDDING_URL: ${SCENIC_TEI_EMBEDDING_URL:-http://tei-embedding:80}
+      HATCHET_CLIENT_HOST_PORT: hatchet-engine:7077
+      HATCHET_CLIENT_SERVER_URL: http://hatchet-api:8080
+      HATCHET_CLIENT_TLS_STRATEGY: none
+      HATCHET_CLIENT_TOKEN_FILE: /tokens/worker
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    volumes:
+      - app-secrets:/run/memory-palace-secrets:ro
+      - hatchet-tokens:/tokens:ro
+    depends_on:
+      hatchet-token:
+        condition: service_completed_successfully
+      hatchet-engine:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      tei-embedding:
+        condition: service_healthy
+    networks:
+      - data-plane
+      - agent-plane
+      - egress
+    security_opt:
+      - no-new-privileges:true
+
+
+  hatchet-engine:
+    image: ghcr.io/hatchet-dev/hatchet/hatchet-engine:v0.107.1
+    profiles: ["agent-runtime"]
+    restart: unless-stopped
+    command: ["/hatchet/hatchet-engine", "--config", "/config"]
+    environment:
+      DATABASE_URL: postgresql://${HATCHET_POSTGRES_USER:-hatchet}:${HATCHET_POSTGRES_PASSWORD:-hatchet-local}@hatchet-postgres:5432/${HATCHET_POSTGRES_DB:-hatchet}?sslmode=disable
+      SERVER_PORT: "8080"
+      SERVER_URL: ${HATCHET_SERVER_URL:-http://localhost:8091}
+      SERVER_HEALTHCHECK: "true"
+      SERVER_HEALTHCHECK_PORT: "8733"
+      SERVER_AUTH_COOKIE_DOMAIN: localhost
+      SERVER_AUTH_COOKIE_INSECURE: "true"
+      SERVER_GRPC_PORT: "7077"
+      SERVER_GRPC_BIND_ADDRESS: 0.0.0.0
+      SERVER_GRPC_BROADCAST_ADDRESS: hatchet-engine:7077
+      SERVER_GRPC_INSECURE: "true"
+      SERVER_MSGQUEUE_KIND: postgres
+      SERVER_SECURITY_CHECK_ENABLED: "false"
+      SERVER_LOGGER_LEVEL: warn
+      SERVER_LOGGER_FORMAT: console
+      DATABASE_LOGGER_LEVEL: warn
+      DATABASE_LOGGER_FORMAT: console
+      SERVER_OBSERVABILITY_ENABLED: "true"
+    volumes:
+      - hatchet-config:/config:ro
+    depends_on:
+      hatchet-admin:
+        condition: service_completed_successfully
+    networks:
+      - agent-plane
+    expose:
+      - "7077"
+      - "8733"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8733/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+
+  hatchet-api:
+    image: ghcr.io/hatchet-dev/hatchet/hatchet-api:v0.107.1
+    profiles: ["agent-runtime"]
+    restart: unless-stopped
+    command: ["/hatchet/hatchet-api", "--config", "/config"]
+    environment:
+      DATABASE_URL: postgresql://${HATCHET_POSTGRES_USER:-hatchet}:${HATCHET_POSTGRES_PASSWORD:-hatchet-local}@hatchet-postgres:5432/${HATCHET_POSTGRES_DB:-hatchet}?sslmode=disable
+      SERVER_PORT: "8080"
+      SERVER_URL: ${HATCHET_SERVER_URL:-http://localhost:8091}
+      SERVER_AUTH_COOKIE_DOMAIN: localhost
+      SERVER_AUTH_COOKIE_INSECURE: "true"
+      SERVER_GRPC_PORT: "7077"
+      SERVER_GRPC_BROADCAST_ADDRESS: hatchet-engine:7077
+      SERVER_GRPC_INSECURE: "true"
+      SERVER_INTERNAL_CLIENT_INTERNAL_GRPC_BROADCAST_ADDRESS: hatchet-engine:7077
+      SERVER_MSGQUEUE_KIND: postgres
+      SERVER_SECURITY_CHECK_ENABLED: "false"
+      DATABASE_LOGGER_LEVEL: warn
+      DATABASE_LOGGER_FORMAT: console
+      SERVER_OBSERVABILITY_ENABLED: "true"
+    volumes:
+      - hatchet-config:/config:ro
+    depends_on:
+      hatchet-admin:
+        condition: service_completed_successfully
+      hatchet-engine:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${HATCHET_HTTP_PORT:-8091}:8080"
+    networks:
+      - agent-plane
+      - egress
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/api/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.62.0
+    profiles: ["tracing"]
+    restart: unless-stopped
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "127.0.0.1:${JAEGER_UI_PORT:-16686}:16686"
+      - "127.0.0.1:${JAEGER_OTLP_GRPC_PORT:-4317}:4317"
+      - "127.0.0.1:${JAEGER_OTLP_HTTP_PORT:-4318}:4318"
+    networks:
+      - agent-plane
+      - egress
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:14269/"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 15s
+    security_opt:
+      - no-new-privileges:true
+
   postgres:
-    image: postgres:15.8-alpine
+    image: pgvector/pgvector:0.8.1-pg15-bookworm
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-memory_palace}
@@ -94,6 +491,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
       - pg-data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
     networks:
       - data-plane
     expose:
@@ -124,32 +522,11 @@ services:
     security_opt:
       - no-new-privileges:true
 
-  chromadb:
-    image: chromadb/chroma:0.5.23
-    restart: unless-stopped
-    environment:
-      IS_PERSISTENT: "TRUE"
-      ANONYMIZED_TELEMETRY: "FALSE"
-    volumes:
-      - chroma-data:/chroma/chroma
-    networks:
-      - data-plane
-    expose:
-      - "8000"
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/v1/heartbeat"]
-      interval: 15s
-      timeout: 5s
-      retries: 8
-      start_period: 20s
-    security_opt:
-      - no-new-privileges:true
-
   nginx:
     image: nginx:1.25.5-alpine
     restart: unless-stopped
     ports:
-      - "${HTTP_PORT:-8080}:80"
+      - "${HTTP_PORT:-8090}:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - nginx-logs:/var/log/nginx
@@ -170,12 +547,13 @@ services:
 volumes:
   pg-data:
   redis-data:
-  chroma-data:
   app-logs:
   attachment-data:
   workspaces-data:
-  embedding-cache:
   nginx-logs:
+  hatchet-pg-data:
+  hatchet-config:
+  hatchet-tokens:
   app-secrets:
     external: true
     name: ${MEMORY_PALACE_SECRETS_VOLUME:-memory-palace-secrets}
@@ -184,3 +562,5 @@ networks:
   data-plane:
     internal: true
   egress:
+  agent-plane:
+    internal: true

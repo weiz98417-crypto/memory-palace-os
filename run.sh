@@ -9,7 +9,7 @@ echo "Starting Memory Palace OS..."
 pip install -r requirements.txt
 
 # 2. Create data directory
-mkdir -p data/chroma
+mkdir -p data
 
 # 3. Initialize database
 python -c "from src.memory_palace.knowledge.db_init import init_db; import asyncio; asyncio.run(init_db())"

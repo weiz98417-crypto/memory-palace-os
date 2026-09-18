@@ -132,7 +132,7 @@ async def _seed_complete_event(database, *, event_id: str = "event-watcher-ready
             references_json, raw_hit_count, selected_count, started_at,
             completed_at, latency_ms
         ) VALUES ('retrieval-watcher-ready', 1, 'venue-alpha', ?, ?, ?,
-            'MemoryOps', '闸机恢复流程', 'sha-watcher-ready', 'chroma',
+            'MemoryOps', '闸机恢复流程', 'sha-watcher-ready', 'pgvector',
             'knowledge', 'SUCCEEDED', 5, 0.6, '{}', '[]', ?, 1, 1, ?, ?, 80)
         """,
         (
@@ -172,7 +172,7 @@ async def test_event_watcher_check_persists_complete_evidence_snapshot(tmp_path,
     observed_context = {}
 
     async def successful_watcher(self, context, trace_id):
-        assert self.model_name == "deepseek-v4-flash"
+        assert self.model_name == "deepseek-flash"
         observed_context.update(context)
         return SkillOutput(
             success=True,
@@ -202,7 +202,7 @@ async def test_event_watcher_check_persists_complete_evidence_snapshot(tmp_path,
         body = response.json()
         assert body["summary"] == "证据完整，可闭环"
         assert body["ready_to_close"] is True
-        assert body["model"] == "deepseek-v4-flash"
+        assert body["model"] == "deepseek-flash"
         assert body["trace_id"] == body["run"]["trace_id"]
         assert body["findings"] == []
         snapshot = body["run"]["target_snapshot"]
@@ -220,7 +220,7 @@ async def test_event_watcher_check_persists_complete_evidence_snapshot(tmp_path,
         )
         assert persisted["status"] == "SUCCEEDED"
         assert persisted["event_id"] == event_id
-        assert persisted["model_name"] == "deepseek-v4-flash"
+        assert persisted["model_name"] == "deepseek-flash"
         assert json.loads(persisted["target_snapshot_json"]) == snapshot
         audit = await database.fetch_one(
             """

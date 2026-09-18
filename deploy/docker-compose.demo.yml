@@ -13,7 +13,6 @@ services:
       DEMO_MODE: "true"
       LOG_LEVEL: INFO
       DATABASE_PATH: /app/data/memory.db
-      CHROMA_PERSIST_DIR: /app/data/chroma
       USE_REDIS: "false"
       METRICS_ENABLED: "true"
     ports:

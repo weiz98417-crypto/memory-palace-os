@@ -124,7 +124,7 @@ async def test_event_dossier_is_human_readable_and_keeps_technical_ids_folded(tm
             "trace-event-dossier",
             "Router",
             "router",
-            "deepseek-v4-flash",
+            "deepseek-flash",
             now + 0.01,
         ),
     )
@@ -288,7 +288,7 @@ async def test_event_dossier_is_human_readable_and_keeps_technical_ids_folded(tm
             top_k, similarity_threshold, filter_json, attempts_json,
             references_json, raw_hit_count, selected_count, started_at,
             completed_at, latency_ms
-        ) VALUES (?, 1, ?, ?, ?, ?, 'MemoryOps', ?, ?, 'chroma', 'knowledge',
+        ) VALUES (?, 1, ?, ?, ?, ?, 'MemoryOps', ?, ?, 'pgvector', 'knowledge',
             'SUCCEEDED', 5, 0.6, '{}', '[]', ?, 1, 1, ?, ?, 120)
         """,
         (
@@ -363,17 +363,13 @@ async def test_event_dossier_is_human_readable_and_keeps_technical_ids_folded(tm
         "任务已完成",
         "受控动作待审批",
     ]
-    journey_types = [
-        entry["technical"]["activity_type"]
-        for entry in dossier["journey_timeline"]
-    ]
+    journey_types = [entry["technical"]["activity_type"] for entry in dossier["journey_timeline"]]
     assert "MESSAGE_RECEIVED" in journey_types
     assert journey_types.count("AGENT_STEP") == 4
     assert "MODEL_CALL_COMPLETED" in journey_types
     assert "KNOWLEDGE_RETRIEVED" in journey_types
     assert any(
-        entry["label"] == "DeepSeek 推理已完成"
-        and "deepseek-v4-flash" in entry["summary"]
+        entry["label"] == "DeepSeek 推理已完成" and "deepseek-flash" in entry["summary"]
         for entry in dossier["journey_timeline"]
     )
     assert dossier["technical"]["event_id"] == event_id
@@ -513,7 +509,7 @@ async def test_event_dossier_includes_persisted_watcher_and_experience_candidate
                 principal["venue_id"],
                 event_id,
                 "trace-watcher-event-dossier",
-                "deepseek-v4-flash",
+                "deepseek-flash",
                 "证据完整，可闭环",
                 json.dumps(
                     {
@@ -560,7 +556,7 @@ async def test_event_dossier_includes_persisted_watcher_and_experience_candidate
                 extraction_status, extraction_model, retryable,
                 attempt_count, created_by, created_at, updated_at, generated_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'DRAFT',
-                'NOT_INDEXED', 'SUCCEEDED', 'deepseek-v4-flash', ?, 1, ?, ?, ?, ?)
+                'NOT_INDEXED', 'SUCCEEDED', 'deepseek-flash', ?, 1, ?, ?, ?, ?)
             """,
             (
                 "candidate-event-dossier",
@@ -593,7 +589,7 @@ async def test_event_dossier_includes_persisted_watcher_and_experience_candidate
     assert detail.status_code == 200, detail.text
     dossier = detail.json()["dossier"]
     assert dossier["watcher_runs"][0]["summary"] == "证据完整，可闭环"
-    assert dossier["watcher_runs"][0]["model_name"] == "deepseek-v4-flash"
+    assert dossier["watcher_runs"][0]["model_name"] == "deepseek-flash"
     assert dossier["watcher_runs"][0]["target_snapshot"]["schema_version"] == 1
     candidate = dossier["experience_candidates"][0]
     assert candidate["business_id"] == "JY-20260730-RAIN"
@@ -604,4 +600,149 @@ async def test_event_dossier_includes_persisted_watcher_and_experience_candidate
     assert candidate["source_interview_business_id"] == "FT-20260730-RAIN"
     assert candidate["interview_status"] == "INVITED"
     assert "event_snapshot_json" not in candidate
+    await database.close()
+
+
+@pytest.mark.asyncio
+async def test_event_dossier_reads_agent_model_calls_without_message_source(tmp_path):
+    database = AsyncDBClient(tmp_path / "event-dossier-agent.db")
+    await init_database(database)
+    now = time.time()
+    await database.execute(
+        """
+        INSERT INTO venues (id, name, status, created_at, updated_at)
+        VALUES (?, ?, 'ACTIVE', ?, ?)
+        """,
+        ("venue-agent", "Agent 测试景区", now, now),
+    )
+    event_id = await save_confirmed_event(
+        push_id="manual",
+        from_user="scenic-simulation-ops",
+        raw_text="雨后 12 号观光车右后轮异常",
+        event_type="设备安全",
+        severity="P1",
+        context_trigger_data={"source": "ticket-08"},
+        source_type="SCENIC_ALERT",
+        venue_id="venue-agent",
+        trace_id="a" * 32,
+        database=database,
+        vector_client=VectorStoreStub(),
+    )
+    trace_id = "b" * 32
+    await append_event_activity(
+        database,
+        venue_id="venue-agent",
+        event_id=event_id,
+        activity_type="ADVICE_READY",
+        trace_id=trace_id,
+        payload={"summary": "继续停运并检查右后轮。"},
+        idempotency_key="advice-ready-ticket-08",
+    )
+    await database.execute(
+        """
+        INSERT INTO llm_call_logs (
+            id, venue_id, trace_id, agent_id, agent_name, provider, model_name,
+            status, attempt_count, latency_seconds, prompt_tokens,
+            completion_tokens, total_tokens, request_id, is_mock, created_at
+        ) VALUES (?, ?, ?, 'MemoryOps', 'MemoryOps', 'deepseek', 'deepseek-flash',
+                  'SUCCEEDED', 1, 1.25, 120, 30, 150, 'request-1', 0, ?)
+        """,
+        ("call-ticket-08", "venue-agent", trace_id, now),
+    )
+
+    event = await database.fetch_one(
+        "SELECT * FROM confirmed_events WHERE event_id = ?",
+        (event_id,),
+    )
+    dossier = await build_event_dossier(database, event=event, venue_id="venue-agent")
+
+    assert dossier["model_calls"] == [
+        {
+            "model_call_id": "call-ticket-08",
+            "trace_id": trace_id,
+            "agent_id": "MemoryOps",
+            "agent_name": "MemoryOps",
+            "provider": "deepseek",
+            "model_name": "deepseek-flash",
+            "status": "SUCCEEDED",
+            "attempt_count": 1,
+            "latency_seconds": 1.25,
+            "prompt_tokens": 120,
+            "completion_tokens": 30,
+            "total_tokens": 150,
+            "request_id": "request-1",
+            "error_message": None,
+            "is_mock": False,
+            "created_at": now,
+        }
+    ]
+    assert any(
+        entry["technical"]["activity_type"] == "MODEL_CALL_COMPLETED"
+        and entry["technical"]["model_call_id"] == "call-ticket-08"
+        for entry in dossier["journey_timeline"]
+    )
+    await database.close()
+
+
+@pytest.mark.asyncio
+async def test_same_millisecond_event_activities_keep_append_order(tmp_path):
+    database = AsyncDBClient(tmp_path / "event-activity-order.db")
+    await init_database(database)
+    now = time.time()
+    await database.execute(
+        """
+        INSERT INTO venues (id, name, status, created_at, updated_at)
+        VALUES (?, ?, 'ACTIVE', ?, ?)
+        """,
+        ("venue-order", "\u6392\u5e8f\u666f\u533a", now, now),
+    )
+    event_id = await save_confirmed_event(
+        push_id="manual",
+        from_user="scenic-simulation-ops",
+        raw_text="\u4efb\u52a1\u540c\u4e00\u6beb\u79d2\u963b\u585e\u5e76\u89e3\u9664",
+        event_type="\u8bbe\u5907\u5b89\u5168",
+        severity="P2",
+        context_trigger_data={"source": "ordering-regression"},
+        source_type="SCENIC_ALERT",
+        venue_id="venue-order",
+        trace_id="c" * 32,
+        database=database,
+        vector_client=VectorStoreStub(),
+    )
+    frozen = now + 5
+    blocked = await append_event_activity(
+        database,
+        venue_id="venue-order",
+        event_id=event_id,
+        activity_type="TASK_BLOCKED",
+        trace_id="d" * 32,
+        payload={"summary": "\u73b0\u573a\u963b\u788d"},
+        idempotency_key="order-blocked",
+        created_at=frozen,
+    )
+    unblocked = await append_event_activity(
+        database,
+        venue_id="venue-order",
+        event_id=event_id,
+        activity_type="TASK_UNBLOCKED",
+        trace_id="e" * 32,
+        payload={"summary": "\u963b\u788d\u5df2\u89e3\u9664"},
+        idempotency_key="order-unblocked",
+        created_at=frozen,
+    )
+
+    assert unblocked["created_at"] > blocked["created_at"]
+
+    event = await database.fetch_one(
+        "SELECT * FROM confirmed_events WHERE event_id = ?",
+        (event_id,),
+    )
+    dossier = await build_event_dossier(database, event=event, venue_id="venue-order")
+    ordered = [
+        entry["technical"]["activity_type"]
+        for entry in dossier["timeline"]
+        if entry["technical"]["activity_type"]
+        in {"TASK_BLOCKED", "TASK_UNBLOCKED"}
+    ]
+    assert ordered == ["TASK_BLOCKED", "TASK_UNBLOCKED"]
     await database.close()

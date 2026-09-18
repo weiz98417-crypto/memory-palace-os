@@ -54,7 +54,7 @@ class SystemSettings(BaseModel):
 
 class LLMSettings(BaseModel):
     """LLM 配置"""
-    default_model: str = Field(default="deepseek-v4-flash", description="默认模型")
+    default_model: str = Field(default="deepseek-flash", description="默认模型")
     timeout: float = Field(default=30.0, ge=1.0, le=300.0, description="超时时间(秒)")
     max_retries: int = Field(default=3, ge=0, le=10, description="最大重试次数")
     base_url: str = Field(
@@ -160,7 +160,7 @@ class SecuritySettings(BaseModel):
 class AppSettings(BaseModel):
     """应用全局配置 (强类型)"""
 
-    EMBED_MODEL: str = Field(default="text-embedding-3-small", description="Embedding 模型")
+    EMBED_MODEL: str = Field(default="BAAI/bge-m3", description="Embedding 模型（本地，1024 维）")
     system: SystemSettings = Field(default_factory=SystemSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
     storage: StorageSettings = Field(default_factory=StorageSettings)
@@ -199,7 +199,7 @@ class SettingsSync:
                 data_dir=c.get("system.data_dir", "./data"),
             ),
             llm=LLMSettings(
-                default_model=c.get("llm.default_model", "deepseek-v4-flash"),
+                default_model=c.get("llm.default_model", "deepseek-flash"),
                 timeout=c.get("llm.timeout", 30.0),
                 max_retries=c.get("llm.max_retries", 3),
                 base_url=c.get("llm.base_url", "https://api.deepseek.com/v1"),

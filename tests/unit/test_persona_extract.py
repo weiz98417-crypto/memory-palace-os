@@ -38,7 +38,7 @@ class TestPersonaExtractSkill:
         """技能可正常实例化"""
         skill = PersonaExtractSkill()
         assert skill.config["agent_metadata"]["name"] == "PersonaExtract_Skill"
-        assert skill.config["llm_config"]["model"] == "deepseek-v4-flash"
+        assert skill.config["llm_config"]["model"] == "deepseek-flash"
 
     # =========================================================================
     # 10.2 入参校验

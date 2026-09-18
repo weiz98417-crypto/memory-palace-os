@@ -110,7 +110,7 @@ class ScenarioController:
                 ),
                 CapabilitySnapshot(
                     id="enterprise-data",
-                    label="PostgreSQL / Redis / ChromaDB",
+                    label="PostgreSQL / Redis / pgvector",
                     claim_level=ClaimLevel.OPTIONAL_CONNECTION,
                     status=CapabilityState.NOT_CONFIGURED,
                     detail="已有连接代码，但不进入默认演示关键路径。",

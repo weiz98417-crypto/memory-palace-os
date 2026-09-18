@@ -62,6 +62,8 @@ assert secrets.ADMIN_PASSWORD == "dotenv-admin-password"
         env=process_env,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
 
@@ -92,7 +94,7 @@ def load_test_environment(*args, **kwargs):
             "DATABASE_URL": "postgresql://bootstrap-user@localhost:5432/bootstrap-db",
             "REDIS_URL": "redis://localhost:6379/8",
             "DEEPSEEK_API_KEY": "sk-bootstrap-test-secret",
-            "LLM_DEFAULT_MODEL": "deepseek-v4-flash",
+            "LLM_DEFAULT_MODEL": "deepseek-flash",
             "MEMORY_PALACE_JWT_SECRET": "bootstrap-jwt-secret-with-at-least-32-characters",
             "ADMIN_PASSWORD": "bootstrap-admin-password",
         }
@@ -117,6 +119,8 @@ assert secrets.ADMIN_PASSWORD == "bootstrap-admin-password"
         env=os.environ.copy(),
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
 

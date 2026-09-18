@@ -17,7 +17,7 @@ from src.memory_palace.core.skill_base import SkillOutput
 class TestAppContainer:
 
     def test_container_import_has_no_side_effects(self):
-        """Container 导入不触发 ChromaDB/LLM 初始化"""
+        """Container 导入不触发向量后端/LLM 初始化"""
         c = AppContainer()
         assert c._instances == {}
         assert c._overrides == {}

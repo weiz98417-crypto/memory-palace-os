@@ -43,7 +43,7 @@ def _evidence_source_excerpts(evidence: Mapping[str, Any]) -> list[str]:
 class DeepSeekExperienceDraftExtractor:
     """Turn persisted interview evidence into one validated experience-card draft."""
 
-    model_name = "deepseek-v4-flash"
+    model_name = "deepseek-flash"
     agent_name = "PersonaExtract"
 
     def __init__(self, llm_client: Any):

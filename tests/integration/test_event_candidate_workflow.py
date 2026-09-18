@@ -31,7 +31,7 @@ async def test_event_close_keeps_closed_state_when_candidate_generation_is_retry
             "retryable": True,
             "extraction": {
                 "status": "FAILED",
-                "model": "deepseek-v4-flash",
+                "model": "deepseek-flash",
                 "trace_id": "trace-candidate-failed",
                 "attempt_count": 1,
                 "error": "DeepSeek 经验候选萃取失败",
@@ -109,7 +109,7 @@ async def test_event_candidate_retry_enforces_roles_and_tenant_scope(
             "retryable": False,
             "extraction": {
                 "status": "SUCCEEDED",
-                "model": "deepseek-v4-flash",
+                "model": "deepseek-flash",
                 "trace_id": "trace-candidate-created",
                 "attempt_count": 1,
                 "error": None,

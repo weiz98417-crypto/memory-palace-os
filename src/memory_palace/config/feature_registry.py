@@ -95,7 +95,7 @@ FEATURE_REQUIREMENTS: dict[str, tuple[Requirement, ...]] = {
     "MVP-BIZ-004": (
         ("fact", "events.total", "历史事件已持久化"),
         ("audit", "EVENT_CREATED", "事件补录成功审计"),
-        ("runtime", "chromadb", "向量库健康"),
+        ("runtime", "pgvector", "向量库健康"),
     ),
     "MVP-BIZ-005": (
         ("fact", "events.total", "事件列表与详情存在真实数据"),
@@ -141,7 +141,7 @@ FEATURE_REQUIREMENTS: dict[str, tuple[Requirement, ...]] = {
         ("fact", "knowledge.total", "知识条目已持久化"),
         ("audit", "KNOWLEDGE_CREATED", "知识创建审计"),
         ("audit", "KNOWLEDGE_UPDATED", "知识编辑审计"),
-        ("runtime", "chromadb", "语义检索向量库健康"),
+        ("runtime", "pgvector", "语义检索向量库健康"),
     ),
     "MVP-BIZ-012": (
         ("fact", "knowledge.total", "知识资产已持久化"),
@@ -231,15 +231,15 @@ FEATURE_REQUIREMENTS: dict[str, tuple[Requirement, ...]] = {
         ("runtime", "queue", "Redis Streams 健康"),
         ("audit", "DEAD_LETTER_RETRIED", "死信恢复审计"),
     ),
-    "MVP-PLATFORM-CHROMA": (
-        ("runtime", "chromadb", "ChromaDB 健康"),
+    "MVP-PLATFORM-PGVECTOR": (
+        ("runtime", "pgvector", "PostgreSQL pgvector 与 bge-m3 健康"),
         ("fact", "knowledge.total", "向量知识资产已持久化"),
         ("audit", "KNOWLEDGE_INDEX_REBUILT", "索引重建审计"),
     ),
     "MVP-PLATFORM-HEALTH": (
         ("runtime", "database", "数据库健康"),
         ("runtime", "queue", "消息队列健康"),
-        ("runtime", "chromadb", "向量库健康"),
+        ("runtime", "pgvector", "向量库健康"),
         ("runtime", "scheduler", "调度器健康"),
         ("fact", "runtime_recovery_runs.succeeded", "App 启动恢复结果已持久化"),
         ("audit", "CONFIG_RELOADED", "配置重载审计"),

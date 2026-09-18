@@ -433,12 +433,12 @@ async def update_setting(
 
 
 async def _integration_status_rows(venue_id: str, db) -> list[dict[str, Any]]:
-    model_name = os.environ.get("LLM_DEFAULT_MODEL", "deepseek-v4-flash")
+    model_name = os.environ.get("LLM_DEFAULT_MODEL", "deepseek-flash")
     deepseek_missing = []
     if not read_secret("DEEPSEEK_API_KEY"):
         deepseek_missing.append("DEEPSEEK_API_KEY")
-    if model_name != "deepseek-v4-flash":
-        deepseek_missing.append("LLM_DEFAULT_MODEL=deepseek-v4-flash")
+    if model_name != "deepseek-flash":
+        deepseek_missing.append("LLM_DEFAULT_MODEL=deepseek-flash")
     deepseek_configured = not deepseek_missing
     deepseek_evidence = None
     if deepseek_configured and db is not None:
@@ -448,7 +448,7 @@ async def _integration_status_rows(venue_id: str, db) -> list[dict[str, Any]]:
             FROM llm_call_logs
             WHERE venue_id = ?
               AND provider = 'deepseek'
-              AND model_name = 'deepseek-v4-flash'
+              AND model_name = 'deepseek-flash'
               AND status = 'SUCCEEDED'
               AND NOT COALESCE(is_mock, FALSE)
             ORDER BY created_at DESC
@@ -693,7 +693,7 @@ async def _collect_registry_evidence(request: Request, db, venue_id: str) -> dic
         "runtime": {
             "database": "unhealthy",
             "queue": "unhealthy",
-            "chromadb": "unhealthy",
+            "pgvector": "unhealthy",
             "scheduler": "unhealthy",
         },
         "integrations": {},
@@ -796,9 +796,9 @@ async def _collect_registry_evidence(request: Request, db, venue_id: str) -> dic
     vector_store = getattr(request.app.state, "vector_store", None)
     if vector_store is not None and hasattr(vector_store, "health"):
         try:
-            evidence["runtime"]["chromadb"] = vector_store.health().get("status", "unhealthy")
+            evidence["runtime"]["pgvector"] = vector_store.health().get("status", "unhealthy")
         except Exception as exc:
-            evidence["collection_errors"].append({"source": "chromadb", "error_type": type(exc).__name__})
+            evidence["collection_errors"].append({"source": "pgvector", "error_type": type(exc).__name__})
 
     scheduler = getattr(request.app.state, "scheduler", None)
     if scheduler is not None:
@@ -819,7 +819,7 @@ async def _collect_registry_evidence(request: Request, db, venue_id: str) -> dic
             FROM llm_call_logs
             WHERE venue_id = ?
               AND provider = 'deepseek'
-              AND model_name = 'deepseek-v4-flash'
+              AND model_name = 'deepseek-flash'
               AND status = 'SUCCEEDED'
               AND NOT COALESCE(is_mock, FALSE)
             ORDER BY created_at DESC

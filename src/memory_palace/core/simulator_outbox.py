@@ -339,8 +339,17 @@ def _approval_item(
     }
 
 
-def _orphan_push_item(session_id: str, push: dict[str, Any]) -> dict[str, Any]:
+def _orphan_push_item(
+    session_id: str,
+    push: dict[str, Any],
+    receipt: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     status, status_summary = _push_status(push)
+    receipt_status = str((receipt or {}).get("status") or "DELIVERED").upper()
+    if receipt_status == "ACKNOWLEDGED":
+        status, status_summary = "EXECUTING", "员工已接单，现场处置中"
+    elif receipt_status == "RECEIPT_RECORDED":
+        status, status_summary = "SUCCEEDED", "员工现场回执已记录"
     pushed_at = float(push.get("pushed_at") or 0)
     return {
         "id": f"push:{push['push_id']}",
@@ -350,7 +359,8 @@ def _orphan_push_item(session_id: str, push: dict[str, Any]) -> dict[str, Any]:
         "business_id": None,
         "push_id": str(push["push_id"]),
         "event_id": None,
-        "task_id": None,
+        "incident_id": (receipt or {}).get("incident_id"),
+        "task_id": (receipt or {}).get("task_id"),
         "tool_name": None,
         "tool_label": str(push.get("event_type") or "出站通知"),
         "message": _public_text(push.get("raw_text")) or "未填写通知内容",
@@ -359,6 +369,8 @@ def _orphan_push_item(session_id: str, push: dict[str, Any]) -> dict[str, Any]:
         "approval_status": None,
         "execution_status": None,
         "delivery_status": str(push.get("delivery_status") or "RECORDED").upper(),
+        "receipt_status": receipt_status,
+        "receipt_result": _json_object((receipt or {}).get("result_json")),
         "review_comment": None,
         "execution_error": None,
         "delivery_error": public_error_message(
@@ -367,7 +379,7 @@ def _orphan_push_item(session_id: str, push: dict[str, Any]) -> dict[str, Any]:
         ),
         "trace_id": push.get("trace_id"),
         "created_at": pushed_at,
-        "updated_at": pushed_at,
+        "updated_at": max(pushed_at, float((receipt or {}).get("updated_at") or 0)),
     }
 
 
@@ -386,6 +398,15 @@ async def load_simulator_outbox(
         """,
         (venue_id, f"session:{session_id}"),
     )
+    receipt_rows = await database.fetch_all(
+        """
+        SELECT * FROM scenic_notification_receipts
+        WHERE venue_id = ? AND session_id = ?
+        ORDER BY delivered_at, id
+        """,
+        (venue_id, session_id),
+    )
+    receipts_by_push = {str(row["push_id"]): row for row in receipt_rows}
     simulator_pushes = [
         push
         for push in pushes
@@ -470,5 +491,12 @@ async def load_simulator_outbox(
         )
         for approval in approvals
     ]
-    items.extend(_orphan_push_item(session_id, push) for push in orphan_pushes)
+    items.extend(
+        _orphan_push_item(
+            session_id,
+            push,
+            receipts_by_push.get(str(push["push_id"])),
+        )
+        for push in orphan_pushes
+    )
     return sorted(items, key=lambda item: (item["created_at"], item["id"]))

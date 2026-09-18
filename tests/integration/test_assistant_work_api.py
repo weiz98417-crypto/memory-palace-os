@@ -860,7 +860,13 @@ async def test_employee_can_start_and_complete_own_task_with_readable_result(
         completed = await client.post(
             f"/api/v1/assistant/work/tasks/{task_id}/complete",
             headers=employee_headers,
-            json={"summary": "西门闸机、消防通道和应急照明均已复核，无异常。"},
+            json={
+                "summary": "西门闸机、消防通道和应急照明均已复核，无异常。",
+                "result": {
+                    "inspection_items": ["西门闸机", "消防通道", "应急照明"],
+                    "risk_status": "CLEAR",
+                },
+            },
         )
         detail = await client.get(
             f"/api/v1/assistant/work/tasks/{task_id}",
@@ -872,7 +878,9 @@ async def test_employee_can_start_and_complete_own_task_with_readable_result(
     assert completed.status_code == 200, completed.text
     assert completed.json()["task"]["status"] == "DONE"
     assert completed.json()["task"]["result"] == {
-        "summary": "西门闸机、消防通道和应急照明均已复核，无异常。"
+        "summary": "西门闸机、消防通道和应急照明均已复核，无异常。",
+        "inspection_items": ["西门闸机", "消防通道", "应急照明"],
+        "risk_status": "CLEAR",
     }
     assert detail.status_code == 200, detail.text
     assert detail.json()["task"]["result"] == completed.json()["task"]["result"]

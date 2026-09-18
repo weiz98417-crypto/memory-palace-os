@@ -11,6 +11,7 @@ from src.memory_palace.core.permissions import PermissionEngine
 from src.memory_palace.core.task_graph import TaskGraph
 from src.memory_palace.knowledge.db_init import init_database
 from src.memory_palace.knowledge.postgres_client import PostgresDBClient
+from src.memory_palace.knowledge.vector_schema import verify_vector_schema
 from src.memory_palace.skills.persona_extract.skill import PersonaExtractSkill
 
 
@@ -27,6 +28,9 @@ async def main() -> None:
 
     try:
         await init_database(db)
+        vector_schema = await verify_vector_schema(db)
+        if vector_schema["dimension"] != 1024 or vector_schema["status"] != "READY":
+            raise RuntimeError("pgvector 1024-dimensional index verification failed")
         llm_log_columns = await db.fetch_one(
             """
             SELECT COUNT(*) AS count
@@ -99,7 +103,10 @@ async def main() -> None:
         if recovered_interview is None or recovered_interview["current_question"] != 1:
             raise RuntimeError("Persona interview recovery verification failed")
 
-        print("PostgreSQL runtime recovery verified: schema, task, approval, persona interview, tenant scope")
+        print(
+            "PostgreSQL runtime recovery verified: pgvector 1024 dimensions, "
+            "task, approval, persona interview, tenant scope"
+        )
     finally:
         if interview_id:
             await db.execute("DELETE FROM persona_interviews WHERE id = ?", (interview_id,))

@@ -68,9 +68,12 @@ class AppContainer:
                 EvidenceBackedKnowledgeRetriever,
             )
 
+            from src.memory_palace.knowledge.reranking import build_reranker_backend
+
             self._instances["knowledge_retriever"] = EvidenceBackedKnowledgeRetriever(
                 database=self.db_client,
                 vector_store=self.vector_store,
+                reranker=build_reranker_backend(),
             )
         return self._instances["knowledge_retriever"]
 
