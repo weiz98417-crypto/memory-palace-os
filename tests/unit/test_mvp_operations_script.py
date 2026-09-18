@@ -29,6 +29,8 @@ def run_mvp_script(*arguments: str) -> subprocess.CompletedProcess[str]:
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
 
@@ -211,22 +213,19 @@ def test_restore_rejects_tampered_artifact_checksum(tmp_path):
     backup_directory = tmp_path / backup_id
     backup_directory.mkdir()
     (backup_directory / "postgres.dump").write_bytes(b"not-a-real-dump")
-    (backup_directory / "chroma-data.tar.gz").write_bytes(b"not-a-real-archive")
-    (backup_directory / "embedding-cache.tar.gz").write_bytes(b"not-a-real-cache")
     (backup_directory / "manifest.json").write_text(
         json.dumps(
             {
-                "schema_version": "memory-palace-mvp-backup/v2",
+                "schema_version": "memory-palace-mvp-backup/v3",
                 "backup_id": backup_id,
                 "source": {
                     "compose_project": "memory-palace-mvp",
                     "compose_file_sha256": "0" * 64,
                 },
                 "artifacts": {
-                    "postgres": {"file": "postgres.dump", "sha256": "0" * 64},
-                    "chroma": {"file": "chroma-data.tar.gz", "sha256": "0" * 64},
-                    "embedding_cache": {
-                        "file": "embedding-cache.tar.gz",
+                    "postgres": {
+                        "file": "postgres.dump",
+                        "bytes": len(b"not-a-real-dump"),
                         "sha256": "0" * 64,
                     },
                 },
@@ -255,16 +254,15 @@ def test_restore_rejects_tampered_artifact_checksum(tmp_path):
     assert "checksum mismatch" in f"{result.stdout}\n{result.stderr}"
 
 
-def test_backup_v2_contract_covers_embedding_cache_and_safe_restore():
+def test_backup_v3_contract_covers_postgres_pgvector_and_safe_restore():
     source = SCRIPT_PATH.read_text(encoding="utf-8")
 
-    assert '$ManifestSchema = "memory-palace-mvp-backup/v2"' in source
-    assert '$EmbeddingArtifactName = "embedding-cache.tar.gz"' in source
-    assert 'Get-ProjectVolume -ComposeProject $Project -Volume "embedding-cache"' in source
-    assert 'New-ProjectVolume -ComposeProject $TargetProject -Volume "embedding-cache"' in source
-    assert 'foreach ($volume in @("pg-data", "chroma-data", "embedding-cache"))' in source
-    assert '"tar", "-tvzf", "/backup/$ArtifactName"' in source
-    assert '"--no-same-permissions"' in source
+    assert '$ManifestSchema = "memory-palace-mvp-backup/v3"' in source
+    assert 'Name = "PostgreSQL + pgvector"' in source
+    assert 'artifacts = [ordered]@{' in source
+    assert 'postgres = [ordered]@{' in source
+    assert 'chroma-data.tar.gz' not in source
+    assert 'embedding-cache.tar.gz' not in source
 
 
 def test_restore_forces_explicit_isolated_secrets_volume_into_compose():
@@ -321,7 +319,7 @@ def test_start_and_migrate_use_idempotent_formal_postgres_initialization():
         source.index("function Invoke-PostgresMigration") : source.index("function Invoke-Start")
     ]
 
-    assert start_source.index('@("up", "-d", "postgres", "redis", "chromadb")') < start_source.index(
+    assert start_source.index('@("up", "-d", "postgres", "redis")') < start_source.index(
         "Invoke-PostgresMigration"
     )
     assert start_source.index("Invoke-PostgresMigration") < start_source.index(
@@ -388,7 +386,7 @@ def test_restart_app_is_fixed_scope_and_proves_runtime_change():
     assert '@("restart", "app")' in restart_source
     assert "Get-ServiceRuntimeIdentity" in restart_source
     assert 'Wait-ServiceReady -ComposeProject $context.Project -Service "app"' in restart_source
-    assert 'foreach ($service in @("postgres", "redis", "chromadb", "nginx"))' in restart_source
+    assert 'foreach ($service in @("postgres", "redis", "nginx"))' in restart_source
     assert "App runtime identity did not change" in restart_source
     assert "Non-App service changed during restart-app" in restart_source
     assert '"down"' not in restart_source
@@ -405,7 +403,7 @@ def test_upgrade_is_backup_first_and_emits_non_destructive_recovery_command():
     ]
 
     assert upgrade_source.index("Invoke-Backup") < upgrade_source.index(
-        '@("pull", "postgres", "redis", "chromadb", "nginx")'
+        '@("pull", "postgres", "redis", "nginx")'
     )
     assert upgrade_source.index('@("build", "app")') < upgrade_source.index("Invoke-PostgresMigration")
     assert upgrade_source.index("Invoke-PostgresMigration") < upgrade_source.index('"--force-recreate", "app"')

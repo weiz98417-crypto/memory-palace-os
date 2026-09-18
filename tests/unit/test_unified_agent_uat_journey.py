@@ -95,7 +95,7 @@ async def test_e2e_00_records_sanitized_live_runtime_evidence(tmp_path) -> None:
                 json={
                     "status": "READY",
                     "provider": "deepseek",
-                    "model": "deepseek-v4-flash",
+                    "model": "deepseek-flash",
                     "is_mock": False,
                     "request_id": "deepseek-request-1",
                     "trace_id": "trace-e2e-00",
@@ -109,7 +109,7 @@ async def test_e2e_00_records_sanitized_live_runtime_evidence(tmp_path) -> None:
                 json={
                     "status": "healthy",
                     "runtime": {
-                        name: {"status": "healthy"} for name in ("app", "postgresql", "redis", "chromadb", "worker")
+                        name: {"status": "healthy"} for name in ("app", "postgresql", "redis", "pgvector", "worker")
                     },
                     "agents": [
                         {"id": name, "registered": True, "status": "REGISTERED_UNVERIFIED"}
@@ -134,7 +134,7 @@ async def test_e2e_00_records_sanitized_live_runtime_evidence(tmp_path) -> None:
                     "deepseek": {
                         "status": "READY",
                         "provider": "deepseek",
-                        "model": "deepseek-v4-flash",
+                        "model": "deepseek-flash",
                         "configured": True,
                         "mock_enabled": False,
                         "live_verified": True,
@@ -170,7 +170,7 @@ async def test_e2e_00_records_sanitized_live_runtime_evidence(tmp_path) -> None:
                             "trace_id": "trace-e2e-00",
                             "agent_id": "RuntimeDiagnostics",
                             "provider": "deepseek",
-                            "model_name": "deepseek-v4-flash",
+                            "model_name": "deepseek-flash",
                             "status": "SUCCEEDED",
                             "request_id": "deepseek-request-1",
                             "is_mock": False,
@@ -222,7 +222,7 @@ async def test_e2e_00_records_sanitized_live_runtime_evidence(tmp_path) -> None:
     assert step["model_calls"] == [
         {
             "provider": "deepseek",
-            "model": "deepseek-v4-flash",
+            "model": "deepseek-flash",
             "is_mock": False,
             "request_id": "deepseek-request-1",
             "trace_id": "trace-e2e-00",

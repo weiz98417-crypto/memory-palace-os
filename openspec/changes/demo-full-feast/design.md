@@ -1,5 +1,8 @@
 ## Context
 
+> **Status: superseded (历史快照)** — 本变更记录当时使用的向量后端描述已被 ADR-0007（PostgreSQL pgvector 为唯一向量后端）取代，不再代表当前实现。
+
+
 CEO Plan `2026-07-24-demo-full-feast.md` 已通过 3 轮 spec review（7/10，Scope + Feasibility PASS）。本 design 引用其中的架构决策，聚焦实现细节。
 
 现有基础设施：`demo_router`（gateway.py）、`_demo_results` 内存缓存、`demo_console.html`（5 标签页）、`MESSAGE_QUEUE`、`task_graph` 单例、`incident_logs`/`push_logs` 表、PersonaExtractSkill 内部 `_start_interview`/`_continue_interview`/`_finalize_persona` 方法。

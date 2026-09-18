@@ -72,7 +72,7 @@
 - `send_p0_critical(phones, event_desc)`: 触发 **短信 + 语音电话** 强制唤醒值班经理。
 
 ### 4.3 Vector Store (RAG 检索)
-- `query_experience(text, top_k=3, threshold=0.75)`: 从 ChromaDB 召回历史案例。
+- `query_experience(text, top_k=3, threshold=0.75)`: 从 PostgreSQL pgvector 召回已发布历史案例（1024 维，TEI bge-m3 嵌入）。
 
 ---
 

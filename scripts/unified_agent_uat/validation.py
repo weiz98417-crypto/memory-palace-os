@@ -14,7 +14,7 @@ import yaml
 _REQUIRED_DIRECTORIES = ("api", "artifacts", "failures", "logs", "screenshots", "steps", "traces")
 _REQUIRED_FILES = (
     "browser-console.json",
-    "chroma-retrieval.json",
+    "pgvector-retrieval.json",
     "db-assertions.json",
     "evidence-validation.json",
     "execution-report.md",
@@ -24,8 +24,8 @@ _REQUIRED_FILES = (
 _EXPECTED_ARCHITECTURE = {
     "business_data": "PostgreSQL",
     "queue": "Redis Streams",
-    "vector_store": "ChromaDB",
-    "generative_model": "deepseek-v4-flash",
+    "vector_store": "PostgreSQL pgvector",
+    "generative_model": "deepseek-flash",
 }
 _SENSITIVE_KEYS = {
     "access_token",
@@ -176,7 +176,7 @@ def _validate_step(run_path: Path, run_id: str, entry: Any, errors: list[str]) -
             if not isinstance(call, dict):
                 errors.append(f"step {step_id} model call must be an object")
                 continue
-            if call.get("model") != "deepseek-v4-flash" or call.get("is_mock") is not False:
+            if call.get("model") != "deepseek-flash" or call.get("is_mock") is not False:
                 errors.append(f"step {step_id} contains a mock or unsupported model call")
 
     artifacts = result.get("artifacts", [])

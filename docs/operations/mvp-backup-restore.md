@@ -23,8 +23,8 @@ scripts\mvp.cmd doctor -Project memory-palace-mvp
 `status` 输出 Docker Engine、Compose、容器、镜像和健康状态。`doctor` 额外检查：
 
 - 每个正式服务是否恰好有一个容器；
-- PostgreSQL、Redis 和 ChromaDB 的实时探针；
-- `pg-data`、`chroma-data` 与 `embedding-cache` 卷；
+- PostgreSQL、Redis 与 Nginx 的实时探针；
+- `pg-data`、`redis-data`、`attachment-data` 与 `workspaces-data` 卷；
 - 备份磁盘至少有 1 GiB 可用空间。
 
 任何阻断检查失败时，`doctor` 返回非零退出码。
@@ -36,17 +36,16 @@ scripts\mvp.cmd backup -Project memory-palace-mvp
 scripts\mvp.cmd backup -Project memory-palace-mvp -BackupRoot D:\MVP-Backups
 ```
 
-备份为保证 PostgreSQL 与 Chroma 数据一致，会短暂停止属于该 project 的所有运行中
-App 容器和 ChromaDB；PostgreSQL 保持运行并执行一致性 `pg_dump`。完成或失败后，脚本
-会恢复此前运行的容器。
+备份在同一事务边界内完成 PostgreSQL 逻辑备份：短暂停止属于该 project 的运行中 App 容器，
+PostgreSQL 保持运行并执行一致性 `pg_dump`；完成或失败后脚本恢复此前运行的容器。
 
 每个备份目录包含：
 
 | 文件 | 内容 |
 |---|---|
 | `postgres.dump` | PostgreSQL custom-format 逻辑备份 |
-| `chroma-data.tar.gz` | 完整 Chroma 持久卷，包括向量、索引和元数据 |
-| `embedding-cache.tar.gz` | Chroma 默认 Embedding 模型缓存，保证隔离恢复后无需联网下载模型即可检索 |
+| `attachment-data.tar.gz` | 现场附件与证据文件卷 |
+| `workspaces-data.tar.gz` | Agent 工作区与运行中间产物卷 |
 | `manifest.json` | schema、来源 project、Git 状态、Compose 哈希、Docker/镜像版本、文件大小和 SHA-256 |
 
 脚本先写入同级 `.partial` 目录，所有文件和校验完成后才原子重命名为最终 Backup ID。
@@ -86,7 +85,7 @@ scripts\mvp.cmd restore `
 向外发送 LLM 请求或修改来源栈 Secret 卷。若要把恢复栈提升为可调用 LLM 的独立环境，应在恢复
 验收后按变更流程为该目标卷注入目标环境自己的 Key 并重新创建 App，不能改回来源卷。
 
-默认只启动 PostgreSQL、Redis 和 ChromaDB，避免恢复出的未完成任务使用真实渠道产生
+默认只启动 PostgreSQL 与 Redis，避免恢复出的未完成任务使用真实渠道产生
 外部动作。确认恢复环境使用测试凭据后，可以显式启动完整栈：
 
 ```powershell
@@ -126,7 +125,7 @@ scripts\mvp.cmd restore `
 1. 使用新的 Compose project 和独立 HTTP 端口恢复。
 2. 使用 `status` 检查数据服务健康。
 3. 使用只读 SQL 核对场馆、会话、任务、审批和知识记录数量。
-4. 启动完整栈后验证 Chroma 检索、登录和事件查询；首次向量检索应直接命中已恢复的
+4. 启动完整栈后验证 pgvector 检索、登录和事件查询；首次向量检索应直接命中已恢复的
    `embedding-cache`，不得触发在线模型下载。
 5. 完整栈启动后执行 `doctor`，保存输出和 `manifest.json` 作为恢复证据。默认仅恢复数据服务时，
    App 与 Nginx 按设计保持停止，此时不要把完整 `doctor` 的服务检查当作失败证据。

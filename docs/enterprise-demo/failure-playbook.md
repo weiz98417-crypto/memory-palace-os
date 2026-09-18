@@ -31,7 +31,7 @@ scripts\demo.cmd start
 
 ## Verify 测试容器不退出
 
-当前实现会在 pytest 会话结束时关闭 SQLite、Chroma 和通知线程池。若再次发生：
+当前实现会在 pytest 会话结束时关闭 SQLite、向量连接和通知线程池。若再次发生：
 
 1. 用 `docker ps -a --filter name=memory-palace-demo-app-run` 确认一次性容器。
 2. 保存测试输出和 `docker top` 结果。

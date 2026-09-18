@@ -20,7 +20,7 @@
 | 用例 | 类型 | 预期 |
 |---|---|---|
 | 将浏览器 QA 驱动固化为仓库测试 | 自动化 E2E | CI 可重复验证所有交互和断点 |
-| 真实 PostgreSQL/Redis/Chroma 技术栈 | guarded live | 只在专用测试环境使用临时密钥 |
+| 真实 PostgreSQL/Redis/pgvector 技术栈 | guarded live | 只在专用测试环境使用临时密钥 |
 | 公网反向代理与正式鉴权 | 集成/安全 | 未认证请求拒绝，租户资源隔离 |
 | 生产版持久化运行恢复 | 故障注入 | 独立于 V1 的 INTERRUPTED + Reset 契约设计和验收 |
 
@@ -28,4 +28,4 @@
 
 - 当前 CI 配置未显示 `demo.cmd verify` 是主分支强制 gate。
 - 默认演示不验证真实渠道发送、密钥轮换、生产 RLS、高可用和灾备。
-- 旧模块存在依赖弃用警告，当前不阻断 V1，但升级 FastAPI/Pydantic/ChromaDB 前需消除。
+- 旧模块存在依赖弃用警告，当前不阻断 V1，但升级 FastAPI/Pydantic 前需消除。

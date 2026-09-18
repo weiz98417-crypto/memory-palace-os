@@ -1,5 +1,8 @@
 # Enterprise Demo V1 测试结果
 
+> **Status: superseded (历史快照)** — 本文件记录的 ChromaDB / 1536 维 embedding 与旧四层架构描述，已被 ADR-0007（PostgreSQL pgvector 为唯一向量后端）、ADR-0018（Agent 链为景区事件主干）与 ADR-0019（Agent 运行时技术栈）取代。内容仅作历史证据保留，不是当前实现或实施依据。
+
+
 ## 结论
 
 企业演示版在 Windows + Docker Desktop 环境通过后端全量测试、聚焦回归、真实浏览器工作流和 Docker 运维命令验收。

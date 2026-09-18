@@ -8,7 +8,7 @@
 
 ## 企业 MVP（正式入口）
 
-当前交付面是原正式客户端，不是动画或播放器。产品包含 20 项业务功能、8 个 Agent 和 13 个正式视图，运行链路使用 Nginx、App、PostgreSQL、Redis Streams、ChromaDB 与真实 `deepseek-v4-flash`。
+当前交付面是正式客户端，不是动画或播放器。正式链路使用 Nginx、App、PostgreSQL + pgvector、Redis Streams、本地 `BAAI/bge-m3`（1024 维）与真实 `deepseek-flash`。
 
 Windows + Docker Desktop 快速启动：
 
@@ -20,7 +20,7 @@ scripts\mvp.cmd start -EnvFile $envFile -Project memory-palace-uat -SecretsVolum
 scripts\mvp.cmd verify -EnvFile $envFile -Project memory-palace-uat -SecretsVolume memory-palace-secrets
 ```
 
-启动成功后访问 [http://localhost:8082/admin/](http://localhost:8082/admin/)。系统不提供公开默认密码；使用部署 EnvFile 初始化的管理员账号登录，并在交付前完成密码轮换。
+启动成功后访问 [http://localhost:8090/admin/](http://localhost:8090/admin/)。系统不提供公开默认密码；使用部署 EnvFile 初始化的管理员账号登录，并在交付前完成密码轮换。
 
 - [企业 MVP 交付 PRD](PRD-memory-palace-enterprise-mvp.md)
 - [内部 UAT 与发布就绪报告](docs/verification/mvp-uat-20260728/internal-uat-release-readiness.md)
@@ -28,6 +28,35 @@ scripts\mvp.cmd verify -EnvFile $envFile -Project memory-palace-uat -SecretsVolu
 - [备份、恢复与诊断手册](docs/operations/mvp-backup-restore.md)
 
 > 当前仓库目标是企业 MVP 发布候选。开发团队内部 UAT 不替代客户 UAT；24 小时连续运行与客户签收仍需在目标环境完成。企微、短信和语音未配置时保持 `DISABLED_REQUIRES_CONFIG`，不会伪造发送成功。旧 `/demo` 仅保留为历史开发资产，不是交付入口。
+
+## 本地景区模拟环境
+
+Windows + Docker Desktop：
+
+```powershell
+Copy-Item .env.example .env
+$env:BGE_M3_CACHE_DIR = 'D:\memory-palace-models\huggingface'
+powershell -ExecutionPolicy Bypass -File scripts/scenic.ps1 prepare-model -ModelCache $env:BGE_M3_CACHE_DIR
+powershell -ExecutionPolicy Bypass -File scripts/set_deepseek_secret.ps1 -VolumeName memory-palace-secrets
+powershell -ExecutionPolicy Bypass -File scripts/set_scenic_account_secret.ps1 -VolumeName memory-palace-secrets
+powershell -ExecutionPolicy Bypass -File scripts/scenic.ps1 start -ModelCache $env:BGE_M3_CACHE_DIR
+```
+
+在 `.env` 中设置 PostgreSQL、JWT 和管理员强密码。模型缓存由容器只读挂载，不进入 Git 或应用镜像。CPU 是默认路径；具备 CUDA 环境时可显式设置 `EMBEDDING_DEVICE=cuda`。
+
+演示使用三个独立浏览器会话：
+
+1. 以 `simulation-ops` 登录 `http://localhost:8090/operations/scenic/`，准备 `rain_vehicle_east_gate`，单步 2 秒产生雨后复检和 12 号车异常。
+2. 以王芳 `wangfang` 登录 `/admin/`，在景区指挥中心将设备告警转为 P1 运营事件。
+3. 以李明 `liming` 登录 `/assistant/`，在“共享景区态势”上传右后轮现场图并填写文字说明。
+4. 回到 `/admin/`，真实检索雨后复运 SOP，生成检修任务与高风险审批；王芳批准继续停运 12 号车并启用 7 号备用车。
+5. 以陈雨 `chenyu` 登录 `/assistant/`，开始检修任务并提交结构化检查结论。
+6. 在运行准备入口单步至第 30 秒；`/admin/` 出现东门客流告警，创建分流任务。
+7. 李明在 `/assistant/` 接单并提交分流措施和风险状态；运行准备入口再推进到第 90 秒，使设备与客流告警恢复。
+8. 王芳在 `/admin/` 解除风险并关闭事件；在事件卷宗核对信号、告警、任务、审批、通知送达、接单、现场回执、SOP 命中与审计序号。
+9. 以经理账号打开 `/simulator/wecom/`，选择对应员工会话，核对内部 outbox 的“已送达 → 已接单 → 已回执”。短信和语音仍显示 `NOT_CONFIGURED`。
+
+`/admin/`、`/assistant/` 与 `/simulator/wecom/` 只投影 PostgreSQL 中的同一事件状态；模拟控制只存在于受保护的运行准备入口。旧 `/demo/` 保留兼容，但不是新状态源。
 
 ---
 
@@ -131,32 +160,55 @@ data/workspaces/{task-id}/
 
 ## 技术架构
 
+景区正式主干是 **Agent 主干化**：`IncidentCommand` 是编排四个 agent 的唯一深 seam，Hatchet 负责
+编排与人工中断，pydantic-ai 承载四 agent 契约，LiteLLM 作为进程内模型网关。
+
 ```text
-正式客户端 / 可选外部渠道
+正式客户端 / 现场端 / 受保护的景区运行入口
             ↓
           Nginx
             ↓
- FastAPI Gateway + JWT/RBAC/venue_id
+ FastAPI（Auth / JWT / venue_id / Canonical Ingress）
+            ↓  先写 PostgreSQL，再入队
+ Redis Streams（队列、重试与死信）
             ↓
- Orchestrator + Redis Streams + TaskGraph
-            │
-            ├── ContextTrigger  情境触发与优先级
-            ├── Router          意图路由
-            ├── Commander       现场处置建议
-            ├── MemoryOps       知识检索与经验沉淀
-            ├── Persona         授权经验问答
-            ├── PersonaExtract  多轮访谈萃取
-            ├── TodoWrite       任务依赖图分解
-            └── Watcher         手动/定时巡检闭环
+ Worker + Hatchet（编排与人工中断）
             ↓
- PostgreSQL（权威业务数据与审计）
- Redis（队列、重试与死信）
- ChromaDB（向量检索）
+ ┌──────────────────────────────────────┐
+ │  IncidentCommand（唯一深 seam）        │
+ │  编排 · 门禁 · 超时 · 失败降级 · 幂等   │
+ └──────────────────────────────────────┘
+     ↓        ↓         ↓         ↓
+ ContextTrigger  Router  MemoryOps  Commander
+        （同一模型：deepseek-flash）
+            ↓
+ LiteLLM（进程内模型网关）
+            ↓
+ OpenTelemetry SDK / OTLP → Jaeger（链路下钻，可选）
+
+数据与运行平面
+ PostgreSQL（唯一业务事实源：事件、卷宗、任务、审批、经验、审计、llm_call_logs）
+ PostgreSQL pgvector（1024 维；TEI 承载 bge-m3 嵌入与 bge-reranker-base 重排）
+ Redis Streams（消息与建议运行队列）
  external secret volume（DeepSeek Key）
+
+质量门禁
+ DeepEval 4.2.x
 ```
 
----
+技术栈与选型理由见 [ADR-0018](docs/adr/0018-agent-chain-as-scenic-incident-trunk.md) 与
+[ADR-0019](docs/adr/0019-agent-runtime-stack-selection.md)；运行时差距与风险见
+[docs/architecture/agent-runtime-gap-review.md](docs/architecture/agent-runtime-gap-review.md)。
 
+pgvector 里应当有哪些数据、来自哪张事实表、如何核验，见 [docs/vector-data-contract.md](docs/vector-data-contract.md)；
+可用 `uv run --no-project --with "psycopg[binary]" python scripts/verify_vector_data.py` 检查数据契约。
+
+现场演示（人工操作）看 [docs/operations/scenic-demo-runbook.md](docs/operations/scenic-demo-runbook.md)：
+先用 `uv run --with playwright python scripts/scenic_demo_launcher.py` 打开并按角色登录好各入口，再由人操作。
+SOP/知识导入走正式发布链路：`python scripts/import_sops.py --input artifacts/knowledge/sops.json`；
+公开来源检索可用 `python scripts/collect_knowledge_sources.py`（AnySearch，匿名可用，配置 `ANYSEARCH_API_KEY` 提升配额）。
+
+---
 ## 目录结构
 
 ```
@@ -187,7 +239,7 @@ src/memory_palace/
 │   └── todo/                # 任务分解
 ├── knowledge/
 │   ├── db_client.py         # SQLite 元数据
-│   ├── vector_store.py      # ChromaDB 向量检索
+│   ├── vector_store.py      # PostgreSQL pgvector 向量检索
 │   └── db_init.py           # 建表脚本
 └── tools/
     ├── llm_wrapper.py       # LLM 统一接口
@@ -243,7 +295,7 @@ scripts\mvp.cmd verify -EnvFile C:\secure\memory-palace-uat.env -Project memory-
 scripts\mvp.cmd doctor -Project memory-palace-uat
 ```
 
-正式客户端：`http://localhost:8082/admin/`。账号和密码来自部署初始化，不写入 README、镜像或交付截图。
+正式客户端：`http://localhost:8090/admin/`。账号和密码来自部署初始化，不写入 README、镜像或交付截图。
 
 ### 管理后台功能
 
@@ -289,11 +341,11 @@ scripts\mvp.cmd doctor -Project memory-palace-uat
 | `MEMORY_PALACE_JWT_SECRET` | ✅ | JWT 签名密钥，使用高熵随机值 |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | ✅ | 首次管理员账号，不使用演示密码 |
 | `DEFAULT_VENUE_ID` / `DEFAULT_VENUE_NAME` | ✅ | 初始租户与场地 |
-| `HTTP_PORT` | ✅ | Nginx 对外端口，UAT 默认 `8082` |
+| `HTTP_PORT` | ✅ | Nginx 对外端口，景区演示默认 `8090`（8080 常被其他本地项目占用） |
 | `MEMORY_PALACE_SECRETS_VOLUME` | ✅ | DeepSeek 外部 Secret 卷名称 |
 | `WECHAT_*` / `SMS_*` / `VOICE_*` | 选填 | 缺少真实供应商配置时安全禁用 |
 
-DeepSeek API Key 不写入 EnvFile，而是通过 `scripts/set_deepseek_secret.ps1` 一次性注入外部 Docker volume。所有生成式调用固定使用 `deepseek-v4-flash`，正式 MVP 不允许通过 `DEMO_MODE` 或 Mock 绕过模型。
+DeepSeek API Key 不写入 EnvFile，而是通过 `scripts/set_deepseek_secret.ps1` 一次性注入外部 Docker volume。所有生成式调用固定使用 `deepseek-flash`，正式 MVP 不允许通过 `DEMO_MODE` 或 Mock 绕过模型。
 
 ---
 
@@ -390,7 +442,7 @@ pytest tests/unit/ -v
 - 确认外部 Secret 卷存在且 `deepseek_api_key` 非空。
 
 **Q: LLM 调用失败**
-- 在运维诊断页查看真实 `deepseek-v4-flash` 调用、重试和 Trace。
+- 在运维诊断页查看真实 `deepseek-flash` 调用、重试和 Trace。
 - 检查外部 Secret 卷、网络和 DeepSeek 账户状态。
 - 失败路径进入重试、熔断或人工继续，不返回伪造成功结果。
 
@@ -417,7 +469,7 @@ scripts\mvp.cmd stop -EnvFile $envFile -Project memory-palace-uat -SecretsVolume
 
 Docker Desktop 无法连接镜像仓库、但固定版本镜像已在本机缓存时，`install` 和 `upgrade` 可显式增加 `-Offline`；它只跳过拉取，不放宽版本、迁移或健康门禁。
 
-`restart-app` 是恢复旅程的固定范围入口：只重启 App，等待其重新健康，并核对 PostgreSQL、Redis、ChromaDB 与 Nginx 的容器、进程和启动时间均未变化；命令会输出 App 重启前后的运行标识，供诊断页核验。
+`restart-app` 是恢复旅程的固定范围入口：只重启 App，等待其重新健康，并核对 PostgreSQL、Redis、pgvector 数据与 Nginx 均未被清理；命令会输出 App 重启前后的运行标识，供诊断页核验。
 
 `stop`、重启 Docker Desktop、重建 App/Nginx 镜像都保留数据卷和外部 Secret 卷。恢复必须指定新的 Compose project、独立 Secret 卷、环境文件和精确目标确认。完整安全说明见
 [企业 MVP 备份、恢复与诊断](docs/operations/mvp-backup-restore.md)。

@@ -256,7 +256,7 @@ async def _run_e2e_00(
     )
 
     runtime = _dict_field(diagnostics, "runtime")
-    required_runtime = ("app", "postgresql", "redis", "chromadb", "worker")
+    required_runtime = ("app", "postgresql", "redis", "pgvector", "worker")
     runtime_statuses = {name: _dict_field(runtime, name).get("status") for name in required_runtime}
     coverage = _dict_field(diagnostics, "agent_coverage")
     deepseek = _dict_field(diagnostics, "deepseek")
@@ -306,7 +306,7 @@ async def _run_e2e_00(
             "DeepSeek 真实探针使用指定模型并已落库",
             probe.get("status") == "READY"
             and probe.get("provider") == "deepseek"
-            and probe.get("model") == "deepseek-v4-flash"
+            and probe.get("model") == "deepseek-flash"
             and probe.get("is_mock") is False
             and deepseek.get("status") == "READY"
             and deepseek.get("live_verified") is True

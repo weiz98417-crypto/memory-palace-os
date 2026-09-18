@@ -1,5 +1,8 @@
 # Tasks: M2 — DI Container + Phase 1
 
+> **Status: superseded (历史快照)** — 本变更记录当时使用的向量后端描述已被 ADR-0007（PostgreSQL pgvector 为唯一向量后端）取代，不再代表当前实现。
+
+
 ## 1. Container 核心
 
 - [x] 1.1 新建 `core/container.py`：AppContainer dataclass + 6 个懒加载 property

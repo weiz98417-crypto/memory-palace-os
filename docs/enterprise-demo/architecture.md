@@ -47,7 +47,7 @@ Run snapshot + evidence + JSON report
 | 场景到工具 | 默认只生成 `DEMO_ADAPTER` 证据，不执行真实外呼 | 不代表真实企微、短信或语音已发送 |
 | 服务到数据卷 | 容器以 `appuser` 运行，Demo 卷独立命名 | 不代表多租户 RLS 或生产备份已验证 |
 | Agent 到动作 | 动作来自版本化步骤定义，策略结果进入证据 | 不代表任意 LLM 输出可直接调用工具 |
-| 企业扩展连接 | 环境能力接口显式显示 `NOT_CONFIGURED` | 不代表 PostgreSQL/Redis/ChromaDB 在默认链路生效 |
+| 企业扩展连接 | 环境能力接口显式显示 `NOT_CONFIGURED` | 不代表 PostgreSQL/Redis/pgvector 在默认链路生效 |
 
 ## 已知风险与假设
 

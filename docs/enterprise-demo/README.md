@@ -34,7 +34,7 @@ scripts\demo.cmd start
 ## 演示话术边界
 
 - 可以说：默认演示链路是确定性的、可重置的、可审计的。
-- 可以说：外部 LLM、企微、短信、PostgreSQL、Redis、ChromaDB 已有扩展位和连接代码。
+- 可以说：外部 LLM、企微、短信、PostgreSQL、Redis、pgvector 已有扩展位和连接代码。
 - 不可以说：默认演示已经调用真实 LLM、发送真实企微/短信、验证生产级高可用或灾备。
 - 不可以把 `LOCAL_DEMO_SIMPLIFIED_AUTH` 描述为生产鉴权。
 

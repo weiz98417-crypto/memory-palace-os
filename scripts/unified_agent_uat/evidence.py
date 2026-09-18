@@ -17,7 +17,7 @@ from uuid import uuid4
 _RUN_DIRECTORIES = ("api", "artifacts", "failures", "logs", "screenshots", "steps", "traces")
 _RUN_JSON_SCAFFOLDS = (
     "browser-console.json",
-    "chroma-retrieval.json",
+    "pgvector-retrieval.json",
     "db-assertions.json",
     "evidence-validation.json",
     "llm-calls.json",
@@ -116,8 +116,8 @@ class EvidenceRun:
             "architecture": {
                 "business_data": "PostgreSQL",
                 "queue": "Redis Streams",
-                "vector_store": "ChromaDB",
-                "generative_model": "deepseek-v4-flash",
+                "vector_store": "PostgreSQL pgvector",
+                "generative_model": "deepseek-flash",
             },
             "channel": {
                 "mode": "WECOM_SIMULATOR_ONLY",

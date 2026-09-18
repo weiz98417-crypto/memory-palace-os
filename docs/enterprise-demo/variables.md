@@ -8,7 +8,6 @@
 | `DEMO_MODE` | 应用 | Compose 固定为 `true` | 否 | 关闭后会进入企业连接分支，不属于默认演示 |
 | `LOG_LEVEL` | 应用 | Compose | 否 | Debug 可能输出更多上下文，演示默认 INFO |
 | `DATABASE_PATH` | SQLite 客户端 | Compose | 否 | 必须位于 Demo 数据卷内 |
-| `CHROMA_PERSIST_DIR` | 向量连接扩展位 | Compose | 否 | 默认演示关键路径不依赖真实 Chroma 查询 |
 | `USE_REDIS` | 队列选择 | Compose 固定为 `false` | 否 | 默认使用进程内队列 |
 | `METRICS_ENABLED` | 可观测性 | Compose | 否 | 不等于已接入生产监控平台 |
 

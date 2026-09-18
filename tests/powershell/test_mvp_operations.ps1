@@ -92,13 +92,11 @@ if ($DockerArguments[0] -eq "compose" -and $joined.Contains(" logs ")) {
 if ($DockerArguments[0] -eq "volume" -and $DockerArguments[1] -eq "ls") {
     if ($env:MVP_FAKE_RUNTIME_READY) {
         if ($joined.Contains("volume=pg-data")) { Write-Output "memory-palace-test_pg-data" }
-        elseif ($joined.Contains("volume=chroma-data")) { Write-Output "memory-palace-test_chroma-data" }
-        elseif ($joined.Contains("volume=embedding-cache")) { Write-Output "memory-palace-test_embedding-cache" }
     }
     return
 }
 if ($DockerArguments[0] -eq "ps") {
-    foreach ($service in @("postgres", "redis", "chromadb", "app", "nginx")) {
+    foreach ($service in @("postgres", "redis", "app", "nginx")) {
         if ($joined.Contains("service=$service")) {
             Write-Output "$service-test"
             return
@@ -222,7 +220,7 @@ MEMORY_PALACE_JWT_SECRET=jwt-sentinel-must-not-be-read
     foreach ($expected in @(
         "volume create",
         "memory-palace-test-secrets",
-        "pull postgres redis chromadb nginx",
+        "pull postgres redis nginx",
         "build app",
         "pull alpine:3.20.10",
         "image inspect --format {{.Id}} memory-palace-test-app:latest",
@@ -266,7 +264,7 @@ MEMORY_PALACE_JWT_SECRET=jwt-sentinel-must-not-be-read
             throw "start exposed deployment secret sentinel '$sentinel'."
         }
     }
-    $dependencyStart = $dockerText.IndexOf("up -d postgres redis chromadb")
+    $dependencyStart = $dockerText.IndexOf("up -d postgres redis")
     $migrationRun = $dockerText.IndexOf("run --rm --no-deps app python -c")
     $applicationStart = $dockerText.IndexOf("up -d --no-deps app")
     $nginxStart = $dockerText.IndexOf("up -d --no-deps nginx")
@@ -534,7 +532,7 @@ MEMORY_PALACE_JWT_SECRET=jwt-sentinel-must-not-be-read
     }
     $dockerText = "$(Get-Content -LiteralPath $fakeDockerLog -Raw)"
     $backupOperation = $dockerText.IndexOf("pg_dump -Fc")
-    $pullOperation = $dockerText.IndexOf("pull postgres redis chromadb nginx")
+    $pullOperation = $dockerText.IndexOf("pull postgres redis nginx")
     $buildOperation = $dockerText.IndexOf("build app")
     $migrationOperation = $dockerText.LastIndexOf("run --rm --no-deps app python -c")
     $recreateOperation = $dockerText.IndexOf("up -d --no-deps --force-recreate app")
@@ -649,16 +647,16 @@ MEMORY_PALACE_JWT_SECRET=jwt-sentinel-must-not-be-read
     $tamperedBackup = Join-Path $TestRoot "tampered-backup"
     New-Item -ItemType Directory -Path $tamperedBackup | Out-Null
     Set-Content -LiteralPath (Join-Path $tamperedBackup "postgres.dump") -Value "not-a-real-dump" -Encoding utf8
-    Set-Content -LiteralPath (Join-Path $tamperedBackup "chroma-data.tar.gz") -Value "not-a-real-archive" -Encoding utf8
-    Set-Content -LiteralPath (Join-Path $tamperedBackup "embedding-cache.tar.gz") -Value "not-a-real-cache" -Encoding utf8
     [ordered]@{
-        schema_version = "memory-palace-mvp-backup/v2"
+        schema_version = "memory-palace-mvp-backup/v3"
         backup_id = "tampered-backup"
         source = [ordered]@{ compose_project = "memory-palace-mvp"; compose_file_sha256 = ("0" * 64) }
         artifacts = [ordered]@{
-            postgres = [ordered]@{ file = "postgres.dump"; sha256 = ("0" * 64) }
-            chroma = [ordered]@{ file = "chroma-data.tar.gz"; sha256 = ("0" * 64) }
-            embedding_cache = [ordered]@{ file = "embedding-cache.tar.gz"; sha256 = ("0" * 64) }
+            postgres = [ordered]@{
+                file = "postgres.dump"
+                bytes = (Get-Item -LiteralPath (Join-Path $tamperedBackup "postgres.dump")).Length
+                sha256 = ("0" * 64)
+            }
         }
     } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $tamperedBackup "manifest.json") -Encoding utf8
 
@@ -676,11 +674,8 @@ MEMORY_PALACE_JWT_SECRET=jwt-sentinel-must-not-be-read
         '$previousErrorPreference = $ErrorActionPreference',
         '$BackupId.Replace("''", "''''")',
         '-Status "COMPLETED"',
-        '$ManifestSchema = "memory-palace-mvp-backup/v2"',
-        '$EmbeddingArtifactName = "embedding-cache.tar.gz"',
-        'foreach ($volume in @("pg-data", "chroma-data", "embedding-cache"))',
-        '"tar", "-tvzf", "/backup/$ArtifactName"',
-        '"--no-same-permissions"',
+        '$ManifestSchema = "memory-palace-mvp-backup/v3"',
+        'Name = "PostgreSQL + pgvector"',
         '[string]$TargetSecretsVolume',
         '$env:MEMORY_PALACE_SECRETS_VOLUME = $TargetSecretsVolume',
         'Initialize-EmptySecretsVolume',

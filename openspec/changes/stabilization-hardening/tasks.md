@@ -1,5 +1,8 @@
 ## 1. LLM Output Sanitization (CRITICAL - blocks all other work)
 
+> **Status: superseded (历史快照)** — 本变更记录当时使用的向量后端描述已被 ADR-0007（PostgreSQL pgvector 为唯一向量后端）取代，不再代表当前实现。
+
+
 - [x] 1.1 Create `sanitize_llm_output()` utility in `tools/llm_wrapper.py` with configurable field schema (required keys, types, max lengths, injection token blocklist)
 - [x] 1.2 Add sanitization call in `persona_extract/skill.py:_save_persona()` before DB write (spec: llm-output-sanitization S1)
 - [x] 1.3 Add sanitization call in `context_trigger/skill.py` stage2 result processing before `write_push_log()` and WeChat push (spec: llm-output-sanitization S2)

@@ -1084,3 +1084,4 @@ scripts\mvp.cmd stop
 ## Appendix C：当前文档优先级
 
 本 PRD 是企业 MVP 的权威需求源。现有 `docs/enterprise-demo/`、`docs/verification/enterprise-demo-v1/` 和旧 Demo PRD 只记录已废弃方案及历史实现，不能覆盖本 PRD。
+> ⚠️ 历史规划文档：文中"ChromaDB 向量库 / 1536 维 embedding"等描述已被 ADR-0007（PostgreSQL pgvector 为唯一向量后端）与 ADR-0009（本地 bge-m3，1024 维）取代。以此文档指导实现前请先读 ADR-0007 / ADR-0019。

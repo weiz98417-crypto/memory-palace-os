@@ -1,5 +1,8 @@
 # Tasks: 技能层稳定化
 
+> **Status: superseded (历史快照)** — 本变更记录当时使用的向量后端描述已被 ADR-0007（PostgreSQL pgvector 为唯一向量后端）取代，不再代表当前实现。
+
+
 ## 1. P0: 安全
 
 - [x] 1.1 创建 `.gitignore`：排除 `data/`、`.env`、`__pycache__/`、`.venv/`、`htmlcov/`

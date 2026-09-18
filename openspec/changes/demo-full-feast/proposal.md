@@ -1,5 +1,8 @@
 ## Why
 
+> **Status: superseded (历史快照)** — 本变更记录当时使用的向量后端描述已被 ADR-0007（PostgreSQL pgvector 为唯一向量后端）取代，不再代表当前实现。
+
+
 当前 `demo_console.html` 只覆盖消息链路（ContextTrigger → Router → Agent），项目的 PersonaExtract 多轮访谈、Todo 任务分解、知识库向量检索、Watcher 巡检日志等功能没有演示入口。演示时无法展示系统全貌。需要将演示控制台升级为覆盖全部核心功能的完整演示体验。
 
 ## What Changes

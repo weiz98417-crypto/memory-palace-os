@@ -1,5 +1,8 @@
 # 企业能力声明矩阵
 
+> **Status: superseded (历史快照)** — 本文件记录的 ChromaDB / 1536 维 embedding 与旧四层架构描述，已被 ADR-0007（PostgreSQL pgvector 为唯一向量后端）、ADR-0018（Agent 链为景区事件主干）与 ADR-0019（Agent 运行时技术栈）取代。内容仅作历史证据保留，不是当前实现或实施依据。
+
+
 | 能力 | 声明级别 | 当前状态 | 验证证据 | V1 边界 |
 |---|---|---|---|---|
 | 确定性演示运行时 | 演示实现 | READY | 四场景实跑、Reset、Docker QA | 固定输入和 Demo Adapter |

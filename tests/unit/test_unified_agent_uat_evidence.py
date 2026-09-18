@@ -33,7 +33,7 @@ def test_create_run_builds_simulator_only_evidence_contract(tmp_path):
         "api",
         "artifacts",
         "browser-console.json",
-        "chroma-retrieval.json",
+        "pgvector-retrieval.json",
         "db-assertions.json",
         "evidence-validation.json",
         "execution-report.md",
@@ -48,7 +48,7 @@ def test_create_run_builds_simulator_only_evidence_contract(tmp_path):
     }
     for name in (
         "browser-console.json",
-        "chroma-retrieval.json",
+        "pgvector-retrieval.json",
         "db-assertions.json",
         "evidence-validation.json",
         "llm-calls.json",
@@ -73,8 +73,8 @@ def test_create_run_builds_simulator_only_evidence_contract(tmp_path):
         "architecture": {
             "business_data": "PostgreSQL",
             "queue": "Redis Streams",
-            "vector_store": "ChromaDB",
-            "generative_model": "deepseek-v4-flash",
+            "vector_store": "PostgreSQL pgvector",
+            "generative_model": "deepseek-flash",
         },
         "channel": {
             "mode": "WECOM_SIMULATOR_ONLY",
@@ -368,7 +368,7 @@ def test_validator_accepts_consistent_running_evidence_package(tmp_path):
                 {
                     "call_id": "llm-call-e2e-03",
                     "agent": "Router",
-                    "model": "deepseek-v4-flash",
+                    "model": "deepseek-flash",
                     "is_mock": False,
                 }
             ],
@@ -444,7 +444,7 @@ def test_validator_rejects_missing_files_empty_ids_references_and_mock_models(tm
                 {
                     "call_id": "llm-call-invalid",
                     "agent": "Router",
-                    "model": "deepseek-v4-flash",
+                    "model": "deepseek-flash",
                     "is_mock": False,
                 }
             ],
@@ -821,6 +821,8 @@ def test_bootstrap_uat_wrapper_runs_directly_outside_repository(tmp_path):
         cwd=tmp_path,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
 

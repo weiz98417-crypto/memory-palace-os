@@ -1,5 +1,8 @@
 ## 1. Backend: PersonaExtract 访谈 API
 
+> **Status: superseded (历史快照)** — 本变更记录当时使用的向量后端描述已被 ADR-0007（PostgreSQL pgvector 为唯一向量后端）取代，不再代表当前实现。
+
+
 - [x] 1.1 PersonaExtractSkill 新增 `start_interview(job_title, venue_id, trace_id)` public wrapper（参数 reorder，total_questions=4）
 - [x] 1.2 PersonaExtractSkill 新增 `continue_interview(interview_id, answer, trace_id)` public wrapper
 - [x] 1.3 PersonaExtractSkill 新增 `finalize_interview(interview_id, trace_id)` public wrapper

@@ -42,7 +42,7 @@ scripts\mvp.cmd install `
 
 1. 检查 Docker Engine 和 Docker Compose v2；
 2. 创建或复用指定的 external secrets volume；
-3. 拉取固定版本的 PostgreSQL、Redis、ChromaDB、Nginx 和备份辅助镜像；
+3. 拉取固定版本的 PostgreSQL、Redis、Nginx 和备份辅助镜像；
 4. 从当前获批 Git HEAD 构建 App 镜像，并以 HEAD 短哈希注册不可混淆的本地版本标签。
 
 若 worktree 存在未提交或未跟踪改动，正式安装会在构建前失败。内部联合开发确需验证工作树时可
@@ -71,7 +71,7 @@ scripts\mvp.cmd start `
 `start` 按固定阶段执行，任一阶段失败都会返回非零退出码：
 
 1. 验证 external volume 和非空 `deepseek_api_key`，但不读取文件内容；
-2. 启动 PostgreSQL、Redis、ChromaDB，并逐一等待容器健康；缺失 healthcheck 直接失败；
+2. 启动 PostgreSQL、Redis 与 Nginx，并逐一等待容器健康；缺失 healthcheck 直接失败；
 3. 运行幂等 PostgreSQL 初始化和管理员身份引导，记录 `mvp_schema_migrations` 版本；
 4. 启动 App 并等待健康；
 5. 启动 Nginx 并等待健康。
@@ -118,8 +118,8 @@ scripts\mvp.cmd restart-app `
   -SecretsVolume $MvpSecretsVolume
 ```
 
-`restart-app` 只调用 Compose `restart app`，等待 App 恢复健康，并核对 PostgreSQL、Redis、
-ChromaDB 与 Nginx 的容器 ID、进程 ID 和启动时间均未变化。命令输出 App 重启前后的运行标识；
+`restart-app` 只调用 Compose `restart app`，等待 App 恢复健康，并核对 PostgreSQL、Redis 与 Nginx 的
+容器 ID、进程 ID 和启动时间均未变化。命令输出 App 重启前后的运行标识；
 随后在 `/admin/diagnostics` 核对启动恢复记录、pending claim 和 ACK。该命令不重启数据服务、不清卷、
 不重建镜像，也不重新注入 Secret。
 
@@ -146,7 +146,7 @@ scripts\mvp.cmd logs `
   -Follow
 ```
 
-`-Service` 可重复指定 `app`、`postgres`、`redis`、`chromadb`、`nginx`。`-Tail` 范围是
+`-Service` 可重复指定 `app`、`postgres`、`redis`、`nginx`。`-Tail` 范围是
 1–5000。输出会对常见 Password、Token、Secret、API Key、Bearer 值和 `sk-` Key 做防御性
 脱敏；这不是在应用日志中记录凭据的许可，日志仍可能包含受保护的业务数据，应按生产数据管理。
 
@@ -219,7 +219,7 @@ scripts\mvp.cmd stop `
   -SecretsVolume $MvpSecretsVolume
 ```
 
-`stop` 只调用 Compose `stop`。PostgreSQL、Redis、Chroma、Embedding Cache、日志、工作区数据卷、
+`stop` 只调用 Compose `stop`。PostgreSQL、Redis、日志、附件与工作区数据卷、
 容器配置和 external secrets 均保留。再次执行 `start` 会复用原数据和 Key，并重新执行幂等迁移。
 
 ## 命令清单

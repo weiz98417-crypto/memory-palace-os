@@ -1,5 +1,8 @@
 # Memory Palace OS 内部 UAT 发布就绪报告
 
+> **Status: superseded (历史快照)** — 本文件记录的 ChromaDB / 1536 维 embedding 与旧四层架构描述，已被 ADR-0007（PostgreSQL pgvector 为唯一向量后端）、ADR-0018（Agent 链为景区事件主干）与 ADR-0019（Agent 运行时技术栈）取代。内容仅作历史证据保留，不是当前实现或实施依据。
+
+
 > **发布判定：内部 UAT 发布候选（Internal UAT Release Candidate）。**
 >
 > 本判定只允许继续内部演示、内部验收和发布候选封版准备，**不代表客户可正式交付、生产可上线或企业 MVP 已完成签收**。运行时功能注册表的 `release_gate_passed=true` 是当前 UAT 环境的机器门禁结果，不替代客户 UAT、干净可追溯构建、24 小时连续运行、性能验收或合同约定的外部渠道验收。

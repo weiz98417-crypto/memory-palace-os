@@ -1,5 +1,8 @@
 ## Why
 
+> **Status: superseded (历史快照)** — 本变更记录当时使用的向量后端描述已被 ADR-0007（PostgreSQL pgvector 为唯一向量后端）取代，不再代表当前实现。
+
+
 Memory Palace OS 当前是 Function Demo 阶段：SQLite 单文件数据库、asyncio.Queue 内存队列、无认证、无容器化部署。这 4 个硬门槛阻止了任何生产环境部署。在此基础上，结构化的可观测性、LLM 容灾、多租户隔离是"能运维、能扩展"的必备能力。分 3 个 Phase 逐步推进，每一阶段都有独立的交付价值。
 
 ## What Changes

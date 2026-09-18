@@ -1,5 +1,8 @@
 # Memory Palace OS 统一员工助手完整演示旅程与可执行 UAT
 
+> **Status: superseded (历史快照)** — 本文件记录的 ChromaDB / 1536 维 embedding 与旧四层架构描述，已被 ADR-0007（PostgreSQL pgvector 为唯一向量后端）、ADR-0018（Agent 链为景区事件主干）与 ADR-0019（Agent 运行时技术栈）取代。内容仅作历史证据保留，不是当前实现或实施依据。
+
+
 > 文档性质：新增产品目标文档，不替代现有 PRD，也不继承旧动画 Demo 的实现约束  
 > 产品阶段：企业 MVP 交付验收  
 > 核心入口：企业运营助手、企业内部系统接入环境、管理后台

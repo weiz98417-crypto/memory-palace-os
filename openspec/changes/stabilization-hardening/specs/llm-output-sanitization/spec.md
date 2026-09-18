@@ -1,5 +1,8 @@
 ## ADDED Requirements
 
+> **Status: superseded (历史快照)** — 本变更记录当时使用的向量后端描述已被 ADR-0007（PostgreSQL pgvector 为唯一向量后端）取代，不再代表当前实现。
+
+
 ### Requirement: Sanitize persona_extract logic entries before DB storage
 
 The system SHALL validate LLM-extracted logic entries before writing to the `personas` table. Each entry's `trigger`, `behavior`, and `reason` fields SHALL be stripped of control characters, truncated to 500 characters, and checked for required key presence. Entries containing known prompt injection delimiters (`<|im_start|>`, `<|im_end|>`, `[system]`, `[/system]`) SHALL be rejected.
