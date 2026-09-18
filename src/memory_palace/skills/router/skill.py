@@ -33,7 +33,7 @@ class RouterSkill(BaseAgentSkill):
 
         super().__init__(
             skill_name=self.config.get("agent_name", "Router_Agent"),
-            model_name=self.config.get("llm_config", {}).get("model", "deepseek-v4-flash")
+            model_name=self.config.get("llm_config", {}).get("model", "deepseek-flash")
         )
 
         self.chitchat_patterns = [
@@ -46,7 +46,7 @@ class RouterSkill(BaseAgentSkill):
         config_path = self.base_path / "config.yaml"
         if not config_path.exists():
             logger.warning(f"Router config 缺失，使用硬编码默认配置。")
-            return {"agent_name": "Router_Agent", "llm_config": {"model": "deepseek-v4-flash"}}
+            return {"agent_name": "Router_Agent", "llm_config": {"model": "deepseek-flash"}}
 
         with open(config_path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f)

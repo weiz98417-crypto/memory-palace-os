@@ -39,7 +39,7 @@ class TokenMetricsCollector:
         "output": float(os.environ.get("DEEPSEEK_OUTPUT_USD_PER_MILLION", "0")),
     }
     TOKEN_PRICES = {
-        "deepseek-v4-flash": _DEEPSEEK_PRICE,
+        "deepseek-flash": _DEEPSEEK_PRICE,
         "default": _DEEPSEEK_PRICE,
     }
 

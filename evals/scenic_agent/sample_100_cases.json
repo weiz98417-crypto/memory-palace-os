@@ -1,0 +1,8093 @@
+{
+ "schema_version": 1,
+ "fixture_only": false,
+ "evaluation_origin": "STRATIFIED_SAMPLE_FROM_CORPUS",
+ "source_corpus_size": 860,
+ "cases": [
+  {
+   "id": "n-0001",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "?????????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "?????????????",
+    "field_evidence": "??????????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0002",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "????????????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "????????????????",
+    "field_evidence": "?????????????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0003",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "????????",
+    "field_evidence": "?????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0004",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "??????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "??????????",
+    "field_evidence": "???????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0005",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "????????????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "????????????????",
+    "field_evidence": "?????????????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0006",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "?????????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "?????????????",
+    "field_evidence": "??????????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0007",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "???????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "???????",
+    "field_evidence": "????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0008",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "????????",
+    "field_evidence": "?????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0009",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "????????",
+    "field_evidence": "?????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0010",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "????????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "????????????",
+    "field_evidence": "?????????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0011",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "??????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "??????????",
+    "field_evidence": "???????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0012",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "?????????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "?????????????",
+    "field_evidence": "??????????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0013",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "????????",
+    "field_evidence": "?????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0014",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "???????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "???????",
+    "field_evidence": "????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0015",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "????????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "????????????",
+    "field_evidence": "?????????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0016",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "?????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "?????????",
+    "field_evidence": "??????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0017",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "????????",
+    "field_evidence": "?????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0018",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "????????",
+    "field_evidence": "?????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0019",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "????????",
+    "field_evidence": "?????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "n-0020",
+   "scenario_type": "NO_KNOWLEDGE_BASE",
+   "query": "???????????",
+   "retrieval_status": "NO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "???????????",
+    "field_evidence": "????????????????"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "????"
+    ],
+    "forbidden_substrings": []
+   },
+   "evaluation_origin": "OUT_OF_CORPUS",
+   "retrieval_may_return_hits": true,
+   "retrieved_context": []
+  },
+  {
+   "id": "h-0016-1-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???雨后观光车复运与分流 SOP?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "雨后观光车复运与分流 SOP",
+    "field_evidence": "?????雨后观光车复运与分流 SOP?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "1"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "h-0036-2-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???观光车雨后复运检查与放行?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "观光车雨后复运检查与放行",
+    "field_evidence": "?????观光车雨后复运检查与放行?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "2"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "h-0056-3-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???观光车轮组异常停运与备用车辆启用?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "观光车轮组异常停运与备用车辆启用",
+    "field_evidence": "?????观光车轮组异常停运与备用车辆启用?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "31",
+     "source_type": "SOP",
+     "title": "景区 票务系统 闸机 故障 应急 处置",
+     "version": "1.0",
+     "excerpt": "景区 票务系统 闸机 故障 应急 处置"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "3"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "31",
+     "source_type": "SOP",
+     "title": "景区 票务系统 闸机 故障 应急 处置",
+     "version": "1.0",
+     "excerpt": "景区 票务系统 闸机 故障 应急 处置"
+    }
+   ]
+  },
+  {
+   "id": "h-0076-4-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???东门集散区高峰客流分流与限流?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "东门集散区高峰客流分流与限流",
+    "field_evidence": "?????东门集散区高峰客流分流与限流?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "4"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    }
+   ]
+  },
+  {
+   "id": "h-0096-5-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???强降雨与暴雨天气景区设施检查与恢复运营?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "强降雨与暴雨天气景区设施检查与恢复运营",
+    "field_evidence": "?????强降雨与暴雨天气景区设施检查与恢复运营?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "5"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    }
+   ]
+  },
+  {
+   "id": "h-0116-6-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???景区设备故障现场处置与证据留存?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区设备故障现场处置与证据留存",
+    "field_evidence": "?????景区设备故障现场处置与证据留存?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "35",
+     "source_type": "SOP",
+     "title": "景区 特种设备 安全 管理 制度 台账",
+     "version": "1.0",
+     "excerpt": "景区 特种设备 安全 管理 制度 台账"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "6"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "35",
+     "source_type": "SOP",
+     "title": "景区 特种设备 安全 管理 制度 台账",
+     "version": "1.0",
+     "excerpt": "景区 特种设备 安全 管理 制度 台账"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "h-0136-7-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎",
+    "field_evidence": "?????场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "7",
+     "source_type": "SOP",
+     "title": "场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎",
+     "version": "1.0",
+     "excerpt": "场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "7"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "7",
+     "source_type": "SOP",
+     "title": "场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎",
+     "version": "1.0",
+     "excerpt": "场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    }
+   ]
+  },
+  {
+   "id": "h-0156-8-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???景区 观光车 雨后 复运 检查 要求?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 观光车 雨后 复运 检查 要求",
+    "field_evidence": "?????景区 观光车 雨后 复运 检查 要求?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "8"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    }
+   ]
+  },
+  {
+   "id": "h-0176-9-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???景区 客流 高峰 分流 限流 管理规范?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 客流 高峰 分流 限流 管理规范",
+    "field_evidence": "?????景区 客流 高峰 分流 限流 管理规范?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "29",
+     "source_type": "SOP",
+     "title": "景区 卫生 防疫 消杀 要求",
+     "version": "1.0",
+     "excerpt": "景区 卫生 防疫 消杀 要求"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "9"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "29",
+     "source_type": "SOP",
+     "title": "景区 卫生 防疫 消杀 要求",
+     "version": "1.0",
+     "excerpt": "景区 卫生 防疫 消杀 要求"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "h-0196-10-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???暴雨 强降雨 景区 设施 检查 恢复运营 要求?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+    "field_evidence": "?????暴雨 强降雨 景区 设施 检查 恢复运营 要求?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "10"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    }
+   ]
+  },
+  {
+   "id": "h-0216-11-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???景区 突发事件 应急预案 设备故障 处置?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 突发事件 应急预案 设备故障 处置",
+    "field_evidence": "?????景区 突发事件 应急预案 设备故障 处置?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "38",
+     "source_type": "SOP",
+     "title": "景区 应急预案 演练 要求",
+     "version": "1.0",
+     "excerpt": "景区 应急预案 演练 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "22",
+     "source_type": "SOP",
+     "title": "景区 防汛 应急预案 边坡 落石 排查",
+     "version": "1.0",
+     "excerpt": "景区 防汛 应急预案 边坡 落石 排查"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "11"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "38",
+     "source_type": "SOP",
+     "title": "景区 应急预案 演练 要求",
+     "version": "1.0",
+     "excerpt": "景区 应急预案 演练 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "22",
+     "source_type": "SOP",
+     "title": "景区 防汛 应急预案 边坡 落石 排查",
+     "version": "1.0",
+     "excerpt": "景区 防汛 应急预案 边坡 落石 排查"
+    }
+   ]
+  },
+  {
+   "id": "h-0236-12-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???景区 观光车 驾驶员 资质 培训 限速 载客 规定?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+    "field_evidence": "?????景区 观光车 驾驶员 资质 培训 限速 载客 规定?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "12"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    }
+   ]
+  },
+  {
+   "id": "h-0256-13-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???景区 观光车 充电 电池 安全 管理?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 观光车 充电 电池 安全 管理",
+    "field_evidence": "?????景区 观光车 充电 电池 安全 管理?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "13",
+     "source_type": "SOP",
+     "title": "景区 观光车 充电 电池 安全 管理",
+     "version": "1.0",
+     "excerpt": "景区 观光车 充电 电池 安全 管理"
+    },
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "13"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "13",
+     "source_type": "SOP",
+     "title": "景区 观光车 充电 电池 安全 管理",
+     "version": "1.0",
+     "excerpt": "景区 观光车 充电 电池 安全 管理"
+    },
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "h-0276-14-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???景区 游船 安全 检查 救生衣 载客 定额?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 游船 安全 检查 救生衣 载客 定额",
+    "field_evidence": "?????景区 游船 安全 检查 救生衣 载客 定额?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "14"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "h-0296-15-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???景区 索道 缆车 安全检查 应急救援?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 索道 缆车 安全检查 应急救援",
+    "field_evidence": "?????景区 索道 缆车 安全检查 应急救援?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "15",
+     "source_type": "SOP",
+     "title": "景区 索道 缆车 安全检查 应急救援",
+     "version": "1.0",
+     "excerpt": "景区 索道 缆车 安全检查 应急救援"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "15"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "15",
+     "source_type": "SOP",
+     "title": "景区 索道 缆车 安全检查 应急救援",
+     "version": "1.0",
+     "excerpt": "景区 索道 缆车 安全检查 应急救援"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    }
+   ]
+  },
+  {
+   "id": "h-0316-16-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???大型游乐设施 安全检查 定期检验 运营要求?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "大型游乐设施 安全检查 定期检验 运营要求",
+    "field_evidence": "?????大型游乐设施 安全检查 定期检验 运营要求?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    },
+    {
+     "source_id": "34",
+     "source_type": "SOP",
+     "title": "景区 大型活动 安全 管理 审批",
+     "version": "1.0",
+     "excerpt": "景区 大型活动 安全 管理 审批"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "16"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    },
+    {
+     "source_id": "34",
+     "source_type": "SOP",
+     "title": "景区 大型活动 安全 管理 审批",
+     "version": "1.0",
+     "excerpt": "景区 大型活动 安全 管理 审批"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "h-0336-17-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???玻璃栈道 高空项目 安全管理 检查?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "玻璃栈道 高空项目 安全管理 检查",
+    "field_evidence": "?????玻璃栈道 高空项目 安全管理 检查?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "17"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    }
+   ]
+  },
+  {
+   "id": "h-0356-18-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???漂流 项目 安全 管理 检查 规范?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "漂流 项目 安全 管理 检查 规范",
+    "field_evidence": "?????漂流 项目 安全 管理 检查 规范?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "18",
+     "source_type": "SOP",
+     "title": "漂流 项目 安全 管理 检查 规范",
+     "version": "1.0",
+     "excerpt": "漂流 项目 安全 管理 检查 规范"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "18"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "18",
+     "source_type": "SOP",
+     "title": "漂流 项目 安全 管理 检查 规范",
+     "version": "1.0",
+     "excerpt": "漂流 项目 安全 管理 检查 规范"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    }
+   ]
+  },
+  {
+   "id": "h-0376-19-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???滑索 滑道 安全检查 规范?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "滑索 滑道 安全检查 规范",
+    "field_evidence": "?????滑索 滑道 安全检查 规范?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    },
+    {
+     "source_id": "15",
+     "source_type": "SOP",
+     "title": "景区 索道 缆车 安全检查 应急救援",
+     "version": "1.0",
+     "excerpt": "景区 索道 缆车 安全检查 应急救援"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "19"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    },
+    {
+     "source_id": "15",
+     "source_type": "SOP",
+     "title": "景区 索道 缆车 安全检查 应急救援",
+     "version": "1.0",
+     "excerpt": "景区 索道 缆车 安全检查 应急救援"
+    }
+   ]
+  },
+  {
+   "id": "h-0396-20-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "???景区 消防 安全 检查 灭火器 疏散通道?",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 消防 安全 检查 灭火器 疏散通道",
+    "field_evidence": "?????景区 消防 安全 检查 灭火器 疏散通道?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    },
+    {
+     "source_id": "26",
+     "source_type": "SOP",
+     "title": "景区 拥挤踩踏 预防 疏散 通道",
+     "version": "1.0",
+     "excerpt": "景区 拥挤踩踏 预防 疏散 通道"
+    },
+    {
+     "source_id": "21",
+     "source_type": "SOP",
+     "title": "森林防火 景区 管理 火源管控",
+     "version": "1.0",
+     "excerpt": "森林防火 景区 管理 火源管控"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "20"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_HARD_PHRASING",
+   "retrieved_context": [
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    },
+    {
+     "source_id": "26",
+     "source_type": "SOP",
+     "title": "景区 拥挤踩踏 预防 疏散 通道",
+     "version": "1.0",
+     "excerpt": "景区 拥挤踩踏 预防 疏散 通道"
+    },
+    {
+     "source_id": "21",
+     "source_type": "SOP",
+     "title": "森林防火 景区 管理 火源管控",
+     "version": "1.0",
+     "excerpt": "森林防火 景区 管理 火源管控"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    }
+   ]
+  },
+  {
+   "id": "g-0001-1-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "雨后观光车复运与分流 SOP??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "雨后观光车复运与分流 SOP",
+    "field_evidence": "?????雨后观光车复运与分流 SOP?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "1"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "g-0021-2-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "观光车雨后复运检查与放行??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "观光车雨后复运检查与放行",
+    "field_evidence": "?????观光车雨后复运检查与放行?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "2"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "g-0041-3-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "观光车轮组异常停运与备用车辆启用??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "观光车轮组异常停运与备用车辆启用",
+    "field_evidence": "?????观光车轮组异常停运与备用车辆启用?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "31",
+     "source_type": "SOP",
+     "title": "景区 票务系统 闸机 故障 应急 处置",
+     "version": "1.0",
+     "excerpt": "景区 票务系统 闸机 故障 应急 处置"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "3"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "31",
+     "source_type": "SOP",
+     "title": "景区 票务系统 闸机 故障 应急 处置",
+     "version": "1.0",
+     "excerpt": "景区 票务系统 闸机 故障 应急 处置"
+    }
+   ]
+  },
+  {
+   "id": "g-0061-4-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "东门集散区高峰客流分流与限流??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "东门集散区高峰客流分流与限流",
+    "field_evidence": "?????东门集散区高峰客流分流与限流?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "4"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    }
+   ]
+  },
+  {
+   "id": "g-0081-5-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "强降雨与暴雨天气景区设施检查与恢复运营??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "强降雨与暴雨天气景区设施检查与恢复运营",
+    "field_evidence": "?????强降雨与暴雨天气景区设施检查与恢复运营?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "5"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    }
+   ]
+  },
+  {
+   "id": "g-0101-6-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区设备故障现场处置与证据留存??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区设备故障现场处置与证据留存",
+    "field_evidence": "?????景区设备故障现场处置与证据留存?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "35",
+     "source_type": "SOP",
+     "title": "景区 特种设备 安全 管理 制度 台账",
+     "version": "1.0",
+     "excerpt": "景区 特种设备 安全 管理 制度 台账"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "6"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "35",
+     "source_type": "SOP",
+     "title": "景区 特种设备 安全 管理 制度 台账",
+     "version": "1.0",
+     "excerpt": "景区 特种设备 安全 管理 制度 台账"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    }
+   ]
+  },
+  {
+   "id": "g-0121-7-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎",
+    "field_evidence": "?????场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "7",
+     "source_type": "SOP",
+     "title": "场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎",
+     "version": "1.0",
+     "excerpt": "场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "7"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "7",
+     "source_type": "SOP",
+     "title": "场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎",
+     "version": "1.0",
+     "excerpt": "场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    }
+   ]
+  },
+  {
+   "id": "g-0141-8-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 观光车 雨后 复运 检查 要求??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 观光车 雨后 复运 检查 要求",
+    "field_evidence": "?????景区 观光车 雨后 复运 检查 要求?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "8"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    }
+   ]
+  },
+  {
+   "id": "g-0161-9-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 客流 高峰 分流 限流 管理规范??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 客流 高峰 分流 限流 管理规范",
+    "field_evidence": "?????景区 客流 高峰 分流 限流 管理规范?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "42",
+     "source_type": "SOP",
+     "title": "景区 智慧 监测 客流 预警 系统",
+     "version": "1.0",
+     "excerpt": "景区 智慧 监测 客流 预警 系统"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "9"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "42",
+     "source_type": "SOP",
+     "title": "景区 智慧 监测 客流 预警 系统",
+     "version": "1.0",
+     "excerpt": "景区 智慧 监测 客流 预警 系统"
+    }
+   ]
+  },
+  {
+   "id": "g-0181-10-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "暴雨 强降雨 景区 设施 检查 恢复运营 要求??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+    "field_evidence": "?????暴雨 强降雨 景区 设施 检查 恢复运营 要求?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "10"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    }
+   ]
+  },
+  {
+   "id": "g-0201-11-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 突发事件 应急预案 设备故障 处置??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 突发事件 应急预案 设备故障 处置",
+    "field_evidence": "?????景区 突发事件 应急预案 设备故障 处置?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "38",
+     "source_type": "SOP",
+     "title": "景区 应急预案 演练 要求",
+     "version": "1.0",
+     "excerpt": "景区 应急预案 演练 要求"
+    },
+    {
+     "source_id": "22",
+     "source_type": "SOP",
+     "title": "景区 防汛 应急预案 边坡 落石 排查",
+     "version": "1.0",
+     "excerpt": "景区 防汛 应急预案 边坡 落石 排查"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "11"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "38",
+     "source_type": "SOP",
+     "title": "景区 应急预案 演练 要求",
+     "version": "1.0",
+     "excerpt": "景区 应急预案 演练 要求"
+    },
+    {
+     "source_id": "22",
+     "source_type": "SOP",
+     "title": "景区 防汛 应急预案 边坡 落石 排查",
+     "version": "1.0",
+     "excerpt": "景区 防汛 应急预案 边坡 落石 排查"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    }
+   ]
+  },
+  {
+   "id": "g-0221-12-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 观光车 驾驶员 资质 培训 限速 载客 规定??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+    "field_evidence": "?????景区 观光车 驾驶员 资质 培训 限速 载客 规定?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "12"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "g-0241-13-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 观光车 充电 电池 安全 管理??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 观光车 充电 电池 安全 管理",
+    "field_evidence": "?????景区 观光车 充电 电池 安全 管理?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "13",
+     "source_type": "SOP",
+     "title": "景区 观光车 充电 电池 安全 管理",
+     "version": "1.0",
+     "excerpt": "景区 观光车 充电 电池 安全 管理"
+    },
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "13"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "13",
+     "source_type": "SOP",
+     "title": "景区 观光车 充电 电池 安全 管理",
+     "version": "1.0",
+     "excerpt": "景区 观光车 充电 电池 安全 管理"
+    },
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    }
+   ]
+  },
+  {
+   "id": "g-0261-14-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 游船 安全 检查 救生衣 载客 定额??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 游船 安全 检查 救生衣 载客 定额",
+    "field_evidence": "?????景区 游船 安全 检查 救生衣 载客 定额?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "14"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "g-0281-15-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 索道 缆车 安全检查 应急救援??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 索道 缆车 安全检查 应急救援",
+    "field_evidence": "?????景区 索道 缆车 安全检查 应急救援?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "15",
+     "source_type": "SOP",
+     "title": "景区 索道 缆车 安全检查 应急救援",
+     "version": "1.0",
+     "excerpt": "景区 索道 缆车 安全检查 应急救援"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "15"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "15",
+     "source_type": "SOP",
+     "title": "景区 索道 缆车 安全检查 应急救援",
+     "version": "1.0",
+     "excerpt": "景区 索道 缆车 安全检查 应急救援"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    }
+   ]
+  },
+  {
+   "id": "g-0301-16-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "大型游乐设施 安全检查 定期检验 运营要求??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "大型游乐设施 安全检查 定期检验 运营要求",
+    "field_evidence": "?????大型游乐设施 安全检查 定期检验 运营要求?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "34",
+     "source_type": "SOP",
+     "title": "景区 大型活动 安全 管理 审批",
+     "version": "1.0",
+     "excerpt": "景区 大型活动 安全 管理 审批"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "16"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "34",
+     "source_type": "SOP",
+     "title": "景区 大型活动 安全 管理 审批",
+     "version": "1.0",
+     "excerpt": "景区 大型活动 安全 管理 审批"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "g-0321-17-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "玻璃栈道 高空项目 安全管理 检查??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "玻璃栈道 高空项目 安全管理 检查",
+    "field_evidence": "?????玻璃栈道 高空项目 安全管理 检查?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "17"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    }
+   ]
+  },
+  {
+   "id": "g-0341-18-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "漂流 项目 安全 管理 检查 规范??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "漂流 项目 安全 管理 检查 规范",
+    "field_evidence": "?????漂流 项目 安全 管理 检查 规范?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "18",
+     "source_type": "SOP",
+     "title": "漂流 项目 安全 管理 检查 规范",
+     "version": "1.0",
+     "excerpt": "漂流 项目 安全 管理 检查 规范"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "18"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "18",
+     "source_type": "SOP",
+     "title": "漂流 项目 安全 管理 检查 规范",
+     "version": "1.0",
+     "excerpt": "漂流 项目 安全 管理 检查 规范"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    }
+   ]
+  },
+  {
+   "id": "g-0361-19-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "滑索 滑道 安全检查 规范??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "滑索 滑道 安全检查 规范",
+    "field_evidence": "?????滑索 滑道 安全检查 规范?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    },
+    {
+     "source_id": "15",
+     "source_type": "SOP",
+     "title": "景区 索道 缆车 安全检查 应急救援",
+     "version": "1.0",
+     "excerpt": "景区 索道 缆车 安全检查 应急救援"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "19"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    },
+    {
+     "source_id": "15",
+     "source_type": "SOP",
+     "title": "景区 索道 缆车 安全检查 应急救援",
+     "version": "1.0",
+     "excerpt": "景区 索道 缆车 安全检查 应急救援"
+    }
+   ]
+  },
+  {
+   "id": "g-0381-20-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 消防 安全 检查 灭火器 疏散通道??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 消防 安全 检查 灭火器 疏散通道",
+    "field_evidence": "?????景区 消防 安全 检查 灭火器 疏散通道?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    },
+    {
+     "source_id": "26",
+     "source_type": "SOP",
+     "title": "景区 拥挤踩踏 预防 疏散 通道",
+     "version": "1.0",
+     "excerpt": "景区 拥挤踩踏 预防 疏散 通道"
+    },
+    {
+     "source_id": "21",
+     "source_type": "SOP",
+     "title": "森林防火 景区 管理 火源管控",
+     "version": "1.0",
+     "excerpt": "森林防火 景区 管理 火源管控"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "20"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    },
+    {
+     "source_id": "26",
+     "source_type": "SOP",
+     "title": "景区 拥挤踩踏 预防 疏散 通道",
+     "version": "1.0",
+     "excerpt": "景区 拥挤踩踏 预防 疏散 通道"
+    },
+    {
+     "source_id": "21",
+     "source_type": "SOP",
+     "title": "森林防火 景区 管理 火源管控",
+     "version": "1.0",
+     "excerpt": "森林防火 景区 管理 火源管控"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    }
+   ]
+  },
+  {
+   "id": "g-0401-21-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "森林防火 景区 管理 火源管控??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "森林防火 景区 管理 火源管控",
+    "field_evidence": "?????森林防火 景区 管理 火源管控?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "21",
+     "source_type": "SOP",
+     "title": "森林防火 景区 管理 火源管控",
+     "version": "1.0",
+     "excerpt": "森林防火 景区 管理 火源管控"
+    },
+    {
+     "source_id": "32",
+     "source_type": "SOP",
+     "title": "景区 广播 监控 系统 管理 要求",
+     "version": "1.0",
+     "excerpt": "景区 广播 监控 系统 管理 要求"
+    },
+    {
+     "source_id": "42",
+     "source_type": "SOP",
+     "title": "景区 智慧 监测 客流 预警 系统",
+     "version": "1.0",
+     "excerpt": "景区 智慧 监测 客流 预警 系统"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "37",
+     "source_type": "SOP",
+     "title": "景区 隐患 排查 治理 闭环 管理",
+     "version": "1.0",
+     "excerpt": "景区 隐患 排查 治理 闭环 管理"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "21"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "21",
+     "source_type": "SOP",
+     "title": "森林防火 景区 管理 火源管控",
+     "version": "1.0",
+     "excerpt": "森林防火 景区 管理 火源管控"
+    },
+    {
+     "source_id": "32",
+     "source_type": "SOP",
+     "title": "景区 广播 监控 系统 管理 要求",
+     "version": "1.0",
+     "excerpt": "景区 广播 监控 系统 管理 要求"
+    },
+    {
+     "source_id": "42",
+     "source_type": "SOP",
+     "title": "景区 智慧 监测 客流 预警 系统",
+     "version": "1.0",
+     "excerpt": "景区 智慧 监测 客流 预警 系统"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "37",
+     "source_type": "SOP",
+     "title": "景区 隐患 排查 治理 闭环 管理",
+     "version": "1.0",
+     "excerpt": "景区 隐患 排查 治理 闭环 管理"
+    }
+   ]
+  },
+  {
+   "id": "g-0421-22-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 防汛 应急预案 边坡 落石 排查??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 防汛 应急预案 边坡 落石 排查",
+    "field_evidence": "?????景区 防汛 应急预案 边坡 落石 排查?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "22",
+     "source_type": "SOP",
+     "title": "景区 防汛 应急预案 边坡 落石 排查",
+     "version": "1.0",
+     "excerpt": "景区 防汛 应急预案 边坡 落石 排查"
+    },
+    {
+     "source_id": "23",
+     "source_type": "SOP",
+     "title": "地质灾害 隐患 排查 景区 巡查",
+     "version": "1.0",
+     "excerpt": "地质灾害 隐患 排查 景区 巡查"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "38",
+     "source_type": "SOP",
+     "title": "景区 应急预案 演练 要求",
+     "version": "1.0",
+     "excerpt": "景区 应急预案 演练 要求"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "22"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "22",
+     "source_type": "SOP",
+     "title": "景区 防汛 应急预案 边坡 落石 排查",
+     "version": "1.0",
+     "excerpt": "景区 防汛 应急预案 边坡 落石 排查"
+    },
+    {
+     "source_id": "23",
+     "source_type": "SOP",
+     "title": "地质灾害 隐患 排查 景区 巡查",
+     "version": "1.0",
+     "excerpt": "地质灾害 隐患 排查 景区 巡查"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "38",
+     "source_type": "SOP",
+     "title": "景区 应急预案 演练 要求",
+     "version": "1.0",
+     "excerpt": "景区 应急预案 演练 要求"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    }
+   ]
+  },
+  {
+   "id": "g-0441-23-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "地质灾害 隐患 排查 景区 巡查??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "地质灾害 隐患 排查 景区 巡查",
+    "field_evidence": "?????地质灾害 隐患 排查 景区 巡查?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "23",
+     "source_type": "SOP",
+     "title": "地质灾害 隐患 排查 景区 巡查",
+     "version": "1.0",
+     "excerpt": "地质灾害 隐患 排查 景区 巡查"
+    },
+    {
+     "source_id": "22",
+     "source_type": "SOP",
+     "title": "景区 防汛 应急预案 边坡 落石 排查",
+     "version": "1.0",
+     "excerpt": "景区 防汛 应急预案 边坡 落石 排查"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "38",
+     "source_type": "SOP",
+     "title": "景区 应急预案 演练 要求",
+     "version": "1.0",
+     "excerpt": "景区 应急预案 演练 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "23"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "23",
+     "source_type": "SOP",
+     "title": "地质灾害 隐患 排查 景区 巡查",
+     "version": "1.0",
+     "excerpt": "地质灾害 隐患 排查 景区 巡查"
+    },
+    {
+     "source_id": "22",
+     "source_type": "SOP",
+     "title": "景区 防汛 应急预案 边坡 落石 排查",
+     "version": "1.0",
+     "excerpt": "景区 防汛 应急预案 边坡 落石 排查"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "38",
+     "source_type": "SOP",
+     "title": "景区 应急预案 演练 要求",
+     "version": "1.0",
+     "excerpt": "景区 应急预案 演练 要求"
+    }
+   ]
+  },
+  {
+   "id": "g-0461-24-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "雷电 大风 天气 景区 安全 防护??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "雷电 大风 天气 景区 安全 防护",
+    "field_evidence": "?????雷电 大风 天气 景区 安全 防护?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "24",
+     "source_type": "SOP",
+     "title": "雷电 大风 天气 景区 安全 防护",
+     "version": "1.0",
+     "excerpt": "雷电 大风 天气 景区 安全 防护"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "33",
+     "source_type": "SOP",
+     "title": "景区 反恐 防暴 治安 管理",
+     "version": "1.0",
+     "excerpt": "景区 反恐 防暴 治安 管理"
+    },
+    {
+     "source_id": "26",
+     "source_type": "SOP",
+     "title": "景区 拥挤踩踏 预防 疏散 通道",
+     "version": "1.0",
+     "excerpt": "景区 拥挤踩踏 预防 疏散 通道"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "24"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "24",
+     "source_type": "SOP",
+     "title": "雷电 大风 天气 景区 安全 防护",
+     "version": "1.0",
+     "excerpt": "雷电 大风 天气 景区 安全 防护"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "33",
+     "source_type": "SOP",
+     "title": "景区 反恐 防暴 治安 管理",
+     "version": "1.0",
+     "excerpt": "景区 反恐 防暴 治安 管理"
+    },
+    {
+     "source_id": "26",
+     "source_type": "SOP",
+     "title": "景区 拥挤踩踏 预防 疏散 通道",
+     "version": "1.0",
+     "excerpt": "景区 拥挤踩踏 预防 疏散 通道"
+    }
+   ]
+  },
+  {
+   "id": "g-0481-25-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 最大承载量 核定 限流 措施??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 最大承载量 核定 限流 措施",
+    "field_evidence": "?????景区 最大承载量 核定 限流 措施?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "25"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    }
+   ]
+  },
+  {
+   "id": "g-0501-26-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 拥挤踩踏 预防 疏散 通道??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 拥挤踩踏 预防 疏散 通道",
+    "field_evidence": "?????景区 拥挤踩踏 预防 疏散 通道?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "26",
+     "source_type": "SOP",
+     "title": "景区 拥挤踩踏 预防 疏散 通道",
+     "version": "1.0",
+     "excerpt": "景区 拥挤踩踏 预防 疏散 通道"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "26"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "26",
+     "source_type": "SOP",
+     "title": "景区 拥挤踩踏 预防 疏散 通道",
+     "version": "1.0",
+     "excerpt": "景区 拥挤踩踏 预防 疏散 通道"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    }
+   ]
+  },
+  {
+   "id": "g-0521-27-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 医疗急救 救援站 配置 要求??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 医疗急救 救援站 配置 要求",
+    "field_evidence": "?????景区 医疗急救 救援站 配置 要求?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "38",
+     "source_type": "SOP",
+     "title": "景区 应急预案 演练 要求",
+     "version": "1.0",
+     "excerpt": "景区 应急预案 演练 要求"
+    },
+    {
+     "source_id": "29",
+     "source_type": "SOP",
+     "title": "景区 卫生 防疫 消杀 要求",
+     "version": "1.0",
+     "excerpt": "景区 卫生 防疫 消杀 要求"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "27"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "38",
+     "source_type": "SOP",
+     "title": "景区 应急预案 演练 要求",
+     "version": "1.0",
+     "excerpt": "景区 应急预案 演练 要求"
+    },
+    {
+     "source_id": "29",
+     "source_type": "SOP",
+     "title": "景区 卫生 防疫 消杀 要求",
+     "version": "1.0",
+     "excerpt": "景区 卫生 防疫 消杀 要求"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    }
+   ]
+  },
+  {
+   "id": "g-0541-28-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 食品安全 管理 检查??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 食品安全 管理 检查",
+    "field_evidence": "?????景区 食品安全 管理 检查?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "28",
+     "source_type": "SOP",
+     "title": "景区 食品安全 管理 检查",
+     "version": "1.0",
+     "excerpt": "景区 食品安全 管理 检查"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    },
+    {
+     "source_id": "29",
+     "source_type": "SOP",
+     "title": "景区 卫生 防疫 消杀 要求",
+     "version": "1.0",
+     "excerpt": "景区 卫生 防疫 消杀 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "28"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "28",
+     "source_type": "SOP",
+     "title": "景区 食品安全 管理 检查",
+     "version": "1.0",
+     "excerpt": "景区 食品安全 管理 检查"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    },
+    {
+     "source_id": "29",
+     "source_type": "SOP",
+     "title": "景区 卫生 防疫 消杀 要求",
+     "version": "1.0",
+     "excerpt": "景区 卫生 防疫 消杀 要求"
+    }
+   ]
+  },
+  {
+   "id": "g-0561-29-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 卫生 防疫 消杀 要求??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 卫生 防疫 消杀 要求",
+    "field_evidence": "?????景区 卫生 防疫 消杀 要求?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "29",
+     "source_type": "SOP",
+     "title": "景区 卫生 防疫 消杀 要求",
+     "version": "1.0",
+     "excerpt": "景区 卫生 防疫 消杀 要求"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "28",
+     "source_type": "SOP",
+     "title": "景区 食品安全 管理 检查",
+     "version": "1.0",
+     "excerpt": "景区 食品安全 管理 检查"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "29"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "29",
+     "source_type": "SOP",
+     "title": "景区 卫生 防疫 消杀 要求",
+     "version": "1.0",
+     "excerpt": "景区 卫生 防疫 消杀 要求"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "28",
+     "source_type": "SOP",
+     "title": "景区 食品安全 管理 检查",
+     "version": "1.0",
+     "excerpt": "景区 食品安全 管理 检查"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    }
+   ]
+  },
+  {
+   "id": "g-0581-30-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 夜游 照明 安全 管理??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 夜游 照明 安全 管理",
+    "field_evidence": "?????景区 夜游 照明 安全 管理?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "30",
+     "source_type": "SOP",
+     "title": "景区 夜游 照明 安全 管理",
+     "version": "1.0",
+     "excerpt": "景区 夜游 照明 安全 管理"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "32",
+     "source_type": "SOP",
+     "title": "景区 广播 监控 系统 管理 要求",
+     "version": "1.0",
+     "excerpt": "景区 广播 监控 系统 管理 要求"
+    },
+    {
+     "source_id": "42",
+     "source_type": "SOP",
+     "title": "景区 智慧 监测 客流 预警 系统",
+     "version": "1.0",
+     "excerpt": "景区 智慧 监测 客流 预警 系统"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "30"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "30",
+     "source_type": "SOP",
+     "title": "景区 夜游 照明 安全 管理",
+     "version": "1.0",
+     "excerpt": "景区 夜游 照明 安全 管理"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "32",
+     "source_type": "SOP",
+     "title": "景区 广播 监控 系统 管理 要求",
+     "version": "1.0",
+     "excerpt": "景区 广播 监控 系统 管理 要求"
+    },
+    {
+     "source_id": "42",
+     "source_type": "SOP",
+     "title": "景区 智慧 监测 客流 预警 系统",
+     "version": "1.0",
+     "excerpt": "景区 智慧 监测 客流 预警 系统"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    }
+   ]
+  },
+  {
+   "id": "g-0601-31-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 票务系统 闸机 故障 应急 处置??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 票务系统 闸机 故障 应急 处置",
+    "field_evidence": "?????景区 票务系统 闸机 故障 应急 处置?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "31",
+     "source_type": "SOP",
+     "title": "景区 票务系统 闸机 故障 应急 处置",
+     "version": "1.0",
+     "excerpt": "景区 票务系统 闸机 故障 应急 处置"
+    },
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "31"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "31",
+     "source_type": "SOP",
+     "title": "景区 票务系统 闸机 故障 应急 处置",
+     "version": "1.0",
+     "excerpt": "景区 票务系统 闸机 故障 应急 处置"
+    },
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    }
+   ]
+  },
+  {
+   "id": "g-0621-32-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 广播 监控 系统 管理 要求??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 广播 监控 系统 管理 要求",
+    "field_evidence": "?????景区 广播 监控 系统 管理 要求?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "32",
+     "source_type": "SOP",
+     "title": "景区 广播 监控 系统 管理 要求",
+     "version": "1.0",
+     "excerpt": "景区 广播 监控 系统 管理 要求"
+    },
+    {
+     "source_id": "42",
+     "source_type": "SOP",
+     "title": "景区 智慧 监测 客流 预警 系统",
+     "version": "1.0",
+     "excerpt": "景区 智慧 监测 客流 预警 系统"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "32"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "32",
+     "source_type": "SOP",
+     "title": "景区 广播 监控 系统 管理 要求",
+     "version": "1.0",
+     "excerpt": "景区 广播 监控 系统 管理 要求"
+    },
+    {
+     "source_id": "42",
+     "source_type": "SOP",
+     "title": "景区 智慧 监测 客流 预警 系统",
+     "version": "1.0",
+     "excerpt": "景区 智慧 监测 客流 预警 系统"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    }
+   ]
+  },
+  {
+   "id": "g-0641-33-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 反恐 防暴 治安 管理??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 反恐 防暴 治安 管理",
+    "field_evidence": "?????景区 反恐 防暴 治安 管理?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "33",
+     "source_type": "SOP",
+     "title": "景区 反恐 防暴 治安 管理",
+     "version": "1.0",
+     "excerpt": "景区 反恐 防暴 治安 管理"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "30",
+     "source_type": "SOP",
+     "title": "景区 夜游 照明 安全 管理",
+     "version": "1.0",
+     "excerpt": "景区 夜游 照明 安全 管理"
+    },
+    {
+     "source_id": "21",
+     "source_type": "SOP",
+     "title": "森林防火 景区 管理 火源管控",
+     "version": "1.0",
+     "excerpt": "森林防火 景区 管理 火源管控"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "33"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "33",
+     "source_type": "SOP",
+     "title": "景区 反恐 防暴 治安 管理",
+     "version": "1.0",
+     "excerpt": "景区 反恐 防暴 治安 管理"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "30",
+     "source_type": "SOP",
+     "title": "景区 夜游 照明 安全 管理",
+     "version": "1.0",
+     "excerpt": "景区 夜游 照明 安全 管理"
+    },
+    {
+     "source_id": "21",
+     "source_type": "SOP",
+     "title": "森林防火 景区 管理 火源管控",
+     "version": "1.0",
+     "excerpt": "森林防火 景区 管理 火源管控"
+    }
+   ]
+  },
+  {
+   "id": "g-0661-34-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 大型活动 安全 管理 审批??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 大型活动 安全 管理 审批",
+    "field_evidence": "?????景区 大型活动 安全 管理 审批?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "34",
+     "source_type": "SOP",
+     "title": "景区 大型活动 安全 管理 审批",
+     "version": "1.0",
+     "excerpt": "景区 大型活动 安全 管理 审批"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "34"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "34",
+     "source_type": "SOP",
+     "title": "景区 大型活动 安全 管理 审批",
+     "version": "1.0",
+     "excerpt": "景区 大型活动 安全 管理 审批"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    }
+   ]
+  },
+  {
+   "id": "g-0681-35-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 特种设备 安全 管理 制度 台账??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 特种设备 安全 管理 制度 台账",
+    "field_evidence": "?????景区 特种设备 安全 管理 制度 台账?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "35",
+     "source_type": "SOP",
+     "title": "景区 特种设备 安全 管理 制度 台账",
+     "version": "1.0",
+     "excerpt": "景区 特种设备 安全 管理 制度 台账"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    },
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    },
+    {
+     "source_id": "31",
+     "source_type": "SOP",
+     "title": "景区 票务系统 闸机 故障 应急 处置",
+     "version": "1.0",
+     "excerpt": "景区 票务系统 闸机 故障 应急 处置"
+    },
+    {
+     "source_id": "37",
+     "source_type": "SOP",
+     "title": "景区 隐患 排查 治理 闭环 管理",
+     "version": "1.0",
+     "excerpt": "景区 隐患 排查 治理 闭环 管理"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "35"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "35",
+     "source_type": "SOP",
+     "title": "景区 特种设备 安全 管理 制度 台账",
+     "version": "1.0",
+     "excerpt": "景区 特种设备 安全 管理 制度 台账"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    },
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    },
+    {
+     "source_id": "31",
+     "source_type": "SOP",
+     "title": "景区 票务系统 闸机 故障 应急 处置",
+     "version": "1.0",
+     "excerpt": "景区 票务系统 闸机 故障 应急 处置"
+    },
+    {
+     "source_id": "37",
+     "source_type": "SOP",
+     "title": "景区 隐患 排查 治理 闭环 管理",
+     "version": "1.0",
+     "excerpt": "景区 隐患 排查 治理 闭环 管理"
+    }
+   ]
+  },
+  {
+   "id": "g-0701-36-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 设备 维保 外包 单位 管理??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 设备 维保 外包 单位 管理",
+    "field_evidence": "?????景区 设备 维保 外包 单位 管理?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    },
+    {
+     "source_id": "32",
+     "source_type": "SOP",
+     "title": "景区 广播 监控 系统 管理 要求",
+     "version": "1.0",
+     "excerpt": "景区 广播 监控 系统 管理 要求"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "35",
+     "source_type": "SOP",
+     "title": "景区 特种设备 安全 管理 制度 台账",
+     "version": "1.0",
+     "excerpt": "景区 特种设备 安全 管理 制度 台账"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "36"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    },
+    {
+     "source_id": "32",
+     "source_type": "SOP",
+     "title": "景区 广播 监控 系统 管理 要求",
+     "version": "1.0",
+     "excerpt": "景区 广播 监控 系统 管理 要求"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "35",
+     "source_type": "SOP",
+     "title": "景区 特种设备 安全 管理 制度 台账",
+     "version": "1.0",
+     "excerpt": "景区 特种设备 安全 管理 制度 台账"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    }
+   ]
+  },
+  {
+   "id": "g-0721-37-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 隐患 排查 治理 闭环 管理??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 隐患 排查 治理 闭环 管理",
+    "field_evidence": "?????景区 隐患 排查 治理 闭环 管理?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "37",
+     "source_type": "SOP",
+     "title": "景区 隐患 排查 治理 闭环 管理",
+     "version": "1.0",
+     "excerpt": "景区 隐患 排查 治理 闭环 管理"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "23",
+     "source_type": "SOP",
+     "title": "地质灾害 隐患 排查 景区 巡查",
+     "version": "1.0",
+     "excerpt": "地质灾害 隐患 排查 景区 巡查"
+    },
+    {
+     "source_id": "21",
+     "source_type": "SOP",
+     "title": "森林防火 景区 管理 火源管控",
+     "version": "1.0",
+     "excerpt": "森林防火 景区 管理 火源管控"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "37"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "37",
+     "source_type": "SOP",
+     "title": "景区 隐患 排查 治理 闭环 管理",
+     "version": "1.0",
+     "excerpt": "景区 隐患 排查 治理 闭环 管理"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "23",
+     "source_type": "SOP",
+     "title": "地质灾害 隐患 排查 景区 巡查",
+     "version": "1.0",
+     "excerpt": "地质灾害 隐患 排查 景区 巡查"
+    },
+    {
+     "source_id": "21",
+     "source_type": "SOP",
+     "title": "森林防火 景区 管理 火源管控",
+     "version": "1.0",
+     "excerpt": "森林防火 景区 管理 火源管控"
+    }
+   ]
+  },
+  {
+   "id": "g-0741-38-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 应急预案 演练 要求??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 应急预案 演练 要求",
+    "field_evidence": "?????景区 应急预案 演练 要求?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "38",
+     "source_type": "SOP",
+     "title": "景区 应急预案 演练 要求",
+     "version": "1.0",
+     "excerpt": "景区 应急预案 演练 要求"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "33",
+     "source_type": "SOP",
+     "title": "景区 反恐 防暴 治安 管理",
+     "version": "1.0",
+     "excerpt": "景区 反恐 防暴 治安 管理"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "38"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "38",
+     "source_type": "SOP",
+     "title": "景区 应急预案 演练 要求",
+     "version": "1.0",
+     "excerpt": "景区 应急预案 演练 要求"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "33",
+     "source_type": "SOP",
+     "title": "景区 反恐 防暴 治安 管理",
+     "version": "1.0",
+     "excerpt": "景区 反恐 防暴 治安 管理"
+    }
+   ]
+  },
+  {
+   "id": "g-0761-39-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 游客 投诉 处理 流程??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 游客 投诉 处理 流程",
+    "field_evidence": "?????景区 游客 投诉 处理 流程?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "39",
+     "source_type": "SOP",
+     "title": "景区 游客 投诉 处理 流程",
+     "version": "1.0",
+     "excerpt": "景区 游客 投诉 处理 流程"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "28",
+     "source_type": "SOP",
+     "title": "景区 食品安全 管理 检查",
+     "version": "1.0",
+     "excerpt": "景区 食品安全 管理 检查"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "39"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "39",
+     "source_type": "SOP",
+     "title": "景区 游客 投诉 处理 流程",
+     "version": "1.0",
+     "excerpt": "景区 游客 投诉 处理 流程"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "28",
+     "source_type": "SOP",
+     "title": "景区 食品安全 管理 检查",
+     "version": "1.0",
+     "excerpt": "景区 食品安全 管理 检查"
+    }
+   ]
+  },
+  {
+   "id": "g-0781-40-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 临时 闭园 恢复 开放 程序??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 临时 闭园 恢复 开放 程序",
+    "field_evidence": "?????景区 临时 闭园 恢复 开放 程序?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "40",
+     "source_type": "SOP",
+     "title": "景区 临时 闭园 恢复 开放 程序",
+     "version": "1.0",
+     "excerpt": "景区 临时 闭园 恢复 开放 程序"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "31",
+     "source_type": "SOP",
+     "title": "景区 票务系统 闸机 故障 应急 处置",
+     "version": "1.0",
+     "excerpt": "景区 票务系统 闸机 故障 应急 处置"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "40"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "40",
+     "source_type": "SOP",
+     "title": "景区 临时 闭园 恢复 开放 程序",
+     "version": "1.0",
+     "excerpt": "景区 临时 闭园 恢复 开放 程序"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "31",
+     "source_type": "SOP",
+     "title": "景区 票务系统 闸机 故障 应急 处置",
+     "version": "1.0",
+     "excerpt": "景区 票务系统 闸机 故障 应急 处置"
+    }
+   ]
+  },
+  {
+   "id": "g-0801-41-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 安全生产 责任制 岗位职责??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 安全生产 责任制 岗位职责",
+    "field_evidence": "?????景区 安全生产 责任制 岗位职责?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "41",
+     "source_type": "SOP",
+     "title": "景区 安全生产 责任制 岗位职责",
+     "version": "1.0",
+     "excerpt": "景区 安全生产 责任制 岗位职责"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "38",
+     "source_type": "SOP",
+     "title": "景区 应急预案 演练 要求",
+     "version": "1.0",
+     "excerpt": "景区 应急预案 演练 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "41"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "41",
+     "source_type": "SOP",
+     "title": "景区 安全生产 责任制 岗位职责",
+     "version": "1.0",
+     "excerpt": "景区 安全生产 责任制 岗位职责"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "38",
+     "source_type": "SOP",
+     "title": "景区 应急预案 演练 要求",
+     "version": "1.0",
+     "excerpt": "景区 应急预案 演练 要求"
+    }
+   ]
+  },
+  {
+   "id": "g-0821-42-1",
+   "scenario_type": "KNOWLEDGE",
+   "query": "景区 智慧 监测 客流 预警 系统??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 智慧 监测 客流 预警 系统",
+    "field_evidence": "?????景区 智慧 监测 客流 预警 系统?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "42",
+     "source_type": "SOP",
+     "title": "景区 智慧 监测 客流 预警 系统",
+     "version": "1.0",
+     "excerpt": "景区 智慧 监测 客流 预警 系统"
+    },
+    {
+     "source_id": "32",
+     "source_type": "SOP",
+     "title": "景区 广播 监控 系统 管理 要求",
+     "version": "1.0",
+     "excerpt": "景区 广播 监控 系统 管理 要求"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "42"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "42",
+     "source_type": "SOP",
+     "title": "景区 智慧 监测 客流 预警 系统",
+     "version": "1.0",
+     "excerpt": "景区 智慧 监测 客流 预警 系统"
+    },
+    {
+     "source_id": "32",
+     "source_type": "SOP",
+     "title": "景区 广播 监控 系统 管理 要求",
+     "version": "1.0",
+     "excerpt": "景区 广播 监控 系统 管理 要求"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    }
+   ]
+  },
+  {
+   "id": "g-0002-1-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??雨后观光车复运与分流 SOP????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "雨后观光车复运与分流 SOP",
+    "field_evidence": "?????雨后观光车复运与分流 SOP?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "1"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "g-0022-2-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??观光车雨后复运检查与放行????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "观光车雨后复运检查与放行",
+    "field_evidence": "?????观光车雨后复运检查与放行?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "2"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "g-0042-3-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??观光车轮组异常停运与备用车辆启用????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "观光车轮组异常停运与备用车辆启用",
+    "field_evidence": "?????观光车轮组异常停运与备用车辆启用?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "31",
+     "source_type": "SOP",
+     "title": "景区 票务系统 闸机 故障 应急 处置",
+     "version": "1.0",
+     "excerpt": "景区 票务系统 闸机 故障 应急 处置"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "3"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "31",
+     "source_type": "SOP",
+     "title": "景区 票务系统 闸机 故障 应急 处置",
+     "version": "1.0",
+     "excerpt": "景区 票务系统 闸机 故障 应急 处置"
+    }
+   ]
+  },
+  {
+   "id": "g-0062-4-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??东门集散区高峰客流分流与限流????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "东门集散区高峰客流分流与限流",
+    "field_evidence": "?????东门集散区高峰客流分流与限流?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "4"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    }
+   ]
+  },
+  {
+   "id": "g-0082-5-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??强降雨与暴雨天气景区设施检查与恢复运营????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "强降雨与暴雨天气景区设施检查与恢复运营",
+    "field_evidence": "?????强降雨与暴雨天气景区设施检查与恢复运营?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "5"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    }
+   ]
+  },
+  {
+   "id": "g-0102-6-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??景区设备故障现场处置与证据留存????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区设备故障现场处置与证据留存",
+    "field_evidence": "?????景区设备故障现场处置与证据留存?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "35",
+     "source_type": "SOP",
+     "title": "景区 特种设备 安全 管理 制度 台账",
+     "version": "1.0",
+     "excerpt": "景区 特种设备 安全 管理 制度 台账"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "6"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "35",
+     "source_type": "SOP",
+     "title": "景区 特种设备 安全 管理 制度 台账",
+     "version": "1.0",
+     "excerpt": "景区 特种设备 安全 管理 制度 台账"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    }
+   ]
+  },
+  {
+   "id": "g-0122-7-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎",
+    "field_evidence": "?????场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "7",
+     "source_type": "SOP",
+     "title": "场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎",
+     "version": "1.0",
+     "excerpt": "场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "7"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "7",
+     "source_type": "SOP",
+     "title": "场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎",
+     "version": "1.0",
+     "excerpt": "场（厂）内专用机动车辆 观光车 安全技术规程 日常检查 制动 轮胎"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    }
+   ]
+  },
+  {
+   "id": "g-0142-8-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??景区 观光车 雨后 复运 检查 要求????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 观光车 雨后 复运 检查 要求",
+    "field_evidence": "?????景区 观光车 雨后 复运 检查 要求?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "8"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "雨后观光车复运与分流 SOP"
+    }
+   ]
+  },
+  {
+   "id": "g-0162-9-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??景区 客流 高峰 分流 限流 管理规范????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 客流 高峰 分流 限流 管理规范",
+    "field_evidence": "?????景区 客流 高峰 分流 限流 管理规范?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "29",
+     "source_type": "SOP",
+     "title": "景区 卫生 防疫 消杀 要求",
+     "version": "1.0",
+     "excerpt": "景区 卫生 防疫 消杀 要求"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "9"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "29",
+     "source_type": "SOP",
+     "title": "景区 卫生 防疫 消杀 要求",
+     "version": "1.0",
+     "excerpt": "景区 卫生 防疫 消杀 要求"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "g-0182-10-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??暴雨 强降雨 景区 设施 检查 恢复运营 要求????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+    "field_evidence": "?????暴雨 强降雨 景区 设施 检查 恢复运营 要求?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "10"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    },
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "观光车轮组异常停运与备用车辆启用"
+    }
+   ]
+  },
+  {
+   "id": "g-0202-11-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??景区 突发事件 应急预案 设备故障 处置????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 突发事件 应急预案 设备故障 处置",
+    "field_evidence": "?????景区 突发事件 应急预案 设备故障 处置?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "38",
+     "source_type": "SOP",
+     "title": "景区 应急预案 演练 要求",
+     "version": "1.0",
+     "excerpt": "景区 应急预案 演练 要求"
+    },
+    {
+     "source_id": "22",
+     "source_type": "SOP",
+     "title": "景区 防汛 应急预案 边坡 落石 排查",
+     "version": "1.0",
+     "excerpt": "景区 防汛 应急预案 边坡 落石 排查"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "11"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "6",
+     "source_type": "SOP",
+     "title": "景区设备故障现场处置与证据留存",
+     "version": "1.0",
+     "excerpt": "景区设备故障现场处置与证据留存"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    },
+    {
+     "source_id": "38",
+     "source_type": "SOP",
+     "title": "景区 应急预案 演练 要求",
+     "version": "1.0",
+     "excerpt": "景区 应急预案 演练 要求"
+    },
+    {
+     "source_id": "22",
+     "source_type": "SOP",
+     "title": "景区 防汛 应急预案 边坡 落石 排查",
+     "version": "1.0",
+     "excerpt": "景区 防汛 应急预案 边坡 落石 排查"
+    },
+    {
+     "source_id": "5",
+     "source_type": "SOP",
+     "title": "强降雨与暴雨天气景区设施检查与恢复运营",
+     "version": "1.0",
+     "excerpt": "强降雨与暴雨天气景区设施检查与恢复运营"
+    }
+   ]
+  },
+  {
+   "id": "g-0222-12-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??景区 观光车 驾驶员 资质 培训 限速 载客 规定????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+    "field_evidence": "?????景区 观光车 驾驶员 资质 培训 限速 载客 规定?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "12"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    },
+    {
+     "source_id": "4",
+     "source_type": "SOP",
+     "title": "东门集散区高峰客流分流与限流",
+     "version": "1.0",
+     "excerpt": "东门集散区高峰客流分流与限流"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "g-0242-13-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??景区 观光车 充电 电池 安全 管理????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 观光车 充电 电池 安全 管理",
+    "field_evidence": "?????景区 观光车 充电 电池 安全 管理?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "13",
+     "source_type": "SOP",
+     "title": "景区 观光车 充电 电池 安全 管理",
+     "version": "1.0",
+     "excerpt": "景区 观光车 充电 电池 安全 管理"
+    },
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "13"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "13",
+     "source_type": "SOP",
+     "title": "景区 观光车 充电 电池 安全 管理",
+     "version": "1.0",
+     "excerpt": "景区 观光车 充电 电池 安全 管理"
+    },
+    {
+     "source_id": "12",
+     "source_type": "SOP",
+     "title": "景区 观光车 驾驶员 资质 培训 限速 载客 规定",
+     "version": "1.0",
+     "excerpt": "景区 观光车 驾驶员 资质 培训 限速 载客 规定"
+    },
+    {
+     "source_id": "8",
+     "source_type": "SOP",
+     "title": "景区 观光车 雨后 复运 检查 要求",
+     "version": "1.0",
+     "excerpt": "景区 观光车 雨后 复运 检查 要求"
+    },
+    {
+     "source_id": "36",
+     "source_type": "SOP",
+     "title": "景区 设备 维保 外包 单位 管理",
+     "version": "1.0",
+     "excerpt": "景区 设备 维保 外包 单位 管理"
+    },
+    {
+     "source_id": "2",
+     "source_type": "SOP",
+     "title": "观光车雨后复运检查与放行",
+     "version": "1.0",
+     "excerpt": "观光车雨后复运检查与放行"
+    }
+   ]
+  },
+  {
+   "id": "g-0262-14-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??景区 游船 安全 检查 救生衣 载客 定额????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 游船 安全 检查 救生衣 载客 定额",
+    "field_evidence": "?????景区 游船 安全 检查 救生衣 载客 定额?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "14"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "25",
+     "source_type": "SOP",
+     "title": "景区 最大承载量 核定 限流 措施",
+     "version": "1.0",
+     "excerpt": "景区 最大承载量 核定 限流 措施"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "g-0282-15-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??景区 索道 缆车 安全检查 应急救援????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "景区 索道 缆车 安全检查 应急救援",
+    "field_evidence": "?????景区 索道 缆车 安全检查 应急救援?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "15",
+     "source_type": "SOP",
+     "title": "景区 索道 缆车 安全检查 应急救援",
+     "version": "1.0",
+     "excerpt": "景区 索道 缆车 安全检查 应急救援"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "15"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "15",
+     "source_type": "SOP",
+     "title": "景区 索道 缆车 安全检查 应急救援",
+     "version": "1.0",
+     "excerpt": "景区 索道 缆车 安全检查 应急救援"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "27",
+     "source_type": "SOP",
+     "title": "景区 医疗急救 救援站 配置 要求",
+     "version": "1.0",
+     "excerpt": "景区 医疗急救 救援站 配置 要求"
+    },
+    {
+     "source_id": "11",
+     "source_type": "SOP",
+     "title": "景区 突发事件 应急预案 设备故障 处置",
+     "version": "1.0",
+     "excerpt": "景区 突发事件 应急预案 设备故障 处置"
+    }
+   ]
+  },
+  {
+   "id": "g-0302-16-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??大型游乐设施 安全检查 定期检验 运营要求????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "大型游乐设施 安全检查 定期检验 运营要求",
+    "field_evidence": "?????大型游乐设施 安全检查 定期检验 运营要求?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "34",
+     "source_type": "SOP",
+     "title": "景区 大型活动 安全 管理 审批",
+     "version": "1.0",
+     "excerpt": "景区 大型活动 安全 管理 审批"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "16"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "16",
+     "source_type": "SOP",
+     "title": "大型游乐设施 安全检查 定期检验 运营要求",
+     "version": "1.0",
+     "excerpt": "大型游乐设施 安全检查 定期检验 运营要求"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "34",
+     "source_type": "SOP",
+     "title": "景区 大型活动 安全 管理 审批",
+     "version": "1.0",
+     "excerpt": "景区 大型活动 安全 管理 审批"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    }
+   ]
+  },
+  {
+   "id": "g-0322-17-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??玻璃栈道 高空项目 安全管理 检查????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "玻璃栈道 高空项目 安全管理 检查",
+    "field_evidence": "?????玻璃栈道 高空项目 安全管理 检查?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "17"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "10",
+     "source_type": "SOP",
+     "title": "暴雨 强降雨 景区 设施 检查 恢复运营 要求",
+     "version": "1.0",
+     "excerpt": "暴雨 强降雨 景区 设施 检查 恢复运营 要求"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "20",
+     "source_type": "SOP",
+     "title": "景区 消防 安全 检查 灭火器 疏散通道",
+     "version": "1.0",
+     "excerpt": "景区 消防 安全 检查 灭火器 疏散通道"
+    }
+   ]
+  },
+  {
+   "id": "g-0342-18-2",
+   "scenario_type": "KNOWLEDGE",
+   "query": "??漂流 项目 安全 管理 检查 规范????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "漂流 项目 安全 管理 检查 规范",
+    "field_evidence": "?????漂流 项目 安全 管理 检查 规范?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "18",
+     "source_type": "SOP",
+     "title": "漂流 项目 安全 管理 检查 规范",
+     "version": "1.0",
+     "excerpt": "漂流 项目 安全 管理 检查 规范"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "18"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "????"
+    ]
+   },
+   "evaluation_origin": "SYNTHETIC_FROM_CORPUS",
+   "retrieved_context": [
+    {
+     "source_id": "18",
+     "source_type": "SOP",
+     "title": "漂流 项目 安全 管理 检查 规范",
+     "version": "1.0",
+     "excerpt": "漂流 项目 安全 管理 检查 规范"
+    },
+    {
+     "source_id": "14",
+     "source_type": "SOP",
+     "title": "景区 游船 安全 检查 救生衣 载客 定额",
+     "version": "1.0",
+     "excerpt": "景区 游船 安全 检查 救生衣 载客 定额"
+    },
+    {
+     "source_id": "17",
+     "source_type": "SOP",
+     "title": "玻璃栈道 高空项目 安全管理 检查",
+     "version": "1.0",
+     "excerpt": "玻璃栈道 高空项目 安全管理 检查"
+    },
+    {
+     "source_id": "19",
+     "source_type": "SOP",
+     "title": "滑索 滑道 安全检查 规范",
+     "version": "1.0",
+     "excerpt": "滑索 滑道 安全检查 规范"
+    },
+    {
+     "source_id": "9",
+     "source_type": "SOP",
+     "title": "景区 客流 高峰 分流 限流 管理规范",
+     "version": "1.0",
+     "excerpt": "景区 客流 高峰 分流 限流 管理规范"
+    }
+   ]
+  }
+ ],
+ "context_source": "LIVE_TOP5_FROM_INDEX"
+}

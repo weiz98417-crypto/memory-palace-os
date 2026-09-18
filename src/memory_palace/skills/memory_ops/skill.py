@@ -36,7 +36,7 @@ class MemoryOpsSkill(BaseAgentSkill):
 
         super().__init__(
             skill_name=self.config.get("agent_name", "MemoryOps_Agent"),
-            model_name=self.config.get("llm_config", {}).get("model", "deepseek-v4-flash")
+            model_name=self.config.get("llm_config", {}).get("model", "deepseek-flash")
         )
 
     def _load_config(self) -> Dict[str, Any]:
@@ -46,7 +46,7 @@ class MemoryOpsSkill(BaseAgentSkill):
             logger.warning("MemoryOps config 缺失，采用默认 RAG 参数。")
             return {
                 "agent_name": "MemoryOps_Agent",
-                "llm_config": {"model": "deepseek-v4-flash"},
+                "llm_config": {"model": "deepseek-flash"},
                 "rag_config": {"top_k": 3, "similarity_threshold": 0.75}
             }
 

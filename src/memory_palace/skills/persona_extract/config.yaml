@@ -8,7 +8,7 @@ agent_metadata:
   description: "结构化访谈萃取老员工判断逻辑的专家"
 
 llm_config:
-  model: "deepseek-v4-flash"
+  model: "deepseek-flash"
   temperature: 0.3
   max_tokens: 1000
   json_mode: true
@@ -34,6 +34,6 @@ invoke_config:
   # 相似度阈值（低于此值不采用）
   relevance_threshold: 0.3
   # 回答模型
-  invoke_model: "deepseek-v4-flash"
+  invoke_model: "deepseek-flash"
   # 回答最大字数
   max_reply_chars: 120

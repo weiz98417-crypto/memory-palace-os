@@ -71,7 +71,7 @@ class TodoWriteSkill(BaseAgentSkill):
 
         super().__init__(
             skill_name="todo_write",
-            model_name=self.config.get("llm_config", {}).get("model", "deepseek-v4-flash")
+            model_name=self.config.get("llm_config", {}).get("model", "deepseek-flash")
         )
 
     def _load_config(self) -> Dict[str, Any]:
@@ -79,7 +79,7 @@ class TodoWriteSkill(BaseAgentSkill):
         config_path = self.base_path / "config.yaml"
         if not config_path.exists():
             return {
-                "llm_config": {"model": "deepseek-v4-flash"},
+                "llm_config": {"model": "deepseek-flash"},
                 "max_tasks": 10
             }
 

@@ -26,7 +26,7 @@ from ..config.secrets import read_secret
 from ..core.sensitive_output import public_error_message
 
 
-REQUIRED_GENERATIVE_MODEL = "deepseek-v4-flash"
+REQUIRED_GENERATIVE_MODEL = "deepseek-flash"
 DEFAULT_DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1"
 
 

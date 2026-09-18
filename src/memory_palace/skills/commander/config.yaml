@@ -12,7 +12,7 @@ agent_metadata:
 # 指挥官建议：必须使用逻辑推理能力最强的模型（如 GPT-4o 或 Claude-3.5-Sonnet）。
 # 因为处理 P0 级事件不容许逻辑断层。
 llm_config:
-  model: "deepseek-v4-flash"
+  model: "deepseek-flash"
   temperature: 0.1           # 极低随机性，确保在面对同一类事故时，给出的 SOP 指令保持高度一致
   top_p: 1.0
   max_tokens: 1000           # 允许更详尽的步骤说明，但需防止模型由于发散而话痨

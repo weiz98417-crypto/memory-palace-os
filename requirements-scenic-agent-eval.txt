@@ -1,0 +1,5 @@
+# Live evaluation gate (ADR-0019 / ADR-0020): DeepEval 4.2.x plus the Agent trunk and
+# Postgres access it drives. Kept out of the app image so the production runtime stays
+# lean; the live gate refuses to run without a real model credential.
+-r requirements.txt
+deepeval>=4.2.0,<4.3.0

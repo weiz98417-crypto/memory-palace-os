@@ -1,0 +1,109 @@
+{
+ "schema_version": 1,
+ "fixture_only": true,
+ "evaluation_origin": "HAND_CURATED_CALIBRATION",
+ "cases": [
+  {
+   "id": "device-anomaly-grounded",
+   "scenario_type": "DEVICE_ANOMALY",
+   "query": "观光车轮组异常停运与备用车辆启用??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "观光车轮组异常停运与备用车辆启用",
+    "field_evidence": "?????观光车轮组异常停运与备用车辆启用?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "3",
+     "source_type": "SOP",
+     "title": "观光车轮组异常停运与备用车辆启用",
+     "version": "1.0",
+     "excerpt": "【适用场景】观光车出现轮组异响、振动、轴承或轮胎异常等设备异常信号时。 【依据】我国场（厂）内专用机动车辆使用环境日趋复杂，违章作业与带病运行是事故高发原因（场车使用安全治理行动方案）；使用单位应建立日常维护保养与自行检查制度，不符合安全要求的设备应停止运营和使用（强降雨防范应对通知对场内机动车辆等特种设备的检查要求）。 【处置步骤】 1. 立即停运：发现异常信号或现场异响、振动，车辆就地停运并隔离，设置停运标识，禁止继续载客。 2. 上报：现场人员向当班负责人报告车辆编号、异常部位（如右后轮）、现象与时间。 3. 现场证据：拍摄故障部位照片，记录文字说明，提交到正式事件卷宗。 4. 备用车检查：按同一检查项检查备用车辆（轮胎、制动、转向、灯光、安全带、座椅固定），不合格不得启用。 5. 审批：继续停运故障车并启用备用车辆属于高风险决定，须由值班经理审批并留意见。 6. 检修：检修班组接单"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "3"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "没有依据"
+    ]
+   },
+   "calibration_observation": {
+    "candidate_kind": "CALIBRATION_FIXTURE",
+    "evidence_status": "GROUNDED",
+    "answer": "依据《观光车轮组异常停运与备用车辆启用》：【适用场景】观光车出现轮组异响、振动、轴承或轮胎异常等设备异常信号时。 【依据】我国场（厂）内专用机动车辆使用环境日趋复杂，违章作业与带病运行是事故高发原因（场车使用安全治理行动方案）；使用单位应建立日常维护保养与自行检查制度，不符合安全要求的设备应停止运营和使用（强降雨防范应对通知对场内机动车辆等特种设备的检查要求）。 【处置步骤】 1. 立即停运：发现异常信号或现场异响、振动，车辆就地停运并隔",
+    "citations": [
+     "3"
+    ]
+   }
+  },
+  {
+   "id": "crowd-alert-grounded",
+   "scenario_type": "CROWD_ALERT",
+   "query": "雨后观光车复运与分流 SOP??????????",
+   "retrieval_status": "HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "雨后观光车复运与分流 SOP",
+    "field_evidence": "?????雨后观光车复运与分流 SOP?"
+   },
+   "knowledge_hits": [
+    {
+     "source_id": "1",
+     "source_type": "SOP",
+     "title": "雨后观光车复运与分流 SOP",
+     "version": "1.0",
+     "excerpt": "连续降雨结束后，载客观光车必须完成轮胎、制动和底盘复检。发现轮组异常时继续停运故障车辆，由值班经理审批启用备用车辆；客流超过区域阈值时追加东门分流任务。检修回执、现场图片、审批结果和客流恢复证据齐全后，方可解除风险并关闭事件。"
+    }
+   ],
+   "expected": {
+    "evidence_status": "GROUNDED",
+    "must_cite_source_ids": [
+     "1"
+    ],
+    "required_substrings": [],
+    "forbidden_substrings": [
+     "没有依据"
+    ]
+   },
+   "calibration_observation": {
+    "candidate_kind": "CALIBRATION_FIXTURE",
+    "evidence_status": "GROUNDED",
+    "answer": "依据《雨后观光车复运与分流 SOP》：连续降雨结束后，载客观光车必须完成轮胎、制动和底盘复检。发现轮组异常时继续停运故障车辆，由值班经理审批启用备用车辆；客流超过区域阈值时追加东门分流任务。检修回执、现场图片、审批结果和客流恢复证据齐全后，方可解除风险并关闭事件。",
+    "citations": [
+     "1"
+    ]
+   }
+  },
+  {
+   "id": "no-knowledge-hit-refusal",
+   "scenario_type": "NO_KNOWLEDGE_HIT",
+   "query": "今天景区的门票收入是多少？",
+   "retrieval_status": "ZERO_HITS",
+   "incident_context": {
+    "venue_id": "venue-hq",
+    "incident_title": "门票收入查询",
+    "field_evidence": "值班人员询问当日门票收入。"
+   },
+   "knowledge_hits": [],
+   "expected": {
+    "evidence_status": "NO_EVIDENCE",
+    "must_cite_source_ids": [],
+    "required_substrings": [
+     "没有依据"
+    ],
+    "forbidden_substrings": []
+   },
+   "calibration_observation": {
+    "candidate_kind": "CALIBRATION_FIXTURE",
+    "evidence_status": "NO_EVIDENCE",
+    "answer": "没有依据",
+    "citations": []
+   }
+  }
+ ]
+}

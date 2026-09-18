@@ -295,7 +295,7 @@ async def _generate_first_person_reply(
         llm_res = await llm_client.ask(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            model="deepseek-v4-flash",
+            model="deepseek-flash",
             temperature=0.3,
             max_tokens=200,
             json_mode=False,

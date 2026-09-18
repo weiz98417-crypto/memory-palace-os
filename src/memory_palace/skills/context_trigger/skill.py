@@ -42,7 +42,7 @@ class ContextTriggerSkill(BaseAgentSkill):
 
         super().__init__(
             skill_name=self.config.get("agent_metadata", {}).get("name", "ContextTrigger_Skill"),
-            model_name=self.config.get("stage2_config", {}).get("llm_config", {}).get("model", "deepseek-v4-flash")
+            model_name=self.config.get("stage2_config", {}).get("llm_config", {}).get("model", "deepseek-flash")
         )
 
     def _load_config(self) -> Dict[str, Any]:

@@ -30,7 +30,7 @@ stage2_config:
   # 当 Stage1 未触发时，是否仍送 Stage2（兜底）
   fallback_to_llm: true
   llm_config:
-    model: "deepseek-v4-flash"
+    model: "deepseek-flash"
     temperature: 0.0               # 确定性判断，温度为0
     max_tokens: 500                # 简短判断，不需要长回复
     json_mode: true

@@ -11,7 +11,7 @@ agent_metadata:
 # 2. 大语言模型 (LLM) 策略配置
 # 记忆专家需要结合历史案例做类比推理，建议使用推理能力强的模型。
 llm_config:
-  model: "deepseek-v4-flash"
+  model: "deepseek-flash"
   temperature: 0.3             # 中等随机性：既要保持判断的一致性，又要允许灵活类比
   top_p: 0.95
   max_tokens: 1200             # 允许输出较长的处置建议和参考案例说明

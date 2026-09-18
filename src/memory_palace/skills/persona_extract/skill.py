@@ -57,7 +57,7 @@ class PersonaExtractSkill(BaseAgentSkill):
 
         super().__init__(
             skill_name=self.config.get("agent_metadata", {}).get("name", "PersonaExtract_Skill"),
-            model_name=self.config.get("llm_config", {}).get("model", "deepseek-v4-flash"),
+            model_name=self.config.get("llm_config", {}).get("model", "deepseek-flash"),
         )
 
     def _load_config(self) -> Dict[str, Any]:
@@ -65,7 +65,7 @@ class PersonaExtractSkill(BaseAgentSkill):
         if not config_path.exists():
             return {
                 "agent_metadata": {"name": "PersonaExtract_Skill"},
-                "llm_config": {"model": "deepseek-v4-flash", "temperature": 0.3},
+                "llm_config": {"model": "deepseek-flash", "temperature": 0.3},
                 "max_questions": 8,
             }
         import yaml

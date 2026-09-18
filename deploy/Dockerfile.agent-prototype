@@ -1,0 +1,13 @@
+# Prototype-only image. It intentionally builds on the already verified app image
+# so the prototype worker uses the same source and Python runtime as the service.
+ARG BASE_IMAGE=memory-palace-scenic-app:latest
+FROM ${BASE_IMAGE}
+
+USER root
+COPY requirements-scenic-agent-prototype.txt /tmp/requirements-scenic-agent-prototype.txt
+RUN pip install --no-cache-dir -r /tmp/requirements-scenic-agent-prototype.txt
+COPY --chown=appuser:appuser . .
+USER appuser
+WORKDIR /app
+ENV PYTHONPATH=/app
+CMD ["python", "-m", "scripts.scenic_agent_prototype.worker"]

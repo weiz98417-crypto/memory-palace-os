@@ -21,7 +21,7 @@ class PersonaSkill(BaseAgentSkill):
 
         super().__init__(
             skill_name=self.config.get("agent_name", "Persona_Expert_Agent"),
-            model_name=self.config.get("llm_config", {}).get("model", "deepseek-v4-flash")
+            model_name=self.config.get("llm_config", {}).get("model", "deepseek-flash")
         )
 
     def _load_config(self) -> Dict[str, Any]:
@@ -31,7 +31,7 @@ class PersonaSkill(BaseAgentSkill):
             logger.warning("Persona config 缺失，采用默认对话参数。")
             return {
                 "agent_name": "Persona_Expert_Agent",
-                "llm_config": {"model": "deepseek-v4-flash", "temperature": 0.5},
+                "llm_config": {"model": "deepseek-flash", "temperature": 0.5},
                 "memory_config": {"max_history_turns": 5}
             }
 

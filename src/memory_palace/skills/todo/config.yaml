@@ -1,7 +1,7 @@
 # TodoWrite Skill Configuration
 
 llm_config:
-  model: deepseek-v4-flash
+  model: deepseek-flash
 
 max_tasks: 10  # 最多分解为 10 个任务
 

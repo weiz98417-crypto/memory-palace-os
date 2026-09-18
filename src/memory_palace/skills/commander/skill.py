@@ -31,7 +31,7 @@ class CommanderSkill(BaseAgentSkill):
 
         super().__init__(
             skill_name=self.config.get("agent_metadata", {}).get("name", "Commander_Agent"),
-            model_name=self.config.get("llm_config", {}).get("model", "deepseek-v4-flash")
+            model_name=self.config.get("llm_config", {}).get("model", "deepseek-flash")
         )
 
     def _load_config(self) -> Dict[str, Any]:
@@ -39,7 +39,7 @@ class CommanderSkill(BaseAgentSkill):
         config_path = self.base_path / "config.yaml"
         if not config_path.exists():
             logger.warning(f"Commander config 缺失，使用安全默认值。")
-            return {"agent_metadata": {"name": "Commander_Agent"}, "llm_config": {"model": "deepseek-v4-flash"}}
+            return {"agent_metadata": {"name": "Commander_Agent"}, "llm_config": {"model": "deepseek-flash"}}
 
         with open(config_path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f)

@@ -11,7 +11,7 @@ agent_metadata:
 # 2. 大语言模型 (LLM) 策略配置
 # 分身专家需要处理复杂的逻辑疏导和情感抚慰，必须使用高情商、高智商模型。
 llm_config:
-  model: "deepseek-v4-flash"
+  model: "deepseek-flash"
   temperature: 0.5           # 【关键区别】指挥官是0.1，这里调到0.5。必须保留一定的随机性，让对话显得有“人情味”和同理心
   top_p: 0.95                # 保证词汇的多样性
   max_tokens: 1000           # 允许深入的解释和多轮展开

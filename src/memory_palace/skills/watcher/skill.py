@@ -31,7 +31,7 @@ class WatcherSkill(BaseAgentSkill):
 
         super().__init__(
             skill_name=self.config.get("agent_name", "Watcher_Audit_Agent"),
-            model_name=self.config.get("llm_config", {}).get("model", "deepseek-v4-flash")
+            model_name=self.config.get("llm_config", {}).get("model", "deepseek-flash")
         )
 
     def _load_config(self) -> Dict[str, Any]:
@@ -41,7 +41,7 @@ class WatcherSkill(BaseAgentSkill):
             logger.warning("Watcher config 缺失，采用默认审计参数。")
             return {
                 "agent_name": "Watcher_Audit_Agent",
-                "llm_config": {"model": "deepseek-v4-flash", "temperature": 0.1}
+                "llm_config": {"model": "deepseek-flash", "temperature": 0.1}
             }
 
         with open(config_path, "r", encoding="utf-8") as f:
