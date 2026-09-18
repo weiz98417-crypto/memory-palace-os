@@ -201,6 +201,19 @@ class PermissionEngine:
         """获取工具权限配置"""
         return self._tool_permissions.get(tool_name)
 
+    def cooldown_remaining(self, tool_name: str, venue_id: str = "") -> float:
+        """Return the remaining rate-limit window for a tool without side effects.
+
+        Callers use this before they create downstream business objects, so a refused
+        high-risk decision cannot leave half-dispatch state behind.
+        """
+        permission = self._tool_permissions.get(tool_name)
+        cooldown_seconds = permission.cooldown_seconds if permission else 60
+        last_execution = self._cooldown_cache.get((venue_id, tool_name))
+        if last_execution is None:
+            return 0.0
+        return max(0.0, cooldown_seconds - (time.time() - last_execution))
+
     async def check_and_execute(
         self,
         tool_name: str,

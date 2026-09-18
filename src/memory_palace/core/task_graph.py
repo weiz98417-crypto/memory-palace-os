@@ -49,6 +49,9 @@ class Task:
     event_id: Optional[str] = None
     status: TaskStatus = TaskStatus.PENDING
     dependencies: List[str] = field(default_factory=list)  # 前置任务 ID 列表
+    due_at: Optional[float] = None
+    result_schema_json: Dict[str, Any] = field(default_factory=dict)
+    evidence_refs_json: List[Dict[str, Any]] = field(default_factory=list)
     result: Optional[Dict] = None
     error: Optional[str] = None
     block_reason: Optional[str] = None
@@ -72,6 +75,9 @@ class Task:
             "description": self.description,
             "status": self.status.value,
             "dependencies": self.dependencies,
+            "due_at": self.due_at,
+            "result_schema_json": self.result_schema_json,
+            "evidence_refs_json": self.evidence_refs_json,
             "result": self.result,
             "error": self.error,
             "block_reason": self.block_reason,
@@ -90,10 +96,16 @@ class Task:
     def from_dict(cls, data: Dict[str, Any]) -> "Task":
         dependencies = data.get("dependencies", [])
         result = data.get("result")
+        result_schema = data.get("result_schema_json", {})
+        evidence_refs = data.get("evidence_refs_json", [])
         if isinstance(dependencies, str):
             dependencies = json.loads(dependencies or "[]")
         if isinstance(result, str):
             result = json.loads(result) if result else None
+        if isinstance(result_schema, str):
+            result_schema = json.loads(result_schema or "{}")
+        if isinstance(evidence_refs, str):
+            evidence_refs = json.loads(evidence_refs or "[]")
         return cls(
             id=data["id"],
             session_id=data["session_id"],
@@ -103,6 +115,9 @@ class Task:
             event_id=data.get("event_id"),
             status=TaskStatus(data.get("status", "PENDING")),
             dependencies=dependencies,
+            due_at=data.get("due_at"),
+            result_schema_json=result_schema,
+            evidence_refs_json=evidence_refs,
             result=result,
             error=data.get("error"),
             block_reason=data.get("block_reason"),
@@ -160,6 +175,9 @@ class TaskGraph:
         max_attempts: int = 3,
         venue_id: str = "",
         event_id: Optional[str] = None,
+        due_at: Optional[float] = None,
+        result_schema_json: Optional[Dict[str, Any]] = None,
+        evidence_refs_json: Optional[List[Dict[str, Any]]] = None,
         defer_activation: bool = False,
         decomposition_id: Optional[str] = None,
     ) -> Task:
@@ -196,6 +214,9 @@ class TaskGraph:
                 venue_id=venue_id,
                 event_id=event_id,
                 dependencies=deps,
+                due_at=due_at,
+                result_schema_json=result_schema_json or {},
+                evidence_refs_json=evidence_refs_json or [],
                 assigned_agent=assigned_agent,
                 assigned_user_id=assigned_user_id,
                 decomposition_id=decomposition_id,
@@ -907,9 +928,10 @@ class TaskGraph:
                 """
                 INSERT INTO tasks
                 (id, business_id, venue_id, session_id, event_id, description, status, dependencies,
-                 result, error, block_reason, assigned_agent, assigned_user_id, decomposition_id, created_at, updated_at,
+                 due_at, result_schema_json, evidence_refs_json, result, error, block_reason,
+                 assigned_agent, assigned_user_id, decomposition_id, created_at, updated_at,
                  started_at, completed_at, attempts, max_attempts)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     business_id = excluded.business_id,
                     venue_id = excluded.venue_id,
@@ -918,6 +940,9 @@ class TaskGraph:
                     description = excluded.description,
                     status = excluded.status,
                     dependencies = excluded.dependencies,
+                    due_at = excluded.due_at,
+                    result_schema_json = excluded.result_schema_json,
+                    evidence_refs_json = excluded.evidence_refs_json,
                     result = excluded.result,
                     error = excluded.error,
                     block_reason = excluded.block_reason,
@@ -939,6 +964,9 @@ class TaskGraph:
                     task.description,
                     task.status.value,
                     json.dumps(task.dependencies),
+                    task.due_at,
+                    json.dumps(task.result_schema_json, ensure_ascii=False),
+                    json.dumps(task.evidence_refs_json, ensure_ascii=False),
                     json.dumps(task.result) if task.result else None,
                     task.error,
                     task.block_reason,

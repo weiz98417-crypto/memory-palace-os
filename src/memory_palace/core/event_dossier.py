@@ -1,7 +1,10 @@
 import json
 from typing import Any, Optional
 
-from .attachments import message_attachments as load_message_attachments
+from .attachments import (
+    attachment_records,
+    message_attachments as load_message_attachments,
+)
 from .event_closure import calculate_event_closure_conditions
 from .sensitive_output import public_error_message, sanitize_public_value
 
@@ -53,6 +56,10 @@ ACTIVITY_LABELS = {
     "CONTROLLED_ACTION_FAILED": "受控动作执行失败",
     "WATCHER_COMPLETED": "闭环检查已完成",
     "EVENT_CLOSE_DENIED": "事件暂不具备闭环条件",
+    "ADVICE_READY": "处置建议已生成",
+    "ADVICE_DECIDED": "处置建议已判断",
+    "ADVICE_FAILED": "未获得模型建议",
+    "ADVICE_SUPERSEDED": "处置建议已过期",
     "EVENT_CLOSED": "事件已闭环",
     "EXPERIENCE_CANDIDATE_CREATED": "已生成经验候选",
 }
@@ -237,6 +244,53 @@ async def build_event_dossier(
         else []
     )
 
+    scenic_incident = await database.fetch_one(
+        """
+        SELECT incident_id FROM scenic_incidents
+        WHERE venue_id = ? AND event_id = ?
+        """,
+        (venue_id, event_id),
+    )
+    scenic_evidence_rows = []
+    scenic_knowledge_rows = []
+    if scenic_incident:
+        scenic_evidence_rows = await database.fetch_all(
+            """
+            SELECT * FROM scenic_event_evidence
+            WHERE venue_id = ? AND incident_id = ?
+            ORDER BY recorded_at ASC, id ASC
+            """,
+            (venue_id, scenic_incident["incident_id"]),
+        )
+        scenic_knowledge_rows = await database.fetch_all(
+            """
+            SELECT hit.*, sop.title, sop.published_at
+            FROM scenic_knowledge_hits AS hit
+            LEFT JOIN sop_documents AS sop
+              ON sop.venue_id = hit.venue_id
+             AND CAST(sop.id AS TEXT) = hit.source_id
+            WHERE hit.venue_id = ? AND hit.incident_id = ?
+            ORDER BY hit.recorded_at ASC, hit.id ASC
+            """,
+            (venue_id, scenic_incident["incident_id"]),
+        )
+
+    scenic_attachments = await attachment_records(
+        database,
+        venue_id=venue_id,
+        attachment_ids=(row.get("attachment_id") for row in scenic_evidence_rows),
+    )
+    existing_attachment_ids = {
+        str(item.get("attachment_id")) for item in event_attachments
+    }
+    for evidence in scenic_evidence_rows:
+        attachment = scenic_attachments.get(str(evidence.get("attachment_id") or ""))
+        if not attachment or attachment["attachment_id"] in existing_attachment_ids:
+            continue
+        attachment["description"] = evidence.get("text_content") or "现场证据"
+        event_attachments.append(attachment)
+        existing_attachment_ids.add(attachment["attachment_id"])
+
     session = None
     if source_message and source_message.get("session_id"):
         session = await database.fetch_one(
@@ -379,7 +433,7 @@ async def build_event_dossier(
                 "id": run.get("id"),
                 "status": run.get("status") or "FAILED",
                 "summary": run.get("summary") or "闭环检查未返回摘要",
-                "model_name": run.get("model_name") or "deepseek-v4-flash",
+                "model_name": run.get("model_name") or "deepseek-flash",
                 "target_count": run.get("target_count") or 0,
                 "finding_count": run.get("finding_count") or 0,
                 "target_snapshot": _decode_json(
@@ -426,7 +480,7 @@ async def build_event_dossier(
                 "index_status": candidate.get("index_status") or "NOT_INDEXED",
                 "extraction_status": candidate.get("extraction_status") or "PENDING",
                 "extraction_model": candidate.get("extraction_model")
-                or "deepseek-v4-flash",
+                or "deepseek-flash",
                 "retryable": bool(candidate.get("retryable")),
                 "attempt_count": candidate.get("attempt_count") or 0,
                 "created_at": candidate.get("created_at"),
@@ -503,6 +557,31 @@ async def build_event_dossier(
                     },
                 }
             )
+    for hit in scenic_knowledge_rows:
+        key = (hit.get("source_type"), hit.get("source_id"), hit.get("source_version"))
+        if key in seen_references:
+            continue
+        seen_references.add(key)
+        references.append(
+            {
+                "source_label": "已核验 SOP",
+                "title": hit.get("title") or "未命名 SOP",
+                "version": hit.get("source_version") or "版本待确认",
+                "expert_name": None,
+                "publisher_name": None,
+                "published_at": hit.get("published_at"),
+                "relevance": hit.get("score"),
+                "business_id": None,
+                "technical": {
+                    "source_type": hit.get("source_type"),
+                    "resource_id": hit.get("source_id"),
+                    "vector_doc_id": hit.get("vector_doc_id"),
+                    "backend": hit.get("backend"),
+                    "model_name": hit.get("model_name"),
+                    "dimension": hit.get("dimension"),
+                },
+            }
+        )
 
     timeline = []
     for activity in activities:
@@ -548,8 +627,9 @@ async def build_event_dossier(
         placeholders = ",".join("?" for _ in trace_ids)
         model_calls = await database.fetch_all(
             f"""
-            SELECT id, trace_id, agent_id, agent_name, model_name, status,
-                   attempt_count, latency_seconds, error_message, created_at
+            SELECT id, trace_id, agent_id, agent_name, provider, model_name, status,
+                   attempt_count, latency_seconds, prompt_tokens, completion_tokens,
+                   total_tokens, request_id, error_message, is_mock, created_at
             FROM llm_call_logs
             WHERE venue_id = ? AND trace_id IN ({placeholders})
             ORDER BY created_at ASC, id ASC
@@ -557,6 +637,30 @@ async def build_event_dossier(
             (venue_id, *sorted(trace_ids)),
         )
 
+    readable_model_calls = [
+        {
+            "model_call_id": model_call.get("id"),
+            "trace_id": model_call.get("trace_id"),
+            "agent_id": model_call.get("agent_id") or model_call.get("agent_name"),
+            "agent_name": model_call.get("agent_name"),
+            "provider": model_call.get("provider"),
+            "model_name": model_call.get("model_name"),
+            "status": model_call.get("status"),
+            "attempt_count": model_call.get("attempt_count"),
+            "latency_seconds": model_call.get("latency_seconds"),
+            "prompt_tokens": model_call.get("prompt_tokens"),
+            "completion_tokens": model_call.get("completion_tokens"),
+            "total_tokens": model_call.get("total_tokens"),
+            "request_id": model_call.get("request_id"),
+            "error_message": public_error_message(
+                model_call.get("error_message"),
+                context="model",
+            ),
+            "is_mock": bool(model_call.get("is_mock")),
+            "created_at": model_call.get("created_at"),
+        }
+        for model_call in model_calls
+    ]
     message_result = _decode_json((source_message or {}).get("result_json"), {})
     agent_trace = (
         message_result.get("agent_trace", [])
@@ -564,6 +668,35 @@ async def build_event_dossier(
         else []
     )
     journey_timeline = list(timeline)
+    if not source_message and model_calls:
+        for model_call in model_calls:
+            succeeded = str(model_call.get("status") or "").upper() == "SUCCEEDED"
+            agent_id = model_call.get("agent_id") or model_call.get("agent_name") or "统一助手"
+            journey_timeline.append(
+                {
+                    "label": "DeepSeek 推理已完成" if succeeded else "DeepSeek 推理失败",
+                    "summary": (
+                        f"{agent_id} 使用 {model_call.get('model_name') or 'deepseek-flash'} 完成推理。"
+                        if succeeded
+                        else public_error_message(
+                            model_call.get("error_message"),
+                            context="model",
+                        )
+                        or "模型服务处理失败，请携带 Trace ID 联系管理员后重试。"
+                    ),
+                    "actor_name": "DeepSeek 模型服务",
+                    "business_id": event.get("business_id"),
+                    "created_at": model_call.get("created_at"),
+                    "technical": {
+                        "activity_type": "MODEL_CALL_COMPLETED" if succeeded else "MODEL_CALL_FAILED",
+                        "model_call_id": model_call.get("id"),
+                        "agent_id": agent_id,
+                        "trace_id": model_call.get("trace_id"),
+                        "message_id": None,
+                    },
+                }
+            )
+
     if source_message and (agent_trace or model_calls):
         journey_timeline.append(
             {
@@ -633,7 +766,7 @@ async def build_event_dossier(
                 {
                     "label": "DeepSeek 推理已完成" if succeeded else "DeepSeek 推理失败",
                     "summary": (
-                        f"{agent_id} 使用 {model_call.get('model_name') or 'deepseek-v4-flash'} 完成推理。"
+                        f"{agent_id} 使用 {model_call.get('model_name') or 'deepseek-flash'} 完成推理。"
                         if succeeded
                         else public_error_message(
                             model_call.get("error_message"),
@@ -678,6 +811,43 @@ async def build_event_dossier(
                 str((entry.get("technical") or {}).get("activity_type") or ""),
             )
         )
+    for evidence in scenic_evidence_rows:
+        actor_user = user_lookup.get(str(evidence.get("submitted_by") or ""))
+        journey_timeline.append(
+            {
+                "label": "现场证据已补充",
+                "summary": evidence.get("text_content") or "现场证据已写入事件卷宗。",
+                "actor_name": _person(actor_user, "现场员工")["name"],
+                "business_id": event.get("business_id"),
+                "created_at": evidence.get("recorded_at"),
+                "technical": {
+                    "activity_type": "FIELD_EVIDENCE_ADDED",
+                    "evidence_id": evidence.get("id"),
+                    "attachment_id": evidence.get("attachment_id"),
+                },
+            }
+        )
+    for hit in scenic_knowledge_rows:
+        journey_timeline.append(
+            {
+                "label": "处置依据已检索",
+                "summary": f"已核验 SOP《{hit.get('title') or '未命名 SOP'}》{hit.get('source_version') or ''}。",
+                "actor_name": "企业运营助手",
+                "business_id": event.get("business_id"),
+                "created_at": hit.get("recorded_at"),
+                "technical": {
+                    "activity_type": "KNOWLEDGE_RETRIEVED",
+                    "knowledge_hit_id": hit.get("id"),
+                    "vector_doc_id": hit.get("vector_doc_id"),
+                },
+            }
+        )
+    journey_timeline.sort(
+        key=lambda entry: (
+            float(entry.get("created_at") or 0),
+            str((entry.get("technical") or {}).get("activity_type") or ""),
+        )
+    )
 
     if str(event.get("status") or "OPEN").upper() == "CLOSED":
         next_action = "事件已闭环，可查看经验沉淀与后续复用情况。"
@@ -741,8 +911,22 @@ async def build_event_dossier(
         "watcher_runs": watcher_runs,
         "experience_candidates": experience_candidates,
         "attachments": event_attachments,
+        "field_evidence": [
+            {
+                "type": evidence.get("evidence_type") or "FIELD_REPORT",
+                "text": evidence.get("text_content") or "",
+                "submitted_by": _person(
+                    user_lookup.get(str(evidence.get("submitted_by") or "")),
+                    "现场员工",
+                ),
+                "submitted_at": evidence.get("recorded_at"),
+                "attachment_id": evidence.get("attachment_id"),
+            }
+            for evidence in scenic_evidence_rows
+        ],
         "timeline": timeline,
         "journey_timeline": journey_timeline,
+        "model_calls": readable_model_calls,
         "technical": {
             "event_id": event.get("event_id"),
             "trace_id": trace_id,

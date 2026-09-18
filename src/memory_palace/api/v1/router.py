@@ -13,6 +13,7 @@ from .endpoints import (
     management,
     messages,
     sessions,
+    scenic,
     skills,
     watcher,
     workflows,
@@ -28,6 +29,7 @@ router.include_router(channels.router, prefix="/channels", tags=["channels"])
 router.include_router(messages.router, prefix="/messages", tags=["messages"])
 router.include_router(skills.router, prefix="/skills", tags=["skills"])
 router.include_router(sessions.router, prefix="/sessions", tags=["sessions"])
+router.include_router(scenic.router, tags=["scenic"])
 router.include_router(admin.router, prefix="/admin", tags=["admin"])
 router.include_router(experiences.admin_router, prefix="/admin", tags=["experience-admin"])
 router.include_router(management.router, prefix="/admin", tags=["management"])

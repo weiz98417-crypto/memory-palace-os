@@ -315,3 +315,35 @@ async def message_attachments(
     for row in rows:
         result.setdefault(str(row["message_id"]), []).append(_attachment_payload(row))
     return result
+
+
+async def attachment_records(
+    database,
+    *,
+    venue_id: str,
+    attachment_ids: Iterable[str],
+) -> dict[str, dict[str, Any]]:
+    normalized_ids = [
+        str(attachment_id)
+        for attachment_id in dict.fromkeys(attachment_ids)
+        if attachment_id
+    ]
+    if not normalized_ids:
+        return {}
+    placeholders = ",".join("?" for _ in normalized_ids)
+    rows = await database.fetch_all(
+        f"""
+        SELECT attachment.*, uploader.display_name AS uploaded_by_name
+        FROM message_attachments AS attachment
+        LEFT JOIN users AS uploader
+          ON uploader.id = attachment.owner_user_id
+         AND uploader.venue_id = attachment.venue_id
+        WHERE attachment.venue_id = ?
+          AND attachment.id IN ({placeholders})
+        """,
+        (venue_id, *normalized_ids),
+    )
+    return {
+        str(row["id"]): _attachment_payload(row)
+        for row in rows
+    }

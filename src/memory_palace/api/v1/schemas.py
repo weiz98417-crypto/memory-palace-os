@@ -137,6 +137,7 @@ class SimulatorOutboxItem(BaseModel):
     supersedes_business_id: Optional[str] = None
     push_id: Optional[str] = None
     event_id: Optional[str] = None
+    incident_id: Optional[str] = None
     task_id: Optional[str] = None
     tool_name: Optional[str] = None
     tool_label: str
@@ -146,6 +147,8 @@ class SimulatorOutboxItem(BaseModel):
     approval_status: Optional[str] = None
     execution_status: Optional[str] = None
     delivery_status: Optional[str] = None
+    receipt_status: Optional[str] = None
+    receipt_result: dict[str, Any] = Field(default_factory=dict)
     review_comment: Optional[str] = None
     execution_error: Optional[str] = None
     delivery_error: Optional[str] = None
