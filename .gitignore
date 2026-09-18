@@ -18,6 +18,16 @@ htmlcov/
 .coverage
 .pytest_cache/
 
+# Ephemeral local command output
+*.log
+/_*.txt
+/scripts/_*.py
+
+# Local evidence, planning scratch and lockfiles that must not be committed blindly
+artifacts/
+.scratch/
+uv.lock
+
 # IDE
 .vscode/
 .idea/
