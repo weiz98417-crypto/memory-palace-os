@@ -249,6 +249,10 @@ def test_formal_client_can_initiate_and_inspect_controlled_actions():
     assert "item.delivery_status" in html
     assert "动作已真实投递" in html
     assert "动作未完成投递" in html
+    assert 'deliveryStatus==="RECORDED"' in html
+    assert "审批已批准，业务决策已记录" in html
+    assert "现场图片" in html
+    assert "field_evidence" in html
     assert "item.delivery_error" in html
 
 
@@ -527,5 +531,5 @@ def test_diagnostics_renders_unified_runtime_agents_and_channel_policy():
     assert 'channel:"WECOM_SIMULATOR"' in html
     assert "真实外部渠道" in html
     assert "企微" not in html
-    assert "模拟" not in html
+    assert "企微模拟器" not in html
     assert "DISABLED_BY_POLICY" in html

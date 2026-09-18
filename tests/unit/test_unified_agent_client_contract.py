@@ -188,7 +188,7 @@ def test_employee_assistant_is_a_real_api_driven_work_surface():
 
     assert 'src="/shared/client.js"' in html
     assert 'href="/shared/base.css"' in html
-    assert 'href="/assistant/styles.css?v=20260804-3"' in html
+    assert 'href="/assistant/styles.css?v=20260915-1"' in html
     assert html.count('src="/admin/brand/logo-primary.svg"') == 4
     assert ">AI<" not in html
     assert 'src="/assistant/app.js"' in html
@@ -380,7 +380,7 @@ def test_wecom_simulator_is_explicitly_bounded_and_reads_real_chain_state():
 
     assert 'src="/shared/client.js?v=20260803-1"' in html
     assert 'href="/shared/base.css"' in html
-    assert 'href="/simulator/wecom/styles.css?v=20260804-4"' in html
+    assert 'href="/simulator/wecom/styles.css?v=20260915-1"' in html
     assert '<div><strong>企业运营助手</strong><span>企业内部系统接入环境</span></div>' in html
     assert html.count('src="/admin/brand/logo-primary.svg"') == 3
     assert ">AI<" not in html

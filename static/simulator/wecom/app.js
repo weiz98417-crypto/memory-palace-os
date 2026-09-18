@@ -27,6 +27,9 @@
     pendingAttachment: null,
     attachmentObjectUrls: {},
     attachmentLoads: {},
+    scenic: null,
+    scenicSubscription: null,
+    scenicRefreshTimer: null,
     experience: {
       loading: false,
       loadVersion: 0,
@@ -157,6 +160,34 @@
     toast.textContent = message;
     region.appendChild(toast);
     window.setTimeout(function () { toast.remove(); }, 4200);
+  }
+
+  function renderScenicStatus(snapshot) {
+    state.scenic = snapshot || {};
+    var incident = (state.scenic.incidents || [])[0];
+    var activeAlerts = (state.scenic.alerts || []).filter(function (item) { return item.status === "ACTIVE"; });
+    byId("scenic-shared-status").innerHTML = '<strong>共享景区态势 · 序号 ' + UI.escapeHTML(state.scenic.latest_sequence || 0) + '</strong><span>' +
+      UI.escapeHTML(incident ? (incident.business_id + " · " + incident.lifecycle + " · 活动告警 " + activeAlerts.length) : "当前无运营事件") + '</span>';
+  }
+
+  async function loadScenicStatus() {
+    try {
+      renderScenicStatus(await Client.scenic.snapshot());
+    } catch (error) {
+      byId("scenic-shared-status").innerHTML = '<strong>共享景区态势</strong><span>短轮询恢复中</span>';
+    }
+  }
+
+  function startScenicSubscription() {
+    if (state.scenicSubscription) return;
+    state.scenicSubscription = Client.scenic.subscribe({
+      afterSequence: state.scenic && state.scenic.latest_sequence,
+      onSnapshot: renderScenicStatus,
+      onEvent: function () {
+        window.clearTimeout(state.scenicRefreshTimer);
+        state.scenicRefreshTimer = window.setTimeout(loadScenicStatus, 120);
+      }
+    });
   }
 
   function showError(error, retryAction) {
@@ -1961,6 +1992,8 @@
     byId("signed-user").textContent = state.signedUser && (state.signedUser.display_name || state.signedUser.username) || "演示账号";
     byId("login-screen").hidden = true;
     byId("simulator-app").hidden = false;
+    await loadScenicStatus();
+    startScenicSubscription();
     await loadIdentities();
   }
 
@@ -1970,6 +2003,8 @@
       return;
     }
     if (state.followController) state.followController.abort();
+    if (state.scenicSubscription) state.scenicSubscription.abort();
+    state.scenicSubscription = null;
     try {
       await Client.auth.logout();
     } catch (error) {

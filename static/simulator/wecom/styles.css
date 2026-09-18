@@ -1453,3 +1453,5 @@ body {
     grid-column: 1 / -1;
   }
 }
+.scenic-shared-status{display:flex;justify-content:space-between;gap:12px;padding:10px 16px;background:#172126;border-bottom:1px solid rgba(255,255,255,.12);color:#dce8ec;font-size:13px}
+.scenic-shared-status span{color:#9fb3ba;text-align:right}

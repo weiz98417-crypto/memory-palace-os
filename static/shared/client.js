@@ -365,12 +365,13 @@
     return request(employeeTaskPath(taskId) + "/start", { method: "POST" });
   }
 
-  async function completeWorkTask(taskId, summary) {
-    summary = String(summary || "").trim();
+  async function completeWorkTask(taskId, input) {
+    input = typeof input === "string" ? { summary: input } : (input || {});
+    var summary = String(input.summary || "").trim();
     if (!summary) throw new Error("请填写完成结果后再提交。");
     return request(employeeTaskPath(taskId) + "/complete", {
       method: "POST",
-      body: { summary: summary }
+      body: { summary: summary, result: input.result || {} }
     });
   }
 
@@ -381,6 +382,85 @@
       method: "POST",
       body: { reason: reason }
     });
+  }
+
+  async function scenicSnapshot() {
+    return request("/scenic/snapshot");
+  }
+
+  async function scenicCommand(kind, payload, idempotencyKey) {
+    return request("/scenic/commands", {
+      method: "POST",
+      headers: { "Idempotency-Key": idempotencyKey || externalId("scenic-command") },
+      body: { kind: kind, payload: payload || {} }
+    });
+  }
+
+  function subscribeScenic(options) {
+    options = options || {};
+    var controller = new AbortController();
+    var cursor = Math.max(0, Number(options.afterSequence) || 0);
+    var reconnectDelay = Math.max(1000, Number(options.reconnectDelayMs) || 3000);
+
+    (async function follow() {
+      while (!controller.signal.aborted) {
+        try {
+          var response = await fetch(
+            API_BASE + "/scenic/stream?after_sequence=" + encodeURIComponent(cursor),
+            {
+              headers: {
+                Authorization: "Bearer " + session.accessToken,
+                Accept: "text/event-stream",
+                "Last-Event-ID": String(cursor)
+              },
+              signal: controller.signal
+            }
+          );
+          if (response.status === 401 && await refresh()) continue;
+          if (!response.ok || !response.body) throw errorDetails(response.status, await parseResponse(response));
+          if (typeof options.onState === "function") options.onState("CONNECTED");
+          var reader = response.body.getReader();
+          var decoder = new TextDecoder();
+          var buffer = "";
+          while (!controller.signal.aborted) {
+            var chunk = await reader.read();
+            if (chunk.done) throw new Error("SSE connection closed");
+            buffer += decoder.decode(chunk.value, { stream: true }).replace(/\r\n/g, "\n");
+            var blocks = buffer.split("\n\n");
+            buffer = blocks.pop();
+            blocks.forEach(function (block) {
+              if (!block || block.charAt(0) === ":") return;
+              var eventName = "message";
+              var eventId = cursor;
+              var dataLines = [];
+              block.split("\n").forEach(function (line) {
+                if (line.indexOf("event:") === 0) eventName = line.slice(6).trim();
+                if (line.indexOf("id:") === 0) eventId = Number(line.slice(3).trim()) || eventId;
+                if (line.indexOf("data:") === 0) dataLines.push(line.slice(5).trimStart());
+              });
+              if (!dataLines.length) return;
+              cursor = Math.max(cursor, eventId);
+              var payload = JSON.parse(dataLines.join("\n"));
+              if (eventName === "snapshot" && typeof options.onSnapshot === "function") options.onSnapshot(payload);
+              if (eventName === "situation" && typeof options.onEvent === "function") options.onEvent(payload);
+              if (eventName.indexOf("ADVICE_") === 0 && typeof options.onAdvice === "function") options.onAdvice(eventName, payload);
+            });
+          }
+        } catch (error) {
+          if (controller.signal.aborted) return;
+          if (typeof options.onState === "function") options.onState("FALLBACK", error);
+          try {
+            var snapshot = await scenicSnapshot();
+            cursor = Math.max(cursor, Number(snapshot.latest_sequence) || 0);
+            if (typeof options.onSnapshot === "function") options.onSnapshot(snapshot);
+          } catch (pollError) {
+            if (typeof options.onError === "function") options.onError(pollError);
+          }
+          await wait(reconnectDelay, controller.signal).catch(function () {});
+        }
+      }
+    }());
+    return controller;
   }
 
   function experiencePath(path, options) {
@@ -812,6 +892,11 @@
       start: startWorkTask,
       complete: completeWorkTask,
       block: blockWorkTask
+    },
+    scenic: {
+      snapshot: scenicSnapshot,
+      command: scenicCommand,
+      subscribe: subscribeScenic
     },
     knowledge: {
       sop: getKnowledgeSop

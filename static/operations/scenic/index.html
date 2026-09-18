@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>景区模拟环境 · 运行准备</title>
+  <link rel="stylesheet" href="/operations/scenic/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header><div><span class="eyebrow">受保护的本地运维入口</span><h1>景区模拟环境 · 运行准备</h1><p>仅控制外部模拟输入与模拟时钟；事件、任务、审批和关闭必须在正式业务入口完成。</p></div><span id="connection" class="status">未登录</span></header>
+    <section id="login-card" class="card narrow">
+      <h2>运行准备身份验证</h2>
+      <form id="login-form"><label>账号<input id="username" autocomplete="username" required></label><label>密码<input id="password" type="password" autocomplete="current-password" required></label><button type="submit">登录</button></form>
+      <p class="hint">只接受预置的 <code>simulation-ops</code> 身份，并限制为本机访问。</p>
+    </section>
+    <section id="workspace" hidden>
+      <div class="grid">
+        <article class="card"><h2>版本化故事</h2><p>雨后观光车异常 → 东门客流上升</p><button data-command="PREPARE_SCENARIO">准备新运行</button><div id="run" class="data">尚未准备</div></article>
+        <article class="card"><h2>模拟时钟</h2><label>倍速<select id="speed"><option>0.5</option><option selected>1</option><option>2</option><option>4</option><option>8</option></select></label><div class="buttons"><button data-command="CLOCK_PLAY">播放</button><button data-command="CLOCK_PAUSE">暂停</button><button data-step="1">单步 1 秒</button><button data-step="2">到设备异常</button><button data-step="28">到东门客流</button><button data-step="60">到风险恢复</button></div></article>
+        <article class="card wide"><h2>人工监测信号注入</h2><form id="inject-form" class="inline"><label>类型<select id="source-type"><option>WEATHER</option><option>DEVICE</option><option>CROWD</option><option>LOCATION</option><option>OBSERVATION</option></select></label><label>区域<select id="zone"><option value="east-gate">东门集散区</option><option value="vehicle-depot">观光车场站</option><option value="mountain-road">山地游线</option><option value="lake-zone">镜湖游览区</option></select></label><label class="grow">JSON 数据<textarea id="signal-data">{"label":"人工观察"}</textarea></label><button type="submit">注入正式态势入口</button></form></article>
+        <article class="card wide"><h2>运行证据</h2><pre id="evidence">等待状态</pre></article>
+      </div>
+    </section>
+    <div id="message" role="status"></div>
+  </main>
+  <script src="/operations/scenic/app.js"></script>
+</body>
+</html>

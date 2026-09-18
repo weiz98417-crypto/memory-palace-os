@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#ffffff">
   <title>企业运营助手 · Memory Palace OS</title>
   <link rel="stylesheet" href="/shared/base.css">
-  <link rel="stylesheet" href="/assistant/styles.css?v=20260804-3">
+  <link rel="stylesheet" href="/assistant/styles.css?v=20260915-1">
 </head>
 <body>
   <section id="login-screen" class="login-stage" aria-label="企业运营助手登录">
@@ -154,6 +154,9 @@
           <button class="btn" type="button" data-action="refresh-current"><span aria-hidden="true">↻</span>刷新</button>
         </header>
         <div class="work-page">
+          <section id="scenic-situation-card" class="scenic-situation-card" aria-live="polite">
+            <div><span class="eyebrow">共享景区态势</span><h2>等待态势订阅</h2></div>
+          </section>
           <form id="work-filter-form" class="work-filter-bar">
             <label class="field compact-field" for="work-task-status">
               <span>任务状态</span>
@@ -293,6 +296,14 @@
               <span>完成结果</span>
               <textarea id="task-complete-summary" maxlength="2000" rows="3" placeholder="说明完成了什么、现场结果和需要交接的事项" required></textarea>
             </label>
+            <div id="task-structured-result" class="task-structured-result" hidden>
+              <label class="field" for="task-result-primary"><span id="task-result-primary-label">检查结论</span>
+                <select id="task-result-primary"></select>
+              </label>
+              <label class="field" for="task-result-secondary"><span id="task-result-secondary-label">风险状态</span>
+                <select id="task-result-secondary"></select>
+              </label>
+            </div>
             <button class="btn primary" type="submit">提交完成</button>
           </form>
           <form id="task-block-form" class="task-action-form" hidden>

@@ -20,6 +20,9 @@
     pendingAttachment: null,
     attachmentObjectUrls: {},
     attachmentLoads: {},
+    scenic: null,
+    scenicSubscription: null,
+    scenicRefreshTimer: null,
     work: {
       tasks: [],
       events: [],
@@ -183,6 +186,8 @@
     applyUser(user);
     byId("login-screen").hidden = true;
     byId("app-screen").hidden = false;
+    await loadScenicSituation();
+    startScenicSubscription();
     var workResource = workResourceFromLocation();
     var sopResource = sopResourceFromLocation();
     navigate(workResource ? "work" : sectionFromLocation(), true);
@@ -828,6 +833,100 @@
       : '<div class="empty-state compact"><strong>当前没有本人事件</strong><p>与本人工作相关的现场事件会出现在这里。</p></div>';
   }
 
+  function renderScenicSituation(snapshot) {
+    state.scenic = snapshot || {};
+    var target = byId("scenic-situation-card");
+    var run = state.scenic.run;
+    var incidents = state.scenic.incidents || [];
+    var alerts = state.scenic.alerts || [];
+    var incident = incidents[0];
+    var activeAlerts = alerts.filter(function (item) { return item.status === "ACTIVE"; });
+    var action = (state.scenic.next_actions || [])[0];
+    var advice = state.scenic.advice;
+    var title = incident ? incident.title : (activeAlerts[0] && activeAlerts[0].title) || "景区态势稳定";
+    var meta = [
+      "事件 " + (incident ? incident.lifecycle : "未建立"),
+      "活动告警 " + activeAlerts.length,
+      "序号 " + (state.scenic.latest_sequence || 0),
+      run ? ("模拟时间 " + UI.dateLabel(run.simulated_at)) : "等待运行准备"
+    ];
+    var adviceHtml = "";
+    if (advice) {
+      var citations = (advice.citations || []).map(function (item) {
+        return '<span>' + UI.escapeHTML(item.title || item.source_id) + ' · v' + UI.escapeHTML(item.version || "-") + '</span>';
+      }).join("");
+      adviceHtml = '<div class="scenic-readonly-advice"><strong>处置建议 · ' +
+        UI.escapeHTML(advice.display_status || advice.status) + '</strong>' +
+        (advice.advice ? '<p>' + UI.escapeHTML(advice.advice) + '</p>' : "") +
+        (citations ? '<div class="scenic-situation-meta">' + citations + '</div>' : "") + '</div>';
+    }
+    var nextHtml = action ? '<div class="scenic-readonly-next"><strong>' + UI.escapeHTML(action.label || "下一步处置") +
+      '</strong><span>' + UI.escapeHTML(action.description || "") + '</span></div>' : "";
+    var evidenceForm = "";
+    if (incident && incident.lifecycle === "DETECTED" && state.user && state.user.username === "liming" && !(incident.evidence || []).length) {
+      evidenceForm = '<form id="scenic-evidence-form" class="scenic-evidence-form">' +
+        '<strong>补充现场文字与图片</strong>' +
+        '<textarea id="scenic-evidence-text" maxlength="1000" required placeholder="说明 12 号车右后轮现场情况"></textarea>' +
+        '<input id="scenic-evidence-file" type="file" accept="image/jpeg,image/png,image/webp" required>' +
+        '<button class="btn primary" type="submit">提交到正式事件卷宗</button></form>';
+    }
+    target.innerHTML = '<div><span class="eyebrow">共享景区态势</span><h2>' + UI.escapeHTML(title) + '</h2></div>' +
+      '<p>' + UI.escapeHTML(incident ? (incident.business_id + " · " + incident.lifecycle) : "监测信号、态势告警与运营事件来自同一 PostgreSQL 事实源。") + '</p>' +
+      '<div class="scenic-situation-meta">' + meta.map(function (item) { return '<span>' + UI.escapeHTML(item) + '</span>'; }).join("") + '</div>' +
+      nextHtml + adviceHtml + evidenceForm;
+    var form = byId("scenic-evidence-form");
+    if (form) form.addEventListener("submit", submitScenicEvidence);
+  }
+
+  async function loadScenicSituation() {
+    try {
+      renderScenicSituation(await Client.scenic.snapshot());
+    } catch (error) {
+      byId("scenic-situation-card").innerHTML = '<div><span class="eyebrow">共享景区态势</span><h2>态势暂时不可用</h2></div><p>' + UI.escapeHTML(UI.errorView(error).message) + '</p>';
+    }
+  }
+
+  function startScenicSubscription() {
+    if (state.scenicSubscription) return;
+    state.scenicSubscription = Client.scenic.subscribe({
+      afterSequence: state.scenic && state.scenic.latest_sequence,
+      onSnapshot: renderScenicSituation,
+      onEvent: function () {
+        window.clearTimeout(state.scenicRefreshTimer);
+        state.scenicRefreshTimer = window.setTimeout(loadScenicSituation, 120);
+      },
+      onAdvice: function (eventName) {
+        var message = eventName === "ADVICE_PENDING" ? "模型建议分析中" :
+          eventName === "ADVICE_READY" ? "处置建议已就绪" : "未获得模型建议";
+        notify(message, eventName === "ADVICE_FAILED" ? "warning" : "success");
+        window.clearTimeout(state.scenicRefreshTimer);
+        state.scenicRefreshTimer = window.setTimeout(loadScenicSituation, 120);
+      }
+    });
+  }
+
+  async function submitScenicEvidence(event) {
+    event.preventDefault();
+    var incident = state.scenic && (state.scenic.incidents || [])[0];
+    var fileInput = byId("scenic-evidence-file");
+    var form = event.currentTarget;
+    if (!incident || !fileInput.files.length) return;
+    form.querySelectorAll("button,textarea,input").forEach(function (control) { control.disabled = true; });
+    try {
+      var attachment = await Client.assistant.uploadAttachment(fileInput.files[0]);
+      await Client.scenic.command("ADD_EVIDENCE", {
+        incident_id: incident.incident_id,
+        text: byId("scenic-evidence-text").value,
+        attachment_id: attachment.attachment_id
+      });
+      notify("现场证据已写入运营事件卷宗。", "success");
+      await loadScenicSituation();
+    } catch (error) {
+      notify(UI.errorView(error).message, "error");
+      form.querySelectorAll("button,textarea,input").forEach(function (control) { control.disabled = false; });
+    }
+  }
+
   function showInlineError(targetId, error) {
     var target = byId(targetId);
     target.hidden = false;
@@ -886,6 +985,27 @@
     byId("task-complete-form").hidden = status !== "RUNNING";
     byId("task-block-form").hidden = status !== "RUNNING";
     byId("task-action-region").hidden = ["PENDING", "RUNNING"].indexOf(status) < 0;
+    configureStructuredTaskResult(task, status);
+  }
+
+  function configureStructuredTaskResult(task, status) {
+    var region = byId("task-structured-result");
+    var primary = byId("task-result-primary");
+    var secondary = byId("task-result-secondary");
+    var kind = String(task.assigned_agent || "");
+    region.hidden = status !== "RUNNING" || ["field-technician", "field-operator"].indexOf(kind) < 0;
+    if (region.hidden) return;
+    if (kind === "field-technician") {
+      byId("task-result-primary-label").textContent = "12 号车检查结论";
+      byId("task-result-secondary-label").textContent = "7 号备用车状态";
+      primary.innerHTML = '<option value="ISOLATED">确认异常，继续停运</option><option value="SAFE">检查正常</option>';
+      secondary.innerHTML = '<option value="READY">检查合格，可启用</option><option value="NOT_READY">暂不可用</option>';
+    } else {
+      byId("task-result-primary-label").textContent = "东门分流措施";
+      byId("task-result-secondary-label").textContent = "现场风险状态";
+      primary.innerHTML = '<option value="ONE_WAY_DIVERSION">已启用单向分流</option><option value="ADDITIONAL_STAFF">已增派引导人员</option>';
+      secondary.innerHTML = '<option value="CLEAR">风险已解除</option><option value="MONITORING">继续观察</option>';
+    }
   }
 
   async function openTask(taskId, preserveURL) {
@@ -1026,10 +1146,21 @@
     clearInlineError("task-action-error");
     setTaskSubmitting(true);
     try {
-      var payload = await Client.work.complete(
-        state.work.selectedTask.id,
-        byId("task-complete-summary").value
-      );
+      var result = {};
+      if (!byId("task-structured-result").hidden) {
+        if (state.work.selectedTask.assigned_agent === "field-technician") {
+          result.vehicle_12 = byId("task-result-primary").value;
+          result.backup_vehicle_7 = byId("task-result-secondary").value;
+          result.inspection_items = ["右后轮", "制动", "底盘", "备用车辆"];
+        } else {
+          result.diversion_action = byId("task-result-primary").value;
+          result.risk_status = byId("task-result-secondary").value;
+        }
+      }
+      var payload = await Client.work.complete(state.work.selectedTask.id, {
+        summary: byId("task-complete-summary").value,
+        result: result
+      });
       byId("task-complete-form").reset();
       replaceWorkTask(payload.task || payload);
       notify("完成结果已保存。", "success");
@@ -1572,6 +1703,8 @@
 
   function followRun(sessionId, messageId) {
     if (state.followController) state.followController.abort();
+    if (state.scenicSubscription) state.scenicSubscription.abort();
+    state.scenicSubscription = null;
     var controller = new AbortController();
     state.followController = controller;
     Client.assistant.follow(sessionId, messageId, {

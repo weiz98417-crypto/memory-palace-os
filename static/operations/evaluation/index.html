@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agent 评估 · Memory Palace OS</title>
+  <link rel="stylesheet" href="/shared/client.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark">MP</span>
+      <div>
+        <strong>Agent 评估视图</strong>
+        <small>受保护的运行准备入口 · 只读评估证据</small>
+      </div>
+    </div>
+    <div class="actions">
+      <label class="tier-filter">层级
+        <select id="tier-filter">
+          <option value="">全部</option>
+          <option value="contract">契约门禁</option>
+          <option value="deep">深度评分</option>
+        </select>
+      </label>
+      <button id="refresh" type="button">刷新</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="cards" id="summary-cards">
+      <p class="empty">正在加载评估记录…</p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>评估运行</h2>
+        <span class="hint" id="run-count"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="runs-table">
+          <thead>
+            <tr>
+              <th>时间</th><th>层级</th><th>用例集</th><th>通过 / 总数</th>
+              <th>通过率</th><th>判官模型</th><th>耗时</th><th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="empty" id="runs-empty" hidden>尚无评估记录。</p>
+    </section>
+
+    <section class="panel" id="detail-panel" hidden>
+      <div class="panel-head">
+        <h2>用例明细</h2>
+        <span class="hint" id="detail-title"></span>
+      </div>
+      <div class="filters">
+        <button class="chip active" data-filter="all" type="button">全部</button>
+        <button class="chip" data-filter="failed" type="button">仅失败</button>
+        <button class="chip" data-filter="GROUNDED" type="button">有依据</button>
+        <button class="chip" data-filter="NO_EVIDENCE" type="button">无依据</button>
+      </div>
+      <div class="table-wrap">
+        <table id="cases-table">
+          <thead>
+            <tr><th>用例</th><th>类型</th><th>期望</th><th>实际</th><th>引用</th><th>评分</th><th>耗时</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/shared/client.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

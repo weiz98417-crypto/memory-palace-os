@@ -247,6 +247,14 @@ function createSimulatorHarness(options) {
         return operation(new AbortController().signal);
       }
     },
+    scenic: {
+      snapshot: async function () {
+        return options.scenic || { latest_sequence: 0, alerts: [], incidents: [] };
+      },
+      subscribe: function () {
+        return { abort: function () {} };
+      }
+    },
     simulator: {
       identities: async function () { return { identities: options.identities.slice() }; },
       outbox: async function (sessionId, userId) {
@@ -654,7 +662,7 @@ test("the simulator wires the complete expert interview and draft confirmation c
     experienceInterviews: { "interview-journey": interview },
     experienceCards: [card],
     experienceHandlers: {
-      complete: function () { return { card: card, extraction: { model: "deepseek-v4-flash" } }; },
+      complete: function () { return { card: card, extraction: { model: "deepseek-flash" } }; },
       revise: function (cardId, input) { return { card: Object.assign({}, card, input, { id: cardId }) }; },
       confirm: function (cardId) { return { card: Object.assign({}, card, { id: cardId, status: "EXPERT_CONFIRMED" }) }; }
     }
@@ -762,7 +770,7 @@ test("experience submission locks employee identity and restores the selected em
   assert.equal(identitySelect.disabled, true);
   identitySelect.value = "employee-b";
 
-  resolveComplete({ card: card, extraction: { model: "deepseek-v4-flash" } });
+  resolveComplete({ card: card, extraction: { model: "deepseek-flash" } });
   await submitting;
   await flushAsyncWork();
 
