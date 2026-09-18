@@ -70,6 +70,18 @@ _Avoid_: 全量记忆卷宗, 数字分身大脑
 The administrative workspace for operational reliability, integrations, permissions, and audit evidence.
 _Avoid_: 设置
 
+**知识负责人**:
+The manager-level role accountable for curating knowledge gaps, confirming gap topics, and publishing SOPs or expert experience.
+_Avoid_: 普通值班经理, 系统管理员
+
+**知识缺口**:
+A deterministic operational fact that a tenant-scoped retrieval completed without a verified knowledge hit.
+_Avoid_: 模型失败, 无效提问
+
+**缺口主题**:
+A human-confirmed grouping of related knowledge gaps used for knowledge governance; it is not a model-generated fact.
+_Avoid_: 语义聚类, 模型主题
+
 **景区模拟环境**:
 A local operating environment that simulates external scenic-area devices and channels while running the real business workflow for incidents, tasks, approvals, knowledge, and audit evidence.
 _Avoid_: 播放器, 假数据后台

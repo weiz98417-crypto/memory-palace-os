@@ -81,3 +81,76 @@ uv run --no-project --with-requirements requirements-eval.txt python evals/sceni
 ## 5. 结果解释
 
 确定性契约和 DeepEval 分数回答的是不同问题：前者证明结构化边界和拒答行为没有漂移，后者衡量当前候选回答与已核验上下文的忠实度。任何一项失败都阻断对应门禁，不能用另一层的成功覆盖。无命中时重点不是“回答有多像”，而是系统是否诚实地承认没有依据。
+
+## 6. 分层评测计划（2026-09-18 更新）
+
+3 条 `golden_cases.json` 只保留为 Fast Smoke，不再代表完整黄金集。景区 Agent 的评测分为五层：
+
+| 层 | 文件/来源 | 规模 | 运行时机 | 作用 |
+| --- | --- | ---: | --- | --- |
+| Fast Golden | `golden_fast_cases.json` | 30 | 每次改动、每次 PR | 关键业务与门禁回归 |
+| Deep Golden | `golden_deep_cases.json` | 120 | 夜间、阶段分支、发布前 | 完整场景、边界、对抗与失败模式 |
+| Production Sample | `sample_100_cases.json` | 100 | 夜间/周期 | 生产分布与漂移观察，不冒充 golden |
+| Corpus | `corpus_cases.json` | 860 | 索引、模型、分块或检索策略变化 | 检索覆盖与版本一致性 |
+| Failure Replay | `failure_replay_cases.json` | 持续增长 | 生产失败发生后 48 小时内 | 让已发生的失败不再回归 |
+
+黄金集采用四类来源组合：
+
+- 生产分布样本约 60%；
+- 对抗样本约 15%；
+- 领域专家构造的边界样本约 15%；
+- 历史失败回放约 10%。
+
+Fast Golden 的 30 条固定覆盖：
+
+| 类别 | 条数 |
+| --- | ---: |
+| Grounded 建议 | 8 |
+| No Evidence / 拒答 | 5 |
+| Retrieval Shape | 4 |
+| Dispatch Draft | 3 |
+| Closure Summary | 3 |
+| HITL / Gates | 3 |
+| Degradation / Failure | 2 |
+| Security / Tenant | 2 |
+
+Deep Golden 的 120 条固定覆盖：
+
+| 类别 | 条数 |
+| --- | ---: |
+| Grounded 建议 | 24 |
+| No Evidence / 拒答 | 16 |
+| Retrieval Shape | 14 |
+| Router / Risk | 10 |
+| Dispatch Draft | 14 |
+| Closure Summary | 12 |
+| HITL / Gates | 10 |
+| Degradation / Failure | 8 |
+| Security / Tenant | 6 |
+| Multi-Agent Trajectory | 6 |
+
+每条 Deep Golden 至少包含：
+
+- `artifact`：`ADVICE`、`DISPATCH_DRAFT` 或 `CLOSURE_SUMMARY`；
+- `expected_outcome`：`READY`、`FAILED` 或 `DEGRADED`；
+- `evidence_status`、必须引用/禁止引用；
+- `expected_risk` 与 `requires_human_approval`；
+- `required_tools` / `expected_actions`；
+- `expected_model_calls` 与允许的降级；
+- `expected_sse_events`；
+- `failure_mode` 与 `source`。
+
+`sample_100_cases.json` 继续保留为生产分布样本。它目前以 `GROUNDED / NO_EVIDENCE` 为主，后续需要补齐 artifact、工具轨迹、审批、失败模式和来源字段后，才能筛选进入 Deep Golden；不能直接把 100 条全部改名为 golden。
+
+运行节奏：
+
+```text
+每次改动：Fast Golden + contract
+夜间/阶段：Deep Golden + Production Sample
+索引/模型变化：Corpus 全量
+生产失败：48 小时内追加 Failure Replay
+发布前：Fast + Deep + Corpus + live gate + scenic_auto_demo
+```
+
+评测报告写入 `artifacts/scenic-agent-eval/`，不把真实模型输出、API Key 或未脱敏业务数据写回评测夹具。
+
