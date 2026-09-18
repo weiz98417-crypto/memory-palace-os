@@ -5,9 +5,19 @@ import os
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
+from pydantic import ValidationError
+
+from .case_schema import (
+    NO_EVIDENCE_TEXT,
+    FastGoldenFixture,
+    adapt_legacy_case,
+    evaluate_fast_golden_case,
+)
+
 
 GOLDEN_CASES_PATH = Path(__file__).with_name("golden_cases.json")
-NO_BASIS_PHRASE = "没有依据"
+FAST_GOLDEN_CASES_PATH = Path(__file__).with_name("golden_fast_cases.json")
+NO_BASIS_PHRASE = NO_EVIDENCE_TEXT
 
 
 class GoldenFixtureError(ValueError):
@@ -46,6 +56,36 @@ def load_golden_cases(path: str | Path | None = None) -> list[dict[str, Any]]:
     cases = payload["cases"]
     validate_golden_cases(cases)
     return cases
+
+
+def load_fast_golden_cases(path: str | Path | None = None) -> list[dict[str, Any]]:
+    fixture_path = Path(path) if path is not None else FAST_GOLDEN_CASES_PATH
+    try:
+        payload = json.loads(fixture_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise GoldenFixtureError(
+            f"cannot load Fast Golden cases from {fixture_path}: {exc}"
+        ) from exc
+    try:
+        fixture = FastGoldenFixture.model_validate(payload)
+    except ValidationError as exc:
+        raise GoldenFixtureError(f"invalid Fast Golden fixture: {exc}") from exc
+    return [case.model_dump(mode="json") for case in fixture.cases]
+
+
+def validate_fast_golden_cases(cases: Sequence[Mapping[str, Any]]) -> None:
+    try:
+        FastGoldenFixture.model_validate(
+            {
+                "schema_version": 2,
+                "fixture_only": True,
+                "dataset_version": str(cases[0].get("dataset_version") or "") if cases else "",
+                "generated_for": "inline-validation",
+                "cases": list(cases),
+            }
+        )
+    except ValidationError as exc:
+        raise GoldenFixtureError(f"invalid Fast Golden cases: {exc}") from exc
 
 
 def validate_golden_cases(cases: Sequence[Mapping[str, Any]]) -> None:
