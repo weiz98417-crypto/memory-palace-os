@@ -13,6 +13,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
+from evals.scenic_agent.production_sample import load_production_sample
 from evals.scenic_agent.contracts import (
     ContractViolation,
     GoldenFixtureError,
@@ -210,7 +211,7 @@ def run_deepeval(report_path: str | None = None) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run scenic agent golden-sample gates.")
     parser.add_argument(
-        "--mode", choices=("contract", "deepeval", "live"), required=True
+        "--mode", choices=("contract", "deepeval", "live", "production-sample"), required=True
     )
     parser.add_argument("--report", help="Optional JSON report path.")
     args = parser.parse_args(argv)
@@ -219,6 +220,16 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.mode == "contract":
             report = run_contract()
+        elif args.mode == "production-sample":
+            sample = load_production_sample()
+            report = {
+                "mode": "production-sample",
+                "case_count": sample["case_count"],
+                "case_ids": [case["id"] for case in sample["cases"]],
+                "source_file": sample["source_file"],
+                "not_golden": True,
+                "success": True,
+            }
         elif args.mode == "live":
             from evals.scenic_agent.live_gate import run_live
 
@@ -232,7 +243,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"EVAL_CONTRACT_FAILED: {exc}", file=sys.stderr)
         return 1
 
-    if args.mode in {"contract", "live"}:
+    if args.mode in {"contract", "live", "production-sample"}:
         _write_report(args.report, report)
     print(json.dumps(report, ensure_ascii=True, sort_keys=True))
     return 0 if report.get("success") else 1

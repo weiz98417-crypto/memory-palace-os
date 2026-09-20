@@ -225,3 +225,29 @@ def test_fast_golden_evaluator_rejects_semantically_invalid_cases():
     contradictory_gate["requires_human_approval"] = False
     with pytest.raises(ValueError, match="HITL_GATES"):
         evaluate_fast_golden_case(contradictory_gate)
+
+
+def test_production_sample_adapter_keeps_observation_semantics_and_missing_fields():
+    from evals.scenic_agent.production_sample import load_production_sample
+
+    sample = load_production_sample()
+
+    assert sample["source_file"] == "sample_100_cases.json"
+    assert sample["case_count"] == 100
+    assert len({case["id"] for case in sample["cases"]}) == 100
+    first = sample["cases"][0]
+    assert first["candidate_pool"] == "PRODUCTION_SAMPLE"
+    assert first["not_golden"] is True
+    assert "artifact" in first["missing_fields"]
+    assert "expected_risk" in first["missing_fields"]
+
+
+def test_production_sample_runner_reports_non_golden_mode(tmp_path):
+    from evals.scenic_agent.run_deepeval import main
+
+    report_path = tmp_path / "production-sample.json"
+    assert main(["--mode", "production-sample", "--report", str(report_path)]) == 0
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    assert report["mode"] == "production-sample"
+    assert report["case_count"] == 100
+    assert report["not_golden"] is True
