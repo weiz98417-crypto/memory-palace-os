@@ -15,7 +15,7 @@ The V2 snapshots reviewed here are intentionally early migration shells. They do
 | Entry | Legacy surface | V2 current surface | Result | Owner ticket |
 | --- | --- | --- | --- | --- |
 | `/operations/*` | Protected scenic preparation and evaluation evidence | Full V2 implementation; visual sign-off pending | `READY_FOR_REVIEW` | F11 |
-| `/simulator/wecom/` | Manager-operated simulator, messages, outbox and experience workflow | Identity count and channel declaration only | `INCOMPLETE` | F12 |
+| `/simulator/wecom/` | Manager-operated simulator, messages, outbox and experience workflow | Full V2 implementation; visual sign-off pending | `READY_FOR_REVIEW` | F12 |
 | `/admin/` | 13 workspaces, 45+ actions, gates and audit evidence | Command-center projection only | `INCOMPLETE` | F13 |
 | `/assistant/` | Mobile chat, work, experience and profile workflow | Run/task/advice projection only | `INCOMPLETE` | F14 |
 
