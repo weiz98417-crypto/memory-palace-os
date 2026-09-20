@@ -44,6 +44,40 @@ _Avoid_: 循环等待动画, 工作台背景动效
 The responsive formal-client experience for reviewing incidents and confirming urgent work away from a desktop workstation.
 _Avoid_: 被压缩的桌面控制台
 
+## Frontend Platform
+
+**前端全量迁移完成**:
+The point at which all four authenticated frontend entries are served by the V2 applications from a reproducible build, have functional parity with the legacy pages, pass behavioral and visual acceptance, and can be rolled back per entry. This is stronger than source code being merged or a local V2 build existing.
+_Avoid_: 代码已合并, 本地能构建, 只看页面能打开
+
+**前端入口迁移**:
+The per-entry completion of the same standard as full frontend migration: reproducible delivery, functional parity, behavioral and visual acceptance, and a working rollback path.
+_Avoid_: 脚手架完成, 只迁路由
+
+**前端视觉定稿**:
+The state in which an entry has been reviewed against `frontend/DESIGN.md` at the required desktop and mobile breakpoints and is no longer allowed to change visually without a new review. All migrated entries require this before the switch is considered complete.
+_Avoid_: 先上骨架再美化, 主观看起来不错
+
+**源码交付包**:
+The delivery format that contains all source and locked dependency metadata needed to reproduce the product build in the target environment. Generated frontend artifacts are build outputs, not the source of truth.
+_Avoid_: 只交静态产物, 把构建产物当源码
+
+**独立观测入口**:
+A technical runtime interface such as Hatchet or Jaeger that remains separately linked and is not restyled or embedded into the business frontend.
+_Avoid_: 业务 SPA 页面, 统一视觉子系统
+
+**前端功能等价**:
+The state in which every legacy route, action, and user-visible state exists in the V2 entry, except for explicitly listed deprecated legacy behavior. Feature equivalence is not satisfied by covering only the demo path.
+_Avoid_: 演示路径等价, 页面数量差不多
+
+**离线发布包**:
+An optional delivery bundle that supplements the source package with dependency caches or prebuilt images so the product can be built without public network access. The source package remains the source of truth.
+_Avoid_: 源码包内提交 node_modules, 用预构建产物替代源码
+
+**旧页面退场门禁**:
+The condition for deleting a legacy entry: one release observation window, V2 functional and visual acceptance, a successful rollback drill, and confirmed zero legacy traffic.
+_Avoid_: 时间到了就删除, V2 能打开就删除
+
 ## Workspace
 
 **指挥中心**:
