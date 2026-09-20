@@ -106,6 +106,7 @@ def _knowledge(case: dict[str, Any]) -> VerifiedKnowledge:
     cases = [
         {
             "case_id": hit.source_id,
+            "vector_doc_id": hit.vector_doc_id,
             "business_id": f"EVAL-{hit.source_id}",
             "title": hit.title,
             "outcome": hit.excerpt,
@@ -178,6 +179,7 @@ def _v2_knowledge(case: dict[str, Any]) -> VerifiedKnowledge:
         historical_cases=[
             HistoricalCase(
                 case_id=hit.source_id,
+                vector_doc_id=hit.vector_doc_id,
                 business_id=f"eval:{hit.source_id}",
                 title=hit.title,
                 outcome=hit.excerpt,
@@ -322,7 +324,10 @@ def _assert_v2_contract(case: dict[str, Any], observed: dict[str, Any]) -> dict[
         raise ContractViolation(f"{case['id']} returned {result.mode.value}, expected {expected_artifact}")
     if observed["outcome"] != case["expected_outcome"]:
         raise ContractViolation(
-            f"{case['id']} outcome={observed['outcome']}, expected {case['expected_outcome']}"
+            f"{case['id']} outcome={observed['outcome']}, "
+            f"expected {case['expected_outcome']}, "
+            f"degradations={observed['degradations']}, "
+            f"calls={observed['call_rows']}"
         )
     artifact = observed["advice"] if expected_artifact == "ADVICE" else observed["dispatch_draft"] if expected_artifact == "DISPATCH_DRAFT" else observed["closure_summary"]
     if case["expected_outcome"] == "READY" and artifact is None:
@@ -369,7 +374,8 @@ async def _run_case_inner(case: dict[str, Any], *, trace_id: str) -> dict[str, A
             )
             result = await command.execute(request)
             rows = await database.fetch_all(
-                "SELECT agent_id, model_name, total_tokens, is_mock FROM llm_call_logs "
+                "SELECT agent_id, model_name, status, total_tokens, is_mock, "
+                "error_type, error_message FROM llm_call_logs "
                 "WHERE venue_id = ?",
                 (case["incident_context"]["venue_id"],),
             )

@@ -445,6 +445,11 @@ class PydanticAIIncidentCommand:
             case.case_id for case in request.knowledge.historical_cases
         )
         verified_vector_ids = {hit.vector_doc_id for hit in verified_hits}
+        verified_vector_ids.update(
+            case.vector_doc_id
+            for case in request.knowledge.historical_cases
+            if case.vector_doc_id
+        )
         if not verified_source_ids and not verified_vector_ids:
             return MemoryOpsOutput(
                 evidence_status="NO_EVIDENCE",

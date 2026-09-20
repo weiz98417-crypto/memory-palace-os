@@ -360,6 +360,7 @@ def test_live_v2_knowledge_preserves_case_retrieval():
     assert [case.case_id for case in knowledge.historical_cases] == [
         "CASE-CROWD-2025"
     ]
+    assert knowledge.historical_cases[0].vector_doc_id == "eval:CASE-CROWD-2025"
     assert knowledge.historical_cases[0].excerpt == "开放侧门并分流"
 
 

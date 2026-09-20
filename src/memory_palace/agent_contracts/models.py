@@ -81,6 +81,7 @@ class KnowledgeHit(ContractModel):
 
 class HistoricalCase(ContractModel):
     case_id: str
+    vector_doc_id: str | None = None
     business_id: str
     title: str
     outcome: str

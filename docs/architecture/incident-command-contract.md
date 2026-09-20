@@ -127,6 +127,7 @@ class HistoricalCase(ContractModel):
     model_config = ConfigDict(extra="forbid")
 
     case_id: str
+    vector_doc_id: str | None = None
     business_id: str
     title: str
     outcome: str

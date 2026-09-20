@@ -80,6 +80,7 @@ async def build_advice_request(
     historical_cases = [
         HistoricalCase(
             case_id=hit.source_id,
+            vector_doc_id=hit.vector_doc_id,
             business_id=f"{venue_id}:{hit.source_id}",
             title=hit.title,
             outcome=hit.excerpt,
