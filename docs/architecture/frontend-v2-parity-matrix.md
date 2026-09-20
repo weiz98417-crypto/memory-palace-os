@@ -1,6 +1,6 @@
 # Frontend V2 parity matrix
 
-Status: ready-for-review
+Status: accepted
 Date: 2026-09-20
 Source of truth: ADR-0021, ADR-0022, `frontend/DESIGN.md`, `CONTEXT.md`
 
@@ -144,6 +144,6 @@ The following state boundaries must be represented in V2 before an entry is comp
 
 ## Sign-off
 
-Product-owner sign-off: pending.
+Product-owner sign-off: accepted 2026-09-20 by user confirmation.
 
 No entry may be marked migrated while it still depends on this matrix having unresolved `MISSING` behavior.
