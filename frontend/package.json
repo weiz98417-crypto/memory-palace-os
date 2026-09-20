@@ -17,6 +17,7 @@
     "dev:operations": "pnpm --filter @memory-palace/operations dev",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "typecheck": "vue-tsc --noEmit",
     "openapi:generate": "node scripts/generate-openapi-types.mjs",
     "openapi:check": "node scripts/generate-openapi-types.mjs --check",
@@ -32,6 +33,7 @@
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@types/node": "26.6.1",
+    "@playwright/test": "1.63.0",
     "@vitejs/plugin-vue": "6.0.9",
     "@vue/test-utils": "2.5.1",
     "eslint": "10.10.0",
