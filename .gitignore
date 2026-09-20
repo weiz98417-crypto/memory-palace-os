@@ -11,6 +11,7 @@ node_modules/
 /static/client/
 /frontend/coverage/
 /frontend/static/
+/frontend/test-results/
 
 # Python
 __pycache__/
