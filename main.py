@@ -178,6 +178,7 @@ async def lifespan(app: FastAPI):
         publisher=scenic_bus.publish,
         advice_repository=advice_repository,
     )
+    scenic_operations.incident_command = incident_command
     # The sink is built from the app's own database and SSE publisher rather than from
     # the operations object, so the worker path and the API path share one implementation
     # and neither can silently drop an advice-ready signal.

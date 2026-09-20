@@ -254,6 +254,7 @@ async def build_event_dossier(
     scenic_evidence_rows = []
     scenic_knowledge_rows = []
     scenic_retrieval_rows = []
+    scenic_dispatch_rows = []
     if scenic_incident:
         scenic_evidence_rows = await database.fetch_all(
             """
@@ -280,6 +281,15 @@ async def build_event_dossier(
             SELECT id, request_json, response_json, created_at, updated_at
             FROM scenic_commands
             WHERE venue_id = ? AND command_type = 'RETRIEVE_SOP' AND status = 'SUCCEEDED'
+            ORDER BY created_at ASC, id ASC
+            """,
+            (venue_id,),
+        )
+        scenic_dispatch_rows = await database.fetch_all(
+            """
+            SELECT id, request_json, response_json, created_at, updated_at
+            FROM scenic_commands
+            WHERE venue_id = ? AND command_type = 'DRAFT_DISPATCH'
             ORDER BY created_at ASC, id ASC
             """,
             (venue_id,),
@@ -887,6 +897,33 @@ async def build_event_dossier(
                     "activity_type": "KNOWLEDGE_RETRIEVED",
                     "knowledge_hit_id": hit.get("id"),
                     "vector_doc_id": hit.get("vector_doc_id"),
+                },
+            }
+        )
+    for dispatch in scenic_dispatch_rows:
+        request_payload = _decode_json(dispatch.get("request_json"), {})
+        request_incident_id = (
+            (request_payload.get("incident") or {}).get("incident_id")
+            or (request_payload.get("payload") or {}).get("incident_id")
+        )
+        if request_incident_id != scenic_incident["incident_id"]:
+            continue
+        if str(dispatch.get("status") or "") != "READY":
+            continue
+        response_payload = _decode_json(dispatch.get("response_json"), {})
+        draft = response_payload.get("dispatch_draft") or {}
+        journey_timeline.append(
+            {
+                "label": "派单草案已生成",
+                "summary": draft.get("summary") or "Agent 已生成派单草案。",
+                "actor_name": "事件指挥 Agent",
+                "business_id": event.get("business_id"),
+                "created_at": dispatch.get("updated_at") or dispatch.get("created_at"),
+                "technical": {
+                    "activity_type": "DISPATCH_DRAFT_READY",
+                    "run_id": dispatch.get("id"),
+                    "requires_human_approval": draft.get("requires_human_approval"),
+                    "degradations": response_payload.get("degradations") or [],
                 },
             }
         )

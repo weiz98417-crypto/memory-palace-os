@@ -6,13 +6,17 @@ import uuid
 from typing import Any
 
 from ..agent_contracts.models import (
+    AdviceDecisionRef,
     CommandMode,
     FieldEvidence,
     IncidentSnapshot,
     KnowledgeHit,
     VerifiedKnowledge,
 )
-from ..incident.contracts import IncidentCommandRequest
+from ..incident.contracts import IncidentCommandPrior, IncidentCommandRequest
+from ..skills.context_trigger.contracts import ContextTriggerOutput
+from ..skills.memory_ops.contracts import MemoryOpsOutput
+from ..skills.router.contracts import RouterOutput
 
 
 def knowledge_hits(incident_view: dict[str, Any]) -> list[KnowledgeHit]:
@@ -114,4 +118,138 @@ async def build_advice_request(
     return request, step
 
 
-__all__ = ["build_advice_request", "knowledge_hits"]
+async def build_dispatch_request(
+    *, database: Any, venue_id: str, incident_id: str, attempt: int = 1
+) -> IncidentCommandRequest:
+    """Build a DISPATCH_DRAFT request from the stored flow-gate decision."""
+
+    base, _step = await build_advice_request(
+        database=database, venue_id=venue_id, incident_id=incident_id, attempt=attempt
+    )
+    advice_row = await database.fetch_one(
+        """
+        SELECT * FROM scenic_commands
+        WHERE venue_id = ? AND command_type = 'GENERATE_ADVICE'
+          AND idempotency_key LIKE ?
+        ORDER BY created_at DESC, id DESC LIMIT 1
+        """,
+        (venue_id, f"advice:{incident_id}:%"),
+    )
+    if advice_row is None:
+        raise ValueError("dispatch draft requires an advice run")
+
+    advice_result = _json_object(advice_row.get("response_json"))
+    prior_advice = None
+    if advice_result.get("advice"):
+        prior_advice = MemoryOpsOutput.model_validate(advice_result["advice"])
+    prior_context = _prior_context(
+        advice_result.get("context"), base.incident, base.field_evidence
+    )
+    prior_routing = _prior_routing(advice_result.get("routing"), base.incident)
+
+    event = await database.fetch_one(
+        "SELECT * FROM confirmed_events WHERE venue_id = ? AND event_id = ?",
+        (venue_id, base.incident.event_id),
+    )
+    activities = await database.fetch_all(
+        """
+        SELECT * FROM event_activities
+        WHERE venue_id = ? AND event_id = ?
+        ORDER BY created_at ASC, id ASC
+        """,
+        (venue_id, base.incident.event_id),
+    )
+    decision = None
+    for activity in activities or []:
+        if str(activity.get("activity_type") or "") not in {
+            "ADVICE_DECIDED",
+            "ADVICE_SUPERSEDED",
+        }:
+            continue
+        payload = _json_object(activity.get("payload_json"))
+        if str(payload.get("advice_run_id") or "") != str(advice_row["id"]):
+            continue
+        decision = AdviceDecisionRef(
+            decision_id=str(activity["id"]),
+            advice_run_id=str(advice_row["id"]),
+            incident_id=incident_id,
+            decision=str(payload.get("decision") or "PROCEED_WITHOUT_WAITING"),
+            decided_by=str(activity.get("created_by") or "unknown"),
+            decided_at=float(activity.get("created_at") or 0.0),
+            reason_ref=payload.get("reason_code"),
+        )
+        break
+    if decision is None:
+        raise ValueError("dispatch draft requires a completed flow-gate decision")
+
+    step = CommandMode.DISPATCH_DRAFT.value
+    return IncidentCommandRequest(
+        mode=CommandMode.DISPATCH_DRAFT,
+        trace_id=uuid.uuid4().hex,
+        idempotency_key=f"dispatch:{incident_id}:{step}:{attempt}",
+        attempt=attempt,
+        incident=base.incident,
+        field_evidence=base.field_evidence,
+        knowledge=base.knowledge,
+        prior=IncidentCommandPrior(
+            context=prior_context,
+            routing=prior_routing,
+            advice_run_id=str(advice_row["id"]),
+            advice=prior_advice,
+            advice_state=str(advice_row["status"]),
+        ),
+        advice_decision=decision,
+    )
+
+
+def _prior_context(
+    value: Any,
+    incident: IncidentSnapshot,
+    evidence: list[FieldEvidence],
+) -> ContextTriggerOutput:
+    if isinstance(value, dict):
+        try:
+            return ContextTriggerOutput.model_validate(value)
+        except Exception:
+            pass
+    return ContextTriggerOutput(
+        normalized_summary=incident.raw_text[:400],
+        triggered=True,
+        event_type=incident.event_type,
+        severity_hint=incident.priority,
+        confidence=0.0,
+        evidence_refs=[item.evidence_id for item in evidence],
+        deduplicated_count=0,
+    )
+
+
+def _prior_routing(value: Any, incident: IncidentSnapshot) -> RouterOutput:
+    if isinstance(value, dict):
+        try:
+            return RouterOutput.model_validate(value)
+        except Exception:
+            pass
+    return RouterOutput(
+        intent="incident_report",
+        severity=incident.priority,
+        summary=incident.title,
+        is_critical=incident.priority in {"P0", "P1"},
+        confidence=0.0,
+        risk_reason="dispatch draft uses the persisted incident priority",
+    )
+
+
+def _json_object(value: Any) -> dict[str, Any]:
+    if isinstance(value, dict):
+        return value
+    if not value:
+        return {}
+    import json
+
+    try:
+        decoded = json.loads(value)
+    except (TypeError, ValueError):
+        return {}
+    return decoded if isinstance(decoded, dict) else {}
+
+__all__ = ["build_advice_request", "build_dispatch_request", "knowledge_hits"]

@@ -149,6 +149,7 @@ class ScenicAreaOperations:
         # Pushes the durable workflow's decision event; a no-op when the trunk runs
         # on the in-process dispatcher.
         self.advice_decision_publisher = advice_decision_publisher
+        self.incident_command = None
         # Injected by main.py once the dispatcher exists; None keeps the auto-enqueue
         # disabled for the local stack and tests.
         self.advice_dispatcher = None
@@ -1163,6 +1164,146 @@ class ScenicAreaOperations:
             "superseded": supersedes_pending,
             "advice_state": "SUPERSEDED" if supersedes_pending else advice["status"],
         }
+    async def _run_dispatch_draft(self, actor, incident, idempotency_key):
+        command = getattr(self, "incident_command", None)
+        if command is None:
+            # Rollback path retained for one release while the runtime is wired in.
+            return {"run_id": None, "dispatch_draft": None, "degradations": [], "fallback": True}
+        from .advice_request import build_dispatch_request
+
+        request = await build_dispatch_request(
+            database=self.database,
+            venue_id=actor.venue_id,
+            incident_id=incident["incident_id"],
+        )
+        run_id = str(
+            uuid.uuid5(
+                uuid.NAMESPACE_URL,
+                f"memory-palace-dispatch-run:{incident['incident_id']}:DISPATCH_DRAFT:1",
+            )
+        )
+        key = request.idempotency_key
+        request_json = request.model_dump_json()
+        request_hash = hashlib.sha256(request_json.encode()).hexdigest()
+        now = time.time()
+        existing = await self.database.fetch_one(
+            "SELECT * FROM scenic_commands WHERE venue_id = ? AND idempotency_key = ?",
+            (actor.venue_id, key),
+        )
+        if existing is not None:
+            if existing["request_hash"] != request_hash:
+                raise ScenicCommandConflict("dispatch draft key was reused with different inputs")
+            if existing["status"] == "READY":
+                return {
+                    "run_id": str(existing["id"]),
+                    "dispatch_draft": _json_object(existing.get("response_json")).get(
+                        "dispatch_draft"
+                    ),
+                    "degradations": _json_object(existing.get("response_json")).get(
+                        "degradations"
+                    )
+                    or [],
+                }
+            raise ScenicCommandConflict("dispatch draft is not available")
+        await self.database.execute(
+            """
+            INSERT INTO scenic_commands (
+                id, venue_id, command_type, idempotency_key, request_hash,
+                status, request_json, created_at, updated_at
+            ) VALUES (?, ?, 'DRAFT_DISPATCH', ?, ?, 'PENDING', ?, ?, ?)
+            """,
+            (run_id, actor.venue_id, key, request_hash, request_json, now, now),
+        )
+        claimed = await self.database.execute(
+            """
+            UPDATE scenic_commands SET status = 'RUNNING', updated_at = ?
+            WHERE venue_id = ? AND id = ? AND status = 'PENDING'
+            """,
+            (time.time(), actor.venue_id, run_id),
+        )
+        if claimed != 1:
+            raise ScenicCommandConflict("dispatch draft could not enter RUNNING")
+        try:
+            result = await command.execute(request)
+        except Exception as exc:
+            await self.database.execute(
+                """
+                UPDATE scenic_commands SET status = 'FAILED', error_type = ?,
+                    error_message = ?, updated_at = ?
+                WHERE venue_id = ? AND id = ? AND status = 'RUNNING'
+                """,
+                (type(exc).__name__, str(exc)[:500], time.time(), actor.venue_id, run_id),
+            )
+            raise ScenicCommandConflict("dispatch draft failed before task creation") from exc
+
+        body = result.model_dump(mode="json")
+        if result.dispatch_draft is None:
+            await self.database.execute(
+                """
+                UPDATE scenic_commands SET status = 'FAILED', response_json = ?,
+                    error_type = 'DISPATCH_DRAFT_UNAVAILABLE', error_message = ?,
+                    updated_at = ?
+                WHERE venue_id = ? AND id = ? AND status = 'RUNNING'
+                """,
+                (
+                    json.dumps(body, ensure_ascii=False, sort_keys=True),
+                    "dispatch draft did not return a draft",
+                    time.time(),
+                    actor.venue_id,
+                    run_id,
+                ),
+            )
+            raise ScenicCommandConflict("dispatch draft unavailable; no task was created")
+        updated = await self.database.execute(
+            """
+            UPDATE scenic_commands SET status = 'READY', response_json = ?,
+                error_type = NULL, error_message = NULL, updated_at = ?
+            WHERE venue_id = ? AND id = ? AND status = 'RUNNING'
+            """,
+            (
+                json.dumps(body, ensure_ascii=False, sort_keys=True),
+                time.time(),
+                actor.venue_id,
+                run_id,
+            ),
+        )
+        if updated != 1:
+            raise ScenicCommandConflict("dispatch draft was superseded before completion")
+        await append_event_activity(
+            self.database,
+            venue_id=actor.venue_id,
+            event_id=incident["event_id"],
+            activity_type="DISPATCH_DRAFT_READY",
+            trace_id=request.trace_id,
+            payload={
+                "incident_id": incident["incident_id"],
+                "artifact": "DISPATCH_DRAFT",
+                "run_id": run_id,
+                "state": "READY",
+                "dispatch_draft": body["dispatch_draft"],
+                "degradations": body.get("degradations") or [],
+            },
+            idempotency_key=f"dispatch:{run_id}:READY",
+        )
+        await self._record_event(
+            actor.venue_id,
+            incident["run_id"],
+            "DISPATCH_DRAFT_READY",
+            "scenic_incident",
+            incident["incident_id"],
+            {
+                "incident_id": incident["incident_id"],
+                "artifact": "DISPATCH_DRAFT",
+                "run_id": run_id,
+                "state": "READY",
+            },
+            float(await self._simulation_time(actor.venue_id)),
+        )
+        return {
+            "run_id": run_id,
+            "dispatch_draft": body["dispatch_draft"],
+            "degradations": body.get("degradations") or [],
+        }
     async def _command_create_repair_task(self, actor, payload, idempotency_key):
         self._require_roles(actor, "manager", "admin")
         incident = await self._incident(actor.venue_id, str(payload.get("incident_id") or ""))
@@ -1176,6 +1317,7 @@ class ScenicAreaOperations:
                 "high-risk vehicle decision did not enter approval; "
                 f"retry after {math.ceil(remaining)}s"
             )
+        dispatch_run = await self._run_dispatch_draft(actor, incident, idempotency_key)
         technician = await self._user(actor.venue_id, "chenyu")
         session_id = "scenic-session-chenyu"
         task = await self.task_graph.create_task(
@@ -1254,6 +1396,9 @@ class ScenicAreaOperations:
             "task": task.to_dict(),
             "approval_id": approval_result["approval_id"],
             "approval_business_id": approval_result["business_id"],
+            "dispatch_draft": dispatch_run["dispatch_draft"],
+            "dispatch_run_id": dispatch_run["run_id"],
+            "dispatch_degradations": dispatch_run["degradations"],
         }
 
     async def _command_create_diversion_task(self, actor, payload, idempotency_key):
@@ -1826,6 +1971,30 @@ class ScenicAreaOperations:
             (row["venue_id"], row["event_id"]),
         )
         advice = project_advice(activities)
+        dispatch_draft = None
+        dispatch_rows = await self.database.fetch_all(
+            """
+            SELECT * FROM scenic_commands
+            WHERE venue_id = ? AND command_type = 'DRAFT_DISPATCH'
+            ORDER BY updated_at DESC, id DESC
+            """,
+            (row["venue_id"],),
+        )
+        for dispatch_row in dispatch_rows or []:
+            request_payload = _json_object(dispatch_row.get("request_json"))
+            request_incident_id = str(
+                (request_payload.get("incident") or {}).get("incident_id")
+                or (request_payload.get("payload") or {}).get("incident_id")
+                or ""
+            )
+            if request_incident_id != str(row["incident_id"]):
+                continue
+            if dispatch_row["status"] != "READY":
+                break
+            dispatch_draft = _json_object(dispatch_row.get("response_json")).get(
+                "dispatch_draft"
+            )
+            break
         if advice and advice.get("trace_id"):
             calls = await self.database.fetch_all(
                 """
@@ -1857,6 +2026,7 @@ class ScenicAreaOperations:
             "knowledge_hits": hits,
             "notifications": [_decode_fields(item, "result_json") for item in notifications],
             "advice": advice,
+            "dispatch_draft": dispatch_draft,
         }
         incident["next_actions"] = build_next_actions(
             run={"id": row.get("run_id")},
