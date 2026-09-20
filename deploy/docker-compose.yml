@@ -5,6 +5,8 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-node:24.15.0-bookworm-slim}
     restart: "no"
     user: root
     entrypoint: ["/bin/sh", "-c"]
@@ -20,6 +22,8 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-node:24.15.0-bookworm-slim}
     restart: unless-stopped
     environment:
       APP_ENV: prod

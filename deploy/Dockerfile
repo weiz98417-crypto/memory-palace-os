@@ -2,6 +2,7 @@
 # Stage 1: builder — 安装依赖，不污染最终镜像
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ARG PYTHON_BASE_IMAGE=python:3.11-slim
+ARG NODE_IMAGE=node:24.15.0-bookworm-slim
 ARG LOCAL_EMBEDDINGS=false
 
 FROM ${PYTHON_BASE_IMAGE} AS builder
@@ -24,8 +25,37 @@ RUN pip install --upgrade pip && \
     fi
 
 
+# Export the real FastAPI contract for the frontend type check.
+# The build must not assume that a host-side API is already running.
+COPY . .
+ENV PYTHONPATH=/install/lib/python3.11/site-packages
+RUN python scripts/export_openapi.py /tmp/openapi.json
+
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Stage 2: runtime — 最终运行镜像，尽可能精简
+# Stage 2: frontend builder — build Vite apps from source
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FROM ${NODE_IMAGE} AS frontend-builder
+
+WORKDIR /frontend
+RUN npm install -g pnpm@11.19.0
+
+COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml frontend/.npmrc frontend/tsconfig.json frontend/vite.shared.ts frontend/vitest.config.ts frontend/eslint.config.js ./
+COPY frontend/apps ./apps
+COPY frontend/packages ./packages
+COPY frontend/scripts ./scripts
+
+RUN pnpm install --frozen-lockfile
+COPY --from=builder /tmp/openapi.json /tmp/openapi.json
+RUN OPENAPI_FILE=/tmp/openapi.json pnpm build && \
+    test -f /static/client/console/index.html && \
+    test -f /static/client/field/index.html && \
+    test -f /static/client/integration/index.html && \
+    test -f /static/client/operations/index.html
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Stage 3: runtime — 最终运行镜像，尽可能精简
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FROM ${PYTHON_BASE_IMAGE} AS runtime
 
@@ -45,8 +75,9 @@ RUN groupadd -r appuser && useradd -r -m -d /home/appuser -g appuser appuser
 
 WORKDIR /app
 
-# 复制项目源码
+# 复制项目源码和由源码构建的 V2 前端产物
 COPY --chown=appuser:appuser . .
+COPY --from=frontend-builder --chown=appuser:appuser /static/client /app/static/client
 
 # 创建数据目录（volumes 会覆盖，但保证目录存在）
 RUN mkdir -p data/logs /models/huggingface && \
