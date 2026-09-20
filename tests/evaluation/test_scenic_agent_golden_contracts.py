@@ -300,3 +300,12 @@ def test_live_metric_catalog_covers_required_agent_boundaries():
     }
     assert all(metric in THRESHOLDS for metrics in METRIC_CATALOG.values() for metric in metrics)
     assert all(value == 0.8 for value in THRESHOLDS.values())
+
+
+def test_corpus_gate_triggers_only_for_retrieval_index_or_model_changes():
+    from evals.scenic_agent.corpus_gate import load_corpus_cases, should_run_corpus
+
+    assert len(load_corpus_cases()["cases"]) == 860
+    assert should_run_corpus(["src/memory_palace/knowledge/vector_store.py"])
+    assert should_run_corpus(["requirements-scenic-agent-local-embeddings.txt"])
+    assert not should_run_corpus(["frontend/apps/console/src/App.vue"])
