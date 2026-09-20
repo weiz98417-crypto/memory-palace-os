@@ -12,6 +12,11 @@ $cache = Get-ScenicModelCache -Override $ModelCache
 $env:BGE_M3_CACHE_DIR = $cache
 Assert-ScenicDocker
 
+# Docker Desktop can assign a different bridge gateway after a network recreate.
+# The protected operations entry trusts the local ingress, so keep this value in sync.
+$gateway = Get-ScenicEgressGateway
+if ($gateway) { $env:SCENIC_PREP_ALLOWED_HOSTS = Merge-ScenicAllowedHosts -Gateway $gateway }
+
 $arguments = @('up', '-d')
 if (-not $NoBuild) { $arguments += '--build' }
 $arguments += @('app', 'nginx', 'scenic-agent-worker', 'hatchet-api', 'jaeger')
@@ -19,6 +24,19 @@ $arguments += @('app', 'nginx', 'scenic-agent-worker', 'hatchet-api', 'jaeger')
 Write-Host "Starting scenic demo stack ($script:ScenicProjectName)..." -ForegroundColor Cyan
 Invoke-ScenicCompose -Arguments $arguments
 Wait-ScenicAppContainerHealthy -TimeoutSeconds $TimeoutSeconds
+
+# On a cold start the network is created by the command above. Re-read its gateway
+# and apply it to the app before opening the protected operations entry.
+$gateway = Get-ScenicEgressGateway
+if ($gateway) {
+    $allowedHosts = Merge-ScenicAllowedHosts -Gateway $gateway
+    if ($env:SCENIC_PREP_ALLOWED_HOSTS -ne $allowedHosts) {
+        $env:SCENIC_PREP_ALLOWED_HOSTS = $allowedHosts
+        Invoke-ScenicCompose -Arguments @('up', '-d', '--no-deps', '--force-recreate', 'app')
+        Wait-ScenicAppContainerHealthy -TimeoutSeconds $TimeoutSeconds
+    }
+}
+
 # Recreate nginx upstream resolution after the app container is recreated.
 Invoke-ScenicCompose -Arguments @('restart', 'nginx')
 $health = Wait-ScenicDemoHealth -TimeoutSeconds $TimeoutSeconds

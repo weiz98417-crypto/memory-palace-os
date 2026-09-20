@@ -47,6 +47,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\scenic-demo-start.ps1 `
 
 首次启动或代码/镜像更新后建议保留默认的 `--build`；只重启现有栈时可加 `-NoBuild`。
 
+启动脚本会自动探测当前 Compose 的 egress 网关，并把它合并进 `SCENIC_PREP_ALLOWED_HOSTS`；Docker Desktop 重建网络后网关地址变化时，不需要手工改 `.env`。
+
 启动完成后应先确认：
 
 ```powershell

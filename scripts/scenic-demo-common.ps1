@@ -53,6 +53,28 @@ function Get-ScenicModelCache {
     return (Resolve-Path -LiteralPath $expanded).Path
 }
 
+function Get-ScenicEgressGateway {
+    $network = "$($script:ScenicProjectName)_egress"
+    $gateway = & docker network inspect $network --format '{{(index .IPAM.Config 0).Gateway}}' 2>$null
+    if ($LASTEXITCODE -ne 0 -or -not $gateway) { return $null }
+    return $gateway.Trim()
+}
+
+function Merge-ScenicAllowedHosts {
+    param([string]$Gateway)
+
+    $configured = $env:SCENIC_PREP_ALLOWED_HOSTS
+    if (-not $configured) { $configured = Read-ScenicDotEnvValue -Key 'SCENIC_PREP_ALLOWED_HOSTS' }
+    if (-not $configured) { $configured = '127.0.0.1,::1,localhost,testclient' }
+    $items = [System.Collections.Generic.List[string]]::new()
+    foreach ($item in ($configured -split ',')) {
+        $trimmed = $item.Trim()
+        if ($trimmed -and -not $items.Contains($trimmed)) { $items.Add($trimmed) }
+    }
+    if ($Gateway -and -not $items.Contains($Gateway)) { $items.Add($Gateway) }
+    return ($items -join ',')
+}
+
 function Assert-ScenicDocker {
     if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
         throw 'Docker CLI was not found. Start Docker Desktop first.'
