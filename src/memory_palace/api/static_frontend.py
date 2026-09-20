@@ -46,4 +46,29 @@ def mount_frontend_v2(
     return True
 
 
-__all__ = ["SpaStaticFiles", "frontend_v2_enabled", "mount_frontend_v2"]
+FRONTEND_APPS = {
+    "console": "/admin",
+    "field": "/assistant",
+    "integration": "/simulator/wecom",
+    "operations": "/operations",
+}
+
+
+def mount_configured_frontend_apps(
+    app: FastAPI,
+    *,
+    root: Path,
+    environ: Mapping[str, str] | None = None,
+) -> dict[str, bool]:
+    mounted: dict[str, bool] = {}
+    for app_name, route in FRONTEND_APPS.items():
+        mounted[app_name] = mount_frontend_v2(
+            app,
+            app_name=app_name,
+            route=route,
+            directory=root / app_name,
+            environ=environ,
+        )
+    return mounted
+
+__all__ = ["FRONTEND_APPS", "SpaStaticFiles", "frontend_v2_enabled", "mount_configured_frontend_apps", "mount_frontend_v2"]
