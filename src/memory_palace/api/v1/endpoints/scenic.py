@@ -237,7 +237,11 @@ async def scenic_stream(
                 for event in events:
                     cursor = int(event["sequence"])
                     event_type = str(event.get("event_type") or "situation")
-                    event_name = event_type if event_type.startswith("ADVICE_") else "situation"
+                    event_name = (
+                        event_type
+                        if event_type.startswith(("ADVICE_", "DISPATCH_DRAFT_", "CLOSURE_SUMMARY_"))
+                        else "situation"
+                    )
                     yield _sse(event_name, cursor, event)
                 continue
             if bus is not None:

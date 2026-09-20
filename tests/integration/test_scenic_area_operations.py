@@ -330,6 +330,7 @@ async def test_rain_vehicle_and_east_gate_story_closes_with_auditable_dossier(tm
         assert formal_dossier["attachments"][0]["attachment_id"] == "photo-wheel-12"
         assert formal_dossier["field_evidence"][0]["submitted_by"]["name"] == "李明"
         assert formal_dossier["references"][0]["title"] == "雨后观光车复运与分流 SOP"
+        assert any(item["technical"]["activity_type"] == "CLOSURE_SUMMARY_READY" for item in formal_dossier["journey_timeline"])
         journey_types = {
             item["technical"]["activity_type"]
             for item in formal_dossier["journey_timeline"]

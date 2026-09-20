@@ -255,6 +255,7 @@ async def build_event_dossier(
     scenic_knowledge_rows = []
     scenic_retrieval_rows = []
     scenic_dispatch_rows = []
+    scenic_closure_rows = []
     if scenic_incident:
         scenic_evidence_rows = await database.fetch_all(
             """
@@ -290,6 +291,15 @@ async def build_event_dossier(
             SELECT id, request_json, response_json, created_at, updated_at
             FROM scenic_commands
             WHERE venue_id = ? AND command_type = 'DRAFT_DISPATCH'
+            ORDER BY created_at ASC, id ASC
+            """,
+            (venue_id,),
+        )
+        scenic_closure_rows = await database.fetch_all(
+            """
+            SELECT id, request_json, response_json, created_at, updated_at
+            FROM scenic_commands
+            WHERE venue_id = ? AND command_type = 'SUMMARIZE_CLOSURE'
             ORDER BY created_at ASC, id ASC
             """,
             (venue_id,),
@@ -897,6 +907,30 @@ async def build_event_dossier(
                     "activity_type": "KNOWLEDGE_RETRIEVED",
                     "knowledge_hit_id": hit.get("id"),
                     "vector_doc_id": hit.get("vector_doc_id"),
+                },
+            }
+        )
+    for closure in scenic_closure_rows:
+        request_payload = _decode_json(closure.get("request_json"), {})
+        request_incident_id = (
+            (request_payload.get("incident") or {}).get("incident_id")
+            or (request_payload.get("payload") or {}).get("incident_id")
+        )
+        if request_incident_id != scenic_incident["incident_id"]:
+            continue
+        response_payload = _decode_json(closure.get("response_json"), {})
+        journey_timeline.append(
+            {
+                "label": "关闭摘要已生成" if closure.get("status") == "READY" else "关闭摘要不可用",
+                "summary": (response_payload.get("closure_summary") or {}).get("outcome_summary")
+                or "关闭摘要未获得，人工继续按门禁关闭。",
+                "actor_name": "事件指挥 Agent",
+                "business_id": event.get("business_id"),
+                "created_at": closure.get("updated_at") or closure.get("created_at"),
+                "technical": {
+                    "activity_type": "CLOSURE_SUMMARY_READY" if closure.get("status") == "READY" else "CLOSURE_SUMMARY_FAILED",
+                    "run_id": closure.get("id"),
+                    "state": closure.get("status"),
                 },
             }
         )

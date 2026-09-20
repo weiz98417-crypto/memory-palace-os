@@ -1576,6 +1576,20 @@ class ScenicAreaOperations:
             status = "FAILED"
         await self.database.execute("""UPDATE scenic_commands SET status = ?, response_json = ?, error_type = ?, error_message = ?, updated_at = ? WHERE venue_id = ? AND id = ? AND status = 'RUNNING'""", (status, json.dumps(body, ensure_ascii=False, sort_keys=True), body.get("error_type"), body.get("error_message"), time.time(), actor.venue_id, run_id))
         await append_event_activity(self.database, venue_id=actor.venue_id, event_id=incident["event_id"], activity_type="CLOSURE_SUMMARY_READY" if status == "READY" else "CLOSURE_SUMMARY_FAILED", trace_id=request.trace_id, payload={"incident_id": incident["incident_id"], "artifact": "CLOSURE_SUMMARY", "run_id": run_id, "state": status, "closure_summary": body.get("closure_summary"), "degradations": body.get("degradations") or []}, idempotency_key=f"closure:{run_id}:{status}")
+        await self._record_event(
+            actor.venue_id,
+            incident["run_id"],
+            "CLOSURE_SUMMARY_READY" if status == "READY" else "CLOSURE_SUMMARY_FAILED",
+            "scenic_incident",
+            incident["incident_id"],
+            {
+                "incident_id": incident["incident_id"],
+                "artifact": "CLOSURE_SUMMARY",
+                "run_id": run_id,
+                "state": status,
+            },
+            float(await self._simulation_time(actor.venue_id)),
+        )
         return {"run_id": run_id, "closure_summary": body.get("closure_summary"), "degradations": body.get("degradations") or []}
 
     async def _settle_advice_at_closure(self, actor, incident):
@@ -2086,6 +2100,39 @@ class ScenicAreaOperations:
                 "dispatch_draft"
             )
             break
+        agent_run_rows = await self.database.fetch_all(
+            """
+            SELECT * FROM scenic_commands
+            WHERE venue_id = ? AND command_type IN ('GENERATE_ADVICE', 'DRAFT_DISPATCH', 'SUMMARIZE_CLOSURE')
+            ORDER BY created_at ASC, id ASC
+            """,
+            (row["venue_id"],),
+        )
+        agent_runs = []
+        for run_row in agent_run_rows or []:
+            run_request = _json_object(run_row.get("request_json"))
+            run_incident_id = str(
+                (run_request.get("incident") or {}).get("incident_id")
+                or (run_request.get("payload") or {}).get("incident_id")
+                or ""
+            )
+            if run_incident_id != str(row["incident_id"]):
+                continue
+            artifact = {
+                "GENERATE_ADVICE": "ADVICE",
+                "DRAFT_DISPATCH": "DISPATCH_DRAFT",
+                "SUMMARIZE_CLOSURE": "CLOSURE_SUMMARY",
+            }.get(str(run_row.get("command_type")), str(run_row.get("command_type")))
+            run_result = _json_object(run_row.get("response_json"))
+            agent_runs.append(
+                {
+                    "artifact": artifact,
+                    "run_id": str(run_row["id"]),
+                    "state": str(run_row["status"]),
+                    "degradations": run_result.get("degradations") or [],
+                    "error_type": run_row.get("error_type"),
+                }
+            )
         if advice and advice.get("trace_id"):
             calls = await self.database.fetch_all(
                 """
@@ -2118,6 +2165,7 @@ class ScenicAreaOperations:
             "notifications": [_decode_fields(item, "result_json") for item in notifications],
             "advice": advice,
             "dispatch_draft": dispatch_draft,
+            "agent_runs": agent_runs,
         }
         incident["next_actions"] = build_next_actions(
             run={"id": row.get("run_id")},
