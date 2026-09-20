@@ -3,7 +3,8 @@ param(
     [ValidateSet('Open', 'Verify', 'Auto')]
     [string]$Mode = 'Open',
     [string]$Browser = 'msedge',
-    [int]$KeepOpenSeconds = 0
+    [int]$KeepOpenSeconds = 0,
+    [switch]$Headless
 )
 
 $ErrorActionPreference = 'Stop'
@@ -26,7 +27,9 @@ $env:SCENIC_DEMO_BASE_URL = $baseUrl
 Push-Location $script:ScenicRepoRoot
 try {
     if ($Mode -eq 'Auto') {
-        & uv run --with playwright python scripts\scenic_auto_demo.py --base-url $baseUrl --browser-channel $Browser --headless
+        $autoArgs = @('run', '--with', 'playwright', 'python', 'scripts\scenic_auto_demo.py', '--base-url', $baseUrl, '--browser-channel', $Browser)
+        if ($Headless) { $autoArgs += '--headless' }
+        & uv @autoArgs
     }
     elseif ($Mode -eq 'Verify') {
         & uv run --with playwright python scripts\scenic_demo_launcher.py --base-url $baseUrl --browser-channel $Browser --headless --verify-only

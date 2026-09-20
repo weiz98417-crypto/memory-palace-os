@@ -27,7 +27,7 @@
 | `scripts\scenic-demo-status.ps1` | 查看容器、健康、密钥、入口 |
 | `scripts\scenic-demo-open.ps1 -Mode Open` | 打开 5 个已按角色登录的演示窗口 |
 | `scripts\scenic-demo-open.ps1 -Mode Verify` | 无窗口验证 5 个入口登录链路 |
-| `scripts\scenic-demo-open.ps1 -Mode Auto` | 自动跑完 15 步 UI 演示并保存证据 |
+| `scripts\scenic-demo-open.ps1 -Mode Auto` | 用可见浏览器自动跑完 15 步 UI 演示并保存证据 |
 | `scripts\scenic-demo-stop.ps1` | 停止容器，保留所有数据卷和密钥卷 |
 
 ## 三、启动
@@ -85,11 +85,13 @@ powershell -ExecutionPolicy Bypass -File .\scripts\scenic-demo-open.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\scenic-demo-open.ps1 -Mode Verify
 ```
 
-自动跑完整链路并保存证据：
+自动跑完整链路并保存证据（默认可见浏览器）：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\scenic-demo-open.ps1 -Mode Auto
 ```
+
+CI 或不需要窗口时加 `-Headless`。
 
 ## 五、人工演示 15 步
 
