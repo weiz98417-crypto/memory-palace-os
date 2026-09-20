@@ -26,6 +26,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from src.memory_palace.api.static_frontend import mount_frontend_v2
 from loguru import logger
 
 load_dotenv()
@@ -510,20 +511,27 @@ else:
         StaticFiles(directory="static/simulator/wecom", html=True),
         name="wecom_simulator_static",
     )
-    @app.get("/operations/scenic", include_in_schema=False)
-    async def scenic_operations_redirect():
-        return RedirectResponse(url="/operations/scenic/", status_code=302)
+    operations_v2 = mount_frontend_v2(
+        app,
+        app_name="operations",
+        route="/operations",
+        directory=Path(__file__).resolve().parent / "static" / "client" / "operations",
+    )
+    if not operations_v2:
+        @app.get("/operations/scenic", include_in_schema=False)
+        async def scenic_operations_redirect():
+            return RedirectResponse(url="/operations/scenic/", status_code=302)
 
-    app.mount(
-        "/operations/scenic",
-        StaticFiles(directory="static/operations/scenic", html=True),
-        name="scenic_operations_static",
-    )
-    app.mount(
-        "/operations/evaluation",
-        StaticFiles(directory="static/operations/evaluation", html=True),
-        name="operations_evaluation_static",
-    )
+        app.mount(
+            "/operations/scenic",
+            StaticFiles(directory="static/operations/scenic", html=True),
+            name="scenic_operations_static",
+        )
+        app.mount(
+            "/operations/evaluation",
+            StaticFiles(directory="static/operations/evaluation", html=True),
+            name="operations_evaluation_static",
+        )
     app.mount("/shared", StaticFiles(directory="static/shared"), name="client_shared_static")
     app.mount("/admin", StaticFiles(directory="static", html=True), name="admin_static")
 
