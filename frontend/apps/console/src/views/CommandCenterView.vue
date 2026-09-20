@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { createApiClient } from '@memory-palace/api-client'
 import { AgentRunCard } from '@memory-palace/domain-ui'
-import { buildCommandCenter, loadCommandCenter, type CommandCenterModel } from '../commandCenter'
+import { loadCommandCenter, type CommandCenterModel } from '../commandCenter'
 
 const model = ref<CommandCenterModel>({ runs: [], nextAction: null, advice: null })
 const loading = ref(true)

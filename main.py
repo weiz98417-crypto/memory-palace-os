@@ -488,7 +488,9 @@ else:
         app_name="field",
         route="/assistant",
         directory=Path(__file__).resolve().parent / "static" / "client" / "field",
-    )    @app.get("/assistant", include_in_schema=False)
+    )
+
+    @app.get("/assistant", include_in_schema=False)
     async def assistant_redirect():
         return RedirectResponse(url="/assistant/", status_code=302)
 
@@ -511,7 +513,9 @@ else:
         app_name="integration",
         route="/simulator/wecom",
         directory=Path(__file__).resolve().parent / "static" / "client" / "integration",
-    )    @app.get("/simulator/wecom", include_in_schema=False)
+    )
+
+    @app.get("/simulator/wecom", include_in_schema=False)
     async def wecom_simulator_redirect():
         return RedirectResponse(url="/simulator/wecom/", status_code=302)
 

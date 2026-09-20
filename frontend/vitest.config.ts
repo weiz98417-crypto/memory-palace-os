@@ -20,6 +20,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     restoreMocks: true,
+    exclude: ['**/node_modules/**', '**/e2e/**'],
     pool: 'threads',
     maxWorkers: 1,
     fileParallelism: false,
