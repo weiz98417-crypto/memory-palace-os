@@ -191,7 +191,51 @@ def _statements(*, postgres: bool) -> tuple[str, ...]:
         "CREATE INDEX IF NOT EXISTS idx_scenic_incidents_state ON scenic_incidents (venue_id, lifecycle, updated_at)",
         "CREATE INDEX IF NOT EXISTS idx_scenic_receipts_incident ON scenic_notification_receipts (venue_id, incident_id, updated_at)",
         "CREATE INDEX IF NOT EXISTS idx_scenic_events_sequence ON scenic_situation_events (venue_id, sequence)",
+        """
+        CREATE TABLE IF NOT EXISTS scenic_knowledge_gap_annotations (
+            id TEXT PRIMARY KEY,
+            venue_id TEXT NOT NULL,
+            gap_id TEXT NOT NULL,
+            normalized_query TEXT NOT NULL,
+            status TEXT NOT NULL,
+            resolution_type TEXT,
+            resolution_note TEXT,
+            resolved_at DOUBLE PRECISION,
+            updated_by TEXT NOT NULL,
+            created_at DOUBLE PRECISION NOT NULL,
+            updated_at DOUBLE PRECISION NOT NULL,
+            UNIQUE (venue_id, gap_id),
+            UNIQUE (venue_id, normalized_query)
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS scenic_knowledge_gap_topics (
+            id TEXT PRIMARY KEY,
+            venue_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            status TEXT NOT NULL,
+            merged_into_topic_id TEXT,
+            created_by TEXT NOT NULL,
+            created_at DOUBLE PRECISION NOT NULL,
+            updated_at DOUBLE PRECISION NOT NULL
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS scenic_knowledge_gap_topic_members (
+            venue_id TEXT NOT NULL,
+            topic_id TEXT NOT NULL,
+            gap_id TEXT NOT NULL,
+            normalized_query TEXT NOT NULL,
+            assigned_by TEXT NOT NULL,
+            assigned_at DOUBLE PRECISION NOT NULL,
+            PRIMARY KEY (venue_id, gap_id)
+        )
+        """,
         "CREATE INDEX IF NOT EXISTS idx_scenic_eval_runs_venue ON scenic_evaluation_runs (venue_id, created_at DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_scenic_gap_annotations_venue ON scenic_knowledge_gap_annotations (venue_id, status, updated_at)",
+        "CREATE INDEX IF NOT EXISTS idx_scenic_gap_topics_venue ON scenic_knowledge_gap_topics (venue_id, status, updated_at)",
+        "CREATE UNIQUE INDEX IF NOT EXISTS uq_scenic_gap_topic_active_name ON scenic_knowledge_gap_topics (venue_id, name) WHERE status = 'ACTIVE'",
+        "CREATE INDEX IF NOT EXISTS idx_scenic_gap_members_topic ON scenic_knowledge_gap_topic_members (venue_id, topic_id)",
     )
 
 

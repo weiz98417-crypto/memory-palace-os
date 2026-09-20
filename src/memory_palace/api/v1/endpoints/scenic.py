@@ -29,6 +29,12 @@ from ....incident.command import (
 from ....incident.contracts import IncidentCommandRequest
 from ....incident.runtime import build_incident_agent_registry
 from ....scenic.evaluation_runs import EvaluationRunRepository
+from ....scenic.knowledge_gaps import (
+    KnowledgeGapConflict,
+    KnowledgeGapInputError,
+    KnowledgeGapNotFound,
+    KnowledgeGapRepository,
+)
 from ....scenic.operations import (
     Actor,
     Command,
@@ -252,6 +258,265 @@ async def scenic_stream(
             "X-Accel-Buffering": "no",
         },
     )
+
+
+class KnowledgeGapResolveRequest(BaseModel):
+    resolution_type: str = Field(..., min_length=2, max_length=64)
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class KnowledgeTopicCreateRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=120)
+
+
+class KnowledgeTopicRenameRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=120)
+
+
+class KnowledgeTopicAssignRequest(BaseModel):
+    gap_id: str = Field(..., min_length=8, max_length=128)
+
+
+class KnowledgeTopicMergeRequest(BaseModel):
+    target_topic_id: str = Field(..., min_length=8, max_length=128)
+
+
+class KnowledgeTopicSplitRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=120)
+    gap_ids: list[str] = Field(..., min_length=1, max_length=500)
+
+
+def _knowledge_gap_repository(request: Request) -> KnowledgeGapRepository:
+    database = getattr(request.app.state, "db_client", None)
+    if database is None:
+        raise HTTPException(status_code=503, detail={"code": "DATABASE_NOT_READY"})
+    return KnowledgeGapRepository(database)
+
+
+def _require_knowledge_governance(principal: dict[str, str]) -> None:
+    if principal.get("role") not in {"manager", "admin"}:
+        raise HTTPException(
+            status_code=403,
+            detail={"code": "SCENIC_KNOWLEDGE_GOVERNANCE_ROLE_REQUIRED"},
+        )
+
+
+def _raise_knowledge_gap_error(exc: Exception) -> None:
+    if isinstance(exc, KnowledgeGapNotFound):
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "SCENIC_KNOWLEDGE_GAP_NOT_FOUND", "message": str(exc)},
+        ) from exc
+    if isinstance(exc, KnowledgeGapConflict):
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "SCENIC_KNOWLEDGE_GAP_CONFLICT", "message": str(exc)},
+        ) from exc
+    if isinstance(exc, KnowledgeGapInputError):
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "SCENIC_KNOWLEDGE_GAP_INVALID", "message": str(exc)},
+        ) from exc
+    raise exc
+
+
+@router.get("/scenic/knowledge-gaps")
+async def list_knowledge_gaps(
+    request: Request,
+    principal: dict[str, str] = Depends(require_auth),
+):
+    _require_knowledge_governance(principal)
+    items = await _knowledge_gap_repository(request).list_gaps(venue_id=principal["venue_id"])
+    return {"items": items, "total": len(items)}
+
+
+@router.get("/scenic/knowledge-gaps/{gap_id}")
+async def get_knowledge_gap(
+    gap_id: str,
+    request: Request,
+    principal: dict[str, str] = Depends(require_auth),
+):
+    _require_knowledge_governance(principal)
+    try:
+        return await _knowledge_gap_repository(request).get_gap(
+            venue_id=principal["venue_id"], gap_id=gap_id
+        )
+    except Exception as exc:
+        _raise_knowledge_gap_error(exc)
+
+
+@router.post("/scenic/knowledge-gaps/{gap_id}/acknowledge")
+async def acknowledge_knowledge_gap(
+    gap_id: str,
+    request: Request,
+    idempotency_key: str = Header(..., alias="Idempotency-Key", min_length=8, max_length=128),
+    principal: dict[str, str] = Depends(require_auth),
+):
+    _require_knowledge_governance(principal)
+    try:
+        return await _knowledge_gap_repository(request).acknowledge(
+            venue_id=principal["venue_id"],
+            gap_id=gap_id,
+            actor_id=principal["user_id"],
+            trace_id=idempotency_key,
+        )
+    except Exception as exc:
+        _raise_knowledge_gap_error(exc)
+
+
+@router.post("/scenic/knowledge-gaps/{gap_id}/resolve")
+async def resolve_knowledge_gap(
+    gap_id: str,
+    body: KnowledgeGapResolveRequest,
+    request: Request,
+    idempotency_key: str = Header(..., alias="Idempotency-Key", min_length=8, max_length=128),
+    principal: dict[str, str] = Depends(require_auth),
+):
+    _require_knowledge_governance(principal)
+    try:
+        return await _knowledge_gap_repository(request).resolve(
+            venue_id=principal["venue_id"],
+            gap_id=gap_id,
+            resolution_type=body.resolution_type,
+            note=body.note,
+            actor_id=principal["user_id"],
+            trace_id=idempotency_key,
+        )
+    except Exception as exc:
+        _raise_knowledge_gap_error(exc)
+
+
+@router.post("/scenic/knowledge-gaps/{gap_id}/reopen")
+async def reopen_knowledge_gap(
+    gap_id: str,
+    request: Request,
+    idempotency_key: str = Header(..., alias="Idempotency-Key", min_length=8, max_length=128),
+    principal: dict[str, str] = Depends(require_auth),
+):
+    _require_knowledge_governance(principal)
+    try:
+        return await _knowledge_gap_repository(request).reopen(
+            venue_id=principal["venue_id"],
+            gap_id=gap_id,
+            actor_id=principal["user_id"],
+            trace_id=idempotency_key,
+        )
+    except Exception as exc:
+        _raise_knowledge_gap_error(exc)
+
+
+@router.get("/scenic/knowledge-topics")
+async def list_knowledge_topics(
+    request: Request,
+    principal: dict[str, str] = Depends(require_auth),
+):
+    _require_knowledge_governance(principal)
+    items = await _knowledge_gap_repository(request).list_topics(venue_id=principal["venue_id"])
+    return {"items": items, "total": len(items)}
+
+
+@router.post("/scenic/knowledge-topics")
+async def create_knowledge_topic(
+    body: KnowledgeTopicCreateRequest,
+    request: Request,
+    idempotency_key: str = Header(..., alias="Idempotency-Key", min_length=8, max_length=128),
+    principal: dict[str, str] = Depends(require_auth),
+):
+    _require_knowledge_governance(principal)
+    try:
+        return await _knowledge_gap_repository(request).create_topic(
+            venue_id=principal["venue_id"],
+            name=body.name,
+            actor_id=principal["user_id"],
+            trace_id=idempotency_key,
+        )
+    except Exception as exc:
+        _raise_knowledge_gap_error(exc)
+
+
+@router.post("/scenic/knowledge-topics/{topic_id}/rename")
+async def rename_knowledge_topic(
+    topic_id: str,
+    body: KnowledgeTopicRenameRequest,
+    request: Request,
+    idempotency_key: str = Header(..., alias="Idempotency-Key", min_length=8, max_length=128),
+    principal: dict[str, str] = Depends(require_auth),
+):
+    _require_knowledge_governance(principal)
+    try:
+        return await _knowledge_gap_repository(request).rename_topic(
+            venue_id=principal["venue_id"],
+            topic_id=topic_id,
+            name=body.name,
+            actor_id=principal["user_id"],
+            trace_id=idempotency_key,
+        )
+    except Exception as exc:
+        _raise_knowledge_gap_error(exc)
+
+
+@router.post("/scenic/knowledge-topics/{topic_id}/assign")
+async def assign_knowledge_gap_topic(
+    topic_id: str,
+    body: KnowledgeTopicAssignRequest,
+    request: Request,
+    idempotency_key: str = Header(..., alias="Idempotency-Key", min_length=8, max_length=128),
+    principal: dict[str, str] = Depends(require_auth),
+):
+    _require_knowledge_governance(principal)
+    try:
+        return await _knowledge_gap_repository(request).assign_gap(
+            venue_id=principal["venue_id"],
+            topic_id=topic_id,
+            gap_id=body.gap_id,
+            actor_id=principal["user_id"],
+            trace_id=idempotency_key,
+        )
+    except Exception as exc:
+        _raise_knowledge_gap_error(exc)
+
+
+@router.post("/scenic/knowledge-topics/{topic_id}/merge")
+async def merge_knowledge_topics(
+    topic_id: str,
+    body: KnowledgeTopicMergeRequest,
+    request: Request,
+    idempotency_key: str = Header(..., alias="Idempotency-Key", min_length=8, max_length=128),
+    principal: dict[str, str] = Depends(require_auth),
+):
+    _require_knowledge_governance(principal)
+    try:
+        return await _knowledge_gap_repository(request).merge_topics(
+            venue_id=principal["venue_id"],
+            source_topic_id=topic_id,
+            target_topic_id=body.target_topic_id,
+            actor_id=principal["user_id"],
+            trace_id=idempotency_key,
+        )
+    except Exception as exc:
+        _raise_knowledge_gap_error(exc)
+
+
+@router.post("/scenic/knowledge-topics/{topic_id}/split")
+async def split_knowledge_topic(
+    topic_id: str,
+    body: KnowledgeTopicSplitRequest,
+    request: Request,
+    idempotency_key: str = Header(..., alias="Idempotency-Key", min_length=8, max_length=128),
+    principal: dict[str, str] = Depends(require_auth),
+):
+    _require_knowledge_governance(principal)
+    try:
+        return await _knowledge_gap_repository(request).split_topic(
+            venue_id=principal["venue_id"],
+            topic_id=topic_id,
+            name=body.name,
+            gap_ids=body.gap_ids,
+            actor_id=principal["user_id"],
+            trace_id=idempotency_key,
+        )
+    except Exception as exc:
+        _raise_knowledge_gap_error(exc)
 
 
 class EvaluationRunRequest(BaseModel):
