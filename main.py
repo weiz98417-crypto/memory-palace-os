@@ -483,7 +483,12 @@ else:
             media_type="text/html; charset=utf-8",
         )
 
-    @app.get("/assistant", include_in_schema=False)
+    mount_frontend_v2(
+        app,
+        app_name="field",
+        route="/assistant",
+        directory=Path(__file__).resolve().parent / "static" / "client" / "field",
+    )    @app.get("/assistant", include_in_schema=False)
     async def assistant_redirect():
         return RedirectResponse(url="/assistant/", status_code=302)
 

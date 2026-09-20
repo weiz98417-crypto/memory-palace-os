@@ -1,7 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from './views/HomeView.vue'
+import FieldTaskView from './views/FieldTaskView.vue'
 
 export const router = createRouter({
-  history: createWebHistory(),
-  routes: [{ path: '/:pathMatch(.*)*', component: HomeView }],
+  history: createWebHistory('/assistant/'),
+  routes: [
+    { path: '/', component: FieldTaskView },
+    { path: '/:pathMatch(.*)*', component: FieldTaskView },
+  ],
 })
