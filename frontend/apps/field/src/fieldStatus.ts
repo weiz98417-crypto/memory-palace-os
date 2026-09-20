@@ -5,7 +5,9 @@ export function buildFieldView(snapshot: Record<string, any>) {
   const text = evidenceStatus === 'NO_EVIDENCE'
     ? '没有依据'
     : advice?.advice || '建议正在生成。'
+  const runs = incident?.agent_runs || snapshot.agent_runs || []
   return {
+    runs,
     tasks: Array.isArray(incident?.tasks) ? incident.tasks : [],
     evidence: Array.isArray(incident?.evidence) ? incident.evidence : [],
     advice: advice ? {

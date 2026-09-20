@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { createApiClient } from '@memory-palace/api-client'
+import { AgentRunCard } from '@memory-palace/domain-ui'
 import { buildFieldView } from '../fieldStatus'
 
-const view = ref({ tasks: [] as any[], evidence: [] as any[], advice: null as any })
+const view = ref({ runs: [] as any[], tasks: [] as any[], evidence: [] as any[], advice: null as any })
 onMounted(async () => {
   view.value = buildFieldView(await createApiClient().request('/scenic/snapshot'))
 })
@@ -13,7 +14,7 @@ onMounted(async () => {
   <section data-testid="field-view">
     <p class="eyebrow">MOBILE FIELD</p>
     <h1>我的现场任务</h1>
-    <article v-if="view.advice" class="foundation-card">
+    <AgentRunCard v-for="run in view.runs" :key="`${run.artifact}:${run.run_id}`" :run="run" read-only />\n    <article v-if="view.advice" class="foundation-card">
       <small>处置建议 · {{ view.advice.evidenceStatus || view.advice.status }}</small>
       <p>{{ view.advice.text }}</p>
     </article>

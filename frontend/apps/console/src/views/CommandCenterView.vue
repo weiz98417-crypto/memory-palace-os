@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { createApiClient } from '@memory-palace/api-client'
+import { AgentRunCard } from '@memory-palace/domain-ui'
 import { buildCommandCenter, loadCommandCenter, type CommandCenterModel } from '../commandCenter'
 
-const model = ref<CommandCenterModel>({ nextAction: null, advice: null })
+const model = ref<CommandCenterModel>({ runs: [], nextAction: null, advice: null })
 const loading = ref(true)
 const error = ref<string | null>(null)
 
@@ -29,7 +30,7 @@ onMounted(async () => {
       <h2>{{ model.nextAction.label }}</h2>
       <p>{{ model.nextAction.description }}</p>
     </article>
-    <article v-if="model.advice" class="foundation-card">
+    <AgentRunCard v-for="run in model.runs" :key="`${run.artifact}:${run.run_id}`" :run="run" />\n    <article v-if="model.advice" class="foundation-card">
       <small>处置建议 · {{ model.advice.title }}</small>
       <p>{{ model.advice.text || '建议正在生成。' }}</p>
     </article>

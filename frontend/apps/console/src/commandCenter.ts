@@ -14,6 +14,7 @@ export interface AdviceSnapshot {
 }
 
 export interface CommandCenterModel {
+  runs: any[]
   nextAction: NextAction | null
   advice: {
     status: string
@@ -51,7 +52,9 @@ export function buildCommandCenter(snapshot: Record<string, any>): CommandCenter
   const incidentAdvice = Array.isArray(snapshot.incidents)
     ? snapshot.incidents.find((incident) => incident?.advice)?.advice
     : null
+  const runs = snapshot.agent_runs || snapshot.incidents?.find((incident: any) => incident?.agent_runs)?.agent_runs || []
   return {
+    runs,
     nextAction: action ? {
       code: String(action.code || ''),
       label: String(action.label || ''),
