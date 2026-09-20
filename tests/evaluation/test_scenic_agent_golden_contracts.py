@@ -251,3 +251,36 @@ def test_production_sample_runner_reports_non_golden_mode(tmp_path):
     assert report["mode"] == "production-sample"
     assert report["case_count"] == 100
     assert report["not_golden"] is True
+
+
+def test_deep_golden_has_exact_120_case_distribution():
+    from evals.scenic_agent.contracts import load_deep_golden_cases
+
+    cases = load_deep_golden_cases()
+    assert len(cases) == 120
+    counts: dict[str, int] = {}
+    sources: dict[str, int] = {}
+    for case in cases:
+        counts[case["category"]] = counts.get(case["category"], 0) + 1
+        sources[case["source"]] = sources.get(case["source"], 0) + 1
+    assert counts == {
+        "GROUNDED_ADVICE": 24,
+        "NO_EVIDENCE": 16,
+        "RETRIEVAL_SHAPE": 14,
+        "ROUTER_RISK": 10,
+        "DISPATCH_DRAFT": 14,
+        "CLOSURE_SUMMARY": 12,
+        "HITL_GATES": 10,
+        "DEGRADATION_FAILURE": 8,
+        "SECURITY_TENANT": 6,
+        "MULTI_AGENT_TRAJECTORY": 6,
+    }
+    assert sources == {"production": 72, "adversarial": 18, "expert": 18, "failure_replay": 12}
+    assert report_has_deep_golden()
+
+
+def report_has_deep_golden() -> bool:
+    from evals.scenic_agent.run_deepeval import run_contract
+
+    report = run_contract()
+    return report["case_sets"]["deep_golden"]["case_count"] == 120

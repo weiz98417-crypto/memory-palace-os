@@ -21,6 +21,7 @@ from evals.scenic_agent.contracts import (
     adapt_legacy_case,
     evaluate_contract,
     evaluate_fast_golden_case,
+    load_deep_golden_cases,
     load_fast_golden_cases,
     load_golden_cases,
     require_model_credential,
@@ -55,19 +56,18 @@ def run_contract() -> dict[str, Any]:
     smoke_records: list[dict[str, Any]] = []
     for case in smoke_cases:
         evaluate_contract(case, case["calibration_observation"])
-        normalized = adapt_legacy_case(case)
-        smoke_records.append(_case_report_record(normalized))
+        smoke_records.append(_case_report_record(adapt_legacy_case(case)))
 
     fast_cases = load_fast_golden_cases()
     fast_records = [evaluate_fast_golden_case(case) for case in fast_cases]
-    category_counts = Counter(str(case["category"]) for case in fast_cases)
-    source_counts = Counter(str(case["source"]) for case in fast_cases)
-    dataset_version = str(fast_cases[0]["dataset_version"]) if fast_cases else ""
+    deep_cases = load_deep_golden_cases()
+    deep_records = [evaluate_fast_golden_case(case) for case in deep_cases]
     return {
         "mode": "contract",
-        "case_count": len(smoke_cases) + len(fast_cases),
+        "case_count": len(smoke_cases) + len(fast_cases) + len(deep_cases),
         "case_ids": [case["id"] for case in smoke_cases]
-        + [case["id"] for case in fast_cases],
+        + [case["id"] for case in fast_cases]
+        + [case["id"] for case in deep_cases],
         "case_sets": {
             "fast_smoke": {
                 "dataset_version": "legacy-v1",
@@ -76,17 +76,24 @@ def run_contract() -> dict[str, Any]:
                 "cases": smoke_records,
             },
             "fast_golden": {
-                "dataset_version": dataset_version,
+                "dataset_version": str(fast_cases[0]["dataset_version"]) if fast_cases else "",
                 "case_count": len(fast_cases),
-                "category_counts": dict(sorted(category_counts.items())),
-                "source_counts": dict(sorted(source_counts.items())),
+                "category_counts": dict(sorted(Counter(str(case["category"]) for case in fast_cases).items())),
+                "source_counts": dict(sorted(Counter(str(case["source"]) for case in fast_cases).items())),
                 "case_ids": [case["id"] for case in fast_cases],
                 "cases": fast_records,
+            },
+            "deep_golden": {
+                "dataset_version": str(deep_cases[0]["dataset_version"]) if deep_cases else "",
+                "case_count": len(deep_cases),
+                "category_counts": dict(sorted(Counter(str(case["category"]) for case in deep_cases).items())),
+                "source_counts": dict(sorted(Counter(str(case["source"]) for case in deep_cases).items())),
+                "case_ids": [case["id"] for case in deep_cases],
+                "cases": deep_records,
             },
         },
         "success": True,
     }
-
 
 def _build_judge(api_key: str):
     from deepeval.models import OpenAIModel

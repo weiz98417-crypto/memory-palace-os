@@ -17,6 +17,7 @@ from .case_schema import (
 
 GOLDEN_CASES_PATH = Path(__file__).with_name("golden_cases.json")
 FAST_GOLDEN_CASES_PATH = Path(__file__).with_name("golden_fast_cases.json")
+DEEP_GOLDEN_CASES_PATH = Path(__file__).with_name("golden_deep_cases.json")
 NO_BASIS_PHRASE = NO_EVIDENCE_TEXT
 
 
@@ -72,6 +73,18 @@ def load_fast_golden_cases(path: str | Path | None = None) -> list[dict[str, Any
         raise GoldenFixtureError(f"invalid Fast Golden fixture: {exc}") from exc
     return [case.model_dump(mode="json") for case in fixture.cases]
 
+
+def load_deep_golden_cases(path: str | Path | None = None) -> list[dict[str, Any]]:
+    fixture_path = Path(path) if path is not None else DEEP_GOLDEN_CASES_PATH
+    try:
+        payload = json.loads(fixture_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise GoldenFixtureError(f"cannot load Deep Golden cases from {fixture_path}: {exc}") from exc
+    try:
+        fixture = FastGoldenFixture.model_validate(payload)
+    except ValidationError as exc:
+        raise GoldenFixtureError(f"invalid Deep Golden fixture: {exc}") from exc
+    return [case.model_dump(mode="json") for case in fixture.cases]
 
 def validate_fast_golden_cases(cases: Sequence[Mapping[str, Any]]) -> None:
     try:

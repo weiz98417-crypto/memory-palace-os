@@ -21,6 +21,8 @@ FastCategory = Literal[
     "HITL_GATES",
     "DEGRADATION_FAILURE",
     "SECURITY_TENANT",
+    "ROUTER_RISK",
+    "MULTI_AGENT_TRAJECTORY",
 ]
 
 NO_EVIDENCE_TEXT = "没有依据"
