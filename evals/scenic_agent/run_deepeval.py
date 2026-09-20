@@ -15,6 +15,7 @@ if str(REPOSITORY_ROOT) not in sys.path:
 
 from evals.scenic_agent.production_sample import load_production_sample
 from evals.scenic_agent.corpus_gate import load_corpus_cases, should_run_corpus
+from evals.scenic_agent.failure_replay import load_failure_replay_cases
 from evals.scenic_agent.contracts import (
     ContractViolation,
     GoldenFixtureError,
@@ -219,7 +220,7 @@ def run_deepeval(report_path: str | None = None) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run scenic agent golden-sample gates.")
     parser.add_argument(
-        "--mode", choices=("contract", "deepeval", "live", "production-sample", "corpus"), required=True
+        "--mode", choices=("contract", "deepeval", "live", "production-sample", "corpus", "failure-replay"), required=True
     )
     parser.add_argument("--report", help="Optional JSON report path.")
     args = parser.parse_args(argv)
@@ -228,6 +229,14 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.mode == "contract":
             report = run_contract()
+        elif args.mode == "failure-replay":
+            replay = load_failure_replay_cases()
+            report = {
+                "mode": "failure-replay",
+                "case_count": len(replay["cases"]),
+                "case_ids": [case["id"] for case in replay["cases"]],
+                "success": True,
+            }
         elif args.mode == "corpus":
             corpus = load_corpus_cases()
             report = {
@@ -260,7 +269,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"EVAL_CONTRACT_FAILED: {exc}", file=sys.stderr)
         return 1
 
-    if args.mode in {"contract", "live", "production-sample", "corpus"}:
+    if args.mode in {"contract", "live", "production-sample", "corpus", "failure-replay"}:
         _write_report(args.report, report)
     print(json.dumps(report, ensure_ascii=True, sort_keys=True))
     return 0 if report.get("success") else 1

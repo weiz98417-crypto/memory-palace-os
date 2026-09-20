@@ -309,3 +309,32 @@ def test_corpus_gate_triggers_only_for_retrieval_index_or_model_changes():
     assert should_run_corpus(["src/memory_palace/knowledge/vector_store.py"])
     assert should_run_corpus(["requirements-scenic-agent-local-embeddings.txt"])
     assert not should_run_corpus(["frontend/apps/console/src/App.vue"])
+
+
+def test_failure_replay_redacts_and_classifies(tmp_path):
+    from evals.scenic_agent.failure_replay import classify_replay, load_failure_replay_cases, redact_payload
+
+    assert redact_payload({"api_key": "secret", "nested": {"password": "x"}}) == {
+        "api_key": "[REDACTED]",
+        "nested": {"password": "[REDACTED]"},
+    }
+    payload = {
+        "schema_version": 1,
+        "fixture_only": True,
+        "dataset_version": "test",
+        "cases": [{
+            "id": "fr-1",
+            "source_event_id": "event-1",
+            "failure_mode": "timeout",
+            "dataset_version": "test",
+            "source": "failure_replay",
+            "redacted_payload": {"token": "secret"},
+        }],
+    }
+    path = tmp_path / "failure.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    loaded = load_failure_replay_cases(path)
+    case = loaded["cases"][0]
+    assert case["redacted_payload"]["token"] == "[REDACTED]"
+    assert classify_replay(case, current_success=True) == "RECOVERED"
+    assert classify_replay(case, current_success=False) == "STILL_FAILING"
