@@ -14,20 +14,39 @@
 | 账号 | `simulation-ops`、`wangfang`、`liming`、`chenyu` |
 | 密码 | 由 `SCENIC_ACCOUNT_PASSWORD`（容器为 secret 卷）统一设置，不写入文档与截图 |
 
-启动演示环境（Docker 栈）：
+启动演示环境（Docker 栈，完整 Agent + Hatchet + Jaeger）：
 
 ```powershell
-$env:BGE_M3_CACHE_DIR = 'D:\memory-palace-models\huggingface'
-powershell -ExecutionPolicy Bypass -File scripts/scenic.ps1 start -ModelCache $env:BGE_M3_CACHE_DIR
+powershell -ExecutionPolicy Bypass -File scripts/scenic-demo-start.ps1
 ```
 
-或用本机原生栈（PostgreSQL 15432 + Redis 16379 + 应用 8090）：`artifacts/scenic-e2e/local-runtime.ps1 -Command run`。
+如果模型缓存不在 `.env` 中：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/scenic-demo-start.ps1 `
+  -ModelCache 'D:\memory-palace-models\huggingface'
+```
+
+脚本固定使用 Compose project `memory-palace-scenic`，并启用 `agent-runtime` 与 `tracing` profile。不要用默认 project 另起一套栈；机器上如果残留旧容器，先用 `scripts/scenic-demo-status.ps1` 检查。
+
+查看健康、密钥和入口：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/scenic-demo-status.ps1
+```
+
+本机原生栈只用于底层调试：`artifacts/scenic-e2e/local-runtime.ps1 -Command run`。正式演示建议使用 Docker。
 
 ## 二、打开演示窗口
 
 ```powershell
-$env:SCENIC_DEMO_PASSWORD = '<统一演示密码>'
-uv run --with playwright python scripts/scenic_demo_launcher.py
+powershell -ExecutionPolicy Bypass -File scripts/scenic-demo-open.ps1
+```
+
+脚本会从密钥卷读取统一密码，打开 5 个已登录窗口，不会打印密码。只验证登录链路：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/scenic-demo-open.ps1 -Mode Verify
 ```
 
 脚本会开 5 个互相独立的浏览器窗口并各自登录好，按 2 列平铺：
