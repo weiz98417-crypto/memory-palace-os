@@ -1,7 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from './views/HomeView.vue'
+import CommandCenterView from './views/CommandCenterView.vue'
 
 export const router = createRouter({
-  history: createWebHistory(),
-  routes: [{ path: '/:pathMatch(.*)*', component: HomeView }],
+  history: createWebHistory('/admin/'),
+  routes: [
+    { path: '/', component: CommandCenterView },
+    { path: '/command-center', component: CommandCenterView },
+    { path: '/:pathMatch(.*)*', component: CommandCenterView },
+  ],
 })

@@ -533,7 +533,14 @@ else:
             name="operations_evaluation_static",
         )
     app.mount("/shared", StaticFiles(directory="static/shared"), name="client_shared_static")
-    app.mount("/admin", StaticFiles(directory="static", html=True), name="admin_static")
+    console_v2 = mount_frontend_v2(
+        app,
+        app_name="console",
+        route="/admin",
+        directory=Path(__file__).resolve().parent / "static" / "client" / "console",
+    )
+    if not console_v2:
+        app.mount("/admin", StaticFiles(directory="static", html=True), name="admin_static")
 
 
 @app.get("/product", include_in_schema=False)
