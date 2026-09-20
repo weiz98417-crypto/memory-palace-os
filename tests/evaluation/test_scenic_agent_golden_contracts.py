@@ -338,3 +338,55 @@ def test_failure_replay_redacts_and_classifies(tmp_path):
     assert case["redacted_payload"]["token"] == "[REDACTED]"
     assert classify_replay(case, current_success=True) == "RECOVERED"
     assert classify_replay(case, current_success=False) == "STILL_FAILING"
+
+def test_live_v2_knowledge_preserves_case_retrieval():
+    from evals.scenic_agent.live_gate import _v2_knowledge
+
+    knowledge = _v2_knowledge(
+        {
+            "id": "case-source",
+            "knowledge_hits": [
+                {
+                    "source_id": "CASE-CROWD-2025",
+                    "source_type": "CASE",
+                    "title": "去年客流拥堵处置",
+                    "version": "1.0",
+                    "excerpt": "开放侧门并分流",
+                }
+            ],
+        }
+    )
+
+    assert [case.case_id for case in knowledge.historical_cases] == [
+        "CASE-CROWD-2025"
+    ]
+    assert knowledge.historical_cases[0].excerpt == "开放侧门并分流"
+
+
+def test_live_fault_plan_targets_declared_degradation():
+    from evals.scenic_agent.live_gate import _fault_plan
+    from src.memory_palace.agent_contracts.models import AgentRole
+
+    timeout_cases = [
+        {
+            "artifact": "ADVICE",
+            "allowed_degradations": ["TIMEOUT"],
+        },
+        {
+            "artifact": "DISPATCH_DRAFT",
+            "allowed_degradations": ["TIMEOUT"],
+        },
+    ]
+    assert _fault_plan(timeout_cases[0])[0] == {AgentRole.MEMORY_OPS: 0.001}
+    assert _fault_plan(timeout_cases[1])[0] == {AgentRole.COMMANDER: 0.001}
+
+    quota_timeouts, quota_denials = _fault_plan(
+        {"artifact": "ADVICE", "allowed_degradations": ["QUOTA_EXCEEDED"]}
+    )
+    assert quota_timeouts == {}
+    assert quota_denials == {AgentRole.MEMORY_OPS: "QUOTA_EXCEEDED"}
+
+    _timeouts, security_denials = _fault_plan(
+        {"artifact": "ADVICE", "allowed_degradations": ["RETRIEVAL_FAILED"]}
+    )
+    assert security_denials == {AgentRole.MEMORY_OPS: "RETRIEVAL_FAILED"}

@@ -436,20 +436,15 @@ class PydanticAIIncidentCommand:
 
         if advice.evidence_status != "GROUNDED":
             return advice
-        verified_source_ids = {
-            hit.source_id
-            for hit in (
-                list(request.knowledge.sop_hits)
-                + list(request.knowledge.experience_hits)
-            )
-        }
-        verified_vector_ids = {
-            hit.vector_doc_id
-            for hit in (
-                list(request.knowledge.sop_hits)
-                + list(request.knowledge.experience_hits)
-            )
-        }
+        verified_hits = (
+            list(request.knowledge.sop_hits)
+            + list(request.knowledge.experience_hits)
+        )
+        verified_source_ids = {hit.source_id for hit in verified_hits}
+        verified_source_ids.update(
+            case.case_id for case in request.knowledge.historical_cases
+        )
+        verified_vector_ids = {hit.vector_doc_id for hit in verified_hits}
         if not verified_source_ids and not verified_vector_ids:
             return MemoryOpsOutput(
                 evidence_status="NO_EVIDENCE",

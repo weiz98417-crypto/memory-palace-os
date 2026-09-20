@@ -223,9 +223,11 @@ def main(argv: list[str] | None = None) -> int:
         "--mode", choices=("contract", "deepeval", "live", "production-sample", "corpus", "failure-replay"), required=True
     )
     parser.add_argument("--report", help="Optional JSON report path.")
+    parser.add_argument("--tier", choices=("smoke", "fast", "deep", "all"), default="smoke")
     args = parser.parse_args(argv)
 
     os.environ.setdefault("DEEPEVAL_TELEMETRY_OPT_OUT", "YES")
+    os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "true")
     try:
         if args.mode == "contract":
             report = run_contract()
@@ -259,7 +261,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.mode == "live":
             from evals.scenic_agent.live_gate import run_live
 
-            report = run_live(args.report)
+            report = run_live(args.report, tier=args.tier)
         else:
             report = run_deepeval(args.report)
     except MissingModelCredential as exc:

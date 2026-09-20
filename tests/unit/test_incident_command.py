@@ -15,6 +15,7 @@ from src.memory_palace.agent_contracts.models import (
     AgentRole,
     CommandMode,
     FieldEvidence,
+    HistoricalCase,
     IncidentSnapshot,
     KnowledgeHit,
     VerifiedKnowledge,
@@ -511,3 +512,49 @@ async def test_missing_usage_is_reported_honestly_and_marked_degraded():
     assert any(
         ref.status == "SUCCEEDED_NO_USAGE" for ref in result.call_refs
     )
+
+
+@pytest.mark.asyncio
+async def test_historical_case_retrieval_can_ground_advice():
+    knowledge = VerifiedKnowledge(
+        retrieval_snapshot_id="snapshot-case-1",
+        historical_cases=[
+            HistoricalCase(
+                case_id="CASE-CROWD-2025",
+                business_id="SJ-2025-0008",
+                title="去年客流拥堵处置",
+                outcome="开放侧门并分流",
+                closed_at=1785283200.0,
+                excerpt="通过单向通行和接驳车分流缓解拥堵",
+            )
+        ],
+    )
+    advice = _advice(
+        advice_text="参照去年案例开放侧门并分流。",
+        citations=[
+            KnowledgeCitation(
+                source_id="CASE-CROWD-2025",
+                source_type="CASE",
+                title="去年客流拥堵处置",
+                version="1.0",
+                vector_score=0.91,
+                excerpt="通过单向通行和接驳车分流缓解拥堵",
+            )
+        ],
+    )
+    command = _command(
+        {
+            AgentRole.CONTEXT_TRIGGER: ScriptedAgent([_context()]),
+            AgentRole.ROUTER: ScriptedAgent([_routing()]),
+            AgentRole.MEMORY_OPS: ScriptedAgent([advice]),
+            AgentRole.COMMANDER: ScriptedAgent([_advice()]),
+        }
+    )
+
+    result = await command.execute(_request(knowledge=knowledge))
+
+    assert result.outcome == "READY"
+    assert result.advice is not None
+    assert result.advice.evidence_status == "GROUNDED"
+    assert result.advice.citations[0].source_id == "CASE-CROWD-2025"
+    assert result.degradations == []

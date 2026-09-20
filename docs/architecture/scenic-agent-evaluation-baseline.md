@@ -160,11 +160,19 @@ Deep Golden 的 120 条固定覆盖：
 # 每次 PR：无网络 contract
 uv run --no-project --with-requirements requirements.txt python evals/scenic_agent/run_deepeval.py --mode contract --report artifacts/scenic-agent-eval/contract-report.json
 
-# 夜间 / 保护分支：Fast live
-uv run --no-project --with-requirements requirements-eval.txt python evals/scenic_agent/run_deepeval.py --mode live --report artifacts/scenic-agent-eval/live-report.json
+# 夜间 / 保护分支：Fast live（30 条）
+uv run --no-project --with-requirements requirements-scenic-agent-eval.txt python evals/scenic_agent/run_deepeval.py --mode live --tier fast --report artifacts/scenic-agent-eval/live-fast-report.json
+
+# 发布前：Deep live（120 条）
+uv run --no-project --with-requirements requirements-scenic-agent-eval.txt python evals/scenic_agent/run_deepeval.py --mode live --tier deep --report artifacts/scenic-agent-eval/live-deep-report.json
+
+# 全量 live：Smoke + Fast + Deep
+uv run --no-project --with-requirements requirements-scenic-agent-eval.txt python evals/scenic_agent/run_deepeval.py --mode live --tier all --report artifacts/scenic-agent-eval/live-all-report.json
 
 # Production Sample 观察，不冒充 Golden
 uv run --no-project --with-requirements requirements.txt python evals/scenic_agent/run_deepeval.py --mode production-sample --report artifacts/scenic-agent-eval/production-sample-report.json
 ```
+
+`--mode live` 不显式传 `--tier` 时仍兼容旧的 Smoke tier（3 条）；不要把这个结果称为 Fast/Deep live gate。
 
 `live` 报告逐 case 记录 `dataset_version`、`source`、`metric`、`threshold`、`status`、`failure`、真实调用数、token 证据和降级；缺凭据、判官失败或模型异常均返回非零，不跳过。

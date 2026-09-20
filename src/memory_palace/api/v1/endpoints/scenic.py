@@ -17,6 +17,7 @@ from ...auth import require_auth
 from ....agent_contracts.models import (
     CommandMode,
     FieldEvidence,
+    HistoricalCase,
     IncidentSnapshot,
     KnowledgeHit,
     VerifiedKnowledge,
@@ -775,11 +776,25 @@ async def _build_advice_request(request: Request, operations, actor, incident_id
     )
     step = CommandMode.ADVICE.value
     trace_id = uuid.uuid4().hex
+    hits = _knowledge_hits(incident_view)
     knowledge = VerifiedKnowledge(
         retrieval_snapshot_id=str(
             incident_view.get("retrieval_snapshot_id") or f"scenic:{incident_id}"
         ),
-        sop_hits=_knowledge_hits(incident_view),
+        sop_hits=[hit for hit in hits if hit.source_type == "SOP"],
+        historical_cases=[
+            HistoricalCase(
+                case_id=hit.source_id,
+                business_id=f"{actor.venue_id}:{hit.source_id}",
+                title=hit.title,
+                outcome=hit.excerpt,
+                closed_at=float(incident.get("created_at") or 0.0),
+                excerpt=hit.excerpt,
+            )
+            for hit in hits
+            if hit.source_type == "CASE"
+        ],
+        experience_hits=[hit for hit in hits if hit.source_type == "EXPERIENCE_CARD"],
     )
     snapshot = IncidentSnapshot(
         incident_id=str(incident["incident_id"]),
