@@ -1164,6 +1164,52 @@ class ScenicAreaOperations:
             "superseded": supersedes_pending,
             "advice_state": "SUPERSEDED" if supersedes_pending else advice["status"],
         }
+    async def _command_correct_advice_decision(self, actor, payload, idempotency_key):
+        self._require_roles(actor, "manager", "admin")
+        incident_id = str(payload.get("incident_id") or "")
+        incident = await self._incident(actor.venue_id, incident_id)
+        advice_run_id = str(payload.get("advice_run_id") or "")
+        corrected = str(payload.get("corrected_decision") or "").strip().upper()
+        if corrected not in {"ADOPT", "IGNORE", "PROCEED_WITHOUT_WAITING"}:
+            raise ValueError("unsupported corrected_decision")
+        reason_code = str(payload.get("reason_code") or "").strip().upper() or None
+        reason_text = str(payload.get("reason_text") or "").strip() or None
+        if corrected in {"IGNORE", "PROCEED_WITHOUT_WAITING"} and not reason_code:
+            raise ValueError("reason_code is required for corrected ignore/proceed")
+        activities = await self.database.fetch_all(
+            "SELECT * FROM event_activities WHERE venue_id = ? AND event_id = ? ORDER BY created_at ASC, id ASC",
+            (actor.venue_id, incident["event_id"]),
+        )
+        original = None
+        for row in activities or []:
+            if str(row.get("activity_type") or "") not in {"ADVICE_DECIDED", "ADVICE_SUPERSEDED"}:
+                continue
+            body = _json_object(row.get("payload_json"))
+            if str(body.get("advice_run_id") or "") == advice_run_id:
+                original = body
+        if original is None:
+            raise ScenicCommandConflict("original advice decision was not found")
+        corrected_at = time.time()
+        await append_event_activity(
+            self.database,
+            venue_id=actor.venue_id,
+            event_id=incident["event_id"],
+            activity_type="ADVICE_DECISION_CORRECTED",
+            trace_id=advice_run_id,
+            payload={
+                "incident_id": incident_id,
+                "advice_run_id": advice_run_id,
+                "original_decision": original.get("decision"),
+                "corrected_decision": corrected,
+                "corrected_by": actor.user_id,
+                "corrected_at": corrected_at,
+                "reason_code": reason_code,
+                "reason_text": reason_text,
+            },
+            idempotency_key=f"{idempotency_key}:correction",
+        )
+        await self._audit(actor, "SCENIC_ADVICE_DECISION_CORRECTED", "scenic_advice", advice_run_id, idempotency_key)
+        return {"incident_id": incident_id, "advice_run_id": advice_run_id, "corrected_decision": corrected}
     async def _run_dispatch_draft(self, actor, incident, idempotency_key):
         command = getattr(self, "incident_command", None)
         if command is None:
@@ -1501,11 +1547,56 @@ class ScenicAreaOperations:
         await self._audit(actor, "SCENIC_INCIDENT_RESOLVED", "scenic_incident", incident["incident_id"], idempotency_key)
         return {"incident_id": incident["incident_id"], "lifecycle": lifecycle}
 
+    async def _run_closure_summary(self, actor, incident, idempotency_key):
+        command = getattr(self, "incident_command", None)
+        if command is None:
+            return {"run_id": None, "closure_summary": None, "degradations": [], "fallback": True}
+        from .advice_request import build_closure_request
+
+        request = await build_closure_request(
+            database=self.database, venue_id=actor.venue_id, incident_id=incident["incident_id"]
+        )
+        run_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"memory-palace-closure-run:{incident['incident_id']}:CLOSURE_SUMMARY:1"))
+        key = request.idempotency_key
+        request_json = request.model_dump_json()
+        request_hash = hashlib.sha256(request_json.encode()).hexdigest()
+        now = time.time()
+        existing = await self.database.fetch_one("SELECT * FROM scenic_commands WHERE venue_id = ? AND idempotency_key = ?", (actor.venue_id, key))
+        if existing is not None:
+            body = _json_object(existing.get("response_json"))
+            return {"run_id": str(existing["id"]), "closure_summary": body.get("closure_summary"), "degradations": body.get("degradations") or []}
+        await self.database.execute("""INSERT INTO scenic_commands (id, venue_id, command_type, idempotency_key, request_hash, status, request_json, created_at, updated_at) VALUES (?, ?, 'SUMMARIZE_CLOSURE', ?, ?, 'PENDING', ?, ?, ?)""", (run_id, actor.venue_id, key, request_hash, request_json, now, now))
+        await self.database.execute("UPDATE scenic_commands SET status = 'RUNNING', updated_at = ? WHERE venue_id = ? AND id = ? AND status = 'PENDING'", (time.time(), actor.venue_id, run_id))
+        try:
+            result = await command.execute(request)
+            body = result.model_dump(mode="json")
+            status = "READY" if result.closure_summary is not None else "FAILED"
+        except Exception as exc:
+            body = {"error_type": type(exc).__name__, "error_message": str(exc)[:500]}
+            status = "FAILED"
+        await self.database.execute("""UPDATE scenic_commands SET status = ?, response_json = ?, error_type = ?, error_message = ?, updated_at = ? WHERE venue_id = ? AND id = ? AND status = 'RUNNING'""", (status, json.dumps(body, ensure_ascii=False, sort_keys=True), body.get("error_type"), body.get("error_message"), time.time(), actor.venue_id, run_id))
+        await append_event_activity(self.database, venue_id=actor.venue_id, event_id=incident["event_id"], activity_type="CLOSURE_SUMMARY_READY" if status == "READY" else "CLOSURE_SUMMARY_FAILED", trace_id=request.trace_id, payload={"incident_id": incident["incident_id"], "artifact": "CLOSURE_SUMMARY", "run_id": run_id, "state": status, "closure_summary": body.get("closure_summary"), "degradations": body.get("degradations") or []}, idempotency_key=f"closure:{run_id}:{status}")
+        return {"run_id": run_id, "closure_summary": body.get("closure_summary"), "degradations": body.get("degradations") or []}
+
+    async def _settle_advice_at_closure(self, actor, incident):
+        repository = self.advice_repository
+        if repository is not None:
+            for run in await repository.list_for_incident(venue_id=actor.venue_id, incident_id=incident["incident_id"]):
+                if run.state not in {"PENDING", "RUNNING"}:
+                    continue
+                await repository.transition(venue_id=actor.venue_id, run_id=run.run_id, expected=("PENDING", "RUNNING"), new_state="SUPERSEDED", response={"superseded_by": actor.user_id, "state": "SUPERSEDED"}, system_context="EVENT_CLOSED")
+                await self.advice_sink.project(venue_id=actor.venue_id, incident_id=incident["incident_id"], run_id=run.run_id, state="SUPERSEDED", activity_type="ADVICE_SUPERSEDED", payload={"decision": "PROCEED_WITHOUT_WAITING", "superseded_by": actor.user_id}, system_context="EVENT_CLOSED")
+        activities = await self.database.fetch_all("SELECT * FROM event_activities WHERE venue_id = ? AND event_id = ? ORDER BY created_at ASC, id ASC", (actor.venue_id, incident["event_id"]))
+        advice = project_advice(list(activities or []))
+        if advice and advice.get("status") == "READY" and not advice.get("decision"):
+            await append_event_activity(self.database, venue_id=actor.venue_id, event_id=incident["event_id"], activity_type="ADVICE_UNDECIDED_AT_CLOSURE", trace_id=str(advice.get("trace_id") or incident["incident_id"]), payload={"incident_id": incident["incident_id"], "advice_run_id": advice.get("run_id"), "state": "READY", "settlement": "UNDECIDED_AT_CLOSURE"}, idempotency_key=f"closure:{incident['incident_id']}:UNDECIDED_AT_CLOSURE")
     async def _command_close_incident(self, actor, payload, idempotency_key):
         self._require_roles(actor, "manager", "admin")
         incident = await self._incident(actor.venue_id, str(payload.get("incident_id") or ""))
         if incident["lifecycle"] not in {"RESOLVED", "CLOSED"}:
             raise ScenicCommandConflict("incident must be RESOLVED before it can be CLOSED")
+        closure_run = await self._run_closure_summary(actor, incident, idempotency_key)
+        await self._settle_advice_at_closure(actor, incident)
         vector_doc_id = f"evt_{incident['event_id']}"
         self.vector_store.upsert_experience(
             "雨后 12 号观光车右后轮异常处置：继续停运故障车辆，启用备用车辆，东门客流上升后完成分流。",
@@ -1536,7 +1627,7 @@ class ScenicAreaOperations:
             (vector_doc_id, actor.venue_id, incident["event_id"]),
         )
         await self._audit(actor, "SCENIC_INCIDENT_CLOSED", "scenic_incident", incident["incident_id"], idempotency_key)
-        return {"incident_id": incident["incident_id"], "lifecycle": "CLOSED", "dossier_ready": True}
+        return {"incident_id": incident["incident_id"], "lifecycle": "CLOSED", "dossier_ready": True, "closure_summary": closure_run["closure_summary"], "closure_run_id": closure_run["run_id"]}
 
     async def _maybe_triage(self, incident):
         if incident["lifecycle"] != "DETECTED":

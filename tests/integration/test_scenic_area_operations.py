@@ -3,7 +3,10 @@ import time
 
 import pytest
 
+from src.memory_palace.agent_contracts.models import CommandMode
 from src.memory_palace.core.permissions import PermissionEngine
+from src.memory_palace.incident.contracts import IncidentCommandResult
+from src.memory_palace.skills.commander.contracts import ClosureSummary
 from src.memory_palace.core.event_dossier import build_event_dossier
 from src.memory_palace.core.task_graph import TaskGraph
 from src.memory_palace.knowledge.db_client import AsyncDBClient
@@ -275,15 +278,38 @@ async def test_rain_vehicle_and_east_gate_story_closes_with_auditable_dossier(tm
             )
         assert (await operations.snapshot(manager))["incidents"][0]["lifecycle"] == "RESOLVED"
         operations.vector_store.fail_source_type = None
+        class ClosureStub:
+            async def execute(self, request):
+                return IncidentCommandResult(
+                    command_id="closure-command",
+                    mode=CommandMode.CLOSURE_SUMMARY,
+                    trace_id=request.trace_id,
+                    idempotency_key=request.idempotency_key,
+                    outcome="READY",
+                    context=request.prior.context,
+                    routing=request.prior.routing,
+                    closure_summary=ClosureSummary(
+                        outcome_summary="事件已完成停运、检修、分流和告警恢复。",
+                        evidence_refs=request.closure_facts.evidence_refs,
+                        sop_refs=request.closure_facts.sop_hit_refs,
+                        completed_task_refs=request.closure_facts.completed_task_refs,
+                        approval_refs=request.closure_facts.approval_refs,
+                        alert_recovery_refs=request.closure_facts.alert_recovery_refs,
+                        unresolved_risks=[],
+                        recommended_for_closure=True,
+                    ),
+                )
+
+        operations.incident_command = ClosureStub()
         closed = await operations.execute(
             manager,
             Command("CLOSE_INCIDENT", {"incident_id": incident["incident_id"]}, "close-full-story"),
         )
-        assert closed == {
-            "incident_id": incident["incident_id"],
-            "lifecycle": "CLOSED",
-            "dossier_ready": True,
-        }
+        assert closed["incident_id"] == incident["incident_id"]
+        assert closed["lifecycle"] == "CLOSED"
+        assert closed["dossier_ready"] is True
+        assert closed["closure_summary"]["recommended_for_closure"] is True
+        assert closed["closure_run_id"]
         final = await operations.snapshot(manager)
         dossier = final["incidents"][0]
         assert dossier["lifecycle"] == "CLOSED"

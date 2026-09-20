@@ -65,6 +65,7 @@ def project_advice(activities: list[dict[str, Any]]) -> dict[str, Any] | None:
     call_refs: list[str] = []
     trace_id: str | None = None
     decision: dict[str, Any] | None = None
+    closure_settlement: str | None = None
     superseded_by: str | None = None
     failure: dict[str, Any] | None = None
 
@@ -104,6 +105,17 @@ def project_advice(activities: list[dict[str, Any]]) -> dict[str, Any] | None:
                 "decided_by": payload.get("decided_by"),
                 "decided_at": payload.get("decided_at") or row.get("created_at"),
             }
+        elif activity_type == "ADVICE_UNDECIDED_AT_CLOSURE":
+            closure_settlement = str(payload.get("settlement") or "UNDECIDED_AT_CLOSURE")
+        elif activity_type == "ADVICE_DECISION_CORRECTED":
+            decision = {
+                "decision": payload.get("corrected_decision"),
+                "reason_code": payload.get("reason_code"),
+                "reason_text": payload.get("reason_text"),
+                "decided_by": payload.get("corrected_by"),
+                "decided_at": payload.get("corrected_at") or row.get("created_at"),
+                "corrected_from": payload.get("original_decision"),
+            }
         elif activity_type == "ADVICE_SUPERSEDED":
             status = "SUPERSEDED"
             superseded_by = str(payload.get("superseded_by") or "SYSTEM")
@@ -136,6 +148,7 @@ def project_advice(activities: list[dict[str, Any]]) -> dict[str, Any] | None:
         "model_evidence": [],
         "trace_id": trace_id,
         "decision": decision,
+        "closure_settlement": closure_settlement,
         "allowed_actions": [] if decision else _decision_allowed(status, evidence_status),
         "superseded_by": superseded_by,
         "failure": failure,

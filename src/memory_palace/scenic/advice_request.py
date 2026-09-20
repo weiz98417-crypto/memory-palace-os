@@ -7,6 +7,7 @@ from typing import Any
 
 from ..agent_contracts.models import (
     AdviceDecisionRef,
+    ClosureFacts,
     CommandMode,
     FieldEvidence,
     IncidentSnapshot,
@@ -252,4 +253,68 @@ def _json_object(value: Any) -> dict[str, Any]:
         return {}
     return decoded if isinstance(decoded, dict) else {}
 
-__all__ = ["build_advice_request", "build_dispatch_request", "knowledge_hits"]
+async def build_closure_request(
+    *, database: Any, venue_id: str, incident_id: str, attempt: int = 1
+) -> IncidentCommandRequest:
+    base, _step = await build_advice_request(
+        database=database, venue_id=venue_id, incident_id=incident_id, attempt=attempt
+    )
+    advice_row = await database.fetch_one(
+        """
+        SELECT * FROM scenic_commands
+        WHERE venue_id = ? AND command_type = 'GENERATE_ADVICE'
+          AND idempotency_key LIKE ?
+        ORDER BY created_at DESC, id DESC LIMIT 1
+        """,
+        (venue_id, f"advice:{incident_id}:%"),
+    )
+    advice_result = _json_object(advice_row.get("response_json")) if advice_row else {}
+    prior_advice = None
+    if advice_result.get("advice"):
+        prior_advice = MemoryOpsOutput.model_validate(advice_result["advice"])
+    evidence = await database.fetch_all(
+        "SELECT id FROM scenic_event_evidence WHERE venue_id = ? AND incident_id = ?",
+        (venue_id, incident_id),
+    )
+    hits = await database.fetch_all(
+        "SELECT id FROM scenic_knowledge_hits WHERE venue_id = ? AND incident_id = ?",
+        (venue_id, incident_id),
+    )
+    tasks = await database.fetch_all(
+        "SELECT id FROM tasks WHERE venue_id = ? AND event_id = ? AND status = 'DONE'",
+        (venue_id, base.incident.event_id),
+    )
+    approvals = await database.fetch_all(
+        "SELECT approval_id FROM approval_requests WHERE venue_id = ? AND event_id = ? AND status = 'APPROVED'",
+        (venue_id, base.incident.event_id),
+    )
+    alerts = await database.fetch_all(
+        "SELECT id FROM scenic_situation_alerts WHERE venue_id = ? AND incident_id = ? AND status = 'RECOVERED'",
+        (venue_id, incident_id),
+    )
+    step = CommandMode.CLOSURE_SUMMARY.value
+    return IncidentCommandRequest(
+        mode=CommandMode.CLOSURE_SUMMARY,
+        trace_id=uuid.uuid4().hex,
+        idempotency_key=f"closure:{incident_id}:{step}:{attempt}",
+        attempt=attempt,
+        incident=base.incident,
+        field_evidence=base.field_evidence,
+        knowledge=base.knowledge,
+        prior=IncidentCommandPrior(
+            context=_prior_context(advice_result.get("context"), base.incident, base.field_evidence),
+            routing=_prior_routing(advice_result.get("routing"), base.incident),
+            advice_run_id=str(advice_row["id"]) if advice_row else None,
+            advice=prior_advice,
+            advice_state=str(advice_row["status"]) if advice_row else "UNAVAILABLE",
+        ),
+        closure_facts=ClosureFacts(
+            evidence_refs=[str(row["id"]) for row in evidence or []],
+            sop_hit_refs=[str(row["id"]) for row in hits or []],
+            completed_task_refs=[str(row["id"]) for row in tasks or []],
+            approval_refs=[str(row["approval_id"]) for row in approvals or []],
+            alert_recovery_refs=[str(row["id"]) for row in alerts or []],
+        ),
+    )
+
+__all__ = ["build_advice_request", "build_closure_request", "build_dispatch_request", "knowledge_hits"]
