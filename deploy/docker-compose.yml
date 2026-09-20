@@ -7,6 +7,7 @@ services:
       dockerfile: deploy/Dockerfile
       args:
         NODE_IMAGE: ${NODE_IMAGE:-node:24.15.0-bookworm-slim}
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmjs.org}
     restart: "no"
     user: root
     entrypoint: ["/bin/sh", "-c"]
@@ -24,6 +25,7 @@ services:
       dockerfile: deploy/Dockerfile
       args:
         NODE_IMAGE: ${NODE_IMAGE:-node:24.15.0-bookworm-slim}
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmjs.org}
     restart: unless-stopped
     environment:
       APP_ENV: prod
@@ -45,6 +47,7 @@ services:
       # is allowed to drive the protected simulation-preparation entry.
       TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-true}
       SCENIC_PREP_ALLOWED_HOSTS: ${SCENIC_PREP_ALLOWED_HOSTS:-}
+      FRONTEND_V2_APPS: ${FRONTEND_V2_APPS:-}
       WECHAT_CORP_ID: ${WECHAT_CORP_ID:-}
       WECHAT_CORP_SECRET: ${WECHAT_CORP_SECRET:-}
       WECHAT_AGENT_ID: ${WECHAT_AGENT_ID:-}

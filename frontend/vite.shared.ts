@@ -2,9 +2,16 @@ import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
 
+const appBasePaths: Record<string, string> = {
+  console: '/admin/',
+  field: '/assistant/',
+  integration: '/simulator/wecom/',
+  operations: '/operations/',
+}
+
 export function appConfig(appName: string) {
   return defineConfig({
-    base: './',
+    base: appBasePaths[appName] ?? '/',
     plugins: [vue()],
     resolve: {
       alias: [

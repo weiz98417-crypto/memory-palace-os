@@ -36,12 +36,15 @@ The default Node base image is:
 node:24.15.0-bookworm-slim
 ```
 
-For registries or mirrors, override it without changing the source:
+For registries or mirrors, override Node and npm without changing the source:
 
 ```powershell
 $env:NODE_IMAGE = 'registry.example.com/library/node:24.15.0-bookworm-slim'
+$env:NPM_REGISTRY = 'https://registry.example.com/npm/'
 docker compose -p memory-palace-scenic --env-file .env -f deploy/docker-compose.yml build app
 ```
+
+`FRONTEND_V2_APPS` is passed through to the application container by Compose. Selecting an entry only changes which static app is mounted; it does not change the build.
 
 ## Rollout boundary
 

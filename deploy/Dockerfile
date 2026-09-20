@@ -3,6 +3,7 @@
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ARG PYTHON_BASE_IMAGE=python:3.11-slim
 ARG NODE_IMAGE=node:24.15.0-bookworm-slim
+ARG NPM_REGISTRY=https://registry.npmjs.org
 ARG LOCAL_EMBEDDINGS=false
 
 FROM ${PYTHON_BASE_IMAGE} AS builder
@@ -36,6 +37,7 @@ RUN python scripts/export_openapi.py /tmp/openapi.json
 # Stage 2: frontend builder — build Vite apps from source
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FROM ${NODE_IMAGE} AS frontend-builder
+ARG NPM_REGISTRY
 
 WORKDIR /frontend
 RUN npm install -g pnpm@11.19.0
@@ -45,7 +47,7 @@ COPY frontend/apps ./apps
 COPY frontend/packages ./packages
 COPY frontend/scripts ./scripts
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm config set registry "$NPM_REGISTRY" && pnpm install --frozen-lockfile
 COPY --from=builder /tmp/openapi.json /tmp/openapi.json
 RUN OPENAPI_FILE=/tmp/openapi.json pnpm build && \
     test -f /static/client/console/index.html && \

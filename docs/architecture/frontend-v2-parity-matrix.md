@@ -8,13 +8,13 @@ Source of truth: ADR-0021, ADR-0022, `frontend/DESIGN.md`, `CONTEXT.md`
 
 The legacy authenticated entries were inventoried from the running static pages and their client code. A behavior counts as migrated only when the corresponding V2 route, action, state, permission boundary, and evidence behavior is present. Missing behavior is not automatically deprecated; every exception must appear in the deprecation whitelist.
 
-The V2 snapshots reviewed here are intentionally early migration shells. They do not satisfy functional equivalence yet.
+The V2 snapshots reviewed here are intentionally early migration shells. They do not satisfy functional equivalence yet. F11 implementation is complete and awaiting product-owner visual sign-off.
 
 ## Summary
 
 | Entry | Legacy surface | V2 current surface | Result | Owner ticket |
 | --- | --- | --- | --- | --- |
-| `/operations/*` | Protected scenic preparation and evaluation evidence | Static V2 shells only | `INCOMPLETE` | F11 |
+| `/operations/*` | Protected scenic preparation and evaluation evidence | Full V2 implementation; visual sign-off pending | `READY_FOR_REVIEW` | F11 |
 | `/simulator/wecom/` | Manager-operated simulator, messages, outbox and experience workflow | Identity count and channel declaration only | `INCOMPLETE` | F12 |
 | `/admin/` | 13 workspaces, 45+ actions, gates and audit evidence | Command-center projection only | `INCOMPLETE` | F13 |
 | `/assistant/` | Mobile chat, work, experience and profile workflow | Run/task/advice projection only | `INCOMPLETE` | F14 |
