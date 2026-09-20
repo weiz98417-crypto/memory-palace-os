@@ -11,6 +11,7 @@ export interface AdviceSnapshot {
   evidence_status?: string | null
   advice?: string | null
   citations?: unknown[]
+  allowed_actions?: string[]
 }
 
 export interface CommandCenterModel {
@@ -22,6 +23,12 @@ export interface CommandCenterModel {
     text: string
     allowedActions: string[]
   } | null
+  metrics: {
+    events: number
+    activeIncidents: number
+    openTasks: number
+    pendingApprovals: number
+  }
 }
 
 export function normalizeAdvice(advice?: AdviceSnapshot | null) {
@@ -42,7 +49,7 @@ export function normalizeAdvice(advice?: AdviceSnapshot | null) {
     status,
     title,
     text,
-    allowedActions: [],
+    allowedActions: Array.isArray(advice.allowed_actions) ? advice.allowed_actions.map(String) : [],
   }
 }
 
@@ -53,8 +60,18 @@ export function buildCommandCenter(snapshot: Record<string, any>): CommandCenter
     ? snapshot.incidents.find((incident) => incident?.advice)?.advice
     : null
   const runs = snapshot.agent_runs || snapshot.incidents?.find((incident: any) => incident?.agent_runs)?.agent_runs || []
+  const incidents = Array.isArray(snapshot.incidents) ? snapshot.incidents : []
+  const tasks = Array.isArray(snapshot.tasks) ? snapshot.tasks : []
+  const approvals = Array.isArray(snapshot.approvals) ? snapshot.approvals : []
+  const events = Array.isArray(snapshot.events) ? snapshot.events : []
   return {
     runs,
+    metrics: {
+      events: events.length,
+      activeIncidents: incidents.filter((item: any) => String(item?.lifecycle || '').toUpperCase() !== 'CLOSED').length,
+      openTasks: tasks.filter((item: any) => !['DONE', 'FAILED'].includes(String(item?.status || '').toUpperCase())).length,
+      pendingApprovals: approvals.filter((item: any) => String(item?.status || '').toUpperCase() === 'PENDING').length,
+    },
     nextAction: action ? {
       code: String(action.code || ''),
       label: String(action.label || ''),

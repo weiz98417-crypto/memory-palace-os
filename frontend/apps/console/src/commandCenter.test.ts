@@ -11,6 +11,7 @@ describe('console command center projection', () => {
     })
     expect(model.nextAction?.code).toBe('REVIEW_ADVICE')
     expect(model.advice?.text).toBe('没有依据')
+    expect(model.metrics.activeIncidents).toBe(0)
   })
 
   it('loads the authoritative snapshot through the shared client', async () => {
@@ -23,5 +24,26 @@ describe('console command center projection', () => {
     })
     expect(requests).toEqual(['/scenic/snapshot'])
     expect(model.nextAction?.label).toBe('等待')
+    expect(model.metrics.events).toBe(0)
   })
 })
+
+  it('keeps backend-owned allowed actions and exposes snapshot metrics', () => {
+    const model = buildCommandCenter({
+      incidents: [{ lifecycle: 'OPEN' }, { lifecycle: 'CLOSED' }],
+      tasks: [{ status: 'PENDING' }, { status: 'DONE' }],
+      approvals: [{ status: 'PENDING' }],
+      events: [{ event_id: 'e1' }],
+      advice: {
+        status: 'READY',
+        evidence_status: 'GROUNDED',
+        advice: '按 SOP 执行',
+        allowed_actions: ['ADOPT', 'IGNORE'],
+      },
+    })
+    expect(model.metrics.activeIncidents).toBe(1)
+    expect(model.metrics.openTasks).toBe(1)
+    expect(model.metrics.pendingApprovals).toBe(1)
+    expect(model.metrics.events).toBe(1)
+    expect(model.advice?.allowedActions).toEqual(['ADOPT', 'IGNORE'])
+  })
