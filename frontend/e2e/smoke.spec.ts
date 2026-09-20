@@ -18,3 +18,20 @@ test('manager can authenticate when demo credentials are configured', async ({ p
   await expect(page.locator('#app-screen')).toHaveClass(/active/, { timeout: 15_000 })
   await expect(page.locator('body')).toContainText(/指挥中心|下一步处置|Memory Palace/i)
 })
+
+test('manager can traverse core command-center workspaces', async ({ page }) => {
+  const password = process.env.SCENIC_DEMO_PASSWORD
+  test.skip(!password, 'SCENIC_DEMO_PASSWORD is required for authenticated UI acceptance')
+  await page.goto('/admin/')
+  await page.locator('#login-username').fill('wangfang')
+  await page.locator('#login-password').fill(password!)
+  await page.locator('#login-submit').click()
+  await expect(page.locator('#app-screen')).toHaveClass(/active/, { timeout: 15_000 })
+
+  for (const view of ['dashboard', 'events', 'tasks', 'approvals', 'knowledge', 'settings']) {
+    const button = page.locator(`.nav-item[data-view="${view}"]`)
+    await button.click()
+    await expect(button).toHaveClass(/active/)
+    await expect(page.locator('#app-screen')).toHaveClass(/active/)
+  }
+})
