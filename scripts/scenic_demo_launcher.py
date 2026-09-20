@@ -75,8 +75,8 @@ DEMO_WINDOWS: tuple[DemoWindow, ...] = (
     ),
     DemoWindow(
         key="channel",
-        title="内部通知接入环境",
-        username="liming",
+        title="内部通知接入环境（值班经理）",
+        username="wangfang",
         path="/simulator/wecom/",
         username_selector="#login-username",
         password_selector="#login-password",

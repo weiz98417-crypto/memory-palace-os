@@ -75,7 +75,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\scenic-demo-open.ps1
 2. `/admin/` —— `wangfang`，指挥中心
 3. `/assistant/` —— `chenyu`，设备检修现场端
 4. `/assistant/` —— `liming`，现场运营端
-5. `/simulator/wecom/` —— `liming`，内部通知回执
+5. `/simulator/wecom/` —— `wangfang`，内部通知与回执联调（经理操作台）
 
 窗口打开后，业务动作全部由人操作。脚本不会代替点击。
 

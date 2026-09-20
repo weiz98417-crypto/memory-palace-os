@@ -55,7 +55,7 @@ powershell -ExecutionPolicy Bypass -File scripts/scenic-demo-open.ps1 -Mode Veri
 2. 指挥中心 —— `wangfang`
 3. 现场端 —— `chenyu`
 4. 现场端 —— `liming`
-5. 内部通知接入环境 —— `liming`
+5. 内部通知接入环境 —— `wangfang`（经理操作台）
 
 窗口开好后**由你手动操作**，脚本不会点击任何业务按钮。想先验证登录链路而不开窗口，加 `--headless --verify-only`。
 
