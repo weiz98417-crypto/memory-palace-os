@@ -154,3 +154,17 @@ Deep Golden 的 120 条固定覆盖：
 
 评测报告写入 `artifacts/scenic-agent-eval/`，不把真实模型输出、API Key 或未脱敏业务数据写回评测夹具。
 
+## 7. 分层门禁命令与报告（E5）
+
+```powershell
+# 每次 PR：无网络 contract
+uv run --no-project --with-requirements requirements.txt python evals/scenic_agent/run_deepeval.py --mode contract --report artifacts/scenic-agent-eval/contract-report.json
+
+# 夜间 / 保护分支：Fast live
+uv run --no-project --with-requirements requirements-eval.txt python evals/scenic_agent/run_deepeval.py --mode live --report artifacts/scenic-agent-eval/live-report.json
+
+# Production Sample 观察，不冒充 Golden
+uv run --no-project --with-requirements requirements.txt python evals/scenic_agent/run_deepeval.py --mode production-sample --report artifacts/scenic-agent-eval/production-sample-report.json
+```
+
+`live` 报告逐 case 记录 `dataset_version`、`source`、`metric`、`threshold`、`status`、`failure`、真实调用数、token 证据和降级；缺凭据、判官失败或模型异常均返回非零，不跳过。

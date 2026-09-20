@@ -31,6 +31,7 @@ from src.memory_palace.knowledge.db_client import AsyncDBClient
 from src.memory_palace.knowledge.db_init import init_database
 
 from .contracts import ContractViolation, load_golden_cases
+from .metrics import METRIC_CATALOG, THRESHOLDS
 
 
 def _knowledge(case: dict[str, Any]) -> VerifiedKnowledge:
@@ -206,6 +207,12 @@ def run_live(report_path: str | None = None) -> dict[str, Any]:
                 "scenario_type": case["scenario_type"],
                 "candidate_kind": "LIVE_MODEL_OUTPUT",
                 "outcome": observed["outcome"],
+                "dataset_version": "legacy-v1",
+                "source": "expert",
+                "metric": metric["metric"],
+                "threshold": metric["threshold"],
+                "status": "PASS" if metric["success"] else "FAIL",
+                "failure": None if metric["success"] else metric.get("reason"),
                 "call_records": len(observed["call_rows"]),
                 "measured_token_rows": sum(
                     1 for row in observed["call_rows"] if int(row["total_tokens"]) > 0

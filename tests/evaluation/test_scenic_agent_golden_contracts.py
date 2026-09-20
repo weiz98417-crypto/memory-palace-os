@@ -284,3 +284,19 @@ def report_has_deep_golden() -> bool:
 
     report = run_contract()
     return report["case_sets"]["deep_golden"]["case_count"] == 120
+
+
+def test_live_metric_catalog_covers_required_agent_boundaries():
+    from evals.scenic_agent.metrics import METRIC_CATALOG, THRESHOLDS
+
+    assert set(METRIC_CATALOG) == {
+        "ADVICE",
+        "DISPATCH_DRAFT",
+        "CLOSURE_SUMMARY",
+        "ROUTER_RISK",
+        "DEGRADATION_FAILURE",
+        "SECURITY_TENANT",
+        "MULTI_AGENT_TRAJECTORY",
+    }
+    assert all(metric in THRESHOLDS for metrics in METRIC_CATALOG.values() for metric in metrics)
+    assert all(value == 0.8 for value in THRESHOLDS.values())
