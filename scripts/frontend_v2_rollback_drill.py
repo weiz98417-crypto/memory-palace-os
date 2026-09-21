@@ -34,6 +34,7 @@ APPS: dict[str, dict[str, str]] = {
     },
 }
 ALL_APPS = tuple(APPS)
+CUTOVER_ORDER = ("operations", "integration", "console", "field")
 
 
 def fetch_html(base_url: str, route: str, *, timeout: float = 10.0) -> str:
@@ -111,6 +112,7 @@ def verify_phase(args: argparse.Namespace, expected: dict[str, str]) -> list[dic
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Exercise every frontend V2 rollback state.")
+    parser.add_argument("--mode", choices=("rollback", "cutover"), default="rollback")
     parser.add_argument("--base-url", default="http://127.0.0.1:8090")
     parser.add_argument("--project", default="memory-palace-scenic")
     parser.add_argument("--compose-file", default="deploy/docker-compose.yml")
@@ -126,48 +128,63 @@ def main() -> None:
     args = parser.parse_args()
     args.repo_root = Path(__file__).resolve().parents[1]
 
-    phases: list[tuple[str, tuple[str, ...], dict[str, str]]] = [
-        ("all-legacy", (), {app: "legacy" for app in ALL_APPS}),
-    ]
-    for target in ALL_APPS:
-        phases.append(
-            (
-                f"v2-{target}-only",
-                (target,),
-                {app: ("v2" if app == target else "legacy") for app in ALL_APPS},
+    phases: list[tuple[str, tuple[str, ...], dict[str, str]]] = []
+    if args.mode == "cutover":
+        enabled: list[str] = []
+        phases.append(("legacy-baseline", (), {app: "legacy" for app in ALL_APPS}))
+        for target in CUTOVER_ORDER:
+            enabled.append(target)
+            phases.append(
+                (
+                    f"enable-{target}",
+                    tuple(enabled),
+                    {app: ("v2" if app in enabled else "legacy") for app in ALL_APPS},
+                )
             )
-        )
-    phases.extend(
-        [
-            ("all-v2", ALL_APPS, {app: "v2" for app in ALL_APPS}),
-        ]
-    )
-    for target in ALL_APPS:
-        phases.append(
-            (
-                f"rollback-{target}",
-                tuple(app for app in ALL_APPS if app != target),
-                {app: ("legacy" if app == target else "v2") for app in ALL_APPS},
+    else:
+        phases.append(("all-legacy", (), {app: "legacy" for app in ALL_APPS}))
+        for target in ALL_APPS:
+            phases.append(
+                (
+                    f"v2-{target}-only",
+                    (target,),
+                    {app: ("v2" if app == target else "legacy") for app in ALL_APPS},
+                )
             )
-        )
+        phases.append(("all-v2", ALL_APPS, {app: "v2" for app in ALL_APPS}))
+        for target in ALL_APPS:
+            phases.append(
+                (
+                    f"rollback-{target}",
+                    tuple(app for app in ALL_APPS if app != target),
+                    {app: ("legacy" if app == target else "v2") for app in ALL_APPS},
+                )
+            )
 
     evidence: dict[str, Any] = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
+        "mode": args.mode,
         "base_url": args.base_url,
         "phases": [],
         "passed": False,
     }
     try:
+        previous: tuple[str, ...] = ()
         for name, enabled, expected in phases:
+            started_at = datetime.now(timezone.utc).isoformat()
             compose_restart(args, enabled)
             records = verify_phase(args, expected)
             evidence["phases"].append(
                 {
                     "name": name,
+                    "started_at": started_at,
+                    "completed_at": datetime.now(timezone.utc).isoformat(),
                     "frontend_v2_apps": ",".join(enabled),
+                    "rollback_frontend_v2_apps": ",".join(previous),
                     "routes": records,
                 }
             )
+            previous = enabled
         evidence["passed"] = True
     finally:
         compose_restart(args, ALL_APPS)
@@ -182,7 +199,7 @@ def main() -> None:
         )
 
     if not evidence["passed"]:
-        raise SystemExit("rollback drill failed")
+        raise SystemExit(f"frontend {args.mode} drill failed")
     print(json.dumps(evidence, ensure_ascii=False, indent=2))
 
 

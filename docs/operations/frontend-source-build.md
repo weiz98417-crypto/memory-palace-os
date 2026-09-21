@@ -51,7 +51,7 @@ docker compose -p memory-palace-scenic --env-file .env -f deploy/docker-compose.
 Building the V2 assets does not switch any entry. Runtime selection still uses:
 
 ```text
-FRONTEND_V2_APPS=
+FRONTEND_V2_APPS=console,field,integration,operations
 ```
 
-V2 remains disabled until an entry passes the functional and visual acceptance gates in the frontend migration tickets.
+The source-package default is all four V2 entries: `console,field,integration,operations`. Runtime overrides remain available for per-entry rollback.

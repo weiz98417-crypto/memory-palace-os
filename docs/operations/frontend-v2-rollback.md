@@ -15,7 +15,7 @@ Date: 2026-09-21
 
 ## Flag matrix
 
-`FRONTEND_V2_APPS` is a comma-separated subset. Empty means all four entries use legacy pages.
+FRONTEND_V2_APPS defaults to console,field,integration,operations. Empty means all four entries use legacy pages.
 
 | Flag value | V2 entries | Legacy entries |
 | --- | --- | --- |
