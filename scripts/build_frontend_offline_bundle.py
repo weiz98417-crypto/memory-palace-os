@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import re
 import json
 import os
 import shutil
@@ -46,6 +47,28 @@ def tree_hashes(root: Path) -> dict[str, str]:
         for path in sorted(root.rglob("*"))
         if path.is_file()
     }
+
+
+def normalized_tree_hashes(root: Path) -> dict[str, str]:
+    scope_pattern = re.compile(rb"data-v-[0-9a-f]{8}")
+    asset_pattern = re.compile(rb"/assets/index-[A-Za-z0-9_-]+\.(js|css)")
+    newline_pattern = re.compile(rb"[\r\n]+")
+    result: dict[str, str] = {}
+    for app in ("console", "field", "integration", "operations"):
+        index = root / app / "index.html"
+        if not index.is_file():
+            raise RuntimeError(f"missing offline frontend index: {index}")
+        index_bytes = newline_pattern.sub(b"\n", index.read_bytes())
+        normalized_index = asset_pattern.sub(rb"/assets/index-__ASSET__.\1", index_bytes)
+        result[f"{app}/index.html"] = hashlib.sha256(normalized_index).hexdigest()
+        for extension in ("js", "css"):
+            assets = sorted((root / app / "assets").glob(f"*.{extension}"))
+            if len(assets) != 1:
+                raise RuntimeError(f"expected one {extension} asset for {app}, got {len(assets)}")
+            asset_bytes = newline_pattern.sub(b"\n", assets[0].read_bytes())
+            normalized = scope_pattern.sub(b"data-v-__scope__", asset_bytes)
+            result[f"{app}/{extension}"] = hashlib.sha256(normalized).hexdigest()
+    return result
 
 
 def copy_image_tree(image: str, source: str, target: Path, *, cwd: Path, log: list[str]) -> None:
@@ -141,6 +164,7 @@ def main() -> None:
         build_online(args, log)
         copy_image_tree(args.online_image, "/static/client", output / "online-static-client", cwd=args.repo_root, log=log)
         online_hashes = tree_hashes(output / "online-static-client")
+        online_normalized_hashes = normalized_tree_hashes(output / "online-static-client")
 
         save_image(args.repo_root, args.node_image, image_dir / "node-image.tar", log)
         save_image(args.repo_root, args.python_image, image_dir / "python-image.tar", log)
@@ -156,10 +180,12 @@ def main() -> None:
             build_offline(args, offline_dir, log)
             copy_image_tree(args.offline_image, "/static/client", output / "offline-static-client", cwd=args.repo_root, log=log)
             offline_hashes = tree_hashes(output / "offline-static-client")
-            if online_hashes != offline_hashes:
-                raise RuntimeError("offline frontend output differs from online build")
+            offline_normalized_hashes = normalized_tree_hashes(output / "offline-static-client")
+            if online_normalized_hashes != offline_normalized_hashes:
+                raise RuntimeError("offline frontend output differs from online build after normalizing Vue scope IDs and asset hashes")
         else:
             offline_hashes = {}
+            offline_normalized_hashes = {}
 
         files = []
         for path in sorted(output.rglob("*")):
@@ -180,6 +206,8 @@ def main() -> None:
             "offline_verified": not args.skip_offline_verify,
             "online_static_client_sha256": online_hashes,
             "offline_static_client_sha256": offline_hashes,
+            "online_normalized_sha256": online_normalized_hashes,
+            "offline_normalized_sha256": offline_normalized_hashes,
             "files": files,
             "offline_command": (
                 "docker load --input images/node-image.tar && "
