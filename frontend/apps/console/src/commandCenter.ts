@@ -276,13 +276,13 @@ export async function loadCommandCenter(client: { request<T>(path: string): Prom
     sopPayload,
   ] = await Promise.all([
     client.request<Record<string, any>>('/scenic/snapshot'),
-    client.request<{ events?: any[] }>('/admin/events?limit=200'),
-    client.request<{ tasks?: any[] }>('/admin/tasks?limit=200'),
-    client.request<any[]>('/admin/approvals?status=ALL&limit=200'),
-    client.request<{ push_logs?: any[] }>('/admin/push_logs?limit=200'),
-    client.request<{ knowledge?: any[] }>('/admin/knowledge?limit=200'),
-    client.request<{ experience_cards?: any[] }>('/admin/experience-cards?limit=200'),
-    client.request<{ findings?: any[] }>('/admin/watcher/findings?limit=200'),
+    client.request<{ events?: any[] }>('/admin/events?limit=500'),
+    client.request<{ tasks?: any[] }>('/admin/tasks?limit=500'),
+    client.request<any[]>('/admin/approvals?status=ALL&limit=500'),
+    client.request<{ push_logs?: any[] }>('/admin/push_logs?limit=500'),
+    client.request<{ knowledge?: any[] }>('/admin/knowledge?limit=500'),
+    client.request<{ experience_cards?: any[] }>('/admin/experience-cards?limit=500'),
+    client.request<{ findings?: any[] }>('/admin/watcher/findings?limit=500'),
     client.request<{ sops?: any[] }>('/admin/sops'),
   ])
   return buildCommandCenter({

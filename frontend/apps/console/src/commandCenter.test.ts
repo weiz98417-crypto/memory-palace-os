@@ -67,13 +67,13 @@ describe('console command center projection', () => {
 
     expect(requests).toEqual([
       '/scenic/snapshot',
-      '/admin/events?limit=200',
-      '/admin/tasks?limit=200',
-      '/admin/approvals?status=ALL&limit=200',
-      '/admin/push_logs?limit=200',
-      '/admin/knowledge?limit=200',
-      '/admin/experience-cards?limit=200',
-      '/admin/watcher/findings?limit=200',
+      '/admin/events?limit=500',
+      '/admin/tasks?limit=500',
+      '/admin/approvals?status=ALL&limit=500',
+      '/admin/push_logs?limit=500',
+      '/admin/knowledge?limit=500',
+      '/admin/experience-cards?limit=500',
+      '/admin/watcher/findings?limit=500',
       '/admin/sops',
     ])
     expect(model.metrics).toEqual({ events: 3, activeIncidents: 1, activeAlerts: 1, openTasks: 1, pendingApprovals: 1 })
