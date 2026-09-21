@@ -8,6 +8,7 @@ const props = withDefaults(
     connection: 'CONNECTING' | 'CONNECTED' | 'RECONNECTING' | 'FALLBACK'
     lastUpdated: string
     theme?: 'ops' | 'field'
+    backgroundImage?: string
   }>(),
   { theme: 'ops' },
 )
@@ -27,6 +28,8 @@ const connectionLabel = computed(
   <div
     class="mp-shell"
     :data-theme="theme"
+    :data-background="Boolean(backgroundImage)"
+    :style="backgroundImage ? { '--mp-shell-background-image': `url(${backgroundImage})` } : undefined"
   >
     <header class="mp-shell__header">
       <div class="mp-shell__identity">
@@ -65,10 +68,58 @@ const connectionLabel = computed(
   flex-direction: column;
   height: 100vh;
   min-height: 0;
+  position: relative;
+  isolation: isolate;
   overflow: hidden;
   background: var(--mp-color-canvas);
   color: var(--mp-color-body);
   font-family: var(--mp-font-ui);
+}
+
+.mp-shell[data-background='true']::before,
+.mp-shell[data-background='true']::after {
+  position: absolute;
+  inset: -24px;
+  z-index: -2;
+  content: '';
+  pointer-events: none;
+}
+
+.mp-shell[data-background='true']::before {
+  background-image: var(--mp-shell-background-image, none);
+  background-position: center;
+  background-size: cover;
+  filter: blur(18px) saturate(.88) brightness(.42);
+  transform: scale(1.06);
+}
+
+.mp-shell[data-background='true']::after {
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(5, 12, 29, .54), rgba(5, 12, 29, .86));
+}
+
+.mp-shell[data-background='true'] {
+  --mp-color-canvas: #0a1024;
+  --mp-color-surface: rgba(16, 24, 48, .78);
+  --mp-color-surface-elevated: rgba(29, 39, 74, .86);
+}
+
+.mp-shell[data-background='true'] .mp-shell__header {
+  background: rgba(7, 14, 32, .72);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+.mp-shell[data-background='true'] .mp-shell__nav {
+  background: rgba(8, 15, 34, .78);
+  backdrop-filter: blur(18px) saturate(120%);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .mp-shell[data-background='true'] .mp-shell__header,
+  .mp-shell[data-background='true'] .mp-shell__nav {
+    background: #0b1228;
+    backdrop-filter: none;
+  }
 }
 
 .mp-shell__header {

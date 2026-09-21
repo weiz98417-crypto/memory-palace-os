@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "2.3.2",
     "@memory-palace/api-client": "workspace:*",
     "@memory-palace/design-tokens": "workspace:*",
     "@memory-palace/domain-ui": "workspace:*",

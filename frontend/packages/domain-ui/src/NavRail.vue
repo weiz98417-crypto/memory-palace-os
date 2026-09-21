@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import type { Component } from 'vue'
+
 export interface NavItem {
   key: string
   label: string
-  icon?: string
+  icon?: Component | string
   disabled?: boolean
 }
 
@@ -32,7 +34,10 @@ function select(item: NavItem) {
       :disabled="item.disabled"
       @click="select(item)"
     >
-      <span v-if="item.icon" class="nav-rail__icon" aria-hidden="true">{{ item.icon }}</span>
+      <el-icon v-if="item.icon && typeof item.icon !== 'string'" class="nav-rail__icon" aria-hidden="true">
+        <component :is="item.icon" />
+      </el-icon>
+      <span v-else-if="item.icon" class="nav-rail__icon" aria-hidden="true">{{ item.icon }}</span>
       <span>{{ item.label }}</span>
     </button>
   </nav>

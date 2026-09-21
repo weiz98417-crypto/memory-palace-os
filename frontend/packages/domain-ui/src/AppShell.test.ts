@@ -3,6 +3,14 @@ import { describe, expect, it } from 'vitest'
 import AppShell from './AppShell.vue'
 
 describe('AppShell', () => {
+  it('supports an optional immersive background without changing the base shell', () => {
+    const wrapper = mount(AppShell, {
+      props: { title: '指挥中心', venue: '云栖山景区', connection: 'CONNECTED', lastUpdated: '23:50', backgroundImage: '/assets/console.webp' },
+    })
+    expect(wrapper.attributes('data-background')).toBe('true')
+    expect(wrapper.attributes('style')).toContain('--mp-shell-background-image')
+  })
+
   it('renders the entry identity, venue, connection, and last update', () => {
     const wrapper = mount(AppShell, {
       props: {

@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { createApiClient } from '@memory-palace/api-client'
 import { StatePanel, StatusBadge } from '@memory-palace/domain-ui'
+import { ChatDotRound, Medal, Tickets, User as UserIcon } from '@element-plus/icons-vue'
 import { buildFieldView } from '../fieldStatus'
 import {
   acceptAssistantInterview,
@@ -37,6 +38,12 @@ import {
 
 const emit = defineEmits<{ logout: [] }>()
 const client = createApiClient()
+const fieldSections = [
+  { key: 'chat', label: '助手', icon: ChatDotRound },
+  { key: 'work', label: '工作', icon: Tickets },
+  { key: 'experience', label: '经验', icon: Medal },
+  { key: 'me', label: '我的', icon: UserIcon },
+] as const
 const user = ref<any>(client.auth.read())
 const section = ref<'chat' | 'work' | 'experience' | 'me'>('chat')
 const loading = ref(false)
@@ -409,7 +416,7 @@ onMounted(async () => {
     <p v-else-if="notice" class="notice">{{ notice }}</p>
 
     <nav class="section-tabs" aria-label="现场端功能">
-      <button v-for="item in [{ key: 'chat', label: '助手', icon: '对' }, { key: 'work', label: '工作', icon: '工' }, { key: 'experience', label: '经验', icon: '经' }, { key: 'me', label: '我的', icon: '我' }]" :key="item.key" :class="{ active: section === item.key }" @click="switchSection(item.key as any)"><span aria-hidden="true">{{ item.icon }}</span><small>{{ item.label }}</small></button>
+      <button v-for="item in fieldSections" :key="item.key" :class="{ active: section === item.key }" @click="switchSection(item.key)"><el-icon aria-hidden="true"><component :is="item.icon" /></el-icon><small>{{ item.label }}</small></button>
     </nav>
 
     <div v-if="section === 'chat'" class="section-grid chat-grid">

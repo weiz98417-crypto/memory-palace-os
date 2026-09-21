@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
+import { defineComponent } from 'vue'
 import NavRail from './NavRail.vue'
 
 describe('NavRail', () => {
@@ -20,6 +21,15 @@ describe('NavRail', () => {
     expect(wrapper.emitted('select')?.[0]).toEqual(['events'])
     await wrapper.find('[data-nav-key="disabled"]').trigger('click')
     expect(wrapper.emitted('select')).toHaveLength(1)
+  })
+
+  it('renders a component icon instead of a character glyph', () => {
+    const Icon = defineComponent({ template: '<svg data-test-icon="true" />' })
+    const wrapper = mount(NavRail, {
+      props: { activeKey: 'dashboard', items: [{ key: 'dashboard', label: '指挥中心', icon: Icon }] },
+    })
+    expect(wrapper.find('[data-test-icon]').exists()).toBe(true)
+    expect(wrapper.find('.nav-rail__icon').text()).toBe('')
   })
 
   it('supports horizontal navigation for the field entry', () => {

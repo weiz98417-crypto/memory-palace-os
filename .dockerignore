@@ -29,3 +29,5 @@ README.md
 *.log
 *.pem
 *.key
+.scratch
+artifacts
