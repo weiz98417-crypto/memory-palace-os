@@ -14,6 +14,11 @@ export interface AdviceSnapshot {
   allowed_actions?: string[]
 }
 
+export interface ChartDatum {
+  name: string
+  value: number
+}
+
 export interface CommandCenterModel {
   runs: any[]
   nextAction: NextAction | null
@@ -28,6 +33,11 @@ export interface CommandCenterModel {
     activeIncidents: number
     openTasks: number
     pendingApprovals: number
+  }
+  charts: {
+    eventSeverity: ChartDatum[]
+    taskStatus: ChartDatum[]
+    approvalStatus: ChartDatum[]
   }
 }
 
@@ -53,6 +63,17 @@ export function normalizeAdvice(advice?: AdviceSnapshot | null) {
   }
 }
 
+function distribution(values: string[]): ChartDatum[] {
+  const counts = new Map<string, number>()
+  for (const value of values) {
+    const label = value || '未分类'
+    counts.set(label, (counts.get(label) || 0) + 1)
+  }
+  return [...counts.entries()]
+    .map(([name, value]) => ({ name, value }))
+    .sort((left, right) => right.value - left.value)
+}
+
 export function buildCommandCenter(snapshot: Record<string, any>): CommandCenterModel {
   const actions = Array.isArray(snapshot.next_actions) ? snapshot.next_actions : []
   const action = actions.find((item) => item?.enabled !== false) || actions[0] || null
@@ -72,6 +93,11 @@ export function buildCommandCenter(snapshot: Record<string, any>): CommandCenter
       openTasks: tasks.filter((item: any) => !['DONE', 'FAILED'].includes(String(item?.status || '').toUpperCase())).length,
       pendingApprovals: approvals.filter((item: any) => String(item?.status || '').toUpperCase() === 'PENDING').length,
     },
+    charts: {
+      eventSeverity: distribution(events.map((item: any) => String(item?.severity || '').toUpperCase())),
+      taskStatus: distribution(tasks.map((item: any) => String(item?.status || '').toUpperCase())),
+      approvalStatus: distribution(approvals.map((item: any) => String(item?.status || '').toUpperCase())),
+    },
     nextAction: action ? {
       code: String(action.code || ''),
       label: String(action.label || ''),
@@ -83,6 +109,16 @@ export function buildCommandCenter(snapshot: Record<string, any>): CommandCenter
 }
 
 export async function loadCommandCenter(client: { request<T>(path: string): Promise<T> }) {
-  const snapshot = await client.request<Record<string, any>>('/scenic/snapshot')
-  return buildCommandCenter(snapshot)
+  const [snapshot, eventPayload, taskPayload, approvalPayload] = await Promise.all([
+    client.request<Record<string, any>>('/scenic/snapshot'),
+    client.request<{ events?: any[] }>('/admin/events?limit=200'),
+    client.request<{ tasks?: any[] }>('/admin/tasks?limit=200'),
+    client.request<any[]>('/admin/approvals?status=ALL&limit=200'),
+  ])
+  return buildCommandCenter({
+    ...snapshot,
+    events: Array.isArray(eventPayload.events) ? eventPayload.events : [],
+    tasks: Array.isArray(taskPayload.tasks) ? taskPayload.tasks : [],
+    approvals: Array.isArray(approvalPayload) ? approvalPayload : [],
+  })
 }

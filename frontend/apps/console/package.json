@@ -13,6 +13,8 @@
     "@memory-palace/api-client": "workspace:*",
     "@memory-palace/design-tokens": "workspace:*",
     "@memory-palace/domain-ui": "workspace:*",
-    "vue": "3.5.43"
+    "echarts": "5.6.0",
+    "vue": "3.5.43",
+    "vue-echarts": "7.0.3"
   }
 }

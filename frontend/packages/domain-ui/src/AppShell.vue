@@ -89,13 +89,13 @@ const connectionLabel = computed(
   background-image: var(--mp-shell-background-image, none);
   background-position: center;
   background-size: cover;
-  filter: blur(18px) saturate(.88) brightness(.42);
+  filter: blur(14px) saturate(.96) brightness(.62);
   transform: scale(1.06);
 }
 
 .mp-shell[data-background='true']::after {
   z-index: -1;
-  background: linear-gradient(180deg, rgba(5, 12, 29, .54), rgba(5, 12, 29, .86));
+  background: linear-gradient(180deg, rgba(5, 12, 29, .28), rgba(5, 12, 29, .74));
 }
 
 .mp-shell[data-background='true'] {
@@ -105,12 +105,12 @@ const connectionLabel = computed(
 }
 
 .mp-shell[data-background='true'] .mp-shell__header {
-  background: rgba(7, 14, 32, .72);
+  background: rgba(7, 14, 32, .66);
   backdrop-filter: blur(18px) saturate(125%);
 }
 
 .mp-shell[data-background='true'] .mp-shell__nav {
-  background: rgba(8, 15, 34, .78);
+  background: rgba(8, 15, 34, .72);
   backdrop-filter: blur(18px) saturate(120%);
 }
 

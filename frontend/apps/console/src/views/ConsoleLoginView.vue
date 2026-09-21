@@ -263,7 +263,7 @@ async function submit() {
 }
 
 @media (max-width: 900px) {
-  .console-login { grid-template-columns: 1fr; align-items: end; padding: 0 16px max(16px, env(safe-area-inset-bottom)); }
+  .console-login { grid-template-columns: 1fr; align-items: center; padding: 24px 16px; }
   .console-login__background img { object-position: 54% center; }
   .console-login__wash { background: linear-gradient(180deg, rgba(5, 14, 34, .04) 10%, rgba(5, 14, 34, .48) 58%, rgba(5, 14, 34, .84)); }
   .console-login__signal { top: 18px; right: 18px; }

@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import VChart from 'vue-echarts'
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { BarChart, PieChart } from 'echarts/charts'
+import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
 import { createApiClient } from '@memory-palace/api-client'
 import { AgentRunCard, StatePanel, StatusBadge } from '@memory-palace/domain-ui'
 import { loadCommandCenter, type CommandCenterModel } from '../commandCenter'
@@ -9,7 +14,31 @@ const model = ref<CommandCenterModel>({
   nextAction: null,
   advice: null,
   metrics: { events: 0, activeIncidents: 0, openTasks: 0, pendingApprovals: 0 },
+  charts: { eventSeverity: [], taskStatus: [], approvalStatus: [] },
 })
+use([CanvasRenderer, PieChart, BarChart, GridComponent, LegendComponent, TooltipComponent])
+
+const chartColors = ['#5B6EFF', '#39C68A', '#FFB020', '#FF5C6C', '#A06CF9', '#57C1FF']
+const pieOption = (data: Array<{ name: string; value: number }>) => ({
+  backgroundColor: 'transparent',
+  color: chartColors,
+  tooltip: { trigger: 'item' },
+  legend: { bottom: 0, textStyle: { color: '#A7AFCA' } },
+  series: [{ type: 'pie', radius: ['46%', '70%'], center: ['50%', '43%'], label: { color: '#F4F5FF' }, data }],
+})
+const barOption = (data: Array<{ name: string; value: number }>) => ({
+  backgroundColor: 'transparent',
+  color: ['#5B6EFF'],
+  tooltip: { trigger: 'axis' },
+  grid: { left: 38, right: 18, top: 18, bottom: 42 },
+  xAxis: { type: 'category', data: data.map((item) => item.name), axisLabel: { color: '#A7AFCA' }, axisLine: { lineStyle: { color: 'rgba(213,218,255,.18)' } } },
+  yAxis: { type: 'value', minInterval: 1, axisLabel: { color: '#A7AFCA' }, splitLine: { lineStyle: { color: 'rgba(213,218,255,.10)' } } },
+  series: [{ type: 'bar', barMaxWidth: 42, data: data.map((item) => item.value), itemStyle: { borderRadius: [6, 6, 0, 0] } }],
+})
+const eventOption = computed(() => pieOption(model.value.charts.eventSeverity))
+const taskOption = computed(() => barOption(model.value.charts.taskStatus))
+const approvalOption = computed(() => pieOption(model.value.charts.approvalStatus))
+
 const loading = ref(true)
 const error = ref<string | null>(null)
 
@@ -56,6 +85,12 @@ onMounted(async () => {
         <article><span>事件记录</span><strong>{{ model.metrics.events }}</strong></article>
       </div>
 
+      <div class="chart-grid">
+        <article class="chart-panel"><div class="section-head"><h2>事件级别分布</h2><span class="muted">PostgreSQL 事件</span></div><VChart v-if="model.charts.eventSeverity.length" class="chart" :option="eventOption" autoresize /><p v-else class="muted">暂无可绘制的事件数据。</p></article>
+        <article class="chart-panel"><div class="section-head"><h2>任务状态分布</h2><span class="muted">当前任务图</span></div><VChart v-if="model.charts.taskStatus.length" class="chart" :option="taskOption" autoresize /><p v-else class="muted">暂无可绘制的任务数据。</p></article>
+        <article class="chart-panel"><div class="section-head"><h2>审批状态分布</h2><span class="muted">高风险动作</span></div><VChart v-if="model.charts.approvalStatus.length" class="chart" :option="approvalOption" autoresize /><p v-else class="muted">暂无可绘制的审批数据。</p></article>
+      </div>
+
       <section v-if="model.advice" class="advice-panel">
         <div class="section-head"><div><h2>处置建议</h2><p class="muted">{{ model.advice.title }}</p></div><StatusBadge :label="model.advice.status" tone="ai" /></div>
         <p>{{ model.advice.text || '建议正在生成。' }}</p>
@@ -82,13 +117,16 @@ onMounted(async () => {
 .next-action h2 { margin: 6px 0 8px; color: var(--mp-color-ink); font-size: 24px; }
 .next-action p { margin: 0; color: var(--mp-color-body); font-size: 14px; }
 .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-.metric-grid article, .advice-panel, .run-list { padding: 16px; border: 1px solid var(--mp-color-hairline); border-radius: var(--mp-radius-card); background: var(--mp-color-surface); }
+.metric-grid article, .advice-panel, .run-list, .chart-panel { padding: 16px; border: 1px solid var(--mp-color-hairline); border-radius: var(--mp-radius-card); background: var(--mp-color-surface); }
 .metric-grid article { display: grid; gap: 6px; }
 .metric-grid strong { color: var(--mp-color-ink); font-size: 28px; font-variant-numeric: tabular-nums; }
 .advice-panel, .run-list { display: grid; gap: 12px; }
+.chart-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.chart-panel { display: grid; gap: 8px; min-height: 260px; }
+.chart { width: 100%; height: 225px; }
 .advice-panel p { margin: 0; color: var(--mp-color-body); font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
 .section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .section-head h2 { margin: 0; color: var(--mp-color-ink); font-size: 17px; }
 .allowed-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-@media (max-width: 900px) { .command-center__header, .next-action { flex-direction: column; } .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 900px) { .command-center__header, .next-action { flex-direction: column; } .metric-grid, .chart-grid { grid-template-columns: 1fr; } }
 </style>
