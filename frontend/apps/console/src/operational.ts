@@ -193,3 +193,68 @@ export async function rejectApproval(client: RequestClient, approvalId: string, 
 export async function requestControlledAction(client: RequestClient, body: Record<string, unknown>): Promise<unknown> {
   return client.request('/admin/action-requests', { method: 'POST', json: body })
 }
+
+
+export interface PushLogRecord {
+  push_id: string
+  channel?: string
+  recipient?: string
+  from_user?: string
+  event_type?: string
+  severity?: string
+  hit_keywords?: string[]
+  delivery_status?: string
+  delivery_error?: string
+  adoption_status?: string
+  pushed_at?: number
+}
+
+export interface IntegrationStatusRecord {
+  key?: string
+  name?: string
+  status?: string
+  configured?: boolean
+  live_verified?: boolean
+  blocked_reason?: string
+  missing?: string[]
+}
+
+export interface DeadLetterRecord {
+  id: string
+  retries?: number
+  created_at_ms?: number
+  error?: string
+  message?: Record<string, unknown>
+}
+
+export async function loadPushLogs(client: RequestClient, adoptionStatus = ''): Promise<PushLogRecord[]> {
+  const filter = adoptionStatus ? `&adoption_status=${encodeURIComponent(adoptionStatus)}` : ''
+  const payload = await client.request<{ push_logs?: PushLogRecord[] }>(`/admin/push_logs?limit=200${filter}`)
+  return Array.isArray(payload.push_logs) ? payload.push_logs : []
+}
+
+export async function loadIntegrations(client: RequestClient): Promise<IntegrationStatusRecord[]> {
+  const payload = await client.request<{ integrations?: IntegrationStatusRecord[] }>('/admin/integrations')
+  return Array.isArray(payload.integrations) ? payload.integrations : []
+}
+
+export async function loadDeadLetters(client: RequestClient): Promise<DeadLetterRecord[]> {
+  const payload = await client.request<{ dead_letters?: DeadLetterRecord[] }>('/admin/dead-letters?limit=50')
+  return Array.isArray(payload.dead_letters) ? payload.dead_letters : []
+}
+
+export async function updatePushAdoption(
+  client: RequestClient,
+  pushId: string,
+  status: 'pending' | 'adopted' | 'rejected',
+  notes = '',
+): Promise<unknown> {
+  return client.request(`/admin/push_logs/${encodeURIComponent(pushId)}/adoption`, {
+    method: 'PATCH',
+    json: { status, notes: notes || null },
+  })
+}
+
+export async function retryDeadLetter(client: RequestClient, deadLetterId: string): Promise<unknown> {
+  return client.request(`/admin/dead-letters/${encodeURIComponent(deadLetterId)}/retry`, { method: 'POST' })
+}

@@ -85,3 +85,30 @@ describe('console task and approval API seam', () => {
     expect(request).toHaveBeenNthCalledWith(4, '/admin/approvals/a1/reject', { method: 'POST', json: { comment: '风险过高' } })
   })
 })
+
+
+describe('console action-log API seam', () => {
+  it('loads push logs, integrations and dead letters', async () => {
+    const request = vi.fn()
+      .mockResolvedValueOnce({ push_logs: [{ push_id: 'p1' }] })
+      .mockResolvedValueOnce({ integrations: [{ key: 'wecom', status: 'ACTIVE' }] })
+      .mockResolvedValueOnce({ dead_letters: [{ id: 'd1' }] })
+    expect(await operational.loadPushLogs({ request })).toHaveLength(1)
+    expect(await operational.loadIntegrations({ request })).toHaveLength(1)
+    expect(await operational.loadDeadLetters({ request })).toHaveLength(1)
+    expect(request).toHaveBeenNthCalledWith(1, '/admin/push_logs?limit=200')
+    expect(request).toHaveBeenNthCalledWith(2, '/admin/integrations')
+    expect(request).toHaveBeenNthCalledWith(3, '/admin/dead-letters?limit=50')
+  })
+
+  it('updates adoption and retries dead letters explicitly', async () => {
+    const request = vi.fn().mockResolvedValue({ ok: true })
+    await operational.updatePushAdoption({ request }, 'p1', 'adopted', '已采纳')
+    await operational.retryDeadLetter({ request }, 'd1')
+    expect(request).toHaveBeenNthCalledWith(1, '/admin/push_logs/p1/adoption', {
+      method: 'PATCH',
+      json: { status: 'adopted', notes: '已采纳' },
+    })
+    expect(request).toHaveBeenNthCalledWith(2, '/admin/dead-letters/d1/retry', { method: 'POST' })
+  })
+})
