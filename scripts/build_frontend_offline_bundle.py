@@ -64,6 +64,7 @@ def build_online(args: argparse.Namespace, log: list[str]) -> None:
         "docker", "buildx", "build",
         "--file", "deploy/Dockerfile",
         "--target", "frontend-builder",
+        "--no-cache",
         "--build-arg", f"NODE_IMAGE={args.node_image}",
         "--build-arg", f"PYTHON_BASE_IMAGE={args.python_image}",
         "--output", f"type=image,name={args.online_image}",
@@ -91,7 +92,7 @@ def export_offline_inputs(repo_root: Path, image: str, target_dir: Path, log: li
     created = run(
         [
             "docker", "create", image, "sh", "-lc",
-            "tar -C /frontend -czf /tmp/node_modules.tar.gz node_modules",
+            "find . -type d -name node_modules -prune -print0 | tar --null -T - -czf /tmp/node_modules.tar.gz",
         ],
         cwd=repo_root,
         log=log,
