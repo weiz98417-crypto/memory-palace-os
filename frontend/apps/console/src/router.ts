@@ -2,6 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import CommandCenterView from './views/CommandCenterView.vue'
 import ActionLogWorkspaceView from './views/ActionLogWorkspaceView.vue'
 import KnowledgeWorkspaceView from './views/KnowledgeWorkspaceView.vue'
+import ManagementWorkspaceView from './views/ManagementWorkspaceView.vue'
+import SettingsWorkspaceView from './views/SettingsWorkspaceView.vue'
+import DiagnosticsWorkspaceView from './views/DiagnosticsWorkspaceView.vue'
 import ExperienceWorkspaceView from './views/ExperienceWorkspaceView.vue'
 import WatcherWorkspaceView from './views/WatcherWorkspaceView.vue'
 import SopWorkspaceView from './views/SopWorkspaceView.vue'
@@ -13,7 +16,7 @@ import WorkspaceView from './views/WorkspaceView.vue'
 import { CONSOLE_WORKSPACES } from './workspaces'
 
 const workspaceRoutes = CONSOLE_WORKSPACES
-  .filter((workspace) => !['dashboard', 'events', 'sessions', 'tasks', 'approvals', 'actions', 'knowledge', 'experience', 'watcher', 'sops'].includes(workspace.key))
+  .filter((workspace) => !['dashboard', 'events', 'sessions', 'tasks', 'approvals', 'actions', 'knowledge', 'experience', 'watcher', 'sops', 'management', 'settings', 'diagnostics'].includes(workspace.key))
   .map((workspace) => ({
     path: workspace.path,
     component: WorkspaceView,
@@ -34,6 +37,9 @@ export const router = createRouter({
     { path: '/experience', component: ExperienceWorkspaceView },
     { path: '/watcher', component: WatcherWorkspaceView },
     { path: '/sops', component: SopWorkspaceView },
+    { path: '/management', component: ManagementWorkspaceView },
+    { path: '/settings', component: SettingsWorkspaceView },
+    { path: '/diagnostics', component: DiagnosticsWorkspaceView },
     ...workspaceRoutes,
     { path: '/:pathMatch(.*)*', component: CommandCenterView },
   ],
