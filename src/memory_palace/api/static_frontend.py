@@ -40,8 +40,11 @@ def mount_frontend_v2(
 ) -> bool:
     if not frontend_v2_enabled(app_name, environ):
         return False
-    if not (directory / "index.html").is_file():
-        return False
+    index_file = directory / "index.html"
+    if not index_file.is_file():
+        raise RuntimeError(
+            f"frontend V2 asset missing: {app_name} ({index_file.as_posix()})"
+        )
     app.mount(route, SpaStaticFiles(directory=directory, html=True), name=f"{app_name}_v2_static")
     return True
 
@@ -54,12 +57,32 @@ FRONTEND_APPS = {
 }
 
 
+def validate_configured_frontend_assets(
+    root: Path,
+    environ: Mapping[str, str] | None = None,
+) -> dict[str, bool]:
+    """Validate enabled entry assets without silently falling back to legacy."""
+    enabled: dict[str, bool] = {}
+    for app_name in FRONTEND_APPS:
+        if not frontend_v2_enabled(app_name, environ):
+            enabled[app_name] = False
+            continue
+        index_file = root / app_name / "index.html"
+        if not index_file.is_file():
+            raise RuntimeError(
+                f"frontend V2 asset missing: {app_name} ({index_file.as_posix()})"
+            )
+        enabled[app_name] = True
+    return enabled
+
+
 def mount_configured_frontend_apps(
     app: FastAPI,
     *,
     root: Path,
     environ: Mapping[str, str] | None = None,
 ) -> dict[str, bool]:
+    enabled = validate_configured_frontend_assets(root, environ)
     mounted: dict[str, bool] = {}
     for app_name, route in FRONTEND_APPS.items():
         mounted[app_name] = mount_frontend_v2(
@@ -71,4 +94,4 @@ def mount_configured_frontend_apps(
         )
     return mounted
 
-__all__ = ["FRONTEND_APPS", "SpaStaticFiles", "frontend_v2_enabled", "mount_configured_frontend_apps", "mount_frontend_v2"]
+__all__ = ["FRONTEND_APPS", "SpaStaticFiles", "frontend_v2_enabled", "mount_configured_frontend_apps", "mount_frontend_v2", "validate_configured_frontend_assets"]
