@@ -10,11 +10,12 @@ from urllib.parse import quote
 
 import httpx
 
+from .sourced_showcase import seed_sourced_showcase
 from .uat_bootstrap import UATBootstrapError, _FormalAPI
 
 
 SHOWCASE_SOURCE_PREFIX = "showcase:"
-SUPPORTED_SHOWCASE_SECTIONS = frozenset({"experiences", "knowledge", "sops", "watcher"})
+SUPPORTED_SHOWCASE_SECTIONS = frozenset({"experiences", "knowledge", "sops", "sourced", "watcher"})
 
 
 class UATShowcaseError(RuntimeError):
@@ -1142,6 +1143,10 @@ async def seed_uat_showcase_data(
             watcher_counts, watcher_created = await _seed_watcher(api, operational_targets)
             counts.update(watcher_counts)
             created.update(watcher_created)
+        if "sourced" in selected:
+            sourced_counts, sourced_created = await seed_sourced_showcase(api)
+            counts.update(sourced_counts)
+            created.update(sourced_created)
         return UATShowcaseResult(counts=counts, created=created)
     except UATBootstrapError as exc:
         raise UATShowcaseError(str(exc)) from exc
