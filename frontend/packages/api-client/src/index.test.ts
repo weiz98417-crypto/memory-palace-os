@@ -26,6 +26,14 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+describe('api-client session seam', () => {
+  it('reads the current user without exposing tokens to views', () => {
+    const client = createApiClient({ storage: createMemoryStorage(session()) })
+    expect(client.auth.read()).toEqual(session().user)
+    expect(client.auth.read()).not.toHaveProperty('access_token')
+  })
+})
+
 describe('api-client request behaviour', () => {
   it('adds auth, tenant, and idempotency headers and returns JSON', async () => {
     const fetchImpl = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => jsonResponse({ ok: true }))

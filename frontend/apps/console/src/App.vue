@@ -8,7 +8,8 @@ import { visibleWorkspaces, workspaceByKey } from './workspaces'
 const route = useRoute()
 const router = useRouter()
 const client = createApiClient()
-const session = ref<any>(client.auth.read())
+const storedSession = client.auth.read() as any
+const session = ref<any>(storedSession?.user || storedSession)
 const username = ref('wangfang')
 const password = ref('')
 const error = ref('')

@@ -236,7 +236,7 @@ export function createApiClient(options: ApiClientOptions = {}) {
   return {
     request,
     auth: {
-      read: readSession,
+      read: () => readSession()?.user ?? null,
       set: setSession,
       clear,
       async login(username: string, password: string): Promise<SessionUser> {
