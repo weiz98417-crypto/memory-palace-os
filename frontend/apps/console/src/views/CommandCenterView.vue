@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { BarChart, PieChart } from 'echarts/charts'
 import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
+import { Close, FullScreen } from '@element-plus/icons-vue'
 import { createApiClient } from '@memory-palace/api-client'
 import { AgentRunCard, StatePanel, StatusBadge } from '@memory-palace/domain-ui'
-import { loadCommandCenter, type ChartSeries, type CommandCenterModel } from '../commandCenter'
+import { loadCommandCenter, type ChartDatum, type ChartSeries, type CommandCenterModel } from '../commandCenter'
 
 const model = ref<CommandCenterModel>({
   runs: [],
@@ -19,46 +20,122 @@ const model = ref<CommandCenterModel>({
 use([CanvasRenderer, PieChart, BarChart, GridComponent, LegendComponent, TooltipComponent])
 
 const chartColors = ['#5B6EFF', '#39C68A', '#FFB020', '#FF5C6C', '#A06CF9', '#57C1FF']
-const pieOption = (data: Array<{ name: string; value: number }>) => ({
-  backgroundColor: 'transparent',
-  color: chartColors,
-  tooltip: { trigger: 'item', formatter: '{b}<br/>{c} 条' },
-  legend: { type: 'scroll', bottom: 0, textStyle: { color: '#A7AFCA' } },
-  series: [{
-    type: 'pie',
-    radius: ['42%', '66%'],
-    center: ['50%', '42%'],
-    label: { color: '#F4F5FF', formatter: '{b}\n{c} 条' },
-    labelLine: { lineStyle: { color: 'rgba(213,218,255,.45)' } },
-    data,
-  }],
-})
-const barOption = (data: Array<{ name: string; value: number }>) => ({
-  backgroundColor: 'transparent',
-  color: ['#5B6EFF'],
-  tooltip: { trigger: 'axis', formatter: '{b}<br/>{c} 条' },
-  grid: { left: 42, right: 18, top: 18, bottom: data.length > 7 ? 68 : 42, containLabel: true },
-  xAxis: {
-    type: 'category',
-    data: data.map((item) => item.name),
-    axisLabel: {
-      color: '#A7AFCA',
-      interval: 0,
-      rotate: data.length > 7 ? 28 : 0,
-      overflow: 'truncate',
-      width: 72,
+const selectedChart = ref<ChartSeries | null>(null)
+let previousBodyOverflow = ''
+const browser = globalThis as any
+
+function compactData(data: ChartDatum[], limit = 8): ChartDatum[] {
+  if (data.length <= limit) return data
+  const visible = data.slice(0, limit - 1)
+  const hidden = data.slice(limit - 1)
+  return [
+    ...visible,
+    { name: `其他 ${hidden.length} 类`, value: hidden.reduce((sum, item) => sum + item.value, 0) },
+  ]
+}
+
+const tooltipStyle = {
+  backgroundColor: 'rgba(34, 41, 77, .96)',
+  borderColor: 'rgba(213, 218, 255, .22)',
+  borderWidth: 1,
+  textStyle: { color: '#F4F5FF', fontSize: 12 },
+  extraCssText: 'box-shadow: 0 12px 34px rgba(0,0,0,.34); border-radius: 8px;',
+}
+
+function pieOption(data: ChartDatum[], expanded = false) {
+  const chartData = expanded ? data : compactData(data)
+  return {
+    backgroundColor: 'transparent',
+    color: chartColors,
+    animationDuration: 360,
+    tooltip: { trigger: 'item', formatter: '{b}<br/>正式记录：{c} 条', ...tooltipStyle },
+    legend: {
+      type: 'scroll',
+      bottom: 0,
+      textStyle: { color: '#A7AFCA', fontSize: 11 },
+      pageTextStyle: { color: '#A7AFCA' },
+      pageIconColor: '#5B6EFF',
+      pageIconInactiveColor: '#4F5878',
     },
-    axisLine: { lineStyle: { color: 'rgba(213,218,255,.18)' } },
-  },
-  yAxis: {
-    type: 'value',
-    minInterval: 1,
-    axisLabel: { color: '#A7AFCA' },
-    splitLine: { lineStyle: { color: 'rgba(213,218,255,.10)' } },
-  },
-  series: [{ type: 'bar', barMaxWidth: 42, data: data.map((item) => item.value), itemStyle: { borderRadius: [6, 6, 0, 0] } }],
-})
-const chartOption = (chart: ChartSeries) => chart.kind === 'pie' ? pieOption(chart.data) : barOption(chart.data)
+    series: [{
+      type: 'pie',
+      radius: expanded ? ['40%', '64%'] : ['46%', '68%'],
+      center: expanded ? ['50%', '43%'] : ['50%', '42%'],
+      minAngle: 3,
+      label: {
+        color: '#F4F5FF',
+        fontSize: expanded ? 12 : 11,
+        formatter: '{b}\n{c} 条',
+        lineHeight: 16,
+      },
+      labelLine: { lineStyle: { color: 'rgba(213,218,255,.42)' } },
+      emphasis: {
+        scale: true,
+        scaleSize: expanded ? 10 : 7,
+        itemStyle: { shadowBlur: 24, shadowColor: 'rgba(91,110,255,.55)' },
+      },
+      data: chartData,
+    }],
+  }
+}
+
+function barOption(data: ChartDatum[], expanded = false) {
+  const chartData = expanded ? data : compactData(data)
+  return {
+    backgroundColor: 'transparent',
+    color: ['#5B6EFF'],
+    animationDuration: 360,
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(91,110,255,.10)' } },
+      formatter: '{b}<br/>正式记录：{c} 条',
+      ...tooltipStyle,
+    },
+    grid: { left: 8, right: 28, top: 10, bottom: 8, containLabel: true },
+    xAxis: {
+      type: 'value',
+      minInterval: 1,
+      axisLabel: { color: '#A7AFCA', fontSize: 11 },
+      splitLine: { lineStyle: { color: 'rgba(213,218,255,.10)' } },
+    },
+    yAxis: {
+      type: 'category',
+      inverse: true,
+      data: chartData.map((item) => item.name),
+      axisLabel: {
+        color: '#C7CDE5',
+        fontSize: 12,
+        width: expanded ? 190 : 116,
+        overflow: 'break',
+      },
+      axisLine: { show: false },
+      axisTick: { show: false },
+    },
+    series: [{
+      type: 'bar',
+      barMaxWidth: expanded ? 28 : 22,
+      data: chartData.map((item) => item.value),
+      itemStyle: {
+        borderRadius: [0, 7, 7, 0],
+        color: {
+          type: 'linear',
+          x: 0,
+          y: 0,
+          x2: 1,
+          y2: 0,
+          colorStops: [
+            { offset: 0, color: '#4054E8' },
+            { offset: 1, color: '#7E8DFF' },
+          ],
+        },
+      },
+      emphasis: { focus: 'series', itemStyle: { color: '#9BA7FF' } },
+      blur: { itemStyle: { opacity: .35 } },
+    }],
+  }
+}
+
+const chartOption = (chart: ChartSeries, expanded = false) => chart.kind === 'pie' ? pieOption(chart.data, expanded) : barOption(chart.data, expanded)
 const chartGroups = computed(() => {
   const groups = new Map<string, ChartSeries[]>()
   for (const chart of model.value.charts) {
@@ -68,11 +145,34 @@ const chartGroups = computed(() => {
   }
   return [...groups.entries()].map(([title, charts]) => ({ title, charts }))
 })
+const expandedChartHeight = computed(() => {
+  const chart = selectedChart.value
+  if (!chart) return '560px'
+  if (chart.kind === 'pie') return `${Math.min(760, Math.max(520, chart.data.length * 26 + 240))}px`
+  return `${Math.max(520, chart.data.length * 32 + 96)}px`
+})
+
+function openChart(chart: ChartSeries) {
+  if (!chart.data.length) return
+  previousBodyOverflow = browser.document.body.style.overflow
+  browser.document.body.style.overflow = 'hidden'
+  selectedChart.value = chart
+}
+
+function closeChart() {
+  selectedChart.value = null
+  browser.document.body.style.overflow = previousBodyOverflow
+}
+
+function handleKeydown(event: { key: string }) {
+  if (event.key === 'Escape' && selectedChart.value) closeChart()
+}
 
 const loading = ref(true)
 const error = ref<string | null>(null)
 
 onMounted(async () => {
+  browser.window.addEventListener('keydown', handleKeydown)
   try {
     model.value = await loadCommandCenter(createApiClient())
   } catch (cause) {
@@ -80,6 +180,11 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+})
+
+onBeforeUnmount(() => {
+  browser.window.removeEventListener('keydown', handleKeydown)
+  browser.document.body.style.overflow = previousBodyOverflow
 })
 </script>
 
@@ -132,11 +237,26 @@ onMounted(async () => {
             :data-chart-key="chart.key"
             :data-chart-title="chart.title"
           >
-            <div class="section-head">
-              <h3>{{ chart.title }}</h3>
-              <span class="muted">{{ chart.subtitle }}</span>
+            <div class="section-head chart-panel__head">
+              <div>
+                <h3>{{ chart.title }}</h3>
+                <span class="muted">{{ chart.subtitle }}</span>
+              </div>
+              <button
+                v-if="chart.data.length"
+                class="chart-panel__expand"
+                type="button"
+                :aria-label="`放大查看${chart.title}`"
+                @click="openChart(chart)"
+              >
+                <FullScreen aria-hidden="true" />
+                <span>放大</span>
+              </button>
             </div>
-            <VChart v-if="chart.data.length" class="chart" :option="chartOption(chart)" autoresize />
+            <div v-if="chart.data.length" class="chart-panel__plot" @click="openChart(chart)">
+              <VChart class="chart" :option="chartOption(chart)" autoresize />
+              <span class="chart-panel__hint">悬停查看数值 · 点击放大</span>
+            </div>
             <p v-else class="chart-empty">暂无该分类的正式业务数据。</p>
           </article>
         </div>
@@ -156,6 +276,26 @@ onMounted(async () => {
       </section>
     </template>
   </section>
+
+  <Teleport to="body">
+    <div v-if="selectedChart" class="chart-modal" @click.self="closeChart">
+      <section class="chart-modal__panel" role="dialog" aria-modal="true" :aria-label="`${selectedChart.title}放大视图`">
+        <header class="chart-modal__header">
+          <div>
+            <p class="eyebrow">CHART DETAIL</p>
+            <h2>{{ selectedChart.title }}</h2>
+            <p class="muted">{{ selectedChart.subtitle }} · 共 {{ selectedChart.data.length }} 个分类</p>
+          </div>
+          <button class="chart-modal__close" type="button" aria-label="关闭图表放大" @click="closeChart">
+            <Close aria-hidden="true" />
+          </button>
+        </header>
+        <div class="chart-modal__plot" :style="{ height: expandedChartHeight }">
+          <VChart class="chart-modal__chart" :option="chartOption(selectedChart, true)" autoresize />
+        </div>
+      </section>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -175,16 +315,35 @@ onMounted(async () => {
 .advice-panel, .run-list, .chart-section { display: grid; gap: 12px; }
 .chart-section > .section-head h2 { margin: 2px 0 0; color: var(--mp-color-ink); font-size: 20px; }
 .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 12px; }
-.chart-panel { display: grid; align-content: start; gap: 8px; min-height: 310px; }
+.chart-panel { display: grid; align-content: start; gap: 8px; min-height: 330px; transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease, background .18s ease; }
+.chart-panel:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--mp-color-primary) 55%, var(--mp-color-hairline)); background: color-mix(in srgb, var(--mp-color-primary) 7%, var(--mp-color-surface)); box-shadow: 0 14px 34px rgba(5, 10, 32, .22); }
+.chart-panel__head { align-items: flex-start; }
+.chart-panel__head h3 { margin: 0 0 3px; color: var(--mp-color-ink); font-size: 16px; }
+.chart-panel__head .muted { display: block; max-width: none; text-align: left; }
+.chart-panel__expand { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border: 1px solid var(--mp-color-hairline); border-radius: 6px; background: rgba(255,255,255,.025); color: var(--mp-color-mute); font: inherit; font-size: 11px; cursor: pointer; transition: color .18s ease, border-color .18s ease, background .18s ease; }
+.chart-panel__expand svg { width: 13px; height: 13px; }
+.chart-panel__expand:hover { border-color: var(--mp-color-primary); background: color-mix(in srgb, var(--mp-color-primary) 13%, transparent); color: var(--mp-color-ink); }
+.chart-panel__plot { position: relative; cursor: zoom-in; border-radius: 7px; }
+.chart-panel__plot:focus-within { outline: 2px solid var(--mp-color-primary); outline-offset: 2px; }
+.chart-panel__hint { position: absolute; right: 8px; bottom: 1px; padding: 3px 7px; border-radius: 999px; background: rgba(13,15,26,.72); color: var(--mp-color-mute); font-size: 10px; opacity: 0; transform: translateY(3px); transition: opacity .18s ease, transform .18s ease; pointer-events: none; }
+.chart-panel__plot:hover .chart-panel__hint { opacity: 1; transform: translateY(0); }
 .chart { width: 100%; height: 250px; }
 .chart-empty { display: grid; min-height: 190px; margin: 0; place-items: center; color: var(--mp-color-mute); font-size: 13px; text-align: center; }
-.section-head h3 { margin: 0; color: var(--mp-color-ink); font-size: 16px; }
-.section-head .muted { max-width: 58%; text-align: right; }
-.advice-panel p { margin: 0; color: var(--mp-color-body); font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
 .section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .section-head h2 { margin: 0; color: var(--mp-color-ink); font-size: 17px; }
+.advice-panel p { margin: 0; color: var(--mp-color-body); font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
 .allowed-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.chart-modal { position: fixed; z-index: 3000; inset: 0; display: grid; overflow: auto; padding: 28px; place-items: center; background: rgba(5, 8, 22, .76); backdrop-filter: blur(12px); }
+.chart-modal__panel { width: min(1180px, 96vw); max-height: 92vh; overflow: auto; border: 1px solid var(--mp-color-hairline-strong); border-radius: 12px; background: var(--mp-color-surface-elevated); box-shadow: 0 30px 90px rgba(0,0,0,.55); }
+.chart-modal__header { position: sticky; z-index: 1; top: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 20px 22px; border-bottom: 1px solid var(--mp-color-hairline); background: color-mix(in srgb, var(--mp-color-surface-elevated) 94%, transparent); backdrop-filter: blur(12px); }
+.chart-modal__header h2 { margin: 5px 0 4px; color: var(--mp-color-ink); font-size: 23px; }
+.chart-modal__header .muted { margin: 0; }
+.chart-modal__close { display: grid; flex: 0 0 auto; width: 36px; height: 36px; border: 1px solid var(--mp-color-hairline); border-radius: 8px; background: rgba(255,255,255,.03); color: var(--mp-color-body); cursor: pointer; place-items: center; transition: color .18s ease, border-color .18s ease, background .18s ease; }
+.chart-modal__close svg { width: 18px; height: 18px; }
+.chart-modal__close:hover { border-color: var(--mp-color-primary); background: color-mix(in srgb, var(--mp-color-primary) 14%, transparent); color: var(--mp-color-ink); }
+.chart-modal__plot { width: 100%; min-height: 520px; padding: 12px 14px 18px; }
+.chart-modal__chart { width: 100%; height: 100%; }
 @media (max-width: 1180px) { .metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 900px) { .command-center__header, .next-action { flex-direction: column; } .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .chart-grid { grid-template-columns: 1fr; } }
-@media (max-width: 560px) { .metric-grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .command-center__header, .next-action { flex-direction: column; } .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .chart-grid { grid-template-columns: 1fr; } .chart-modal { padding: 12px; } .chart-modal__panel { width: 100%; max-height: 96vh; } }
+@media (max-width: 560px) { .metric-grid { grid-template-columns: 1fr; } .chart-modal__header { padding: 16px; } .chart-modal__header h2 { font-size: 20px; } .chart-modal__plot { min-height: 480px; padding-inline: 6px; } }
 </style>
