@@ -57,6 +57,28 @@ RUN OPENAPI_FILE=/tmp/openapi.json pnpm build && \
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Optional offline frontend build — uses dependency cache only, never prebuilt app output
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FROM ${NODE_IMAGE} AS frontend-builder-offline
+WORKDIR /frontend
+COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml frontend/.npmrc frontend/tsconfig.json frontend/vite.shared.ts frontend/vitest.config.ts frontend/eslint.config.js ./
+COPY frontend/apps ./apps
+COPY frontend/packages ./packages
+COPY frontend/scripts ./scripts
+COPY offline/node_modules.tar.gz /tmp/node_modules.tar.gz
+COPY offline/openapi.json /tmp/openapi.json
+RUN tar -xzf /tmp/node_modules.tar.gz -C /frontend && \
+    OPENAPI_FILE=/tmp/openapi.json node scripts/generate-openapi-types.mjs --check && \
+    (cd apps/console && node ../../node_modules/vite/bin/vite.js build) && \
+    (cd apps/field && node ../../node_modules/vite/bin/vite.js build) && \
+    (cd apps/integration && node ../../node_modules/vite/bin/vite.js build) && \
+    (cd apps/operations && node ../../node_modules/vite/bin/vite.js build) && \
+    test -f /static/client/console/index.html && \
+    test -f /static/client/field/index.html && \
+    test -f /static/client/integration/index.html && \
+    test -f /static/client/operations/index.html
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Stage 3: runtime — 最终运行镜像，尽可能精简
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FROM ${PYTHON_BASE_IMAGE} AS runtime
