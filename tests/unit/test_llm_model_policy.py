@@ -92,3 +92,54 @@ async def test_mock_call_is_explicitly_recorded_for_non_production_tests(tmp_pat
     assert evidence["agent_id"] == "Router"
     assert evidence["agent_name"] == "Router_Agent"
     await db.close()
+
+@pytest.mark.asyncio
+async def test_watcher_direct_call_is_blocked_by_global_daily_quota(tmp_path, monkeypatch):
+    import time
+
+    monkeypatch.setenv("APP_ENV", "test")
+    monkeypatch.delenv("MOCK_LLM", raising=False)
+    monkeypatch.setenv("SCENIC_AGENT_DAILY_TOKEN_LIMIT", "1000")
+    db = AsyncDBClient(tmp_path / "global-quota.db")
+    await init_database(db)
+    await db.execute(
+        """
+        INSERT INTO llm_call_logs (
+            id, venue_id, trace_id, agent_id, agent_name, provider, model_name,
+            status, attempt_count, latency_seconds, prompt_tokens,
+            completion_tokens, total_tokens, request_id, is_mock, created_at
+        ) VALUES (?, ?, ?, ?, ?, 'deepseek', ?, 'SUCCEEDED', 1, 1.0, ?, ?, ?, 'req', 0, ?)
+        """,
+        (
+            "quota-used",
+            "venue-global-quota",
+            "a" * 32,
+            "Watcher",
+            "Watcher_Audit_Agent",
+            REQUIRED_GENERATIVE_MODEL,
+            1000,
+            0,
+            1000,
+            time.time(),
+        ),
+    )
+    client = LLMClient()
+    client.set_database(db)
+
+    async def must_not_call_provider():
+        raise AssertionError("provider must not be called after quota exhaustion")
+
+    monkeypatch.setattr(client, "get_client", must_not_call_provider)
+
+    with pytest.raises(RuntimeError, match="QUOTA_EXCEEDED"):
+        await client.ask(
+            system_prompt="audit",
+            user_prompt="batch",
+            json_mode=True,
+            trace_id="b" * 32,
+            venue_id="venue-global-quota",
+            agent_id="Watcher",
+            agent_name="Watcher_Audit_Agent",
+        )
+
+    await db.close()

@@ -133,6 +133,32 @@ class LLMClient:
             raise ValueError("正式环境禁止启用 MOCK_LLM")
         return enabled
 
+    async def _enforce_daily_token_quota(
+        self,
+        *,
+        venue_id: str,
+        trace_id: str,
+        agent_id: str,
+    ) -> None:
+        """Apply the venue-wide daily quota to every direct LLM entry point."""
+        if self._database is None:
+            return
+        from ..incident.model_policy import DatabaseModelPreflight
+
+        quota = await DatabaseModelPreflight(self._database).quota_status(
+            venue_id=venue_id
+        )
+        if quota.get("status") == "EXHAUSTED":
+            logger.warning(
+                "[Trace-{}] 全局 token 配额已用尽，拒绝调用 {}（agent={}，used={}/{}）",
+                trace_id,
+                REQUIRED_GENERATIVE_MODEL,
+                agent_id or "unknown",
+                quota.get("used_tokens"),
+                quota.get("limit_tokens"),
+            )
+            raise RuntimeError("QUOTA_EXCEEDED: 今日模型 token 配额已用尽")
+
     ### CHANGE: 改为 async 方法，返回 AsyncOpenAI
     async def get_client(self) -> AsyncOpenAI:
         """获取或初始化异步 OpenAI 客户端（单例懒加载）"""
@@ -255,6 +281,12 @@ class LLMClient:
                 is_mock=True,
             )
             return response
+
+        await self._enforce_daily_token_quota(
+            venue_id=venue_id,
+            trace_id=trace_id,
+            agent_id=agent_id,
+        )
 
         messages = [
             {"role": "system", "content": system_prompt},
@@ -440,6 +472,12 @@ class LLMClient:
                 is_mock=True,
             )
             return response
+
+        await self._enforce_daily_token_quota(
+            venue_id=venue_id,
+            trace_id=trace_id,
+            agent_id=agent_id,
+        )
 
         messages = [
             {"role": "system", "content": system_prompt}
