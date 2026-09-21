@@ -14,6 +14,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 import time
@@ -90,7 +91,7 @@ def export_offline_inputs(repo_root: Path, image: str, target_dir: Path, log: li
     created = run(
         [
             "docker", "create", image, "sh", "-lc",
-            "tar -C /frontend -czf /tmp/node_modules.tar.gz node_modules && test -f /tmp/openapi.json",
+            "tar -C /frontend -czf /tmp/node_modules.tar.gz node_modules",
         ],
         cwd=repo_root,
         log=log,
@@ -98,7 +99,7 @@ def export_offline_inputs(repo_root: Path, image: str, target_dir: Path, log: li
     try:
         run(["docker", "start", "-a", created], cwd=repo_root, log=log)
         run(["docker", "cp", f"{created}:/tmp/node_modules.tar.gz", str(target_dir / "node_modules.tar.gz")], cwd=repo_root, log=log)
-        run(["docker", "cp", f"{created}:/tmp/openapi.json", str(target_dir / "openapi.json")], cwd=repo_root, log=log)
+        run([sys.executable, "scripts/export_openapi.py", str(target_dir / "openapi.json")], cwd=repo_root, log=log)
     finally:
         subprocess.run(["docker", "rm", "-f", created], cwd=repo_root, capture_output=True, text=True)
 

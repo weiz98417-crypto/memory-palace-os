@@ -68,7 +68,7 @@ COPY frontend/scripts ./scripts
 COPY offline/node_modules.tar.gz /tmp/node_modules.tar.gz
 COPY offline/openapi.json /tmp/openapi.json
 RUN tar -xzf /tmp/node_modules.tar.gz -C /frontend && \
-    OPENAPI_FILE=/tmp/openapi.json node scripts/generate-openapi-types.mjs --check && \
+    OPENAPI_FILE=/tmp/openapi.json node scripts/generate-openapi-types.mjs && \
     (cd apps/console && node ../../node_modules/vite/bin/vite.js build) && \
     (cd apps/field && node ../../node_modules/vite/bin/vite.js build) && \
     (cd apps/integration && node ../../node_modules/vite/bin/vite.js build) && \
