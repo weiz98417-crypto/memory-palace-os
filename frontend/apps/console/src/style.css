@@ -77,17 +77,12 @@ body {
   position: relative;
 }
 .modal-close {
-  position: sticky;
-  z-index: 3;
-  top: 12px;
-  float: right;
-  margin: 12px 12px 0 0;
   min-height: 34px;
   padding: 6px 11px;
   border: 1px solid var(--mp-color-hairline-strong);
   border-radius: 9px;
   color: var(--mp-color-body);
-  background: color-mix(in srgb, var(--mp-color-surface-elevated) 92%, transparent);
+  background: color-mix(in srgb, var(--mp-color-surface) 92%, transparent);
   cursor: pointer;
 }
 .modal-close:hover {

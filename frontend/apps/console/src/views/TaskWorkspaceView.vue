@@ -53,6 +53,9 @@ function statusTone(status: string): 'success' | 'warning' | 'danger' | 'neutral
   if (status === 'FAILED') return 'danger'
   return 'neutral'
 }
+function formatTime(value?: number): string {
+  return value ? new Date(value * 1000).toLocaleString('zh-CN', { hour12: false }) : '—'
+}
 function resultRows(value: unknown): Array<{ label: string; value: string }> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return []
   return Object.entries(value as Record<string, unknown>).map(([label, item]) => ({
@@ -210,11 +213,29 @@ onMounted(load)
           <button v-if="selected.status === 'FAILED'" :disabled="busy" @click="action(selected, 'retry')">恢复</button>
         </template>
       </TaskCard>
+      <section class="task-facts">
+        <div class="wide"><span>任务描述</span><strong>{{ selected.description || '—' }}</strong></div>
+        <div><span>任务编号</span><strong class="mono">{{ selected.business_id || selected.id }}</strong></div>
+        <div><span>当前状态</span><strong>{{ selected.status || 'PENDING' }}</strong></div>
+        <div><span>负责人</span><strong>{{ assigneeName(selected.assigned_user_id) }}</strong></div>
+        <div><span>关联事件</span><strong class="mono">{{ selected.event_id || '—' }}</strong></div>
+        <div><span>关联会话</span><strong class="mono">{{ selected.session_id || '—' }}</strong></div>
+        <div><span>依赖任务</span><strong>{{ (selected.dependencies || []).join('、') || '无' }}</strong></div>
+        <div><span>尝试次数</span><strong>{{ selected.attempts || 0 }} / {{ selected.max_attempts || 3 }}</strong></div>
+        <div><span>截止时间</span><strong>{{ formatTime(selected.due_at) }}</strong></div>
+        <div><span>创建时间</span><strong>{{ formatTime(selected.created_at) }}</strong></div>
+        <div><span>更新时间</span><strong>{{ formatTime(selected.updated_at) }}</strong></div>
+        <div class="wide" v-if="selected.block_reason"><span>阻塞原因</span><strong>{{ selected.block_reason }}</strong></div>
+        <div class="wide" v-if="selected.error"><span>错误信息</span><strong>{{ selected.error }}</strong></div>
+      </section>
+      <section v-if="resultRows(selected.result).length" class="result-section">
+        <h3>执行结果</h3>
+        <dl class="result-grid"><div v-for="row in resultRows(selected.result)" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div></dl>
+      </section>
       <div v-if="selected.status === 'RUNNING'" class="action-inputs">
         <textarea v-model="completeSummary" rows="2" placeholder="完成结果"></textarea>
         <textarea v-model="failureReason" rows="2" placeholder="失败原因"></textarea>
       </div>
-      <dl v-if="resultRows(selected.result).length" class="result-grid"><div v-for="row in resultRows(selected.result)" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div></dl>
     </article>
     </ModalShell>
   </section>
@@ -241,6 +262,14 @@ th, td { padding: 10px 8px; border-bottom: 1px solid var(--mp-color-hairline); t
 th { color: var(--mp-color-mute); font-weight: 500; }
 td small { display: block; margin-top: 3px; color: var(--mp-color-mute); font-family: var(--mp-font-mono); }
 .detail { max-width: 900px; }
+.task-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 14px; border: 1px solid var(--mp-color-hairline); border-radius: var(--mp-radius-md); background: color-mix(in srgb, var(--mp-color-surface-elevated) 54%, transparent); }
+.task-facts > div { display: grid; gap: 4px; min-width: 0; }
+.task-facts .wide { grid-column: 1 / -1; }
+.task-facts span, .result-section h3 { color: var(--mp-color-mute); font-size: 12px; }
+.task-facts strong { color: var(--mp-color-body); font-size: 13px; overflow-wrap: anywhere; }
+.mono { font-family: var(--mp-font-mono); }
+.result-section { display: grid; gap: 8px; }
+.result-section h3 { margin: 0; font-size: 14px; }
 .action-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
 .result-grid div { display: grid; gap: 3px; }

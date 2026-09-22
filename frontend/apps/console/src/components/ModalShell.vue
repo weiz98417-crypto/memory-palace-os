@@ -16,8 +16,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   <Teleport to="body">
     <div class="modal-backdrop" role="presentation">
       <section class="modal-surface" role="dialog" aria-modal="true" :aria-label="label">
-        <button class="modal-close" type="button" aria-label="关闭弹窗" @click="emit('close')">关闭</button>
-        <slot />
+        <header class="modal-shell__bar">
+          <strong>{{ label }}</strong>
+          <button class="modal-close" type="button" aria-label="关闭弹窗" @click="emit('close')">关闭</button>
+        </header>
+        <div class="modal-body"><slot /></div>
       </section>
     </div>
   </Teleport>
