@@ -537,7 +537,10 @@ class Orchestrator:
                     "reply_text": (
                         None
                         if target_agent
-                        else self._general_assistant_reply(intent)
+                        else self._general_assistant_reply(
+                            intent,
+                            sd.get("reply_text") or result.reply_text,
+                        )
                     ),
                     "from_user": payload.get("from_user", "unknown"),
                     "content": raw_text,
@@ -581,7 +584,10 @@ class Orchestrator:
         return intent_agent_map.get(intent)
 
     @staticmethod
-    def _general_assistant_reply(intent: str) -> str:
+    def _general_assistant_reply(intent: str, reply_text: Optional[str] = None) -> str:
+        candidate = str(reply_text or "").strip()
+        if candidate:
+            return candidate
         if intent == "chitchat":
             return (
                 "你好，我是企业运营助手。你可以直接上报现场事件、查询已发布知识与"

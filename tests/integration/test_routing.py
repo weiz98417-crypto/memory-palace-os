@@ -64,6 +64,52 @@ class TestRouting:
         execute_agent.assert_not_called()
 
     @pytest.mark.asyncio
+    async def test_general_answer_uses_router_reply_without_business_agent(self):
+        """通用问答直接返回模型答案，不调用 Persona 或业务 Agent。"""
+
+        router_output = SkillOutput(
+            success=True,
+            structured_data={
+                "intent": "chitchat",
+                "severity": "P4",
+                "confidence": 0.99,
+                "reply_text": "2",
+            },
+            action_taken="llm_semantic_analysis",
+        )
+
+        def get_skill(name):
+            if name == "context_trigger":
+                m = MagicMock()
+                m.run = AsyncMock(return_value=SkillOutput(
+                    success=True,
+                    structured_data={"should_trigger": False, "excluded": False},
+                    action_taken="passive",
+                ))
+                return m
+            if name == "router":
+                m = MagicMock()
+                m.run = AsyncMock(return_value=router_output)
+                return m
+            return None
+
+        orch = Orchestrator()
+        with patch.object(orch, "_save_message", new_callable=AsyncMock):
+            with patch.object(orch, "_execute_agent", new_callable=AsyncMock) as execute_agent:
+                with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
+                    result = await orch.process({
+                        "msg_id": "route_general_001",
+                        "trace_id": "trace_general",
+                        "from_user": "employee_a",
+                        "content": "1+1等于几",
+                    })
+
+        assert result["status"] == "processed"
+        assert result["route"]["target_agent"] is None
+        assert result["reply_text"] == "2"
+        execute_agent.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_default_route_fails_closed_without_persona_extract(self):
         """路由不可用时返回可恢复失败，不启动经验萃取。"""
 

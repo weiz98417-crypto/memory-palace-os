@@ -54,6 +54,30 @@ def authorized_persona_context():
 
 
 @pytest.mark.asyncio
+async def test_router_preserves_general_answer_from_chitchat(monkeypatch):
+    client = MagicMock()
+    client.ask = AsyncMock(return_value=MagicMock(content='{}', tokens_used=12))
+    client.parse_json = AsyncMock(return_value={
+        "intent": "chitchat",
+        "severity": "P4",
+        "summary": "简单算术",
+        "is_critical": False,
+        "confidence": 0.99,
+        "reply_text": "2",
+    })
+    monkeypatch.setattr("src.memory_palace.skills.router.skill.llm_client", client)
+
+    output = await RouterSkill().run(
+        {"raw_text": "1+1等于几", "venue_id": "venue-a"},
+        trace_id="trace-router-general-answer",
+    )
+
+    assert output.success is True
+    assert output.structured_data["intent"] == "chitchat"
+    assert output.structured_data["reply_text"] == "2"
+
+
+@pytest.mark.asyncio
 async def test_router_fails_when_llm_client_is_unavailable(monkeypatch):
     monkeypatch.setattr("src.memory_palace.skills.router.skill.llm_client", None)
     skill = RouterSkill()

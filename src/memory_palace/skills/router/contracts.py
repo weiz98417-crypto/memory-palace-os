@@ -29,6 +29,7 @@ class RouterOutput(ContractModel):
     confidence: float = Field(ge=0.0, le=1.0)
     risk_reason: str
     risk_codes: list[str] = Field(default_factory=list)
+    reply_text: str | None = None
 
 
 __all__ = ["RouterInput", "RouterOutput"]
