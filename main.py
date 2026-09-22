@@ -593,7 +593,7 @@ async def readiness_check():
 async def health_check():
     """
     Kubernetes / Docker 健康探针端点。
-    返回队列积压深度，便于运维监控。
+    返回队列积压深度、容量模式和队列后端，便于运维监控。Redis Streams 没有固定 maxsize，容量字段为 null 时以 queue_capacity_mode=unbounded 表示。
     """
     runtime_queue = getattr(app.state, "message_queue", IN_MEMORY_QUEUE)
     if hasattr(runtime_queue, "get_depth"):
@@ -601,10 +601,13 @@ async def health_check():
     else:
         queue_size = runtime_queue.qsize()
     status = "degraded" if queue_size > 500 else "ok"
+    queue_capacity = getattr(runtime_queue, "maxsize", None)
     return {
         "status": status,
         "queue_depth": queue_size,
-        "queue_capacity": getattr(runtime_queue, "maxsize", None),
+        "queue_capacity": queue_capacity,
+        "queue_capacity_mode": "bounded" if queue_capacity is not None else "unbounded",
+        "queue_backend": getattr(runtime_queue, "backend_name", type(runtime_queue).__name__),
     }
 
 
