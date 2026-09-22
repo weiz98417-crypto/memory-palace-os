@@ -2653,7 +2653,7 @@ export interface paths {
         /**
          * Health Check
          * @description Kubernetes / Docker 健康探针端点。
-         *     返回队列积压深度，便于运维监控。
+         *     返回队列积压深度、容量模式和队列后端，便于运维监控。Redis Streams 没有固定 maxsize，容量字段为 null 时以 queue_capacity_mode=unbounded 表示。
          */
         get: operations["health_check_health_get"];
         put?: never;

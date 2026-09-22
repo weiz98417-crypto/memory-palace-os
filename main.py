@@ -23,8 +23,8 @@ from pathlib import Path
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from src.memory_palace.api.static_frontend import mount_frontend_v2
 from loguru import logger
@@ -590,7 +590,7 @@ async def readiness_check():
 
 
 @app.get("/health", tags=["运维"])
-async def health_check():
+async def health_check(request: Request):
     """
     Kubernetes / Docker 健康探针端点。
     返回队列积压深度、容量模式和队列后端，便于运维监控。Redis Streams 没有固定 maxsize，容量字段为 null 时以 queue_capacity_mode=unbounded 表示。
@@ -602,13 +602,18 @@ async def health_check():
         queue_size = runtime_queue.qsize()
     status = "degraded" if queue_size > 500 else "ok"
     queue_capacity = getattr(runtime_queue, "maxsize", None)
-    return {
+    payload = {
         "status": status,
         "queue_depth": queue_size,
         "queue_capacity": queue_capacity,
         "queue_capacity_mode": "bounded" if queue_capacity is not None else "unbounded",
         "queue_backend": getattr(runtime_queue, "backend_name", type(runtime_queue).__name__),
     }
+    from src.memory_palace.core.health_page import accepts_html, render_health_status_page
+
+    if request.query_params.get("format") != "json" and accepts_html(request.headers.get("accept", "")):
+        return HTMLResponse(render_health_status_page(payload))
+    return payload
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
