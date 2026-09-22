@@ -12,7 +12,8 @@
 | 内部系统接入环境 | `/simulator/wecom/` —— 内部通知与回执 |
 | 受保护运行准备 | `/operations/scenic/` —— 仅 `simulation-ops`，仅本机/受信入口 |
 | 账号 | `simulation-ops`、`wangfang`、`liming`、`chenyu` |
-| 密码 | 由 `SCENIC_ACCOUNT_PASSWORD`（容器为 secret 卷）统一设置，不写入文档与截图 |
+| 业务账号统一密码 | `Scenic-E2E-Users-2026!`（仅本机演示，发布前必须移除） |
+| Hatchet 账号 | `admin@example.com` / `Admin123!!`（仅本机 quickstart） |
 
 启动演示环境（Docker 栈，完整 Agent + Hatchet + Jaeger）：
 
