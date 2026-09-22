@@ -8,7 +8,8 @@
 | --- | --- | --- |
 | `ghcr.io/huggingface/text-embeddings-inference` | `cpu-1.9.4` | bge-m3 嵌入、bge-reranker-base 重排 |
 | `ghcr.io/hatchet-dev/hatchet/hatchet-engine` | `v0.107.1` | 持久化运行时引擎 |
-| `ghcr.io/hatchet-dev/hatchet/hatchet-api` | `v0.107.1` | 运行视图/API |
+| `ghcr.io/hatchet-dev/hatchet/hatchet-api` | `v0.107.1` | 内部运行 API |
+| `ghcr.io/hatchet-dev/hatchet/hatchet-dashboard` | `v0.107.1` | Hatchet UI 与同源 API 代理 |
 | `ghcr.io/hatchet-dev/hatchet/hatchet-migrate` | `v0.107.1` | 一次性数据库迁移 |
 | `ghcr.io/hatchet-dev/hatchet/hatchet-admin` | `v0.107.1` | 一次性配置初始化 |
 | `jaegertracing/all-in-one` | `1.62.0` | OTLP 追踪查看 |
@@ -27,7 +28,7 @@ Hatchet 的 SDK 版本与 engine/API 版本独立。Python worker 使用 `hatche
 | 默认 | `tei-embedding` | bge-m3 向量服务；与 app 同栈常驻（app 镜像已去 torch，ADR-0020） |
 | `tei-reranker` | `tei-reranker` | bge-reranker-base 重排；`max-batch-tokens=1024` |
 | `rerank-v2` | `tei-reranker-v2` | 可选更强 bge-reranker-v2-m3；与 base reranker 互斥，需 8GB 预算 |
-| `agent-runtime` | `hatchet-postgres`、`hatchet-migrate`、`hatchet-admin`、`hatchet-token`、`hatchet-engine`、`hatchet-api`、`scenic-agent-prototype` | Hatchet split 运行栈 + 票 08 prototype worker；迁移和 quickstart 是一次性 job，正式 worker 仍由后续实现接入 |
+| `agent-runtime` | `hatchet-postgres`、`hatchet-migrate`、`hatchet-admin`、`hatchet-token`、`hatchet-engine`、`hatchet-api`、`hatchet-dashboard`、`scenic-agent-prototype` | Hatchet split 运行栈 + 票 08 prototype worker；迁移和 quickstart 是一次性 job，正式 worker 仍由后续实现接入 |
 | `tracing` | `jaeger` | OTLP 追踪；缺它不影响业务事实和关闭门禁 |
 
 命令（使用与运行文档一致的 8090 业务端口，避让本机 8080）：
@@ -81,7 +82,7 @@ HATCHET_HEALTH_URL=http://hatchet-engine:8733/ready
 JAEGER_HEALTH_URL=http://jaeger:14269/
 ```
 
-Hatchet engine 自身暴露 `http://hatchet-engine:8733/ready`，API 暴露 `http://localhost:8091/api/live`。Jaeger UI 默认 `http://localhost:16686`，OTLP HTTP 为 `4318`，gRPC 为 `4317`。
+Hatchet engine 自身暴露 `http://hatchet-engine:8733/ready`，内部 API 暴露 `http://hatchet-api:8080/api/live`；浏览器运行历史入口是 `http://127.0.0.1:8091/`。Jaeger UI 默认 `http://localhost:16686`，OTLP HTTP 为 `4318`，gRPC 为 `4317`。
 
 ## 4. 离线准备
 

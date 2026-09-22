@@ -19,7 +19,7 @@ if ($gateway) { $env:SCENIC_PREP_ALLOWED_HOSTS = Merge-ScenicAllowedHosts -Gatew
 
 $arguments = @('up', '-d')
 if (-not $NoBuild) { $arguments += '--build' }
-$arguments += @('app', 'nginx', 'scenic-agent-worker', 'hatchet-api', 'jaeger')
+$arguments += @('app', 'nginx', 'scenic-agent-worker', 'hatchet-api', 'hatchet-dashboard', 'jaeger')
 
 Write-Host "Starting scenic demo stack ($script:ScenicProjectName)..." -ForegroundColor Cyan
 Invoke-ScenicCompose -Arguments $arguments

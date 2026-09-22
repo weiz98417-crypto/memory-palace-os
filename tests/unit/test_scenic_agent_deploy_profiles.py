@@ -28,6 +28,7 @@ def test_default_services_and_optional_profiles_are_explicit():
         "hatchet-admin": ["agent-runtime"],
         "hatchet-engine": ["agent-runtime"],
         "hatchet-api": ["agent-runtime"],
+        "hatchet-dashboard": ["agent-runtime"],
         "jaeger": ["tracing"],
     }
     for service, profiles in expected_profiles.items():
@@ -60,12 +61,19 @@ def test_hatchet_profile_is_split_and_migration_precedes_engine_and_api():
     assert services["hatchet-admin"]["depends_on"]["hatchet-migrate"]["condition"] == "service_completed_successfully"
     assert services["hatchet-engine"]["depends_on"]["hatchet-admin"]["condition"] == "service_completed_successfully"
     assert services["hatchet-api"]["depends_on"]["hatchet-admin"]["condition"] == "service_completed_successfully"
+    assert services["hatchet-dashboard"]["depends_on"]["hatchet-admin"]["condition"] == "service_completed_successfully"
+    assert services["hatchet-dashboard"]["depends_on"]["hatchet-engine"]["condition"] == "service_healthy"
     assert "hatchet-lite" not in services
 
     engine_health = services["hatchet-engine"]["healthcheck"]["test"]
     api_health = services["hatchet-api"]["healthcheck"]["test"]
     assert any("/ready" in item for item in engine_health)
     assert any("/api/live" in item for item in api_health)
+
+    assert "ports" not in services["hatchet-api"]
+    dashboard_port = services["hatchet-dashboard"]["ports"][0]
+    assert dashboard_port.endswith(":80")
+    assert "8091" in dashboard_port
 
 
 def test_jaeger_profile_exposes_otlp_and_has_healthcheck():

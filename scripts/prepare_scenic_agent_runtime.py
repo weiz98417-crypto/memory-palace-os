@@ -18,6 +18,7 @@ IMAGE_SPECS = (
     TEI_IMAGE,
     f"ghcr.io/hatchet-dev/hatchet/hatchet-engine:{HATCHET_REVISION}",
     f"ghcr.io/hatchet-dev/hatchet/hatchet-api:{HATCHET_REVISION}",
+    f"ghcr.io/hatchet-dev/hatchet/hatchet-dashboard:{HATCHET_REVISION}",
     f"ghcr.io/hatchet-dev/hatchet/hatchet-migrate:{HATCHET_REVISION}",
     f"ghcr.io/hatchet-dev/hatchet/hatchet-admin:{HATCHET_REVISION}",
     "jaegertracing/all-in-one:1.62.0",

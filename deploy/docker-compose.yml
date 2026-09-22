@@ -453,13 +453,46 @@ services:
         condition: service_completed_successfully
       hatchet-engine:
         condition: service_healthy
-    ports:
-      - "127.0.0.1:${HATCHET_HTTP_PORT:-8091}:8080"
+    expose:
+      - "8080"
     networks:
       - agent-plane
       - egress
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/api/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+
+  hatchet-dashboard:
+    image: ghcr.io/hatchet-dev/hatchet/hatchet-dashboard:v0.107.1
+    profiles: ["agent-runtime"]
+    restart: unless-stopped
+    command: ["sh", "./entrypoint.sh", "--config", "/hatchet/config"]
+    environment:
+      DATABASE_URL: postgresql://${HATCHET_POSTGRES_USER:-hatchet}:${HATCHET_POSTGRES_PASSWORD:-hatchet-local}@hatchet-postgres:5432/${HATCHET_POSTGRES_DB:-hatchet}?sslmode=disable
+      SERVER_URL: ${HATCHET_DASHBOARD_URL:-http://127.0.0.1:8091}
+      SERVER_AUTH_COOKIE_DOMAIN: ${HATCHET_AUTH_COOKIE_DOMAIN:-127.0.0.1}
+      SERVER_AUTH_COOKIE_INSECURE: "true"
+      SERVER_MSGQUEUE_KIND: postgres
+      SERVER_SECURITY_CHECK_ENABLED: "false"
+    volumes:
+      - hatchet-config:/hatchet/config:ro
+    depends_on:
+      hatchet-admin:
+        condition: service_completed_successfully
+      hatchet-engine:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${HATCHET_HTTP_PORT:-8091}:80"
+    networks:
+      - agent-plane
+      - egress
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/"]
       interval: 10s
       timeout: 5s
       retries: 10

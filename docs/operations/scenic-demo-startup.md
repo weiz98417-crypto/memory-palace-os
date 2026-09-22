@@ -10,7 +10,7 @@
 | --- | --- | --- | --- |
 | 应用 API | `app` | 鉴权、事件、任务、审批、Agent 命令 | 由 nginx 统一代理 |
 | 异步 Agent worker | `scenic-agent-worker` | 执行 Hatchet 工作流和真实模型建议 | 无直接页面 |
-| Hatchet | `hatchet-postgres`、`hatchet-migrate`、`hatchet-admin`、`hatchet-token`、`hatchet-engine`、`hatchet-api` | 持久化工作流、人工中断和历史 | `/`，端口 `8091` |
+| Hatchet | `hatchet-postgres`、`hatchet-migrate`、`hatchet-admin`、`hatchet-token`、`hatchet-engine`、`hatchet-api`、`hatchet-dashboard` | 持久化工作流、人工中断和历史 | http://127.0.0.1:8091/ |
 | PostgreSQL + pgvector | `postgres` | SOP、事件、卷宗、任务、审批、调用记录的唯一事实源 | 无直接页面 |
 | Redis | `redis` | 消息和运行队列 | 无直接页面 |
 | TEI embedding | `tei-embedding` | `bge-m3` 1024 维向量检索 | 端口 `18000` |

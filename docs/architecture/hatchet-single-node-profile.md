@@ -10,10 +10,11 @@
   - `ghcr.io/hatchet-dev/hatchet/hatchet-lite:v0.107.1`
   - `ghcr.io/hatchet-dev/hatchet/hatchet-engine:v0.107.1`
   - `ghcr.io/hatchet-dev/hatchet/hatchet-api:v0.107.1`
+  - `ghcr.io/hatchet-dev/hatchet/hatchet-dashboard:v0.107.1`
   - `ghcr.io/hatchet-dev/hatchet/hatchet-migrate:v0.107.1`
   - `ghcr.io/hatchet-dev/hatchet/hatchet-admin:v0.107.1`
 
-`hatchet-lite` 把 API、engine、静态 UI 和一个自动 bootstrap entrypoint 放在同一进程；生产语义应优先使用 `hatchet-engine + hatchet-api + hatchet-migrate + hatchet-admin`，把迁移与管理初始化作为一次性 job。
+`hatchet-lite` 把 API、engine、静态 UI 和一个自动 bootstrap entrypoint 放在同一进程；生产语义应优先使用 `hatchet-engine + hatchet-api + hatchet-dashboard + hatchet-migrate + hatchet-admin`，把迁移与管理初始化作为一次性 job。
 
 ## 资源画像
 
