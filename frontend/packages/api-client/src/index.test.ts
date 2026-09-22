@@ -32,6 +32,15 @@ describe('api-client session seam', () => {
     expect(client.auth.read()).toEqual(session().user)
     expect(client.auth.read()).not.toHaveProperty('access_token')
   })
+
+  it('isolates sessions by storage key prefix', () => {
+    const storage = createMemoryStorage(session(), 'mp_operations_')
+    const client = createApiClient({ storage, storageKeyPrefix: 'mp_operations_' })
+
+    expect(client.auth.read()).toEqual(session().user)
+    client.auth.clear()
+    expect(storage.getItem('mp_operations_user')).toBeNull()
+  })
 })
 
 describe('api-client request behaviour', () => {

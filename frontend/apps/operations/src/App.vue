@@ -6,7 +6,7 @@ import { AppShell, LoginShell, NavRail } from '@memory-palace/domain-ui'
 import { Calendar, DataAnalysis } from '@element-plus/icons-vue'
 const loginBackground = '/shared/login-backgrounds/operations.webp'
 
-const client = createApiClient()
+const client = createApiClient({ storageKeyPrefix: 'mp_operations_' })
 const session = ref<any>(client.auth.read())
 const username = ref('simulation-ops')
 const password = ref('')

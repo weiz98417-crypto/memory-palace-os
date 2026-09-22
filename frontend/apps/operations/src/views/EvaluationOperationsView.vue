@@ -18,7 +18,7 @@ import {
 } from '../operations'
 
 const props = defineProps<{ client?: RequestClient }>()
-const client = props.client || createApiClient()
+const client = props.client || createApiClient({ storageKeyPrefix: 'mp_operations_' })
 const runs = ref<EvaluationRun[]>([])
 const selected = ref<EvaluationRun | null>(null)
 const tier = ref('')

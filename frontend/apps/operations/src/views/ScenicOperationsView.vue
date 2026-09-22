@@ -12,7 +12,7 @@ import {
 } from '../operations'
 
 const props = defineProps<{ client?: OperationsClient }>()
-const client = props.client || createApiClient()
+const client = props.client || createApiClient({ storageKeyPrefix: 'mp_operations_' })
 const session = ref<any>(client.auth.read())
 const authenticated = computed(() => session.value?.username === 'simulation-ops')
 const username = ref('simulation-ops')

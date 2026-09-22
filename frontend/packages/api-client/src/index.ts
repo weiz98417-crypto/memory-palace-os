@@ -8,6 +8,14 @@ const STORAGE_KEYS = {
   user: 'mp_user',
 } as const
 
+function storageKeys(prefix: string) {
+  return {
+    accessToken: `${prefix}access_token`,
+    refreshToken: `${prefix}refresh_token`,
+    user: `${prefix}user`,
+  } as const
+}
+
 export type SessionUser = components['schemas']['UserIdentity']
 export type SessionPayload = Pick<
   components['schemas']['TokenResponse'],
@@ -33,6 +41,7 @@ export interface SseSubscription {
 
 export interface ApiClientOptions {
   baseUrl?: string
+  storageKeyPrefix?: string
   fetch?: typeof fetch
   storage?: StorageLike
   idempotencyKey?: () => string
@@ -91,11 +100,12 @@ export class ApiError extends Error {
   }
 }
 
-export function createMemoryStorage(seed?: Partial<SessionPayload>): StorageLike {
+export function createMemoryStorage(seed?: Partial<SessionPayload>, storageKeyPrefix = 'mp_'): StorageLike {
   const values = new Map<string, string>()
-  if (seed?.access_token) values.set(STORAGE_KEYS.accessToken, seed.access_token)
-  if (seed?.refresh_token) values.set(STORAGE_KEYS.refreshToken, seed.refresh_token)
-  if (seed?.user) values.set(STORAGE_KEYS.user, JSON.stringify(seed.user))
+  const keys = storageKeys(storageKeyPrefix)
+  if (seed?.access_token) values.set(keys.accessToken, seed.access_token)
+  if (seed?.refresh_token) values.set(keys.refreshToken, seed.refresh_token)
+  if (seed?.user) values.set(keys.user, JSON.stringify(seed.user))
   return {
     getItem: (key) => values.get(key) ?? null,
     setItem: (key, value) => values.set(key, value),
@@ -107,14 +117,15 @@ export function createApiClient(options: ApiClientOptions = {}) {
   const baseUrl = options.baseUrl ?? API_BASE
   const fetchImpl = options.fetch ?? globalThis.fetch.bind(globalThis)
   const storage = options.storage ?? browserStorage()
+  const keys = storageKeys(options.storageKeyPrefix ?? 'mp_')
   const reconnectDelayMs = options.reconnectDelayMs ?? 500
   const maxReconnectDelayMs = options.maxReconnectDelayMs ?? 10_000
   let refreshPromise: Promise<boolean> | null = null
 
   function readSession(): SessionPayload | null {
-    const accessToken = storage.getItem(STORAGE_KEYS.accessToken)
-    const refreshToken = storage.getItem(STORAGE_KEYS.refreshToken)
-    const rawUser = storage.getItem(STORAGE_KEYS.user)
+    const accessToken = storage.getItem(keys.accessToken)
+    const refreshToken = storage.getItem(keys.refreshToken)
+    const rawUser = storage.getItem(keys.user)
     if (!accessToken || !rawUser) return null
     try {
       return {
@@ -129,16 +140,16 @@ export function createApiClient(options: ApiClientOptions = {}) {
   }
 
   function setSession(payload: SessionPayload): SessionUser {
-    storage.setItem(STORAGE_KEYS.accessToken, payload.access_token ?? '')
-    storage.setItem(STORAGE_KEYS.refreshToken, payload.refresh_token ?? '')
-    storage.setItem(STORAGE_KEYS.user, JSON.stringify(payload.user ?? null))
+    storage.setItem(keys.accessToken, payload.access_token ?? '')
+    storage.setItem(keys.refreshToken, payload.refresh_token ?? '')
+    storage.setItem(keys.user, JSON.stringify(payload.user ?? null))
     return payload.user
   }
 
   function clear() {
-    storage.removeItem(STORAGE_KEYS.accessToken)
-    storage.removeItem(STORAGE_KEYS.refreshToken)
-    storage.removeItem(STORAGE_KEYS.user)
+    storage.removeItem(keys.accessToken)
+    storage.removeItem(keys.refreshToken)
+    storage.removeItem(keys.user)
   }
 
   async function refresh(): Promise<boolean> {
