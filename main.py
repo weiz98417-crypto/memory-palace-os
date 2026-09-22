@@ -26,7 +26,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from src.memory_palace.api.static_frontend import mount_frontend_v2
+from src.memory_palace.api.static_frontend import frontend_v2_enabled, mount_frontend_v2
 from loguru import logger
 
 load_dotenv()
@@ -457,39 +457,41 @@ else:
     async def root_redirect():
         return RedirectResponse(url="/admin/", status_code=302)
 
-    @app.get("/admin", include_in_schema=False)
-    async def admin_redirect():
-        return RedirectResponse(url="/admin/index.html", status_code=302)
+    if not frontend_v2_enabled("console"):
+        @app.get("/admin", include_in_schema=False)
+        async def admin_redirect():
+            return RedirectResponse(url="/admin/index.html", status_code=302)
 
-    @app.get("/admin/events", include_in_schema=False)
-    @app.get("/admin/tasks", include_in_schema=False)
-    @app.get("/admin/approvals", include_in_schema=False)
-    async def admin_business_collection():
-        return FileResponse(
-            Path(__file__).resolve().parent / "static" / "index.html",
-            media_type="text/html; charset=utf-8",
-        )
+        @app.get("/admin/events", include_in_schema=False)
+        @app.get("/admin/tasks", include_in_schema=False)
+        @app.get("/admin/approvals", include_in_schema=False)
+        async def admin_business_collection():
+            return FileResponse(
+                Path(__file__).resolve().parent / "static" / "index.html",
+                media_type="text/html; charset=utf-8",
+            )
 
-    @app.get("/admin/events/{event_id}", include_in_schema=False)
-    async def admin_event_resource(event_id: str):
-        return FileResponse(
-            Path(__file__).resolve().parent / "static" / "index.html",
-            media_type="text/html; charset=utf-8",
-        )
+        @app.get("/admin/events/{event_id}", include_in_schema=False)
+        async def admin_event_resource(event_id: str):
+            return FileResponse(
+                Path(__file__).resolve().parent / "static" / "index.html",
+                media_type="text/html; charset=utf-8",
+            )
 
-    @app.get("/admin/tasks/{task_id}", include_in_schema=False)
-    async def admin_task_resource(task_id: str):
-        return FileResponse(
-            Path(__file__).resolve().parent / "static" / "index.html",
-            media_type="text/html; charset=utf-8",
-        )
+        @app.get("/admin/tasks/{task_id}", include_in_schema=False)
+        async def admin_task_resource(task_id: str):
+            return FileResponse(
+                Path(__file__).resolve().parent / "static" / "index.html",
+                media_type="text/html; charset=utf-8",
+            )
 
-    @app.get("/admin/approvals/{approval_id}", include_in_schema=False)
-    async def admin_approval_resource(approval_id: str):
-        return FileResponse(
-            Path(__file__).resolve().parent / "static" / "index.html",
-            media_type="text/html; charset=utf-8",
-        )
+        @app.get("/admin/approvals/{approval_id}", include_in_schema=False)
+        async def admin_approval_resource(approval_id: str):
+            return FileResponse(
+                Path(__file__).resolve().parent / "static" / "index.html",
+                media_type="text/html; charset=utf-8",
+            )
+
 
     mount_frontend_v2(
         app,
