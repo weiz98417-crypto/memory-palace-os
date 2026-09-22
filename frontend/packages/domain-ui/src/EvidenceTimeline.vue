@@ -12,6 +12,14 @@ function record(value: unknown): Record<string, any> | null {
 function text(value: unknown): string {
   return value === null || value === undefined ? '' : String(value)
 }
+function timeText(value: unknown): string {
+  if (value === null || value === undefined || value === '') return ''
+  const numeric = Number(value)
+  if (Number.isFinite(numeric) && numeric > 1_000_000_000) {
+    return new Date(numeric * 1000).toLocaleString('zh-CN', { hour12: false })
+  }
+  return text(value)
+}
 function toneFor(status: string): StateTone {
   if (['READY', 'GROUNDED', 'DONE', 'SUCCEEDED', 'RECORDED'].includes(status)) return 'success'
   if (['FAILED', 'ERROR'].includes(status)) return 'danger'
@@ -26,7 +34,7 @@ const rows = computed(() => props.items.map((item, index) => {
     title: text(source.title || source.source_id || source.name || '证据'),
     detail: text(source.detail || source.excerpt || source.content || source.summary),
     status: text(source.status || source.evidence_status).toUpperCase(),
-    time: text(source.created_at || source.recorded_at || source.occurred_at),
+    time: timeText(source.created_at || source.recorded_at || source.occurred_at),
   }
 }))
 </script>

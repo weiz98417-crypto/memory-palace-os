@@ -10,7 +10,7 @@ def test_sourced_showcase_has_three_x_volume_and_provenance():
         answers = neutral_answers(scenario)
         assert len(answers) == 4
         assert all(SOURCES[scenario["source"]]["title"] in answer for answer in answers)
-        assert "演示数据改编" in answers[3]
+        assert "本条目依据公开资料整理" in answers[3]
         assert SOURCES[scenario["source"]]["url"] in answers[3]
 
 

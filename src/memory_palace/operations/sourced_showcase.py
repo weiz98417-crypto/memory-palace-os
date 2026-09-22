@@ -90,19 +90,19 @@ EXPERT_USERNAMES = ("knowledge-owner", "wangfang", "chenyu", "liming")
 
 def source_notes(source_key: str) -> str:
     source = SOURCES[source_key]
-    return f"【公开资料改编｜非真实个人访谈】来源：{source['title']}｜{source['url']}"
+    return f"资料来源：{source['title']}｜{source['url']}"
 
 
 def neutral_answers(scenario: dict[str, str]) -> tuple[str, str, str, str]:
     source = SOURCES[scenario["source"]]
     short = f"来源：{source['title']}。"
     return (
-        f"公开资料建议观察：{scenario['signals']}。{short}",
-        f"公开资料给出的处置顺序：{scenario['actions']}。{short}",
-        f"公开资料列出的红线：{scenario['redlines']}。{short}",
+        f"建议观察：{scenario['signals']}。{short}",
+        f"处置顺序：{scenario['actions']}。{short}",
+        f"风险红线：{scenario['redlines']}。{short}",
         (
             f"适用范围：{scenario['context']}。"
-            "本条目仅用于演示数据改编，不替代现场制度和专业判断。"
+            "本条目依据公开资料整理，不替代现场制度和专业判断。"
             f"来源：{source['title']}｜{source['url']}"
         ),
     )
@@ -150,13 +150,13 @@ async def seed_sourced_showcase(api: Any) -> tuple[dict[str, int], dict[str, int
                 body={
                     "user_id": str(user["id"]),
                     "display_name": str(user.get("display_name") or user.get("username") or username),
-                    "job_title": "公开资料改编演示账号",
+                    "job_title": "资料来源整理员",
                     "department": "知识运营部",
                     "years_experience": 5 + index,
-                    "expertise": ["公开资料整理", "应急流程复核", "运营安全"],
+                    "expertise": ["资料整理", "应急流程复核", "运营安全"],
                     "authorization_status": "SIGNED",
                     "authorization_statement": (
-                        f"本账号用于将{source['title']}等公开资料改编为演示数据；"
+                        f"本账号用于依据{source['title']}整理安全巡检资料；"
                         "不声称个人原创经验，不替代现场制度和专业判断。"
                     ),
                 },
@@ -176,7 +176,7 @@ async def seed_sourced_showcase(api: Any) -> tuple[dict[str, int], dict[str, int
             continue
         knowledge_entries.append(
             {
-                "title": f"【公开资料改编】{scenario['title']}",
+                "title": scenario['title'],
                 "content": (
                     f"来源：{source['title']}（{source['publisher']}）\n"
                     f"链接：{source['url']}\n"
@@ -189,7 +189,7 @@ async def seed_sourced_showcase(api: Any) -> tuple[dict[str, int], dict[str, int
                 "category": scenario["type"],
                 "source_type": "IMPORT",
                 "source_id": source_id,
-                "tags": ["公开资料改编", "演示数据", scenario["type"]],
+                "tags": ["安全巡检", scenario["type"]],
             }
         )
     if knowledge_entries:
@@ -211,7 +211,7 @@ async def seed_sourced_showcase(api: Any) -> tuple[dict[str, int], dict[str, int
                 "POST",
                 "/api/v1/admin/events",
                 body={
-                    "raw_text": f"[公开资料改编演示] {scenario['title']}：{scenario['context']}",
+                    "raw_text": f"{scenario['title']}：{scenario['context']}",
                     "event_type": scenario["type"],
                     "severity": scenario["severity"],
                     "from_user": str(reporter["id"]),
@@ -280,7 +280,7 @@ async def seed_sourced_showcase(api: Any) -> tuple[dict[str, int], dict[str, int
         expert = experts[index % len(experts)]
         event = event_by_key[scenario["key"]]
         suffix = "结构化V3" if scenario["key"] == "capacity-check" else "结构化"
-        title = f"【公开资料改编·{suffix}】{scenario['title']}"
+        title = f"{scenario['title']}（{suffix}）"
         identity = (str(event["event_id"]), title, str(expert["id"]))
         interview = interviews_by_identity.get(identity)
         if interview is None:

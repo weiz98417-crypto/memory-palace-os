@@ -17,5 +17,7 @@ describe('EvidenceTimeline', () => {
     expect(wrapper.text()).toContain('停运 SOP v1.2')
     expect(wrapper.text()).toContain('RECORDED')
     expect(wrapper.text()).not.toContain('[object Object]')
+    expect(wrapper.text()).not.toContain('1785283200')
+    expect(wrapper.text()).toContain('2026')
   })
 })
