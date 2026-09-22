@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -12,6 +13,9 @@ import { loadCommandCenter, type ChartDatum, type ChartSeries, type CommandCente
 
 const model = ref<CommandCenterModel>({
   runs: [],
+  run: null,
+  alerts: [],
+  map: { adapter: 'OFFLINE_SVG', coordinateSystem: 'LOCAL_SCENIC_GRID_V1', zones: [], routes: [], gisConnector: {} },
   nextAction: null,
   advice: null,
   metrics: { events: 0, activeIncidents: 0, activeAlerts: 0, openTasks: 0, pendingApprovals: 0 },
@@ -19,6 +23,9 @@ const model = ref<CommandCenterModel>({
 })
 use([CanvasRenderer, PieChart, BarChart, GridComponent, LegendComponent, TooltipComponent])
 
+const router = useRouter()
+const actionBusy = ref(false)
+const notice = ref('')
 const chartColors = ['#5B6EFF', '#39C68A', '#FFB020', '#FF5C6C', '#A06CF9', '#57C1FF']
 const selectedChart = ref<ChartSeries | null>(null)
 let previousBodyOverflow = ''
@@ -168,6 +175,52 @@ function handleKeydown(event: { key: string }) {
   if (event.key === 'Escape' && selectedChart.value) closeChart()
 }
 
+const alertZones = computed(() => new Set(model.value.alerts.map((item) => String(item?.zone_id || '')).filter(Boolean)))
+function zoneById(id: string) {
+  return model.value.map.zones.find((zone) => zone.id === id)
+}
+function mapX(value: number) { return value * 1.6 }
+function mapY(value: number) { return value * 0.9 }
+function routePath(route: { from: string; to: string }) {
+  const from = zoneById(route.from)
+  const to = zoneById(route.to)
+  if (!from || !to) return ''
+  return `M ${mapX(from.x)} ${mapY(from.y)} Q ${mapX((from.x + to.x) / 2)} ${mapY(Math.min(from.y, to.y)) - 9} ${mapX(to.x)} ${mapY(to.y)}`
+}
+function zoneRadius(zone: { capacity: number }) {
+  return Math.max(6, Math.min(12, 5 + zone.capacity / 260))
+}
+async function executeNextAction() {
+  const action = model.value.nextAction
+  if (!action || action.enabled === false || actionBusy.value) return
+  actionBusy.value = true
+  notice.value = ''
+  try {
+    if (action.actionType === 'NAVIGATE' && action.view) {
+      await router.push(`/${action.view}`)
+      return
+    }
+    if (action.actionType === 'OPEN_DOSSIER' && action.eventId) {
+      await router.push(`/events?event=${encodeURIComponent(action.eventId)}`)
+      return
+    }
+    if (action.actionType === 'COMMAND' && action.kind) {
+      await createApiClient().request('/scenic/commands', {
+        method: 'POST',
+        json: { kind: action.kind, payload: action.payload || {} },
+      })
+      notice.value = '动作已提交，正在刷新态势'
+      model.value = await loadCommandCenter(createApiClient())
+      return
+    }
+    notice.value = '该动作需要在对应业务页面继续处理'
+  } catch (cause) {
+    error.value = cause instanceof Error ? cause.message : '下一步动作执行失败'
+  } finally {
+    actionBusy.value = false
+  }
+}
+
 const loading = ref(true)
 const error = ref<string | null>(null)
 
@@ -203,15 +256,85 @@ onBeforeUnmount(() => {
     <StatePanel v-else-if="error" state="error" title="指挥中心加载失败" :message="error" />
 
     <template v-else>
-      <article v-if="model.nextAction" class="next-action">
-        <div>
-          <small>下一步处置</small>
-          <h2>{{ model.nextAction.label }}</h2>
-          <p>{{ model.nextAction.description }}</p>
-        </div>
-        <StatusBadge :label="model.nextAction.enabled === false ? '暂不可用' : '已解锁'" :tone="model.nextAction.enabled === false ? 'warning' : 'info'" />
-      </article>
-      <StatePanel v-else state="empty" title="当前没有下一步动作" message="事件、任务和审批都已处于稳定状态。" />
+      <div class="overview-grid">
+        <article v-if="model.map.zones.length" class="map-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">OFFLINE SCENIC MAP</p>
+              <h2>景区作业地图</h2>
+            </div>
+            <span class="map-status">{{ model.map.adapter }} · {{ model.map.coordinateSystem }}</span>
+          </div>
+          <div class="map-canvas">
+            <svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid meet" role="img" aria-label="云栖山景区实时作业态势图">
+              <defs>
+                <linearGradient id="v2-map-terrain" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#12314d" />
+                  <stop offset=".55" stop-color="#0b2238" />
+                  <stop offset="1" stop-color="#071827" />
+                </linearGradient>
+                <linearGradient id="v2-map-lake" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#2b8fbd" />
+                  <stop offset="1" stop-color="#12527d" />
+                </linearGradient>
+                <filter id="v2-map-glow"><feGaussianBlur stdDeviation="1.5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+              </defs>
+              <rect width="100" height="100" fill="url(#v2-map-terrain)" />
+              <g transform="scale(1.6 .9)">
+                <path d="M0 30 C18 10 38 9 52 21 C63 30 76 17 100 9 L100 0 L0 0 Z" fill="#17354c" opacity=".75" />
+                <path d="M60 15 C72 5 92 7 99 16 C103 24 97 31 87 35 C76 39 63 34 58 25 C56 21 57 18 60 15 Z" fill="url(#v2-map-lake)" stroke="#68d6ff" stroke-width=".45" />
+                <g fill="none" stroke="#315a75" stroke-width=".2" opacity=".55">
+                  <path d="M0 38 C18 26 35 25 50 34 C64 42 78 34 100 26" />
+                  <path d="M0 53 C16 40 35 39 52 48 C68 57 82 48 100 41" />
+                  <path d="M0 68 C20 55 38 55 56 64 C72 72 86 66 100 58" />
+                </g>
+              </g>
+              <g v-for="route in model.map.routes" :key="route.id">
+                <path :d="routePath(route)" fill="none" stroke="#68d6ff" stroke-width="1.4" stroke-linecap="round" opacity=".62" filter="url(#v2-map-glow)" />
+              </g>
+              <g v-for="zone in model.map.zones" :key="zone.id">
+                <circle :cx="mapX(zone.x)" :cy="mapY(zone.y)" :r="zoneRadius(zone)" :class="['map-zone', { 'is-alert': alertZones.has(zone.id) }]" />
+                <circle v-if="alertZones.has(zone.id)" :cx="mapX(zone.x)" :cy="mapY(zone.y)" :r="zoneRadius(zone) + 3" class="map-alert-ring" />
+                <text :x="mapX(zone.x)" :y="mapY(zone.y) - 1.2" class="map-zone-name">{{ zone.name }}</text>
+                <text :x="mapX(zone.x)" :y="mapY(zone.y) + 4.2" class="map-zone-meta">容量 {{ zone.capacity }}</text>
+              </g>
+              <g class="map-north" transform="translate(148 9)">
+                <circle r="5" />
+                <path d="M0-3 L1.5 2 L0 1 L-1.5 2 Z" />
+                <text x="0" y="-6">N</text>
+              </g>
+            </svg>
+          </div>
+          <p class="map-footer">真实 GIS 可选连接器：{{ model.map.gisConnector.status || 'OPTIONAL_CONNECTION / NOT_CONFIGURED' }} · {{ model.map.gisConnector.interface || 'ScenicMapAdapter/v1' }} · 图层 {{ (model.map.gisConnector.layers || []).join(' / ') || 'zones / routes / equipment / staff / alerts' }}</p>
+        </article>
+
+        <aside class="overview-side">
+          <article v-if="model.nextAction" class="next-action">
+            <div>
+              <small>下一步处置</small>
+              <h2>{{ model.nextAction.label }}</h2>
+              <p>{{ model.nextAction.description }}</p>
+            </div>
+            <StatusBadge :label="model.nextAction.enabled === false ? '暂不可用' : '已解锁'" :tone="model.nextAction.enabled === false ? 'warning' : 'info'" />
+            <button class="next-action__button" :disabled="actionBusy || model.nextAction.enabled === false" @click="executeNextAction">
+              {{ actionBusy ? '正在处理' : model.nextAction.label }}
+            </button>
+            <p v-if="notice" class="notice">{{ notice }}</p>
+          </article>
+          <StatePanel v-else state="empty" title="当前没有下一步动作" message="事件、任务和审批都已处于稳定状态。" />
+
+          <article class="alert-panel">
+            <div class="section-head"><h2>当前告警与事件</h2><span class="muted">{{ model.alerts.length }} 条</span></div>
+            <ul v-if="model.alerts.length">
+              <li v-for="item in model.alerts" :key="item.id || item.alert_id || item.rule_code">
+                <strong>{{ item.title || item.rule_code || item.alert_id }}</strong>
+                <span>{{ item.zone_id || '全场' }} · {{ item.severity || '未分级' }} · {{ item.status || 'ACTIVE' }}</span>
+              </li>
+            </ul>
+            <p v-else class="muted">当前没有活跃告警。</p>
+          </article>
+        </aside>
+      </div>
 
       <div class="metric-grid">
         <article><span>事件记录</span><strong>{{ model.metrics.events }}</strong></article>
@@ -304,7 +427,33 @@ onBeforeUnmount(() => {
 .command-center__header h1 { margin: 4px 0 8px; color: var(--mp-color-ink); font-size: 30px; }
 .muted { color: var(--mp-color-mute); font-size: 13px; }
 .eyebrow { margin: 0; color: var(--mp-color-primary); font-size: 11px; font-weight: 700; letter-spacing: .12em; }
-.next-action { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding: 22px; border: 1px solid color-mix(in srgb, var(--mp-color-primary) 52%, var(--mp-color-hairline)); border-radius: var(--mp-radius-card); background: linear-gradient(135deg, color-mix(in srgb, var(--mp-color-primary) 14%, var(--mp-color-surface)), var(--mp-color-surface)); }
+.overview-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(310px, .75fr); gap: 14px; align-items: stretch; }
+.overview-side { display: grid; gap: 12px; align-content: start; }
+.next-action { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: flex-start; gap: 14px; padding: 22px; border: 1px solid color-mix(in srgb, var(--mp-color-primary) 52%, var(--mp-color-hairline)); border-radius: var(--mp-radius-card); background: linear-gradient(135deg, color-mix(in srgb, var(--mp-color-primary) 14%, var(--mp-color-surface)), var(--mp-color-surface)); }
+.next-action > div { min-width: 0; }
+.next-action__button { grid-column: 1 / -1; justify-self: start; min-height: 40px; padding: 9px 14px; border: 1px solid color-mix(in srgb, var(--mp-color-primary) 74%, white); border-radius: var(--mp-radius-md); color: #fff; background: var(--mp-color-primary); font: inherit; font-weight: 650; cursor: pointer; }
+.next-action__button:hover:not(:disabled) { filter: brightness(1.1); }
+.next-action__button:disabled { cursor: not-allowed; opacity: .48; }
+.notice { margin: 0; color: var(--mp-color-success); font-size: 13px; }
+.map-panel, .alert-panel { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--mp-color-hairline); border-radius: var(--mp-radius-card); background: var(--mp-color-surface); }
+.map-panel .section-head h2, .alert-panel h2 { margin: 3px 0 0; color: var(--mp-color-ink); font-size: 20px; }
+.map-status { color: var(--mp-color-mute); font-family: var(--mp-font-mono); font-size: 10px; letter-spacing: .06em; }
+.map-canvas { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid rgba(104, 214, 255, .16); border-radius: 14px; background: #081827; }
+.map-canvas svg { display: block; width: 100%; height: 100%; }
+.map-zone { fill: rgba(23, 77, 112, .82); stroke: #65a7cb; stroke-width: .55; stroke-dasharray: 1.2 1; }
+.map-zone.is-alert { fill: rgba(180, 45, 59, .74); stroke: #ff7d86; stroke-width: .8; }
+.map-alert-ring { fill: none; stroke: #ff7d86; stroke-width: .65; opacity: .6; animation: map-pulse 1.8s ease-out infinite; }
+.map-zone-name { fill: #f4f9ff; font-size: 3.25px; font-weight: 700; text-anchor: middle; paint-order: stroke; stroke: rgba(4, 12, 25, .85); stroke-width: .8; }
+.map-zone-meta { fill: #b9d9ec; font-size: 2.25px; text-anchor: middle; paint-order: stroke; stroke: rgba(4, 12, 25, .78); stroke-width: .65; }
+.map-north circle { fill: rgba(6, 18, 30, .8); stroke: #55748f; stroke-width: .35; }
+.map-north path { fill: #e8f4ff; }
+.map-north text { fill: #d9edff; font-size: 3px; text-anchor: middle; }
+.map-footer { margin: 0; color: var(--mp-color-mute); font-size: 11px; line-height: 1.6; }
+.alert-panel ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.alert-panel li { display: grid; gap: 3px; padding: 10px 12px; border: 1px solid var(--mp-color-hairline); border-radius: 9px; background: color-mix(in srgb, var(--mp-color-danger) 6%, transparent); }
+.alert-panel li strong { color: var(--mp-color-ink); font-size: 13px; }
+.alert-panel li span { color: var(--mp-color-mute); font-size: 12px; }
+@keyframes map-pulse { from { opacity: .72; transform: scale(.9); transform-origin: center; } to { opacity: 0; transform: scale(1.45); transform-origin: center; } }
 .next-action small, .metric-grid span { color: var(--mp-color-mute); font-size: 12px; }
 .next-action h2 { margin: 6px 0 8px; color: var(--mp-color-ink); font-size: 24px; }
 .next-action p { margin: 0; color: var(--mp-color-body); font-size: 14px; }
@@ -343,7 +492,7 @@ onBeforeUnmount(() => {
 .chart-modal__close:hover { border-color: var(--mp-color-primary); background: color-mix(in srgb, var(--mp-color-primary) 14%, transparent); color: var(--mp-color-ink); }
 .chart-modal__plot { width: 100%; min-height: 520px; padding: 12px 14px 18px; }
 .chart-modal__chart { width: 100%; height: 100%; }
-@media (max-width: 1180px) { .metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 1180px) { .metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .overview-grid { grid-template-columns: 1fr; } .map-canvas { min-height: 0; } }
 @media (max-width: 900px) { .command-center__header, .next-action { flex-direction: column; } .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .chart-grid { grid-template-columns: 1fr; } .chart-modal { padding: 12px; } .chart-modal__panel { width: 100%; max-height: 96vh; } }
 @media (max-width: 560px) { .metric-grid { grid-template-columns: 1fr; } .chart-modal__header { padding: 16px; } .chart-modal__header h2 { font-size: 20px; } .chart-modal__plot { min-height: 480px; padding-inline: 6px; } }
 </style>

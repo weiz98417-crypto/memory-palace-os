@@ -3,6 +3,34 @@ export interface NextAction {
   label: string
   description: string
   enabled?: boolean
+  actionType?: string
+  kind?: string
+  payload?: Record<string, unknown>
+  view?: string
+  eventId?: string
+  incidentId?: string
+}
+
+export interface MapZone {
+  id: string
+  name: string
+  capacity: number
+  x: number
+  y: number
+}
+
+export interface MapRoute {
+  id: string
+  from: string
+  to: string
+}
+
+export interface CommandCenterMap {
+  adapter: string
+  coordinateSystem: string
+  zones: MapZone[]
+  routes: MapRoute[]
+  gisConnector: Record<string, any>
 }
 
 export interface AdviceSnapshot {
@@ -30,6 +58,9 @@ export interface ChartSeries {
 
 export interface CommandCenterModel {
   runs: any[]
+  run: any | null
+  alerts: any[]
+  map: CommandCenterMap
   nextAction: NextAction | null
   advice: {
     status: string
@@ -222,6 +253,15 @@ export function buildCommandCenter(snapshot: Record<string, any>): CommandCenter
 
   return {
     runs,
+    run: snapshot.run || null,
+    alerts,
+    map: {
+      adapter: String(snapshot.map?.adapter || 'OFFLINE_SVG'),
+      coordinateSystem: String(snapshot.map?.coordinate_system || 'LOCAL_SCENIC_GRID_V1'),
+      zones: Array.isArray(snapshot.map?.zones) ? snapshot.map.zones : [],
+      routes: Array.isArray(snapshot.map?.routes) ? snapshot.map.routes : [],
+      gisConnector: snapshot.map?.gis_connector && typeof snapshot.map.gis_connector === 'object' ? snapshot.map.gis_connector : {},
+    },
     metrics: {
       events: events.length,
       activeIncidents: incidents.filter((item: any) => normalized(item?.lifecycle) !== 'CLOSED').length,
@@ -253,12 +293,21 @@ export function buildCommandCenter(snapshot: Record<string, any>): CommandCenter
       series('sopCategory', '巡检与 SOP', 'SOP 分类分布', `SOP 资产 · ${sops.length} 条`, 'bar', sops.map((item: any) => item?.category)),
       series('sopPriority', '巡检与 SOP', 'SOP 优先级分布', `SOP 资产 · ${sops.length} 条`, 'pie', sops.map((item: any) => item?.priority), '优先级未知', PRIORITY_LABELS),
     ],
-    nextAction: action ? {
-      code: String(action.code || ''),
-      label: String(action.label || ''),
-      description: String(action.description || ''),
-      enabled: action.enabled !== false,
-    } : null,
+    nextAction: action ? (() => {
+      const detail = action.action && typeof action.action === 'object' ? action.action : {}
+      return {
+        code: String(action.code || ''),
+        label: String(action.label || ''),
+        description: String(action.description || ''),
+        enabled: action.enabled !== false,
+        actionType: String(detail.type || 'INFO'),
+        kind: detail.kind ? String(detail.kind) : undefined,
+        payload: detail.payload && typeof detail.payload === 'object' ? detail.payload : undefined,
+        view: detail.view ? String(detail.view) : undefined,
+        eventId: detail.event_id ? String(detail.event_id) : undefined,
+        incidentId: action.incident_id ? String(action.incident_id) : undefined,
+      }
+    })() : null,
     advice: normalizeAdvice(incidentAdvice || snapshot.advice),
   }
 }

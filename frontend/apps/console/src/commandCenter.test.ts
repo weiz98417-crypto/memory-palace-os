@@ -4,10 +4,20 @@ import { buildCommandCenter, loadCommandCenter } from './commandCenter'
 describe('console command center projection', () => {
   it('puts next action before advice and preserves NO_EVIDENCE wording', () => {
     const model = buildCommandCenter({
-      next_actions: [{ code: 'REVIEW_ADVICE', label: '查看并判断处置建议', description: '核对引用' }],
+      next_actions: [{ code: 'REVIEW_ADVICE', label: '查看并判断处置建议', description: '核对引用', action: { type: 'COMMAND', kind: 'RETRIEVE_SOP', payload: { incident_id: 'incident-1' } } }],
       advice: { status: 'READY', evidence_status: 'NO_EVIDENCE', advice: 'ignored' },
+      map: {
+        adapter: 'OFFLINE_SVG',
+        coordinate_system: 'LOCAL_SCENIC_GRID_V1',
+        zones: [{ id: 'east-gate', name: '东门集散区', capacity: 1200, x: 82, y: 51 }],
+        routes: [],
+        gis_connector: { status: 'OPTIONAL_CONNECTION / NOT_CONFIGURED', interface: 'ScenicMapAdapter/v1' },
+      },
     })
     expect(model.nextAction?.code).toBe('REVIEW_ADVICE')
+    expect(model.nextAction?.kind).toBe('RETRIEVE_SOP')
+    expect(model.nextAction?.actionType).toBe('COMMAND')
+    expect(model.map.zones).toHaveLength(1)
     expect(model.advice?.text).toBe('没有依据')
     expect(model.metrics.activeIncidents).toBe(0)
     expect(model.charts).toHaveLength(22)
