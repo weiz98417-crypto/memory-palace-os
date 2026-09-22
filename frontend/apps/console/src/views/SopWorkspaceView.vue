@@ -15,6 +15,7 @@ import {
   type SopRecord,
   type SopUpdate,
 } from '../governance'
+import ModalShell from '../components/ModalShell.vue'
 
 const sops = ref<SopRecord[]>([])
 const loading = ref(false)
@@ -169,7 +170,8 @@ onMounted(load)
       </tbody></table></div>
     </article>
 
-    <form v-if="formOpen" class="panel form-panel" @submit.prevent="save">
+    <ModalShell v-if="formOpen" label="SOP 编辑" @close="formOpen = false">
+      <form class="panel form-panel" @submit.prevent="save">
       <div class="panel-head"><h2>{{ editingId !== null ? '编辑 SOP 草稿' : '创建 SOP 草稿' }}</h2><button type="button" class="ghost" @click="formOpen = false">取消</button></div>
       <label>标题<input v-model="form.title" required minlength="2" maxlength="200"></label>
       <label>分类<input v-model="form.category" required maxlength="80"></label>
@@ -180,6 +182,7 @@ onMounted(load)
       <label class="wide">正文<textarea v-model="form.content" required minlength="10" maxlength="30000" rows="10"></textarea></label>
       <button type="submit" :disabled="busy">保存 SOP 草稿</button>
     </form>
+    </ModalShell>
 
     <article v-if="detail" class="panel detail-panel">
       <div class="panel-head"><h2>{{ detail.title }}</h2><button class="ghost" @click="detail = null">关闭</button></div>

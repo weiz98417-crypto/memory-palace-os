@@ -40,3 +40,35 @@ body {
   font-family: var(--mp-font-mono);
   font-size: 12px;
 }
+.modal-backdrop {
+  position: fixed;
+  z-index: 3200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow: auto;
+  background: rgba(3, 8, 20, .72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.modal-surface {
+  width: min(760px, 96vw);
+  max-height: min(88vh, 900px);
+  overflow: auto;
+  border: 1px solid var(--mp-color-hairline-strong);
+  border-radius: 18px;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, .58);
+}
+
+.modal-surface > form.panel {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  .modal-backdrop { padding: 12px; }
+  .modal-surface { width: 100%; max-height: 94vh; border-radius: 14px; }
+}

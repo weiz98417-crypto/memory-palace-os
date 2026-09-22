@@ -15,6 +15,7 @@ import {
   type KnowledgeSearchResult,
   type KnowledgeUpsert,
 } from '../governance'
+import ModalShell from '../components/ModalShell.vue'
 
 const knowledge = ref<KnowledgeRecord[]>([])
 const loading = ref(false)
@@ -206,7 +207,8 @@ onMounted(load)
       </tbody></table></div>
     </article>
 
-    <form v-if="showForm" class="panel form-panel" @submit.prevent="save">
+    <ModalShell v-if="showForm" label="知识编辑" @close="showForm = false">
+      <form class="panel form-panel" @submit.prevent="save">
       <div class="panel-head"><h2>{{ editingId ? '编辑知识' : '新增知识' }}</h2><button type="button" class="ghost" @click="showForm = false">取消</button></div>
       <label>标题<input v-model="form.title" required minlength="2" maxlength="200"></label>
       <label>分类<input v-model="form.category" required maxlength="80"></label>
@@ -214,13 +216,16 @@ onMounted(load)
       <label class="wide">正文<textarea v-model="form.content" required minlength="5" maxlength="20000" rows="8"></textarea></label>
       <button type="submit" :disabled="busy">保存并同步索引</button>
     </form>
+    </ModalShell>
 
-    <form v-if="importOpen" class="panel form-panel" @submit.prevent="submitImport">
+    <ModalShell v-if="importOpen" label="导入知识" @close="importOpen = false">
+      <form class="panel form-panel" @submit.prevent="submitImport">
       <div class="panel-head"><h2>批量导入知识</h2><button type="button" class="ghost" @click="importOpen = false">取消</button></div>
       <label class="wide">JSON 数组<textarea v-model="importPayload" required rows="10" placeholder='[{"title":"标题","content":"至少五个字符","category":"通用","tags":[]}]'></textarea></label>
       <p class="muted">每项包含 title、content、category、tags；导入请求由后端事务和向量索引共同校验。</p>
       <button type="submit" :disabled="busy">开始导入</button>
     </form>
+    </ModalShell>
   </section>
 </template>
 

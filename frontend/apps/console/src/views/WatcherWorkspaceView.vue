@@ -18,6 +18,7 @@ import {
   type WatcherPolicyUpsert,
   type WatcherRunRecord,
 } from '../governance'
+import ModalShell from '../components/ModalShell.vue'
 
 const policies = ref<WatcherPolicyRecord[]>([])
 const findings = ref<WatcherFindingRecord[]>([])
@@ -208,7 +209,8 @@ onMounted(load)
       </article>
     </div>
 
-    <form v-if="policyOpen" class="panel form-panel" @submit.prevent="savePolicy">
+    <ModalShell v-if="policyOpen" label="巡检策略" @close="policyOpen = false">
+      <form class="panel form-panel" @submit.prevent="savePolicy">
       <div class="panel-head"><h2>{{ editingId ? '编辑巡检策略' : '创建巡检策略' }}</h2><button type="button" class="ghost" @click="policyOpen = false">取消</button></div>
       <label>策略名称<input v-model="form.name" required minlength="2" maxlength="120"></label>
       <label>执行计划<input v-model="form.schedule_cron" required placeholder="0 10 * * *"></label>
@@ -218,6 +220,7 @@ onMounted(load)
       <label class="wide">说明<textarea v-model="form.description" maxlength="1000" rows="3"></textarea></label>
       <button type="submit" :disabled="busy">保存策略</button>
     </form>
+    </ModalShell>
   </section>
 </template>
 

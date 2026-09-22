@@ -20,6 +20,7 @@ import {
   type ExpertRecord,
   type InterviewRecord,
 } from '../governance'
+import ModalShell from '../components/ModalShell.vue'
 
 const experts = ref<ExpertRecord[]>([])
 const interviews = ref<InterviewRecord[]>([])
@@ -274,7 +275,8 @@ onMounted(load)
       </tbody></table></div>
     </article>
 
-    <form v-if="expertOpen" class="panel form-panel" @submit.prevent="saveExpert">
+    <ModalShell v-if="expertOpen" label="专家资料" @close="expertOpen = false">
+      <form class="panel form-panel" @submit.prevent="saveExpert">
       <div class="panel-head"><h2>新增专家</h2><button type="button" class="ghost" @click="expertOpen = false">取消</button></div>
       <label>关联员工<select v-model="expertForm.user_id" required @change="selectAssignee(expertForm.user_id)"><option value="" disabled>选择在岗员工</option><option v-for="user in eligibleAssignees" :key="user.id" :value="user.id">{{ user.display_name || user.username }} · {{ user.role }}</option></select></label>
       <label>专家姓名<input v-model="expertForm.display_name" required maxlength="80"></label>
@@ -286,8 +288,10 @@ onMounted(load)
       <p class="muted">授权声明必须由专家确认，前端不代替专家签署；未授权专家不能发起访谈。</p>
       <button type="submit" :disabled="busy">保存专家档案</button>
     </form>
+    </ModalShell>
 
-    <form v-if="interviewOpen" class="panel form-panel" @submit.prevent="saveInterview">
+    <ModalShell v-if="interviewOpen" label="访谈记录" @close="interviewOpen = false">
+      <form class="panel form-panel" @submit.prevent="saveInterview">
       <div class="panel-head"><h2>发起经验访谈</h2><button type="button" class="ghost" @click="interviewOpen = false">取消</button></div>
       <label>受访专家<select v-model="interviewForm.expert_id" required><option value="" disabled>选择已授权专家</option><option v-for="item in signedExperts" :key="item.id" :value="item.id">{{ item.display_name }} · {{ item.job_title }}</option></select></label>
       <label>访谈主题<input v-model="interviewForm.title" required minlength="2" maxlength="200"></label>
@@ -295,6 +299,7 @@ onMounted(load)
       <p class="muted">仅符合授权范围的员工可以通过 Agent 检索和引用这次访谈沉淀的经验。</p>
       <button type="submit" :disabled="busy">发送访谈邀请</button>
     </form>
+    </ModalShell>
 
     <article v-if="interviewDetail" class="panel detail-panel">
       <div class="panel-head"><h2>访谈进度：{{ interviewDetail.title || '未命名访谈' }}</h2><button class="ghost" @click="interviewDetail = null">关闭</button></div>

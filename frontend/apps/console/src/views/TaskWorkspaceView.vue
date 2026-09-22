@@ -17,6 +17,7 @@ import {
   type SessionRecord,
   type TaskRecord,
 } from '../operational'
+import ModalShell from '../components/ModalShell.vue'
 
 const tasks = ref<TaskRecord[]>([])
 const assignees = ref<AssigneeRecord[]>([])
@@ -160,7 +161,8 @@ onMounted(load)
     <StatePanel v-else-if="error" state="error" title="任务读取失败" :message="error" />
     <p v-else-if="notice" class="notice">{{ notice }}</p>
 
-    <form v-if="showCreate" class="panel form-grid" @submit.prevent="submitCreate">
+    <ModalShell v-if="showCreate" label="创建单项任务" @close="showCreate = false">
+      <form class="panel form-grid" @submit.prevent="submitCreate">
       <h2>创建单项任务</h2>
       <label>会话<select v-model="createForm.session_id"><option v-for="item in sessions" :key="item.session_id" :value="item.session_id">{{ item.session_id }}</option></select></label>
       <label>关联事件<select v-model="createForm.event_id"><option value="">通用待办</option><option v-for="item in events" :key="item.event_id" :value="item.event_id">{{ item.business_id || item.raw_text }}</option></select></label>
@@ -168,8 +170,10 @@ onMounted(load)
       <label class="wide">任务内容<textarea v-model="createForm.description" rows="3" required></textarea></label>
       <button type="submit" :disabled="busy">创建任务</button>
     </form>
+    </ModalShell>
 
-    <form v-if="showDecompose" class="panel form-grid" @submit.prevent="submitDecompose">
+    <ModalShell v-if="showDecompose" label="AI 拆解任务" @close="showDecompose = false">
+      <form class="panel form-grid" @submit.prevent="submitDecompose">
       <h2>AI 拆解任务</h2>
       <label>会话<select v-model="decomposeForm.session_id"><option v-for="item in sessions" :key="item.session_id" :value="item.session_id">{{ item.session_id }}</option></select></label>
       <label>关联事件<select v-model="decomposeForm.event_id"><option value="">通用待办</option><option v-for="item in events" :key="item.event_id" :value="item.event_id">{{ item.business_id || item.raw_text }}</option></select></label>
@@ -177,6 +181,7 @@ onMounted(load)
       <label class="wide">目标<textarea v-model="decomposeForm.goal" rows="3" required></textarea></label>
       <button type="submit" :disabled="busy">提交拆解</button>
     </form>
+    </ModalShell>
 
     <article class="panel">
       <div class="filters"><input v-model="query" placeholder="搜索任务"><select v-model="statusFilter"><option value="">全部状态</option><option>PENDING</option><option>RUNNING</option><option>BLOCKED</option><option>DONE</option><option>FAILED</option></select><span class="muted">{{ visibleTasks.length }} 条</span></div>
