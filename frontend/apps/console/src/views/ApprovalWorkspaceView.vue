@@ -38,11 +38,12 @@ function resultRows(value?: Record<string, unknown>): Array<{ label: string; val
 function format(value?: number): string {
   return value ? new Date(value * 1000).toLocaleString('zh-CN', { hour12: false }) : '—'
 }
-function tone(status: string): 'success' | 'warning' | 'danger' | 'neutral' {
+function tone(status: string): 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'neutral' {
   const value = status.toUpperCase()
-  if (value === 'APPROVED') return 'success'
-  if (value === 'PENDING') return 'warning'
-  if (value === 'REJECTED') return 'danger'
+  if (value === 'PENDING' || value === 'WAITING') return 'primary'
+  if (value === 'RUNNING' || value === 'EXECUTING') return 'info'
+  if (value === 'APPROVED' || value === 'SUCCEEDED') return 'success'
+  if (value === 'REJECTED' || value === 'FAILED') return 'danger'
   return 'neutral'
 }
 async function load() {

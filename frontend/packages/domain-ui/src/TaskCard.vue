@@ -8,10 +8,11 @@ function text(value: unknown): string {
   return value === null || value === undefined ? '' : String(value)
 }
 function toneFor(status: string): StateTone {
-  if (status === 'DONE') return 'success'
+  if (status === 'PENDING') return 'primary'
   if (status === 'RUNNING') return 'info'
   if (status === 'BLOCKED') return 'warning'
-  if (status === 'FAILED') return 'danger'
+  if (status === 'DONE') return 'success'
+  if (status === 'FAILED' || status === 'RETRY_REQUIRED') return 'danger'
   return 'neutral'
 }
 const title = computed(() => text(props.task.title || props.task.name || '任务'))

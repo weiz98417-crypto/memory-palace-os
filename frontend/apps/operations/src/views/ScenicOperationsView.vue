@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { createApiClient } from '@memory-palace/api-client'
-import { StatePanel, StatusBadge } from '@memory-palace/domain-ui'
+import { StatePanel, StatusBadge, type StateTone } from '@memory-palace/domain-ui'
 import {
   loadScenicSnapshot,
   parseSignalData,
@@ -92,6 +92,16 @@ async function injectSignal() {
 
 function text(value: unknown): string {
   return value === null || value === undefined ? '' : String(value)
+}
+function statusTone(value?: string): StateTone {
+  const state = String(value || '').toUpperCase()
+  if (!state) return 'neutral'
+  if (['PENDING', 'QUEUED', 'WAITING'].includes(state)) return 'primary'
+  if (['RUNNING', 'IN_PROGRESS'].includes(state)) return 'info'
+  if (['READY', 'DONE', 'SUCCEEDED', 'CLOSED', 'RESOLVED', 'HEALTHY'].includes(state)) return 'success'
+  if (['SUPERSEDED', 'WARNING', 'DEGRADED', 'P2', 'OPEN'].includes(state)) return 'warning'
+  if (['FAILED', 'ERROR', 'P0', 'P1', 'CRITICAL', 'HIGH'].includes(state)) return 'danger'
+  return 'info'
 }
 function record(value: unknown): Record<string, any> | null {
   return value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, any> : null
@@ -187,7 +197,7 @@ onMounted(() => {
               <span class="evidence-group">{{ item.group }}</span>
               <strong>{{ item.title }}</strong>
               <span>{{ item.detail }}</span>
-              <StatusBadge v-if="item.status" :label="item.status" tone="neutral" />
+              <StatusBadge v-if="item.status" :label="item.status" :tone="statusTone(item.status)" />
             </li>
           </ul>
         </article>

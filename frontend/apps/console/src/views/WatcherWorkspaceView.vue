@@ -37,11 +37,14 @@ const assigneeMap = computed(() => Object.fromEntries(assignees.value.map((item)
 function format(value?: number): string {
   return value ? new Date(value * 1000).toLocaleString('zh-CN', { hour12: false }) : '—'
 }
-function tone(value?: string): 'success' | 'warning' | 'danger' | 'neutral' | 'info' {
+function tone(value?: string): 'primary' | 'success' | 'warning' | 'danger' | 'neutral' | 'info' {
   const status = String(value || '').toUpperCase()
+  if (['P0', 'P1', 'CRITICAL', 'HIGH', 'FAILED', 'ERROR', 'BLOCKED'].includes(status)) return 'danger'
+  if (['P2', 'MEDIUM', 'OPEN', 'DEGRADED', 'WARNING', 'SUPERSEDED'].includes(status)) return 'warning'
+  if (['P3', 'LOW'].includes(status)) return 'info'
+  if (['PENDING', 'QUEUED'].includes(status)) return 'primary'
+  if (['RUNNING', 'IN_PROGRESS'].includes(status)) return 'info'
   if (['ACTIVE', 'SUCCEEDED', 'CLOSED', 'HEALTHY'].includes(status)) return 'success'
-  if (['OPEN', 'IN_PROGRESS', 'RUNNING', 'PENDING'].includes(status)) return 'warning'
-  if (['FAILED', 'CRITICAL', 'HIGH', 'ERROR'].includes(status)) return 'danger'
   if (status === 'DISABLED') return 'neutral'
   return 'info'
 }

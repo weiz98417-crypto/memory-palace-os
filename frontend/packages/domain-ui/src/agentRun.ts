@@ -1,5 +1,5 @@
 export type Artifact = 'ADVICE' | 'DISPATCH_DRAFT' | 'CLOSURE_SUMMARY'
-export type StateTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger' | 'ai'
+export type StateTone = 'neutral' | 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'ai'
 
 export interface AgentRun {
   incident_id: string
@@ -97,9 +97,10 @@ function runTitle(run: AgentRun, status: string, evidenceStatus: string): string
 }
 
 function runStatus(status: string, evidenceStatus: string): { label: string; tone: StateTone } {
-  if (status === 'PENDING' || status === 'RUNNING') return { label: '分析中', tone: 'info' }
+  if (status === 'PENDING') return { label: '分析中', tone: 'primary' }
+  if (status === 'RUNNING') return { label: '分析中', tone: 'info' }
   if (status === 'FAILED') return { label: '未获得模型建议', tone: 'danger' }
-  if (status === 'SUPERSEDED') return { label: '已过期', tone: 'neutral' }
+  if (status === 'SUPERSEDED') return { label: '已过期', tone: 'warning' }
   if (evidenceStatus === 'NO_EVIDENCE') return { label: '没有依据', tone: 'warning' }
   if (status === 'DEGRADED') return { label: '已降级', tone: 'warning' }
   if (status === 'READY') return { label: '已就绪', tone: 'success' }

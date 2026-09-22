@@ -29,12 +29,14 @@ function format(value?: number | string | null): string {
   const date = typeof value === 'number' ? new Date(value * 1000) : new Date(value)
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString('zh-CN', { hour12: false })
 }
-function tone(value?: string | boolean): 'success' | 'warning' | 'danger' | 'neutral' | 'info' {
+function tone(value?: string | boolean): 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'neutral' {
   if (typeof value === 'boolean') return value ? 'success' : 'danger'
   const state = String(value || '').toUpperCase()
+  if (['PENDING', 'QUEUED'].includes(state)) return 'primary'
+  if (['RUNNING', 'IN_PROGRESS'].includes(state)) return 'info'
   if (['HEALTHY', 'READY', 'LIVE_VERIFIED', 'ACTIVE', 'PASSED', 'PUBLISHED'].includes(state)) return 'success'
-  if (['DEGRADED', 'WARNING', 'CONFIGURED', 'REGISTERED_UNVERIFIED', 'IN_REVIEW'].includes(state)) return 'warning'
-  if (['BLOCKED', 'UNHEALTHY', 'DISABLED', 'EXHAUSTED'].includes(state)) return 'danger'
+  if (['DEGRADED', 'WARNING', 'CONFIGURED', 'REGISTERED_UNVERIFIED', 'IN_REVIEW', 'SUPERSEDED'].includes(state)) return 'warning'
+  if (['BLOCKED', 'UNHEALTHY', 'DISABLED', 'EXHAUSTED', 'FAILED'].includes(state)) return 'danger'
   return state ? 'info' : 'neutral'
 }
 function displayValue(item: SettingRecord): string {

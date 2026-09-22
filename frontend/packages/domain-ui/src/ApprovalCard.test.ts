@@ -19,6 +19,7 @@ describe('ApprovalCard', () => {
     })
     expect(wrapper.text()).toContain('send_in_app_alert')
     expect(wrapper.text()).toContain('PENDING')
+    expect(wrapper.find('.status-badge').attributes('data-tone')).toBe('primary')
     expect(wrapper.text()).toContain('P1')
     expect(wrapper.text()).toContain('王芳')
     expect(wrapper.text()).toContain('继续停运并启用备用车')

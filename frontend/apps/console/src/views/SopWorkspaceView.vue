@@ -34,10 +34,11 @@ const filtered = computed(() => sops.value.filter((item) => {
   return (!filter.value || item.status === filter.value) && (!query.value.trim() || text.includes(query.value.trim().toLowerCase()))
 }))
 
-function tone(value?: string): 'success' | 'warning' | 'danger' | 'neutral' {
+function tone(value?: string): 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'neutral' {
   const status = String(value || '').toUpperCase()
+  if (status === 'DRAFT') return 'primary'
+  if (status === 'IN_REVIEW') return 'info'
   if (status === 'PUBLISHED') return 'success'
-  if (['DRAFT', 'IN_REVIEW'].includes(status)) return 'warning'
   if (status === 'REJECTED') return 'danger'
   return 'neutral'
 }

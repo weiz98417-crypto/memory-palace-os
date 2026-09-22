@@ -11,6 +11,8 @@ describe('integration API seam', () => {
     expect(deliveryStatusLabel('DELIVERED')).toBe('已送达内部系统接入环境')
     expect(deliveryStatusLabel('RECORDED')).toBe('已写入出站账本')
     expect(deliveryStatusLabel('FAILED')).toBe('送达失败')
+    expect(toneForStatus('PENDING')).toBe('primary')
+    expect(toneForStatus('RUNNING')).toBe('info')
     expect(toneForStatus('FAILED')).toBe('danger')
     expect(toneForStatus('SENT')).toBe('success')
   })

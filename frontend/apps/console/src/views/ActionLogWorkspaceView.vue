@@ -38,10 +38,12 @@ const visiblePushLogs = computed(() => pushLogs.value.filter((item) => {
 function format(value?: number): string {
   return value ? new Date(value * 1000).toLocaleString('zh-CN', { hour12: false }) : '—'
 }
-function tone(status: string): 'success' | 'warning' | 'danger' | 'neutral' {
+function tone(status: string): 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'neutral' {
   const value = status.toUpperCase()
+  if (['PENDING', 'WAITING', 'QUEUED'].includes(value)) return 'primary'
+  if (['RUNNING', 'SENDING', 'IN_PROGRESS'].includes(value)) return 'info'
   if (['ACTIVE', 'ADOPTED', 'DELIVERED', 'SUCCEEDED', 'RECORDED'].includes(value)) return 'success'
-  if (['PENDING', 'RETRYING', 'WAITING'].includes(value)) return 'warning'
+  if (['RETRYING', 'DEGRADED'].includes(value)) return 'warning'
   if (['FAILED', 'REJECTED', 'DEAD_LETTERED'].includes(value)) return 'danger'
   return 'neutral'
 }

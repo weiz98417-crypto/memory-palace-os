@@ -18,13 +18,14 @@ describe('AgentRun reducer', () => {
 })
 
 describe('AgentRun presentation', () => {
-  it('maps every advice lifecycle state to the canonical label', () => {
+  it('maps every advice lifecycle state to the canonical label and color tone', () => {
     const base = { incident_id: 'i', artifact: 'ADVICE' as const, run_id: 'r', sequence: 1 }
-    expect(presentAgentRun({ ...base, status: 'PENDING' }).statusLabel).toBe('分析中')
-    expect(presentAgentRun({ ...base, status: 'READY', payload: { evidence_status: 'GROUNDED' } }).statusLabel).toBe('已就绪')
-    expect(presentAgentRun({ ...base, status: 'READY', payload: { evidence_status: 'NO_EVIDENCE' } }).statusLabel).toBe('没有依据')
-    expect(presentAgentRun({ ...base, status: 'FAILED' }).statusLabel).toBe('未获得模型建议')
-    expect(presentAgentRun({ ...base, status: 'SUPERSEDED' }).statusLabel).toBe('已过期')
+    expect(presentAgentRun({ ...base, status: 'PENDING' })).toMatchObject({ statusLabel: '分析中', tone: 'primary' })
+    expect(presentAgentRun({ ...base, status: 'RUNNING' })).toMatchObject({ statusLabel: '分析中', tone: 'info' })
+    expect(presentAgentRun({ ...base, status: 'READY', payload: { evidence_status: 'GROUNDED' } })).toMatchObject({ statusLabel: '已就绪', tone: 'success' })
+    expect(presentAgentRun({ ...base, status: 'READY', payload: { evidence_status: 'NO_EVIDENCE' } })).toMatchObject({ statusLabel: '没有依据', tone: 'warning' })
+    expect(presentAgentRun({ ...base, status: 'FAILED' })).toMatchObject({ statusLabel: '未获得模型建议', tone: 'danger' })
+    expect(presentAgentRun({ ...base, status: 'SUPERSEDED' })).toMatchObject({ statusLabel: '已过期', tone: 'warning' })
   })
 
   it('renders dispatch and closure payloads as structured facts and lists', () => {

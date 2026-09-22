@@ -8,9 +8,9 @@ function text(value: unknown): string {
   return value === null || value === undefined ? '' : String(value)
 }
 function toneFor(status: string): StateTone {
+  if (status === 'PENDING') return 'primary'
   if (status === 'APPROVED') return 'success'
-  if (status === 'REJECTED') return 'danger'
-  if (status === 'PENDING') return 'warning'
+  if (status === 'REJECTED' || status === 'FAILED') return 'danger'
   return 'neutral'
 }
 const title = computed(() => text(props.approval.tool_name || props.approval.action_code || props.approval.request_type || props.approval.title || '审批请求'))

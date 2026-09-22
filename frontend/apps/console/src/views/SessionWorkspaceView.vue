@@ -13,9 +13,12 @@ const busyId = ref('')
 function format(value?: number): string {
   return value ? new Date(value * 1000).toLocaleString('zh-CN', { hour12: false }) : '—'
 }
-function tone(stage: string): 'success' | 'warning' | 'neutral' {
+function tone(stage: string): 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'neutral' {
   if (stage === 'CLOSED') return 'success'
-  if (stage === 'ACTIVE' || stage === 'RUNNING') return 'warning'
+  if (stage === 'ACTIVE' || stage === 'RUNNING' || stage === 'IN_PROGRESS') return 'info'
+  if (stage === 'PENDING' || stage === 'WAITING') return 'primary'
+  if (stage === 'PAUSED' || stage === 'DEGRADED') return 'warning'
+  if (stage === 'FAILED' || stage === 'ERROR') return 'danger'
   return 'neutral'
 }
 async function load() {

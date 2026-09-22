@@ -91,10 +91,12 @@ const currentInterviewQuestion = computed(() => {
   return turns[nextIndex]?.question_text || turns[turns.length - 1]?.question_text || '请描述你的现场经验'
 })
 
-function statusTone(value?: string): 'success' | 'warning' | 'danger' | 'neutral' | 'info' {
+function statusTone(value?: string): 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'neutral' {
   const state = String(value || '').toUpperCase()
+  if (['PENDING', 'INVITED', 'WAITING', 'QUEUED'].includes(state)) return 'primary'
+  if (['RUNNING', 'SENDING', 'ACCEPTED', 'IN_PROGRESS'].includes(state)) return 'info'
   if (['DONE', 'SUCCEEDED', 'DELIVERED', 'COMPLETED', 'EXPERT_CONFIRMED', 'PUBLISHED', 'ACTIVE'].includes(state)) return 'success'
-  if (['PENDING', 'RUNNING', 'SENDING', 'ACCEPTED', 'IN_PROGRESS', 'PAUSED', 'INVITED'].includes(state)) return 'warning'
+  if (['PAUSED', 'DEGRADED'].includes(state)) return 'warning'
   if (['FAILED', 'BLOCKED', 'RETRY_REQUIRED', 'DEAD_LETTERED', 'REJECTED', 'DEPRECATED'].includes(state)) return 'danger'
   return 'neutral'
 }

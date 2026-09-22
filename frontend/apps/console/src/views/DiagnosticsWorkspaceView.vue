@@ -68,12 +68,14 @@ function format(value?: number | string | null): string {
 function text(value: unknown, fallback: string | number = '—'): string {
   return value === undefined || value === null || value === '' ? String(fallback) : String(value)
 }
-function tone(value?: string | boolean): 'success' | 'warning' | 'danger' | 'neutral' | 'info' {
+function tone(value?: string | boolean): 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'neutral' {
   if (typeof value === 'boolean') return value ? 'success' : 'danger'
   const state = String(value || '').toUpperCase()
+  if (['PENDING', 'QUEUED'].includes(state)) return 'primary'
+  if (['RUNNING', 'IN_PROGRESS', 'HALF_OPEN'].includes(state)) return 'info'
   if (['HEALTHY', 'READY', 'LIVE_VERIFIED', 'SUCCEEDED', 'CLOSED', 'SIMULATOR_READY'].includes(state)) return 'success'
-  if (['DEGRADED', 'WARNING', 'HALF_OPEN', 'PENDING', 'RUNNING', 'OPTIONAL_NOT_CONFIGURED'].includes(state)) return 'warning'
-  if (['UNHEALTHY', 'BLOCKED', 'FAILED', 'OPEN', 'EXHAUSTED', 'DISABLED_BY_POLICY'].includes(state)) return 'danger'
+  if (['DEGRADED', 'WARNING', 'OPEN', 'OPTIONAL_NOT_CONFIGURED', 'SUPERSEDED', 'REGISTERED_UNVERIFIED'].includes(state)) return 'warning'
+  if (['UNHEALTHY', 'BLOCKED', 'FAILED', 'EXHAUSTED', 'DISABLED_BY_POLICY', 'ERROR'].includes(state)) return 'danger'
   return state ? 'info' : 'neutral'
 }
 function traceLabel(value?: string): string {

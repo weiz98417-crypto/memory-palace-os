@@ -21,9 +21,11 @@ function timeText(value: unknown): string {
   return text(value)
 }
 function toneFor(status: string): StateTone {
+  if (['PENDING', 'QUEUED'].includes(status)) return 'primary'
+  if (['RUNNING', 'IN_PROGRESS'].includes(status)) return 'info'
   if (['READY', 'GROUNDED', 'DONE', 'SUCCEEDED', 'RECORDED'].includes(status)) return 'success'
+  if (['DEGRADED', 'WARNING', 'NO_EVIDENCE', 'SUPERSEDED'].includes(status)) return 'warning'
   if (['FAILED', 'ERROR'].includes(status)) return 'danger'
-  if (['DEGRADED', 'PENDING', 'RUNNING'].includes(status)) return 'warning'
   return 'neutral'
 }
 const rows = computed(() => props.items.map((item, index) => {

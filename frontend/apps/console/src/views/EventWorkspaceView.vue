@@ -34,8 +34,10 @@ const evidence = computed(() => {
 function format(value?: number): string {
   return value ? new Date(value * 1000).toLocaleString('zh-CN', { hour12: false }) : '—'
 }
-function tone(value: string): 'success' | 'warning' | 'danger' | 'neutral' {
+function tone(value: string): 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'neutral' {
   const status = value.toUpperCase()
+  if (status === 'PENDING') return 'primary'
+  if (status === 'RUNNING' || status === 'IN_PROGRESS') return 'info'
   if (status === 'CLOSED' || status === 'RESOLVED') return 'success'
   if (status === 'P0' || status === 'P1' || status === 'FAILED') return 'danger'
   if (status === 'OPEN' || status === 'P2') return 'warning'

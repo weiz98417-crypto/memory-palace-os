@@ -70,9 +70,11 @@ export function deliveryStatusLabel(value: string): string {
 
 export function toneForStatus(value: string): StateTone {
   const status = String(value || '').toUpperCase()
+  if (['PENDING', 'QUEUED', 'WAITING'].includes(status)) return 'primary'
+  if (['RUNNING', 'SENDING', 'IN_PROGRESS'].includes(status)) return 'info'
   if (['READY', 'SENT', 'DELIVERED', 'SUCCEEDED', 'DONE', 'RECORDED', 'ACTIVE'].includes(status)) return 'success'
+  if (['RETRY_REQUIRED', 'PAUSED', 'DEGRADED'].includes(status)) return 'warning'
   if (['FAILED', 'ERROR', 'DEAD_LETTERED', 'REJECTED'].includes(status)) return 'danger'
-  if (['PENDING', 'RUNNING', 'SENDING', 'RETRY_REQUIRED', 'PAUSED'].includes(status)) return 'warning'
   return 'neutral'
 }
 

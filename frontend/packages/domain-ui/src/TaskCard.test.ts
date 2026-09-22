@@ -19,6 +19,7 @@ describe('TaskCard', () => {
     })
     expect(wrapper.text()).toContain('检修 12 号车')
     expect(wrapper.text()).toContain('RUNNING')
+    expect(wrapper.find('.status-badge').attributes('data-tone')).toBe('info')
     expect(wrapper.text()).toContain('陈雨')
     expect(wrapper.text()).toContain('检查右后轮')
     expect(wrapper.find('.task-action').exists()).toBe(true)

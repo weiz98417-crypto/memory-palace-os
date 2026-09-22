@@ -88,12 +88,13 @@ function label(value?: string): string {
   }
   return labels[String(value || '').toUpperCase()] || value || '状态待确认'
 }
-function tone(value?: string): 'success' | 'warning' | 'danger' | 'neutral' | 'info' {
+function tone(value?: string): 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'neutral' {
   const state = String(value || '').toUpperCase()
-  if (['ACTIVE', 'SIGNED', 'PUBLISHED', 'COMPLETED'].includes(state)) return 'success'
-  if (['PENDING', 'INVITED', 'ACCEPTED', 'IN_PROGRESS', 'IN_REVIEW'].includes(state)) return 'warning'
-  if (['INACTIVE', 'DEPRECATED', 'REJECTED'].includes(state)) return 'danger'
-  if (state === 'EXPERT_CONFIRMED') return 'info'
+  if (['PENDING', 'INVITED'].includes(state)) return 'primary'
+  if (['ACCEPTED', 'IN_PROGRESS', 'IN_REVIEW', 'RUNNING'].includes(state)) return 'info'
+  if (['ACTIVE', 'SIGNED', 'PUBLISHED', 'COMPLETED', 'EXPERT_CONFIRMED'].includes(state)) return 'success'
+  if (['PAUSED', 'DEGRADED'].includes(state)) return 'warning'
+  if (['INACTIVE', 'DEPRECATED', 'REJECTED', 'FAILED'].includes(state)) return 'danger'
   return 'neutral'
 }
 function scopeText(scope: { scope_type?: string; scope_value?: string }): string {

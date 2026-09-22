@@ -47,9 +47,11 @@ const visibleTasks = computed(() => tasks.value.filter((task) => {
 function assigneeName(userId?: string): string {
   return assignees.value.find((item) => item.id === userId)?.display_name || userId || '未分配'
 }
-function statusTone(status: string): 'success' | 'warning' | 'danger' | 'neutral' {
+function statusTone(status: string): 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'neutral' {
+  if (status === 'PENDING') return 'primary'
+  if (status === 'RUNNING') return 'info'
+  if (status === 'BLOCKED' || status === 'RETRY_REQUIRED') return 'warning'
   if (status === 'DONE') return 'success'
-  if (status === 'RUNNING') return 'warning'
   if (status === 'FAILED') return 'danger'
   return 'neutral'
 }
