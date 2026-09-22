@@ -254,6 +254,11 @@ onBeforeUnmount(() => {
           <div class="map-canvas">
             <ScenicMap :zones="model.map.zones" :routes="model.map.routes" :alerts="model.alerts" />
           </div>
+          <div class="map-legend-row" aria-label="地图图例">
+            <span><i class="legend-dot legend-dot--alert"></i>告警区域</span>
+            <span><i class="legend-dot legend-dot--normal"></i>正常区域</span>
+            <span><i class="legend-flow"></i>处置流向</span>
+          </div>
           <p class="map-footer">真实 GIS 可选连接器：{{ model.map.gisConnector.status || 'OPTIONAL_CONNECTION / NOT_CONFIGURED' }} · {{ model.map.gisConnector.interface || 'ScenicMapAdapter/v1' }} · 图层 {{ (model.map.gisConnector.layers || []).join(' / ') || 'zones / routes / equipment / staff / alerts' }}</p>
         </article>
 
@@ -398,6 +403,13 @@ onBeforeUnmount(() => {
 .map-north path { fill: #e8f4ff; }
 .map-north text { fill: #d9edff; font-size: 3px; text-anchor: middle; }
 .map-footer { margin: 0; color: var(--mp-color-mute); font-size: 11px; line-height: 1.6; }
+.map-legend-row { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; color: var(--mp-color-mute); font-size: 11px; }
+.map-legend-row > span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
+.legend-dot--alert { background: #f06b73; box-shadow: 0 0 8px rgba(240, 107, 115, .6); }
+.legend-dot--normal { border: 2px dashed #65a7cb; }
+.legend-flow { display: inline-block; width: 26px; height: 3px; border-radius: 999px; background: linear-gradient(90deg, transparent, #68d6ff 35%, #68d6ff 65%, transparent); background-size: 200% 100%; animation: legend-flow 1.6s linear infinite; }
+@keyframes legend-flow { to { background-position: -200% 0; } }
 .alert-panel ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .alert-panel li { display: grid; gap: 3px; padding: 10px 12px; border: 1px solid var(--mp-color-hairline); border-radius: 9px; background: color-mix(in srgb, var(--mp-color-danger) 6%, transparent); }
 .alert-panel li strong { color: var(--mp-color-ink); font-size: 13px; }

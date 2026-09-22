@@ -63,7 +63,8 @@ function zoneLabel(zone: ScenicMapZone) { return `${zone.name} · 容量 ${zone.
 </script>
 
 <template>
-  <svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid meet" role="img" aria-label="云栖山景区实时作业态势图">
+  <div class="scenic-map">
+    <svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid meet" role="img" aria-label="云栖山景区实时作业态势图">
     <defs>
       <linearGradient id="v2-map-terrain" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0" stop-color="#143554" />
@@ -128,17 +129,6 @@ function zoneLabel(zone: ScenicMapZone) { return `${zone.name} · 容量 ${zone.
       <path v-for="zone in zones" :key="`shape-${zone.id}`" :d="zoneShapes[zone.id] || ''" :class="['map-zone-shape', { 'is-alert': isAlert(zone.id) }]" />
     </g>
 
-    <g class="map-legend" transform="translate(5 5)">
-      <rect width="43" height="17" rx="3" fill="rgba(5,16,30,.88)" stroke="#365975" stroke-width=".35" />
-      <text class="map-legend-title" x="3.5" y="4.5">作业态势图</text>
-      <circle cx="4.5" cy="8.2" r="1.5" fill="#f06b73" />
-      <text class="map-legend-text" x="7" y="9.2">告警区域</text>
-      <circle cx="4.5" cy="12.3" r="1.2" fill="none" stroke="#65a7cb" stroke-width=".45" stroke-dasharray=".8 .7" />
-      <text class="map-legend-text" x="7" y="13.2">正常区域</text>
-      <path d="M4.5 15.4 C6.5 15.4 7.5 16 9 16.2" stroke="#68d6ff" stroke-width=".7" fill="none" stroke-linecap="round" />
-      <text class="map-legend-text" x="10.5" y="16.7">处置流向</text>
-    </g>
-
     <g class="map-north" transform="translate(148 8)">
       <circle r="3.3" />
       <path d="M0-2.2 L1.1 1.6 L0 .8 L-1.1 1.6 Z" />
@@ -156,25 +146,26 @@ function zoneLabel(zone: ScenicMapZone) { return `${zone.name} · 容量 ${zone.
     <g class="map-route-lines">
       <path v-for="route in routes" :key="route.id" :d="routePath(route)" />
     </g>
-  </svg>
+    </svg>
+  </div>
 </template>
 
 <style scoped>
-svg { display: block; width: 100%; height: 100%; }
+.scenic-map { display: grid; min-height: 0; height: 100%; }
+.scenic-map svg { display: block; width: 100%; min-height: 0; height: 100%; }
 .map-zone-shape { fill: rgba(80, 155, 198, .11); stroke: #65a7cb; stroke-width: 3.2; stroke-dasharray: 12 10; transition: fill .2s ease, stroke .2s ease; }
 .map-zone-shape.is-alert { fill: rgba(239, 93, 100, .22); stroke: #f06b73; stroke-width: 5; stroke-dasharray: 0; filter: url(#v2-map-glow); }
 .map-forest use { opacity: .88; }
-.map-route-lines path { fill: none; stroke: rgba(111, 222, 255, .82); stroke-width: 1.15; stroke-linecap: round; stroke-dasharray: 2.4 2; filter: url(#v2-map-glow); }
+.map-route-lines path { fill: none; stroke: rgba(111, 222, 255, .86); stroke-width: 1.15; stroke-linecap: round; stroke-dasharray: 2.4 2; filter: url(#v2-map-glow); animation: map-flow 1.55s linear infinite; }
 .map-zone-label { pointer-events: none; }
 .normal-label-bg { fill: rgba(5, 16, 30, .88); stroke: #65a7cb; stroke-width: .35; }
 .alert-label-bg { fill: rgba(76, 17, 29, .9); stroke: #ff707b; stroke-width: .45; }
 .map-zone-title { fill: #f5faff; font-size: 3.05px; font-weight: 750; text-anchor: middle; paint-order: stroke; stroke: rgba(3, 10, 22, .9); stroke-width: .75; }
 .map-zone-meta { fill: #bed9eb; font-size: 1.9px; text-anchor: middle; paint-order: stroke; stroke: rgba(3, 10, 22, .88); stroke-width: .55; }
-.map-alert-ring { fill: none; stroke: #ff7b84; stroke-width: .75; opacity: .7; animation: map-pulse 1.8s ease-out infinite; }
-.map-legend-title { fill: #f1f7ff; font-size: 2.4px; font-weight: 700; }
-.map-legend-text { fill: #bdd1e3; font-size: 1.7px; }
+.map-alert-ring { fill: none; stroke: #ff7b84; stroke-width: .65; opacity: .72; animation: map-pulse 1.8s ease-out infinite; transform-box: fill-box; transform-origin: center; }
 .map-north circle { fill: rgba(5, 16, 30, .86); stroke: #55748f; stroke-width: .35; }
 .map-north path { fill: #e8f4ff; }
 .map-north text { fill: #d9edff; font-size: 2.4px; text-anchor: middle; }
-@keyframes map-pulse { from { opacity: .72; transform: scale(.82); transform-origin: center; } to { opacity: 0; transform: scale(1.34); transform-origin: center; } }
+@keyframes map-flow { to { stroke-dashoffset: -11; } }
+@keyframes map-pulse { 0% { opacity: .78; stroke-width: .5; } 70% { opacity: .24; stroke-width: 1.1; } 100% { opacity: 0; stroke-width: 1.45; } }
 </style>
