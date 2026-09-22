@@ -165,6 +165,24 @@ body {
   font-size: 12px;
 }
 
+.rail-logout {
+  min-height: 30px;
+  margin-left: auto;
+  padding: 4px 8px;
+  border: 1px solid #536168;
+  border-radius: 5px;
+  color: #dce4e7;
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.rail-logout:hover {
+  border-color: #c36a70;
+  color: #ffd9dc;
+  background: rgba(195, 106, 112, .12);
+}
+
 .conversation-panel {
   position: relative;
   z-index: 30;
@@ -1596,6 +1614,10 @@ body {
   .rail-account {
     justify-content: center;
     padding: 14px 8px;
+  }
+
+  .rail-logout {
+    display: none;
   }
 
   .work-columns {
