@@ -7,6 +7,7 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { BarChart, PieChart } from 'echarts/charts'
 import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
 import { Close, FullScreen } from '@element-plus/icons-vue'
+import ScenicMap from '../components/ScenicMap.vue'
 import { createApiClient } from '@memory-palace/api-client'
 import { AgentRunCard, StatePanel, StatusBadge } from '@memory-palace/domain-ui'
 import { loadCommandCenter, type ChartDatum, type ChartSeries, type CommandCenterModel } from '../commandCenter'
@@ -175,21 +176,6 @@ function handleKeydown(event: { key: string }) {
   if (event.key === 'Escape' && selectedChart.value) closeChart()
 }
 
-const alertZones = computed(() => new Set(model.value.alerts.map((item) => String(item?.zone_id || '')).filter(Boolean)))
-function zoneById(id: string) {
-  return model.value.map.zones.find((zone) => zone.id === id)
-}
-function mapX(value: number) { return value * 1.6 }
-function mapY(value: number) { return value * 0.9 }
-function routePath(route: { from: string; to: string }) {
-  const from = zoneById(route.from)
-  const to = zoneById(route.to)
-  if (!from || !to) return ''
-  return `M ${mapX(from.x)} ${mapY(from.y)} Q ${mapX((from.x + to.x) / 2)} ${mapY(Math.min(from.y, to.y)) - 9} ${mapX(to.x)} ${mapY(to.y)}`
-}
-function zoneRadius(zone: { capacity: number }) {
-  return Math.max(6, Math.min(12, 5 + zone.capacity / 260))
-}
 async function executeNextAction() {
   const action = model.value.nextAction
   if (!action || action.enabled === false || actionBusy.value) return
@@ -266,44 +252,7 @@ onBeforeUnmount(() => {
             <span class="map-status">{{ model.map.adapter }} · {{ model.map.coordinateSystem }}</span>
           </div>
           <div class="map-canvas">
-            <svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid meet" role="img" aria-label="云栖山景区实时作业态势图">
-              <defs>
-                <linearGradient id="v2-map-terrain" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stop-color="#12314d" />
-                  <stop offset=".55" stop-color="#0b2238" />
-                  <stop offset="1" stop-color="#071827" />
-                </linearGradient>
-                <linearGradient id="v2-map-lake" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stop-color="#2b8fbd" />
-                  <stop offset="1" stop-color="#12527d" />
-                </linearGradient>
-                <filter id="v2-map-glow"><feGaussianBlur stdDeviation="1.5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-              </defs>
-              <rect width="100" height="100" fill="url(#v2-map-terrain)" />
-              <g transform="scale(1.6 .9)">
-                <path d="M0 30 C18 10 38 9 52 21 C63 30 76 17 100 9 L100 0 L0 0 Z" fill="#17354c" opacity=".75" />
-                <path d="M60 15 C72 5 92 7 99 16 C103 24 97 31 87 35 C76 39 63 34 58 25 C56 21 57 18 60 15 Z" fill="url(#v2-map-lake)" stroke="#68d6ff" stroke-width=".45" />
-                <g fill="none" stroke="#315a75" stroke-width=".2" opacity=".55">
-                  <path d="M0 38 C18 26 35 25 50 34 C64 42 78 34 100 26" />
-                  <path d="M0 53 C16 40 35 39 52 48 C68 57 82 48 100 41" />
-                  <path d="M0 68 C20 55 38 55 56 64 C72 72 86 66 100 58" />
-                </g>
-              </g>
-              <g v-for="route in model.map.routes" :key="route.id">
-                <path :d="routePath(route)" fill="none" stroke="#68d6ff" stroke-width="1.4" stroke-linecap="round" opacity=".62" filter="url(#v2-map-glow)" />
-              </g>
-              <g v-for="zone in model.map.zones" :key="zone.id">
-                <circle :cx="mapX(zone.x)" :cy="mapY(zone.y)" :r="zoneRadius(zone)" :class="['map-zone', { 'is-alert': alertZones.has(zone.id) }]" />
-                <circle v-if="alertZones.has(zone.id)" :cx="mapX(zone.x)" :cy="mapY(zone.y)" :r="zoneRadius(zone) + 3" class="map-alert-ring" />
-                <text :x="mapX(zone.x)" :y="mapY(zone.y) - 1.2" class="map-zone-name">{{ zone.name }}</text>
-                <text :x="mapX(zone.x)" :y="mapY(zone.y) + 4.2" class="map-zone-meta">容量 {{ zone.capacity }}</text>
-              </g>
-              <g class="map-north" transform="translate(148 9)">
-                <circle r="5" />
-                <path d="M0-3 L1.5 2 L0 1 L-1.5 2 Z" />
-                <text x="0" y="-6">N</text>
-              </g>
-            </svg>
+            <ScenicMap :zones="model.map.zones" :routes="model.map.routes" :alerts="model.alerts" />
           </div>
           <p class="map-footer">真实 GIS 可选连接器：{{ model.map.gisConnector.status || 'OPTIONAL_CONNECTION / NOT_CONFIGURED' }} · {{ model.map.gisConnector.interface || 'ScenicMapAdapter/v1' }} · 图层 {{ (model.map.gisConnector.layers || []).join(' / ') || 'zones / routes / equipment / staff / alerts' }}</p>
         </article>
