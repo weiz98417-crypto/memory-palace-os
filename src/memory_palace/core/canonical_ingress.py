@@ -113,14 +113,14 @@ class CanonicalMessageIngress:
             if message.external_conversation_id
             else uuid.uuid4().hex
         )
-        session_id = self._stable_session_id(
+        stable_session_id = self._stable_session_id(
             venue_id=venue_id,
             channel=channel,
             user_id=user_id,
             external_conversation_id=external_conversation_id,
         )
-        await self._ensure_session(
-            session_id=session_id,
+        session_id = await self._ensure_session(
+            session_id=stable_session_id,
             venue_id=venue_id,
             user_id=user_id,
             channel=channel,
@@ -406,8 +406,17 @@ class CanonicalMessageIngress:
         user_id: str,
         channel: str,
         external_conversation_id: str,
-    ) -> None:
+    ) -> str:
         now = time.time()
+        mapping = await self._db.fetch_one(
+            """
+            SELECT session_id FROM channel_conversations
+            WHERE venue_id = ? AND channel = ?
+              AND external_conversation_id = ? AND user_id = ? AND status = 'ACTIVE'
+            """,
+            (venue_id, channel, external_conversation_id, user_id),
+        )
+        effective_session_id = mapping["session_id"] if mapping else session_id
         await self._db.execute(
             """
             INSERT INTO sessions (
@@ -416,7 +425,7 @@ class CanonicalMessageIngress:
             ) VALUES (?, ?, ?, 'router', 'active', 0, ?, ?)
             ON CONFLICT(session_id) DO NOTHING
             """,
-            (session_id, user_id, venue_id, now, now),
+            (effective_session_id, user_id, venue_id, now, now),
         )
         await self._db.execute(
             """
@@ -428,7 +437,7 @@ class CanonicalMessageIngress:
             DO NOTHING
             """,
             (
-                session_id,
+                effective_session_id,
                 venue_id,
                 channel,
                 external_conversation_id,
@@ -451,6 +460,7 @@ class CanonicalMessageIngress:
                 "The external conversation could not be mapped.",
                 status_code=409,
             )
+        return mapping["session_id"]
 
     async def _write_audit(
         self,

@@ -679,6 +679,9 @@
     var badge = byId("evidence-status-badge");
     badge.className = "status-pill " + (evidence ? statusClass(evidence.status) : "");
     badge.textContent = evidence ? UI.statusLabel(evidence.status) : empty;
+    byId("evidence-note").textContent = evidence
+      ? "模型、队列和审计明细以管理后台 Trace 记录为准。"
+      : "尚未选择已受理消息。选择员工并发送或接收一条消息后，这里会显示正式受理证据。";
 
     var sessionLink = byId("admin-session-link");
     var traceLink = byId("admin-trace-link");

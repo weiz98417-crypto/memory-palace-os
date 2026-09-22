@@ -207,6 +207,65 @@ async def test_simulator_lists_only_active_tenant_identities_and_uses_selected_e
 
 
 @pytest.mark.asyncio
+async def test_simulator_reuses_existing_conversation_session_id(tmp_path):
+    app, queue, db = await _build_app(tmp_path)
+    app.state.test_principal = {
+        "user_id": "manager-west",
+        "username": "manager-west",
+        "role": "manager",
+        "venue_id": "venue-west",
+        "auth_type": "test",
+    }
+    now = time.time()
+    existing_session_id = "existing-simulator-session"
+    await db.execute(
+        """
+        INSERT INTO sessions (
+            session_id, user_id, venue_id, agent_name, stage, message_count,
+            created_at, updated_at
+        ) VALUES (?, 'operator-west', 'venue-west', 'router', 'active', 0, ?, ?)
+        """,
+        (existing_session_id, now, now),
+    )
+    await db.execute(
+        """
+        INSERT INTO channel_conversations (
+            session_id, venue_id, channel, external_conversation_id,
+            user_id, status, created_at, updated_at
+        ) VALUES (?, 'venue-west', 'WECOM_SIMULATOR', 'existing-conversation',
+                  'operator-west', 'ACTIVE', ?, ?)
+        """,
+        (existing_session_id, now, now),
+    )
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+
+    try:
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post(
+                "/api/v1/channels/simulator/messages",
+                json={
+                    "user_id": "operator-west",
+                    "content": "复用既有会话映射",
+                    "external_message_id": "sim-existing-session-001",
+                    "external_conversation_id": "existing-conversation",
+                },
+            )
+
+        assert response.status_code == 202
+        accepted = response.json()
+        assert accepted["session_id"] == existing_session_id
+        queued = queue.get_nowait()
+        assert queued["session_id"] == existing_session_id
+        persisted = await db.fetch_one(
+            "SELECT session_id FROM message_runs WHERE message_id = ?",
+            (accepted["message_id"],),
+        )
+        assert persisted["session_id"] == existing_session_id
+    finally:
+        await db.close()
+
+
+@pytest.mark.asyncio
 async def test_real_wecom_adapter_rejects_before_persistence_even_when_credentials_exist(
     tmp_path,
     monkeypatch,
