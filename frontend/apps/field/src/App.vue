@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { createApiClient } from '@memory-palace/api-client'
-import { AppShell, StatePanel } from '@memory-palace/domain-ui'
+import { AppShell, LoginShell } from '@memory-palace/domain-ui'
+import loginBackground from './assets/login-background-1672.webp'
+import FieldWorkspace from './views/FieldTaskView.vue'
 
 const client = createApiClient()
 const session = ref<any>(client.auth.read())
@@ -35,29 +37,25 @@ function logout() {
 </script>
 
 <template>
-  <AppShell title="企业运营助手" :venue="session?.venue_id || '云栖山景区'" connection="CONNECTED" last-updated="--" :theme="'field'">
+  <LoginShell
+    v-if="!canAccessField"
+    v-model:username="username"
+    v-model:password="password"
+    title="企业运营助手"
+    subtitle="登录现场端，处理分配给自己的任务与证据"
+    eyebrow="FIELD ACCESS"
+    button-label="登录助手"
+    busy-label="正在登录"
+    scene-label="MEMORY PALACE OS"
+    :error="error"
+    :busy="authenticating"
+    :background-image="loginBackground"
+    :footer="['仅限景区运营、设备与管理人员', '任务、证据和回执均进入正式审计链路']"
+    variant="field"
+    @submit="login"
+  />
+  <AppShell v-else title="企业运营助手" :venue="session?.venue_id || '云栖山景区'" connection="CONNECTED" last-updated="--" :theme="'field'">
     <template #nav><div class="entry-mark">/assistant/</div></template>
-    <StatePanel v-if="!canAccessField" state="empty" title="企业运营助手登录" message="使用组织分配的正式账号继续。">
-      <form class="login-form" @submit.prevent="login">
-        <label>用户名<input v-model="username" autocomplete="username" required></label>
-        <label>密码<input v-model="password" type="password" autocomplete="current-password" required></label>
-        <p v-if="error" class="error-text">{{ error }}</p>
-        <button type="submit" :disabled="authenticating">{{ authenticating ? '登录中' : '登录助手' }}</button>
-      </form>
-    </StatePanel>
-    <FieldWorkspace v-else @logout="logout" />
+    <FieldWorkspace @logout="logout" />
   </AppShell>
 </template>
-
-<script lang="ts">
-import FieldWorkspace from './views/FieldTaskView.vue'
-export default { components: { FieldWorkspace } }
-</script>
-
-<style scoped>
-.login-form { display: grid; gap: 14px; width: min(420px, 100%); margin-top: 16px; }
-.login-form label { display: grid; gap: 6px; color: var(--mp-color-body); font-size: 14px; }
-.login-form input { min-height: 44px; padding: 10px 12px; border: 1px solid var(--mp-color-hairline-strong); border-radius: var(--mp-radius-md); color: var(--mp-color-ink); background: var(--mp-color-surface-elevated); font: inherit; }
-.login-form button { min-height: 44px; border: 1px solid var(--mp-color-primary); border-radius: var(--mp-radius-md); color: white; background: var(--mp-color-primary); cursor: pointer; }
-.error-text { margin: 0; color: var(--mp-color-danger); font-size: 13px; }
-</style>
