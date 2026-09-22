@@ -53,6 +53,26 @@ select {
   letter-spacing: 0;
 }
 
+input,
+textarea,
+select {
+  color: var(--ink);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--ink-faint);
+  opacity: 1;
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+  color: var(--ink-soft);
+  -webkit-text-fill-color: var(--ink-soft);
+  opacity: 1;
+}
+
 button,
 a,
 input,
