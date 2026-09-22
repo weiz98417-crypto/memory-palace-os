@@ -45,7 +45,7 @@ describe('console task and approval API seam', () => {
   it('loads tasks, assignees and task detail', async () => {
     const request = vi.fn()
       .mockResolvedValueOnce({ tasks: [{ id: 't1' }] })
-      .mockResolvedValueOnce([{ id: 'u1', display_name: '陈雨' }])
+      .mockResolvedValueOnce({ assignees: [{ id: 'u1', display_name: '陈雨' }] })
       .mockResolvedValueOnce({ task: { id: 't1' } })
     expect(await operational.loadTasks({ request })).toHaveLength(1)
     expect(await operational.loadAssignees({ request })).toHaveLength(1)

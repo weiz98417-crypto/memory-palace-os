@@ -137,8 +137,10 @@ export async function loadTasks(client: RequestClient): Promise<TaskRecord[]> {
 }
 
 export async function loadAssignees(client: RequestClient): Promise<AssigneeRecord[]> {
-  const payload = await client.request<AssigneeRecord[] | { users?: AssigneeRecord[] }>('/admin/assignees')
-  return Array.isArray(payload) ? payload : Array.isArray(payload.users) ? payload.users : []
+  const payload = await client.request<AssigneeRecord[] | { assignees?: AssigneeRecord[]; users?: AssigneeRecord[] }>('/admin/assignees')
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload.assignees)) return payload.assignees
+  return Array.isArray(payload.users) ? payload.users : []
 }
 
 export async function loadTask(client: RequestClient, taskId: string): Promise<{ task?: TaskRecord } & TaskRecord> {
