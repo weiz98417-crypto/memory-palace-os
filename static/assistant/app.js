@@ -164,6 +164,7 @@
 
   function showLogin(error) {
     byId("app-screen").hidden = true;
+    byId("app-screen").classList.remove("conversation-hidden");
     byId("login-screen").hidden = false;
     byId("login-error").textContent = error ? UI.errorView(error).message : "";
   }
@@ -260,6 +261,7 @@
   function navigate(section, replace) {
     if (["chat", "work", "experience", "me"].indexOf(section) < 0) section = "chat";
     state.section = section;
+    byId("app-screen").classList.toggle("conversation-hidden", section !== "chat");
     document.querySelectorAll("[data-app-section]").forEach(function (panel) {
       var active = panel.getAttribute("data-app-section") === section;
       panel.hidden = !active;
@@ -367,6 +369,7 @@
   }
 
   function openSessions() {
+    if (state.section !== "chat") return;
     byId("conversation-panel").classList.add("open");
     byId("conversation-backdrop").classList.add("visible");
   }
