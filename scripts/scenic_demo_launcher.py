@@ -122,6 +122,7 @@ def launch(
     screenshot_dir: Path | None,
     keep_open_seconds: int | None,
     verify_only: bool,
+    login_pages: bool = False,
 ) -> int:
     from playwright.sync_api import sync_playwright
 
@@ -146,11 +147,15 @@ def launch(
                 url = f"{base_url.rstrip('/')}{window.path}"
                 try:
                     page.goto(url, wait_until="domcontentloaded", timeout=30_000)
-                    page.fill(window.username_selector, window.username)
-                    page.fill(window.password_selector, password)
-                    page.click("button[type=submit]")
-                    page.wait_for_selector(window.ready_selector, state="visible", timeout=30_000)
-                    print(f"[ok]   {window.title:<24} {window.username:<15} {url}")
+                    if login_pages:
+                        page.wait_for_selector(window.username_selector, state="visible", timeout=30_000)
+                        print(f"[open] {window.title:<24} {window.username:<15} {url}")
+                    else:
+                        page.fill(window.username_selector, window.username)
+                        page.fill(window.password_selector, password)
+                        page.click("button[type=submit]")
+                        page.wait_for_selector(window.ready_selector, state="visible", timeout=30_000)
+                        print(f"[ok]   {window.title:<24} {window.username:<15} {url}")
                 except Exception as exc:  # noqa: BLE001 - report every role, keep the rest open
                     failures.append(f"{window.key}: {type(exc).__name__}: {exc}")
                     print(f"[FAIL] {window.title:<24} {window.username:<15} {exc}")
@@ -216,6 +221,11 @@ def main() -> None:
         help="where to store one screenshot per role (empty string disables)",
     )
     parser.add_argument("--keep-open", type=int, default=0, help="auto close after N seconds")
+    parser.add_argument(
+        "--login-pages",
+        action="store_true",
+        help="open each login page without filling credentials or submitting",
+    )
     args = parser.parse_args()
 
     try:
@@ -226,13 +236,14 @@ def main() -> None:
     screenshot_dir = args.screenshot_dir if str(args.screenshot_dir) else None
     exit_code = launch(
         base_url=args.base_url,
-        password=_password(),
+        password="" if args.login_pages else _password(),
         channel=args.browser_channel,
         headless=args.headless,
         screen=(width, height),
         screenshot_dir=screenshot_dir,
         keep_open_seconds=args.keep_open or None,
         verify_only=args.verify_only,
+        login_pages=args.login_pages,
     )
     sys.exit(exit_code)
 

@@ -1,12 +1,13 @@
 ﻿[CmdletBinding()]
 param(
-    [ValidateSet('Full', 'Start', 'Verify', 'Auto', 'Status', 'Stop')]
+    [ValidateSet('Full', 'Start', 'Verify', 'Auto', 'LoginPages', 'Status', 'Stop')]
     [string]$Mode = 'Full',
     [string]$Browser = 'msedge',
     [string]$ModelCache = '',
     [int]$TimeoutSeconds = 360,
     [switch]$Build,
-    [switch]$NoOpen
+    [switch]$NoOpen,
+    [int]$KeepOpenSeconds = 3600
 )
 
 $ErrorActionPreference = 'Stop'
@@ -70,6 +71,21 @@ switch ($Mode) {
     }
     'Status' {
         & (Join-Path $PSScriptRoot 'scenic-demo-status.ps1')
+        return
+    }
+    'LoginPages' {
+        Assert-ScenicDocker
+        Test-ScenicDemoRoutes
+        $baseUrl = Get-ScenicDemoBaseUrl
+        $env:SCENIC_DEMO_BASE_URL = $baseUrl
+        Push-Location $script:ScenicRepoRoot
+        try {
+            & uv run --with playwright python scripts\scenic_demo_launcher.py --base-url $baseUrl --browser-channel $Browser --login-pages --keep-open $KeepOpenSeconds
+            if ($LASTEXITCODE -ne 0) { throw "Login-page launcher failed with exit code $LASTEXITCODE." }
+        }
+        finally {
+            Pop-Location
+        }
         return
     }
     'Verify' {
