@@ -89,19 +89,19 @@ const connectionLabel = computed(
   background-image: var(--mp-shell-background-image, none);
   background-position: center;
   background-size: cover;
-  filter: blur(14px) saturate(.96) brightness(.62);
+  filter: blur(10px) saturate(1.04) brightness(.78);
   transform: scale(1.06);
 }
 
 .mp-shell[data-background='true']::after {
   z-index: -1;
-  background: linear-gradient(180deg, rgba(5, 12, 29, .28), rgba(5, 12, 29, .74));
+  background: radial-gradient(circle at 24% 22%, rgba(64, 138, 220, .10), transparent 42%), linear-gradient(180deg, rgba(5, 12, 29, .14), rgba(5, 12, 29, .56));
 }
 
 .mp-shell[data-background='true'] {
   --mp-color-canvas: #0a1024;
-  --mp-color-surface: rgba(16, 24, 48, .78);
-  --mp-color-surface-elevated: rgba(29, 39, 74, .86);
+  --mp-color-surface: rgba(16, 24, 48, .62);
+  --mp-color-surface-elevated: rgba(29, 39, 74, .76);
 }
 
 .mp-shell[data-background='true'] .mp-shell__header {
