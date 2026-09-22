@@ -36,7 +36,7 @@ function Write-ScenicDemoGuide {
     Write-Host '角色账号：simulation-ops / wangfang / chenyu / liming / knowledge-owner' -ForegroundColor Yellow
     Write-Host '密码由 memory-palace-secrets 卷统一提供，开窗脚本会自动登录，不会打印密码。'
     Write-Host ''
-    Write-Host '15 步人工演示流程：' -ForegroundColor Cyan
+    Write-Host '15 步业务演示 + Hatchet/Jaeger 技术收口：' -ForegroundColor Cyan
     Write-Host ' 1. 运行准备：准备新运行，确认场景为 PAUSED。'
     Write-Host ' 2. 运行准备：到设备异常，产生 12 号观光车右后轮告警。'
     Write-Host ' 3. 指挥中心：转为 P1 事件，记录业务编号和事件状态。'

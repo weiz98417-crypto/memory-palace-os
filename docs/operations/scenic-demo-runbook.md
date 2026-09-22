@@ -59,7 +59,7 @@ powershell -ExecutionPolicy Bypass -File scripts/scenic-demo-open.ps1 -Mode Veri
 
 窗口开好后**由你手动操作**，脚本不会点击任何业务按钮。想先验证登录链路而不开窗口，加 `--headless --verify-only`。
 
-## 三、演示流程（15 步）
+## 三、演示流程（17 步）
 
 > 每步都写清“在哪个窗口、点什么、应该看到什么”。带 ⏱ 的步骤受 60 秒高风险决策冷却限制。
 
@@ -78,6 +78,8 @@ powershell -ExecutionPolicy Bypass -File scripts/scenic-demo-open.ps1 -Mode Veri
 13. **运行准备 → 到风险恢复**：点击「到风险恢复」（单步 60 秒）。预期：设备与客流信号恢复到阈值内。
 14. **指挥中心 → 核验并解除风险 → 关闭并形成审计卷宗**：先点「核验并解除风险」，再点「关闭并形成审计卷宗」。预期：状态 `RESOLVED → CLOSED`，出现「事件已闭环」，可点「查看事件卷宗」。
 15. **内部通知接入环境 → 查看通知**：切到第 5 个窗口，检查通知投递与回执记录。预期：能看到本场地内部通知的送达/接单/回执，短信与语音显示未配置（不产生假回执）。
+16. **Hatchet → 查看持久化运行历史**：打开 `http://127.0.0.1:8091/`；如出现登录页使用 `admin@example.com` / `Admin123!!`，并在 `Runs` 点击 `Search past 7 days`。预期：看到 `scenic-agent-advice`、暂停、恢复、重试和失败记录。讲解时强调 Hatchet 只保存运行历史，不替代 PostgreSQL 业务事实。
+17. **Jaeger → 查看 Agent 技术调用链**：打开 `http://127.0.0.1:16686/`，`Service=scenic-agent-trunk`，点击 `Find Traces` 后打开 `scenic.incident_command` trace。预期：看到 `context_trigger`、`router`、`memory_ops` span、耗时和重试；Jaeger 不参与关闭门禁。
 
 ## 四、成功判据
 
@@ -92,6 +94,8 @@ powershell -ExecutionPolicy Bypass -File scripts/scenic-demo-open.ps1 -Mode Veri
 | 内部通知回执 | 每个任务各一条 `RECEIPT_RECORDED` |
 | SOP 命中 | `source_type=SOP`，`backend=postgresql_pgvector`，1024 维 |
 | 案例沉淀 | 关闭时写入一条 `CASE` 向量（可在 SOP/知识中心或 `knowledge_vectors` 中核验） |
+| Hatchet | 最近运行、pause/resume/retry 历史可见 |
+| Jaeger | `scenic.incident_command` 根 span 与 Agent span 可见 |
 
 ## 五、注意事项
 

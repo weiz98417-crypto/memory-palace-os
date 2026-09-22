@@ -31,7 +31,7 @@ Hatchet Dashboard 使用独立登录，不走业务系统会话；本机 quickst
 | `scripts\scenic-demo-status.ps1` | 查看容器、健康、密钥、入口 |
 | `scripts\scenic-demo-open.ps1 -Mode Open` | 打开 5 个已按角色登录的演示窗口 |
 | `scripts\scenic-demo-open.ps1 -Mode Verify` | 无窗口验证 5 个入口登录链路 |
-| `scripts\scenic-demo-open.ps1 -Mode Auto` | 用可见浏览器自动跑完 15 步 UI 演示并保存证据 |
+| `scripts\scenic-demo-open.ps1 -Mode Auto` | 用可见浏览器自动跑完 15 步业务 UI，并在 Hatchet / Jaeger 做技术收口 |
 | `scripts\scenic-demo-stop.ps1` | 停止容器，保留所有数据卷和密钥卷 |
 
 ## 三、启动
@@ -97,7 +97,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\scenic-demo-open.ps1 -Mode Au
 
 CI 或不需要窗口时加 `-Headless`。
 
-## 五、人工演示 15 步
+## 五、人工演示 17 步
 
 ### 第 1 步：准备运行
 
@@ -219,6 +219,22 @@ CI 或不需要窗口时加 `-Headless`。
 
 预期：每个任务都有 `RECEIPT_RECORDED`；短信和语音保持未配置，不产生假回执。
 
+### 第 16 步：Hatchet 持久化运行历史
+
+窗口：Hatchet `http://127.0.0.1:8091/`
+
+操作：如出现登录页使用 `admin@example.com` / `Admin123!!`；进入 `Runs`，必要时点击 `Search past 7 days`。
+
+预期：看到 `scenic-agent-advice`、暂停/恢复/重试/失败记录。讲解时强调 Hatchet 只保存运行历史，不替代 PostgreSQL 业务事实。
+
+### 第 17 步：Jaeger Agent 技术调用链
+
+窗口：Jaeger `http://127.0.0.1:16686/`
+
+操作：在 `Search` 选择 `Service=scenic-agent-trunk`，点击 `Find Traces`，打开 `scenic.incident_command` trace。
+
+预期：看到 `context_trigger`、`router`、`memory_ops` span、耗时和重试；Jaeger 不参与关闭门禁。
+
 ## 六、成功判据
 
 | 对象 | 期望 |
@@ -233,6 +249,8 @@ CI 或不需要窗口时加 `-Headless`。
 | 通知回执 | 每个任务各一条 `RECEIPT_RECORDED` |
 | SOP 命中 | `source_type=SOP`、`postgresql_pgvector`、1024 维 |
 | 案例沉淀 | 关闭时写入一条 `CASE` 向量 |
+| Hatchet | 最近运行、pause/resume/retry 历史可见 |
+| Jaeger | `scenic.incident_command` 根 span 与 Agent span 可见 |
 
 ## 七、自动验证与证据
 
@@ -240,7 +258,7 @@ CI 或不需要窗口时加 `-Headless`。
 # 5 个入口登录链路
 powershell -ExecutionPolicy Bypass -File .\scripts\scenic-demo-open.ps1 -Mode Verify
 
-# 15 步真实 UI 流程，证据写入 artifacts\scenic-e2e\auto-demo
+# 15 步业务 UI 流程 + Hatchet/Jaeger 技术收口，证据写入 artifacts\scenic-e2e\auto-demo
 powershell -ExecutionPolicy Bypass -File .\scripts\scenic-demo-open.ps1 -Mode Auto
 
 # Hatchet + PostgreSQL 建议路径
