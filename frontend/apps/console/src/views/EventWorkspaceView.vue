@@ -13,6 +13,7 @@ import {
   updateEvent,
   type EventRecord,
 } from '../operational'
+import ModalShell from '../components/ModalShell.vue'
 
 const events = ref<EventRecord[]>([])
 const selected = ref<EventRecord | null>(null)
@@ -163,7 +164,8 @@ onMounted(load)
       </div>
     </article>
 
-    <article v-if="selected" class="panel detail">
+    <ModalShell v-if="selected" label="事件卷宗" @close="selected = null">
+      <article class="panel detail">
       <div class="panel-head"><div><h2>{{ selected.raw_text || '事件卷宗' }}</h2><p class="muted">{{ eventLabel(selected) }} · {{ selected.event_type || '待确认' }} · {{ selected.severity || '—' }}</p></div><StatusBadge :label="selected.status || selected.lifecycle || 'OPEN'" :tone="tone(selected.status || selected.lifecycle || 'OPEN')" /></div>
       <div class="fact-grid">
         <div><span>事件编号</span><strong>{{ eventLabel(selected) }}</strong></div>
@@ -184,6 +186,7 @@ onMounted(load)
         <button class="danger" :disabled="busy || !resolution.trim()" @click="close">提交闭环</button>
       </div>
     </article>
+    </ModalShell>
   </section>
 </template>
 

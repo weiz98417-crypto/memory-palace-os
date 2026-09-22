@@ -10,6 +10,7 @@ import {
   requestControlledAction,
   type ApprovalRecord,
 } from '../operational'
+import ModalShell from '../components/ModalShell.vue'
 
 const approvals = ref<ApprovalRecord[]>([])
 const selected = ref<ApprovalRecord | null>(null)
@@ -107,7 +108,8 @@ onMounted(load)
     <StatePanel v-else-if="error" state="error" title="审批读取失败" :message="error" />
     <p v-else-if="notice" class="notice">{{ notice }}</p>
 
-    <form v-if="showRequest" class="panel request-form" @submit.prevent="submitRequest">
+    <ModalShell v-if="showRequest" label="发起受控动作" @close="showRequest = false">
+      <form class="panel request-form" @submit.prevent="submitRequest">
       <h2>发起受控动作</h2>
       <label>工具<select v-model="request.tool_name"><option>send_in_app_alert</option><option>send_alert</option><option>send_sms</option><option>record_manager_decision</option></select></label>
       <label>会话 ID<input v-model="request.session_id" required></label>
@@ -116,6 +118,7 @@ onMounted(load)
       <label class="wide">动作内容<textarea v-model="request.message" rows="3" required></textarea></label>
       <button type="submit" :disabled="busy">提交审批</button>
     </form>
+    </ModalShell>
 
     <article class="panel">
       <div class="table-wrap"><table><thead><tr><th>时间</th><th>审批</th><th>工具</th><th>状态</th><th>事件 / 任务</th><th>执行</th><th></th></tr></thead><tbody>
@@ -132,7 +135,8 @@ onMounted(load)
       </tbody></table></div>
     </article>
 
-    <article v-if="selected" class="panel detail">
+    <ModalShell v-if="selected" label="审批详情" @close="selected = null">
+      <article class="panel detail">
       <ApprovalCard :approval="selected">
         <template #actions>
           <textarea v-model="comment" rows="2" placeholder="审批意见"></textarea>
@@ -147,6 +151,7 @@ onMounted(load)
         <div><span>执行错误</span><strong>{{ selected.execution_error || '—' }}</strong></div>
       </div>
     </article>
+    </ModalShell>
   </section>
 </template>
 

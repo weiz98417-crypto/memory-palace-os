@@ -184,12 +184,14 @@ onMounted(load)
     </form>
     </ModalShell>
 
-    <article v-if="detail" class="panel detail-panel">
+    <ModalShell v-if="detail" label="SOP 详情" @close="detail = null">
+      <article class="panel detail-panel">
       <div class="panel-head"><h2>{{ detail.title }}</h2><button class="ghost" @click="detail = null">关闭</button></div>
       <dl><dt>状态</dt><dd><StatusBadge :label="detail.status || 'DRAFT'" :tone="tone(detail.status)" /></dd><dt>版本</dt><dd>{{ detail.version || '1.0' }}</dd><dt>来源事件</dt><dd class="mono">{{ detail.source_event_id || '—' }}</dd></dl>
       <section><h3>正文</h3><p class="content">{{ detail.content }}</p></section>
       <section><h3>版本记录</h3><article v-for="(version, index) in detail.versions || []" :key="`${version.version}-${index}`" class="version"><strong>{{ version.version || '—' }} · {{ version.status || '—' }}</strong><span>{{ formatSopTimestamp(version.created_at) }} · {{ version.change_note || '—' }}</span></article><p v-if="!detail.versions?.length" class="muted">暂无版本记录。</p></section>
     </article>
+    </ModalShell>
   </section>
 </template>
 

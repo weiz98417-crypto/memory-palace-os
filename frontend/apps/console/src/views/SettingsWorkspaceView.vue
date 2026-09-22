@@ -107,7 +107,8 @@ onMounted(load)
     </div>
 
     <article class="panel registry-panel">
-      <div class="panel-head"><div><h2>功能验收注册表</h2><small class="muted">PRD 交付门禁</small></div><StatusBadge :label="registrySummary.release_gate_passed ? '发布门禁通过' : '发布门禁阻塞'" :tone="tone(Boolean(registrySummary.release_gate_passed))" /></div>
+      <div class="panel-head"><div><h2>功能验收门禁（只读）</h2><small class="muted">PRD 交付门禁</small></div><StatusBadge :label="registrySummary.release_gate_passed ? '发布门禁通过' : '发布门禁阻塞'" :tone="tone(Boolean(registrySummary.release_gate_passed))" /></div>
+      <p class="registry-note">BLOCKED 表示浏览器、Live 或 UAT 验收证据尚未齐全，不是配置损坏，也不能在界面中手动放行。下方数据由后端验收注册表计算。</p>
       <div v-if="registry.collection_errors?.length" class="registry-error">证据采集异常：{{ registry.collection_errors.map((item) => `${item.source || 'unknown'} / ${item.error_type || 'unknown'}`).join('；') }}</div>
       <div class="metric-grid"><article><span>业务功能</span><strong>{{ registrySummary.business_total || 0 }}</strong></article><article><span>已 READY</span><strong>{{ registrySummary.business_ready || 0 }}</strong></article><article><span>BLOCKED</span><strong>{{ registryCounts.BLOCKED || 0 }}</strong></article><article><span>发布门禁</span><strong>{{ registrySummary.release_gate_passed ? 'PASS' : 'BLOCK' }}</strong></article></div>
       <div class="journey-list"><article v-for="journey in registry.uat_journeys || []" :key="journey.id"><strong>{{ journey.id }} · {{ journey.name }}</strong><StatusBadge :label="journey.status || 'UNKNOWN'" :tone="tone(journey.status)" /><p>覆盖：{{ (journey.covers || []).join(', ') || '—' }}</p><small v-if="journey.acceptance?.missing?.length">阻塞：{{ journey.acceptance.missing.join(' · ') }}</small><small v-else>覆盖项证据已齐全</small></article></div>
@@ -133,6 +134,7 @@ onMounted(load)
 .setting-item small, td small { display: block; color: var(--mp-color-mute); font-size: 12px; }
 .setting-item button { min-height: 34px; padding: 6px 10px; border: 1px solid var(--mp-color-hairline-strong); border-radius: var(--mp-radius-md); color: var(--mp-color-ink); background: var(--mp-color-surface-elevated); cursor: pointer; }
 .registry-panel { overflow: hidden; }
+.registry-note { margin: 0; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--mp-color-warning) 42%, var(--mp-color-hairline)); border-radius: var(--mp-radius-md); color: var(--mp-color-body); background: color-mix(in srgb, var(--mp-color-warning) 8%, transparent); font-size: 12px; line-height: 1.6; }
 .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .metric-grid article { display: grid; gap: 4px; padding: 12px; border: 1px solid var(--mp-color-hairline); border-radius: var(--mp-radius-md); }
 .metric-grid span { color: var(--mp-color-mute); font-size: 12px; }

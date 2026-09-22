@@ -197,7 +197,8 @@ onMounted(load)
       </tbody></table></div>
     </article>
 
-    <article v-if="selected" class="panel detail">
+    <ModalShell v-if="selected" label="任务详情" @close="selected = null">
+      <article class="panel detail">
       <TaskCard :task="selected">
         <template #actions>
           <select v-model="assignTo"><option value="">未分配</option><option v-for="item in assignees" :key="item.id" :value="item.id">{{ item.display_name || item.username }}</option></select>
@@ -215,6 +216,7 @@ onMounted(load)
       </div>
       <dl v-if="resultRows(selected.result).length" class="result-grid"><div v-for="row in resultRows(selected.result)" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div></dl>
     </article>
+    </ModalShell>
   </section>
 </template>
 

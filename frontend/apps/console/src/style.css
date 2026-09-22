@@ -72,3 +72,25 @@ body {
   .modal-backdrop { padding: 12px; }
   .modal-surface { width: 100%; max-height: 94vh; border-radius: 14px; }
 }
+
+.modal-surface {
+  position: relative;
+}
+.modal-close {
+  position: sticky;
+  z-index: 3;
+  top: 12px;
+  float: right;
+  margin: 12px 12px 0 0;
+  min-height: 34px;
+  padding: 6px 11px;
+  border: 1px solid var(--mp-color-hairline-strong);
+  border-radius: 9px;
+  color: var(--mp-color-body);
+  background: color-mix(in srgb, var(--mp-color-surface-elevated) 92%, transparent);
+  cursor: pointer;
+}
+.modal-close:hover {
+  border-color: var(--mp-color-primary);
+  color: var(--mp-color-ink);
+}

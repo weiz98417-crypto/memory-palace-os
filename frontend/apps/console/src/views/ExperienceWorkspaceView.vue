@@ -301,17 +301,21 @@ onMounted(load)
     </form>
     </ModalShell>
 
-    <article v-if="interviewDetail" class="panel detail-panel">
+    <ModalShell v-if="interviewDetail" label="经验访谈记录" @close="interviewDetail = null">
+      <article class="panel detail-panel">
       <div class="panel-head"><h2>访谈进度：{{ interviewDetail.title || '未命名访谈' }}</h2><button class="ghost" @click="interviewDetail = null">关闭</button></div>
       <dl><dt>受访专家</dt><dd>{{ interviewDetail.expert_name || '未关联专家' }} · {{ interviewDetail.expert_job_title || '岗位待补充' }}</dd><dt>当前状态</dt><dd><StatusBadge :label="label(interviewDetail.status)" :tone="tone(interviewDetail.status)" /></dd><dt>完成进度</dt><dd>{{ interviewDetail.progress?.answered || 0 }} / {{ interviewDetail.progress?.total || 0 }} 题（{{ interviewDetail.progress?.percent || 0 }}%）</dd><dt>经验授权</dt><dd>{{ (interviewDetail.authorization_scopes || []).map(scopeText).join('；') || '授权范围待确认' }}</dd></dl>
       <div class="feed"><h3>访谈记录</h3><article v-for="turn in interviewDetail.turns || []" :key="turn.turn_number" class="feed-item"><strong>第 {{ turn.turn_number }} 题 · {{ turn.question_text || '' }}</strong><p>{{ turn.answer_text || '专家尚未回答' }}</p><small v-if="turn.source_excerpt">现场原话：{{ turn.source_excerpt }}</small></article><p v-if="!interviewDetail.turns?.length" class="muted">专家尚未开始回答；邀请已保存在系统中。</p></div>
     </article>
+    </ModalShell>
 
-    <article v-if="cardDetail" class="panel detail-panel">
+    <ModalShell v-if="cardDetail" label="经验卡详情" @close="cardDetail = null">
+      <article class="panel detail-panel">
       <div class="panel-head"><h2>经验详情：{{ cardDetail.title || '未命名经验' }}</h2><button class="ghost" @click="cardDetail = null">关闭</button></div>
       <dl><dt>贡献专家</dt><dd>{{ cardDetail.expert_name || '未关联专家' }} · {{ cardDetail.expert_job_title || '岗位待补充' }}</dd><dt>当前状态</dt><dd><StatusBadge :label="label(cardDetail.status)" :tone="tone(cardDetail.status)" /></dd><dt>适用范围</dt><dd>{{ (cardDetail.authorization_scopes || []).map(scopeText).join('；') || '授权范围待确认' }}</dd><dt>采用情况</dt><dd>检索 {{ cardDetail.usage_summary?.retrieved || 0 }} 次 · 引用 {{ cardDetail.usage_summary?.referenced || 0 }} 次 · 反馈 {{ cardDetail.usage_summary?.feedback || 0 }} 次</dd></dl>
       <div class="sections"><article><h3>适用情境</h3><p>{{ cardDetail.applicable_context || '待补充' }}</p></article><article><h3>观察信号</h3><p>{{ (cardDetail.signals || []).join('、') || '待补充' }}</p></article><article><h3>判断规则</h3><p>{{ cardDetail.decision_rule || '待补充' }}</p></article><article><h3>建议动作</h3><p>{{ (cardDetail.recommended_actions || []).join('、') || '待补充' }}</p></article><article><h3>判断依据</h3><p>{{ cardDetail.rationale || '待补充' }}</p></article><article><h3>禁止事项</h3><p>{{ (cardDetail.prohibitions || []).join('、') || '待补充' }}</p></article><article><h3>例外情况</h3><p>{{ (cardDetail.exceptions || []).join('、') || '待补充' }}</p></article><article><h3>来源摘录</h3><p>{{ (cardDetail.source_excerpts || []).join('；') || '待补充' }}</p></article></div>
     </article>
+    </ModalShell>
   </section>
 </template>
 
