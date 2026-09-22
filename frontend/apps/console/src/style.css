@@ -54,18 +54,48 @@ body {
 }
 
 .modal-surface {
+  display: grid;
   width: min(760px, 96vw);
   max-height: min(88vh, 900px);
-  overflow: auto;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
   border: 1px solid var(--mp-color-hairline-strong);
   border-radius: 18px;
+  background: var(--mp-color-surface-elevated);
   box-shadow: 0 30px 100px rgba(0, 0, 0, .58);
 }
 
-.modal-surface > form.panel {
+.modal-shell__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 50px;
+  padding: 8px 12px 8px 18px;
+  border-bottom: 1px solid var(--mp-color-hairline);
+  color: var(--mp-color-ink);
+  background: color-mix(in srgb, var(--mp-color-surface-elevated) 96%, transparent);
+}
+
+.modal-shell__bar strong { font-size: 14px; }
+.modal-body {
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(104, 157, 222, .62) transparent;
+}
+.modal-body::-webkit-scrollbar { width: 8px; }
+.modal-body::-webkit-scrollbar-track { background: transparent; }
+.modal-body::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: rgba(104, 157, 222, .62); background-clip: padding-box; }
+.modal-body > .panel,
+.modal-body > form.panel {
   width: 100%;
   max-width: none;
   margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 @media (max-width: 700px) {
@@ -73,9 +103,6 @@ body {
   .modal-surface { width: 100%; max-height: 94vh; border-radius: 14px; }
 }
 
-.modal-surface {
-  position: relative;
-}
 .modal-close {
   min-height: 34px;
   padding: 6px 11px;
