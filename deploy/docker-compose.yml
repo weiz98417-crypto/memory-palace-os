@@ -84,6 +84,7 @@ services:
       SCENIC_TEI_RERANKER_HEALTH_URL: ${SCENIC_TEI_RERANKER_HEALTH_URL:-}
       HATCHET_HEALTH_URL: ${HATCHET_HEALTH_URL:-}
       JAEGER_HEALTH_URL: ${JAEGER_HEALTH_URL:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     volumes:
       - app-logs:/app/data/logs
       - attachment-data:/app/data/attachments

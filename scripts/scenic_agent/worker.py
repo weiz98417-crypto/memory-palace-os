@@ -15,6 +15,7 @@ from src.memory_palace.incident.command import (  # noqa: E402
 )
 from src.memory_palace.incident.model_policy import DatabaseModelPreflight  # noqa: E402
 from src.memory_palace.incident.runtime import build_incident_agent_registry  # noqa: E402
+from src.memory_palace.incident.telemetry import configure_tracing  # noqa: E402
 from src.memory_palace.knowledge.db_init import init_database  # noqa: E402
 from src.memory_palace.knowledge.postgres_client import PostgresDBClient  # noqa: E402
 from src.memory_palace.scenic.advice_runs import (  # noqa: E402
@@ -62,8 +63,13 @@ async def provide_worker() -> AdviceWorker:
 
 
 def main() -> None:
-    worker, _client = build_worker(worker_provider=provide_worker)
-    worker.start()
+    tracing_provider = configure_tracing("scenic-agent-worker")
+    try:
+        worker, _client = build_worker(worker_provider=provide_worker)
+        worker.start()
+    finally:
+        if tracing_provider is not None:
+            tracing_provider.shutdown()
 
 
 if __name__ == "__main__":

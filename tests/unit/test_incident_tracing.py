@@ -14,6 +14,7 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
 from src.memory_palace.agent_contracts.models import AgentRole
+from src.memory_palace.incident.telemetry import configure_tracing
 from src.memory_palace.incident.command import (
     IncidentCommandConfig,
     PydanticAIIncidentCommand,
@@ -99,3 +100,9 @@ async def test_tracing_is_inert_without_an_otlp_endpoint(monkeypatch):
 
     assert result.outcome == "READY"
     assert exporter.get_finished_spans() == ()
+
+
+async def test_configure_tracing_is_disabled_without_an_endpoint(monkeypatch):
+    monkeypatch.delenv("OTEL_EXPORTER_OTLP_ENDPOINT", raising=False)
+
+    assert configure_tracing("test-service") is None

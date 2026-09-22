@@ -11,6 +11,7 @@ $ErrorActionPreference = 'Stop'
 $cache = Get-ScenicModelCache -Override $ModelCache
 $env:BGE_M3_CACHE_DIR = $cache
 Assert-ScenicDocker
+if (-not $env:OTEL_EXPORTER_OTLP_ENDPOINT) { $env:OTEL_EXPORTER_OTLP_ENDPOINT = 'http://jaeger:4317' }
 
 # Docker Desktop can assign a different bridge gateway after a network recreate.
 # The protected operations entry trusts the local ingress, so keep this value in sync.

@@ -25,6 +25,30 @@ def tracing_enabled() -> bool:
     return bool(os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "").strip())
 
 
+def configure_tracing(service_name: str):
+    """Install the OTLP tracer provider for a long-running process.
+
+    The endpoint is the feature switch. Without it the process stays completely inert,
+    so the default stack does not require Jaeger to be present.
+    """
+
+    endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "").strip()
+    if not endpoint:
+        return None
+    from opentelemetry import trace
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+    provider = TracerProvider(resource=Resource.create({"service.name": service_name}))
+    provider.add_span_processor(
+        BatchSpanProcessor(OTLPSpanExporter(endpoint=endpoint, insecure=True))
+    )
+    trace.set_tracer_provider(provider)
+    return provider
+
+
 @contextlib.contextmanager
 def _span(
     name: str,
@@ -110,6 +134,7 @@ def record_agent_outcome(span: Any, *, status: str, model_name: str | None = Non
 __all__ = [
     "_get_tracer",
     "agent_span",
+    "configure_tracing",
     "incident_command_span",
     "record_agent_outcome",
     "tracing_enabled",

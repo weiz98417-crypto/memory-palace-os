@@ -17,6 +17,8 @@
 | nginx | `nginx` | 统一 HTTP 入口 | `http://127.0.0.1:8090/` |
 | Jaeger | `jaeger` | 可选链路追踪 UI | 端口 `16686` |
 
+启动脚本包含 Jaeger 时会设置 `OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317`。如果手工启动，需要同时设置该变量再重启 `app` 和 `scenic-agent-worker`；否则 Jaeger 页面会停留在无 trace 的空态。
+
 不需要启动 `scenic-agent-prototype`；正式演示只使用 `scenic-agent-worker`。如果只需要看页面、不需要真实模型建议，可暂时不启动 worker，但“检索并核验 SOP”之后的异步建议将不可用。
 
 ## 二、脚本清单

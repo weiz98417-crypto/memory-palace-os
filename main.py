@@ -40,6 +40,7 @@ from src.memory_palace.incident.command import (
 )
 from src.memory_palace.incident.model_policy import DatabaseModelPreflight
 from src.memory_palace.incident.runtime import build_incident_agent_registry
+from src.memory_palace.incident.telemetry import configure_tracing
 from src.memory_palace.scenic.advice_dispatch import InProcessAdviceDispatcher
 from src.memory_palace.scenic.advice_runs import (
     AdviceRunRepository,
@@ -105,6 +106,10 @@ async def lifespan(app: FastAPI):
 
     runtime_instance_id = uuid.uuid4().hex
     logger.info("🚀 Memory Palace OS 正在启动...")
+
+    tracing_provider = configure_tracing("memory-palace-api")
+    if tracing_provider is not None:
+        logger.info("✅ OTLP tracing 已启用")
 
     # —— 注册所有 Agent（触发 @register_skill 装饰器）——
     _auto_register_skills()
@@ -376,6 +381,9 @@ async def lifespan(app: FastAPI):
         logger.info("✅ 数据客户端已关闭")
     except Exception as e:
         logger.warning(f"数据客户端关闭异常（不影响退出）: {e}")
+
+    if tracing_provider is not None:
+        tracing_provider.shutdown()
 
     logger.info("👋 Memory Palace OS 已安全退出")
 
