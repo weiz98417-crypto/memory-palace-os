@@ -2,13 +2,15 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
+  <link rel="icon" href="/admin/brand/logo-primary.svg" type="image/svg+xml">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#071124">
   <title>企业运营助手 · Memory Palace OS</title>
   <link rel="stylesheet" href="/shared/base.css">
   <link rel="stylesheet" href="/assistant/styles.css?v=20260915-1">
+  <link rel="stylesheet" href="/shared/login-shell.css?v=20260922-1">
 </head>
-<body>
+<body data-login-variant="field">
   <section id="login-screen" class="login-stage" aria-label="企业运营助手登录">
     <div class="login-context">
       <div class="brand-lockup">
@@ -23,17 +25,22 @@
     <div class="login-panel-wrap">
       <div class="login-panel">
         <div>
-          <h2>登录企业账号</h2>
-          <p class="subcopy">使用组织分配的正式账号继续</p>
+          <h2>登录现场端</h2>
+          <p class="subcopy">现场任务、证据回执与组织经验入口</p>
         </div>
         <form id="login-form" class="login-form">
           <label class="field">
             <span>用户名</span>
-            <input id="login-username" name="username" autocomplete="username" required minlength="2" maxlength="64">
+            <input id="login-username" name="username" autocomplete="username" autofocus required minlength="2" maxlength="64">
           </label>
           <label class="field">
             <span>密码</span>
-            <input id="login-password" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128">
+            <span class="password-input">
+              <input id="login-password" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128">
+              <button class="password-toggle" type="button" aria-label="显示密码" aria-controls="login-password" aria-pressed="false" data-action="toggle-password">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 12s3.5-7 9-7 9 7 9 7-3.5 7-9 7-9-7-9-7Zm9 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" /></svg>
+              </button>
+            </span>
           </label>
           <p id="login-error" class="form-error" role="alert"></p>
           <button id="login-submit" class="btn primary" type="submit">登录助手</button>
@@ -425,5 +432,6 @@
   <div id="toast-region" class="toast-region" aria-live="polite"></div>
   <script src="/shared/client.js"></script>
   <script src="/assistant/app.js"></script>
+  <script src="/shared/login-shell.js?v=20260922-1"></script>
 </body>
 </html>

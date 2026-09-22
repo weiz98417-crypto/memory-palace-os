@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { createApiClient } from '@memory-palace/api-client'
 import { AppShell, LoginShell, NavRail } from '@memory-palace/domain-ui'
 import { Calendar, DataAnalysis } from '@element-plus/icons-vue'
-import loginBackground from './assets/login-background-1672.webp'
+const loginBackground = '/shared/login-backgrounds/operations.webp'
 
 const client = createApiClient()
 const session = ref<any>(client.auth.read())

@@ -1,0 +1,354 @@
+/* Shared cinematic login shell for the legacy scenic entries.
+   V2 routes use the same background assets from /shared/login-backgrounds/. */
+
+body[data-login-variant] {
+  --login-accent: #5b6eff;
+  --login-accent-2: #6b5df2;
+  --login-rx: 0deg;
+  --login-ry: 0deg;
+  min-height: 100dvh;
+  color: #fff;
+  background: #071124;
+}
+
+body[data-login-variant='field'] {
+  --login-accent: #27c2a0;
+  --login-accent-2: #246fbb;
+  --login-bg: url('/shared/login-backgrounds/field.webp');
+}
+
+body[data-login-variant='integration'] {
+  --login-accent: #45a8ff;
+  --login-accent-2: #6657e8;
+  --login-bg: url('/shared/login-backgrounds/integration.webp');
+}
+
+body[data-login-variant='operations'] {
+  --login-accent: #5b8cff;
+  --login-accent-2: #7d5ee8;
+  --login-bg: url('/shared/login-backgrounds/operations.webp');
+}
+
+body[data-login-variant] .login-stage {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: 100dvh;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 480px);
+  align-items: center;
+  overflow: hidden;
+  background: #071124;
+}
+
+body[data-login-variant] .login-stage::before,
+body[data-login-variant] .login-stage::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  pointer-events: none;
+}
+
+body[data-login-variant] .login-stage::before {
+  z-index: 0;
+  inset: -2.5%;
+  background: var(--login-bg) center / cover no-repeat;
+  filter: saturate(.82) contrast(1.04);
+  transform: scale(1.04);
+  animation: login-background-drift 24s ease-in-out infinite alternate;
+}
+
+body[data-login-variant] .login-stage::after {
+  z-index: 1;
+  background:
+    linear-gradient(90deg, rgba(3, 10, 25, .18) 0%, rgba(3, 10, 25, .26) 40%, rgba(3, 10, 25, .72) 72%, rgba(3, 10, 25, .92) 100%),
+    radial-gradient(circle at 18% 72%, rgba(84, 190, 255, .16), transparent 42%),
+    linear-gradient(180deg, rgba(4, 12, 28, .14), rgba(4, 12, 28, .48));
+}
+
+body[data-login-variant] .login-context,
+body[data-login-variant] .login-panel-wrap {
+  position: relative;
+  z-index: 2;
+}
+
+body[data-login-variant] .login-context {
+  display: grid;
+  align-content: end;
+  min-width: 0;
+  height: 100%;
+  padding: clamp(34px, 7vw, 96px);
+  color: #fff;
+  background: transparent;
+}
+
+body[data-login-variant] .login-context .brand-lockup {
+  max-width: 640px;
+  padding: 0;
+  text-shadow: 0 2px 22px rgba(0, 0, 0, .34);
+}
+
+body[data-login-variant] .login-context .product-kicker {
+  margin-bottom: 12px;
+  color: #b8e5ff;
+  font-size: 11px;
+  letter-spacing: .18em;
+}
+
+body[data-login-variant] .login-context h1 {
+  margin-bottom: 12px;
+  color: #fff;
+  font-size: clamp(30px, 4.8vw, 56px);
+  line-height: 1.06;
+  letter-spacing: -.045em;
+}
+
+body[data-login-variant] .login-context p {
+  max-width: 520px;
+  margin: 0;
+  color: rgba(232, 241, 255, .76);
+  font-size: clamp(14px, 1.2vw, 17px);
+}
+
+body[data-login-variant] .login-panel-wrap {
+  display: grid;
+  min-height: 100%;
+  align-content: center;
+  padding: clamp(28px, 5vw, 72px);
+  border: 0;
+  background: transparent;
+}
+
+body[data-login-variant] .login-panel {
+  position: relative;
+  display: grid;
+  width: min(100%, 420px);
+  max-width: 420px;
+  margin: 0 auto;
+  gap: 18px;
+  padding: clamp(26px, 3.6vw, 38px);
+  border: 1px solid rgba(227, 239, 255, .24);
+  border-radius: 24px;
+  background: linear-gradient(145deg, rgba(14, 30, 62, .78), rgba(4, 12, 31, .68));
+  box-shadow: 0 28px 80px rgba(0, 5, 20, .48), inset 0 1px 0 rgba(255, 255, 255, .12);
+  backdrop-filter: blur(22px) saturate(1.25);
+  -webkit-backdrop-filter: blur(22px) saturate(1.25);
+  transform: perspective(1000px) rotateX(var(--login-rx)) rotateY(var(--login-ry));
+  transform-style: preserve-3d;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  animation: login-card-rise 560ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+body[data-login-variant] .login-panel:hover {
+  border-color: color-mix(in srgb, var(--login-accent) 55%, white);
+  box-shadow: 0 32px 90px rgba(0, 5, 20, .56), 0 0 0 1px color-mix(in srgb, var(--login-accent) 16%, transparent), inset 0 1px 0 rgba(255, 255, 255, .14);
+}
+
+body[data-login-variant] .login-panel h2 {
+  margin: 0 0 6px;
+  color: #fff;
+  font-size: clamp(24px, 2.4vw, 30px);
+  letter-spacing: -.035em;
+}
+
+body[data-login-variant] .login-panel .subcopy {
+  margin: 0;
+  color: rgba(231, 240, 255, .74);
+  font-size: 14px;
+}
+
+body[data-login-variant] .login-form {
+  display: grid;
+  gap: 14px;
+}
+
+body[data-login-variant] .login-form .field {
+  display: grid;
+  gap: 7px;
+  color: rgba(232, 241, 255, .8);
+  font-size: 13px;
+}
+
+body[data-login-variant] .login-form .field > span {
+  font-weight: 650;
+}
+
+body[data-login-variant] .login-form .field input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 13px;
+  border: 1px solid rgba(227, 239, 255, .24);
+  border-radius: 12px;
+  color: #fff;
+  background: rgba(2, 10, 28, .48);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+body[data-login-variant] .login-form .field input::placeholder {
+  color: rgba(220, 234, 255, .38);
+}
+
+body[data-login-variant] .login-form .field input:focus {
+  border-color: color-mix(in srgb, var(--login-accent) 82%, white);
+  outline: 0;
+  background: rgba(2, 10, 28, .62);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--login-accent) 20%, transparent), inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+
+body[data-login-variant] .password-input {
+  position: relative;
+}
+
+body[data-login-variant] .password-input input {
+  padding-right: 48px !important;
+}
+
+body[data-login-variant] .password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  color: #9fcaff;
+  background: transparent;
+  transform: translateY(-50%);
+}
+
+body[data-login-variant] .password-toggle:hover {
+  background: rgba(255, 255, 255, .1);
+}
+
+body[data-login-variant] .password-toggle svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+body[data-login-variant] .form-error {
+  min-height: 0;
+  margin: -2px 0 0;
+  color: #ffc5cb;
+  font-size: 13px;
+}
+
+body[data-login-variant] .form-error:not(:empty) {
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 111, 126, .44);
+  border-radius: 10px;
+  background: rgba(101, 20, 36, .34);
+}
+
+body[data-login-variant] .login-form .btn {
+  position: relative;
+  min-height: 50px;
+  margin-top: 4px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--login-accent) 68%, white);
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--login-accent), var(--login-accent-2));
+  box-shadow: 0 12px 34px color-mix(in srgb, var(--login-accent) 32%, transparent), inset 0 1px 0 rgba(255, 255, 255, .34);
+  font-weight: 700;
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+body[data-login-variant] .login-form .btn::after {
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 70%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .36), transparent);
+  transform: skewX(-18deg);
+  content: '';
+}
+
+body[data-login-variant] .login-form .btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+body[data-login-variant] .login-form .btn:hover:not(:disabled)::after {
+  animation: login-sheen 680ms ease;
+}
+
+body[data-login-variant] .login-form .btn:focus-visible,
+body[data-login-variant] .password-toggle:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--login-accent) 46%, transparent);
+  outline-offset: 3px;
+}
+
+@keyframes login-background-drift {
+  from { transform: scale(1.04) translate3d(-.4%, -.2%, 0); }
+  to { transform: scale(1.075) translate3d(.6%, .4%, 0); }
+}
+
+@keyframes login-card-rise {
+  from { opacity: 0; transform: translateX(26px) translateY(10px); }
+  to { opacity: 1; }
+}
+
+@keyframes login-sheen {
+  to { left: 130%; }
+}
+
+@media (max-width: 900px) {
+  body[data-login-variant] .login-stage {
+    grid-template-columns: 1fr;
+    align-items: center;
+    padding: 24px 16px;
+    overflow-y: auto;
+  }
+
+  body[data-login-variant] .login-stage::after {
+    background:
+      linear-gradient(180deg, rgba(3, 10, 25, .08) 0%, rgba(3, 10, 25, .34) 26%, rgba(3, 10, 25, .84) 100%),
+      radial-gradient(circle at 50% 44%, rgba(84, 190, 255, .12), transparent 48%);
+  }
+
+  body[data-login-variant] .login-context {
+    display: none;
+  }
+
+  body[data-login-variant] .login-panel-wrap {
+    min-height: calc(100dvh - 48px);
+    align-content: center;
+    padding: 0;
+  }
+
+  body[data-login-variant] .login-panel {
+    width: min(100%, 430px);
+    padding: 26px 22px;
+    border-radius: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-login-variant] .login-stage::before,
+  body[data-login-variant] .login-panel,
+  body[data-login-variant] .login-form .btn::after {
+    animation: none;
+    transition: none;
+  }
+
+  body[data-login-variant] .login-panel {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  body[data-login-variant] .login-panel {
+    background: rgba(8, 18, 40, .96);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}

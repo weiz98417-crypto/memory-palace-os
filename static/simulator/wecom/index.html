@@ -2,35 +2,42 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
+  <link rel="icon" href="/admin/brand/logo-primary.svg" type="image/svg+xml">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#202a2f">
+  <meta name="theme-color" content="#071124">
   <title>企业内部系统接入环境 · Memory Palace OS</title>
   <link rel="stylesheet" href="/shared/base.css">
   <link rel="stylesheet" href="/simulator/wecom/styles.css?v=20260915-1">
+  <link rel="stylesheet" href="/shared/login-shell.css?v=20260922-1">
 </head>
-<body>
+<body data-login-variant="integration">
   <section id="login-screen" class="login-stage" aria-label="企业内部系统接入环境登录">
     <div class="login-context">
       <div class="brand-lockup">
         <div class="product-kicker">MEMORY PALACE OS</div>
-        <h1>企业内部系统接入环境</h1>
+        <h1>内部通知接入环境</h1>
         <p>用于验证员工身份、消息受理与管理后台联动</p>
       </div>
     </div>
     <div class="login-panel-wrap">
       <div class="login-panel">
         <div>
-          <h2>登录演示账号</h2>
+          <h2>登录接入控制台</h2>
           <p class="subcopy">仅有接入联调权限的经理或管理员可进入</p>
         </div>
         <form id="login-form" class="login-form">
           <label class="field">
             <span>用户名</span>
-            <input id="login-username" name="username" autocomplete="username" required minlength="2" maxlength="64">
+            <input id="login-username" name="username" autocomplete="username" autofocus required minlength="2" maxlength="64">
           </label>
           <label class="field">
             <span>密码</span>
-            <input id="login-password" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128">
+            <span class="password-input">
+              <input id="login-password" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128">
+              <button class="password-toggle" type="button" aria-label="显示密码" aria-controls="login-password" aria-pressed="false" data-action="toggle-password">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 12s3.5-7 9-7 9 7 9 7-3.5 7-9 7-9-7-9-7Zm9 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" /></svg>
+              </button>
+            </span>
           </label>
           <p id="login-error" class="form-error" role="alert"></p>
           <button id="login-submit" class="btn primary" type="submit">进入接入环境</button>
@@ -248,5 +255,6 @@
   <div id="toast-region" class="toast-region" aria-live="polite"></div>
   <script src="/shared/client.js?v=20260803-1"></script>
   <script src="/simulator/wecom/app.js?v=20260804-3"></script>
+  <script src="/shared/login-shell.js?v=20260922-1"></script>
 </body>
 </html>

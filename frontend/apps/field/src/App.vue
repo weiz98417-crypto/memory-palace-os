@@ -2,8 +2,9 @@
 import { computed, ref } from 'vue'
 import { createApiClient } from '@memory-palace/api-client'
 import { AppShell, LoginShell } from '@memory-palace/domain-ui'
-import loginBackground from './assets/login-background-1672.webp'
 import FieldWorkspace from './views/FieldTaskView.vue'
+
+const loginBackground = '/shared/login-backgrounds/field.webp'
 
 const client = createApiClient()
 const session = ref<any>(client.auth.read())

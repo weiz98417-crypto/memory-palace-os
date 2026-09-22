@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { createApiClient } from '@memory-palace/api-client'
 import { AppShell, LoginShell } from '@memory-palace/domain-ui'
-import loginBackground from './assets/login-background-1672.webp'
+const loginBackground = '/shared/login-backgrounds/integration.webp'
 
 const client = createApiClient()
 const session = ref<any>(client.auth.read())
