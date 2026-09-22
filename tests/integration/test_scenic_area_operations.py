@@ -698,3 +698,36 @@ async def test_high_risk_dispatch_cooldown_never_leaves_an_orphan_task(tmp_path)
         assert incident_row["lifecycle"] == "TRIAGED"
     finally:
         await database.close()
+
+@pytest.mark.asyncio
+async def test_story_sop_creates_relational_knowledge_projection(tmp_path):
+    operations, database = await build_operations(tmp_path)
+    try:
+        await operations.execute(
+            actor("simulation-ops", "admin"),
+            Command("PREPARE_SCENARIO", {}, "prepare-projection"),
+        )
+        sop = await database.fetch_one(
+            "SELECT * FROM sop_documents WHERE venue_id = ? AND id = 1",
+            ("venue-scenic",),
+        )
+        projection = await database.fetch_one(
+            """
+            SELECT id, source_type, source_id, title, content, status, vector_doc_id
+            FROM knowledge_documents
+            WHERE venue_id = ? AND source_type = 'SOP' AND source_id = ?
+            """,
+            ("venue-scenic", str(sop["id"])),
+        )
+        vector_doc_id = f"sop:venue-scenic:{sop['id']}"
+        assert projection is not None
+        assert projection["id"] == f"sop-{sop['id']}"
+        assert projection["title"] == sop["title"]
+        assert projection["content"] == sop["content"]
+        assert projection["status"] == "ACTIVE"
+        assert projection["vector_doc_id"] == vector_doc_id
+        assert operations.vector_store.documents[vector_doc_id]["metadata"]["source_id"] == str(
+            sop["id"]
+        )
+    finally:
+        await database.close()

@@ -1787,14 +1787,49 @@ class ScenicAreaOperations:
             vector_doc_id,
             strict=True,
         )
-        await self.database.execute(
-            "UPDATE sop_documents SET status = 'PUBLISHED', published_at = ?, reviewed_by = ?, updated_at = CURRENT_TIMESTAMP WHERE venue_id = ? AND id = ?",
-            (now, actor.user_id, actor.venue_id, sop["id"]),
-        )
-        await self.database.execute(
-            "UPDATE sop_versions SET status = 'PUBLISHED' WHERE venue_id = ? AND sop_id = ? AND version = '1.0'",
-            (actor.venue_id, sop["id"]),
-        )
+        knowledge_id = f"sop-{sop['id']}"
+        async with self.database.transaction() as transaction:
+            await transaction.execute(
+                "UPDATE sop_documents SET status = 'PUBLISHED', published_at = ?, reviewed_by = ?, updated_at = CURRENT_TIMESTAMP WHERE venue_id = ? AND id = ?",
+                (now, actor.user_id, actor.venue_id, sop["id"]),
+            )
+            await transaction.execute(
+                """
+                INSERT INTO knowledge_documents (
+                    id, venue_id, title, content, category, source_type, source_id,
+                    version, status, tags_json, vector_doc_id, created_by, updated_by,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, 'SOP', ?, 1, 'ACTIVE', '[]', ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    title = excluded.title,
+                    content = excluded.content,
+                    category = excluded.category,
+                    source_type = excluded.source_type,
+                    source_id = excluded.source_id,
+                    version = excluded.version,
+                    status = excluded.status,
+                    vector_doc_id = excluded.vector_doc_id,
+                    updated_by = excluded.updated_by,
+                    updated_at = excluded.updated_at
+                """,
+                (
+                    knowledge_id,
+                    actor.venue_id,
+                    title,
+                    content,
+                    sop["category"],
+                    str(sop["id"]),
+                    vector_doc_id,
+                    actor.user_id,
+                    actor.user_id,
+                    now,
+                    now,
+                ),
+            )
+            await transaction.execute(
+                "UPDATE sop_versions SET status = 'PUBLISHED' WHERE venue_id = ? AND sop_id = ? AND version = '1.0'",
+                (actor.venue_id, sop["id"]),
+            )
         return {"sop_id": str(sop["id"]), "vector_doc_id": vector_doc_id}
 
     async def _ingest_signal(self, actor, run, signal: MonitoringSignal, *, idempotency_key):
