@@ -49,6 +49,14 @@ SOURCES: dict[str, dict[str, str]] = {
     },
 }
 
+def watcher_policy_metadata(scenario: dict[str, str]) -> tuple[str, str]:
+    source_title = SOURCES[scenario["source"]]["title"]
+    return (
+        f"基于{source_title}的安全巡检-{scenario['title']}",
+        f"依据{source_title}开展的安全巡检。",
+    )
+
+
 # Each scenario is a neutral adaptation of public guidance, not an interview quote.
 SCENARIOS: tuple[dict[str, str], ...] = (
     {"key": "crowd-monitor", "title": "客流监测与分级预警", "type": "客流管理", "severity": "P1", "source": "gb42101", "signals": "入口分时人数、队尾位置、主通道密度、逆行人数", "actions": "实时监测，达到阈值后增开通道、分流并向值班经理回报", "redlines": "消防通道被占用、出现对冲拥挤、现场广播口径不一致", "context": "入口、核心游览区和索道站等人员密集区域", "task": "复核入口分时客流并回报阈值状态"},
@@ -336,17 +344,19 @@ async def seed_sourced_showcase(api: Any) -> tuple[dict[str, int], dict[str, int
         if isinstance(item.get("config"), dict)
     }
     policies_created = 0
+    policies_updated = 0
     policies: list[dict[str, Any]] = []
     for index, scenario in enumerate(SCENARIOS[:15]):
         key = f"sourced:{scenario['key']}"
         policy = policies_by_key.get(key)
+        policy_name, policy_description = watcher_policy_metadata(scenario)
         if policy is None:
             response = await api.request(
                 "POST",
                 "/api/v1/admin/watcher/policies",
                 body={
-                    "name": f"公开资料改编巡检-{scenario['title']}",
-                    "description": f"基于{SOURCES[scenario['source']]['title']}改编的安全巡检演示。",
+                    "name": policy_name,
+                    "description": policy_description,
                     "schedule_cron": ("*/5 * * * *", "*/10 * * * *", "*/15 * * * *")[index % 3],
                     "enabled": True,
                     "check_types": [("SLA", "TASK", "SOP")[index % 3]],
@@ -360,6 +370,14 @@ async def seed_sourced_showcase(api: Any) -> tuple[dict[str, int], dict[str, int
             )
             policy = response["policy"]
             policies_created += 1
+        elif policy.get("name") != policy_name or policy.get("description") != policy_description:
+            response = await api.request(
+                "PUT",
+                f"/api/v1/admin/watcher/policies/{policy['id']}",
+                body={"name": policy_name, "description": policy_description},
+            )
+            policy = response["policy"]
+            policies_updated += 1
         policies.append(policy)
 
     existing_runs_payload = await api.request("GET", "/api/v1/admin/watcher/runs?limit=500")
@@ -400,6 +418,7 @@ async def seed_sourced_showcase(api: Any) -> tuple[dict[str, int], dict[str, int
         "sourced_interviews": interviews_created,
         "sourced_cards": cards_created,
         "sourced_watcher_policies": policies_created,
+        "sourced_watcher_policies_updated": policies_updated,
         "sourced_watcher_runs": runs_created + event_runs_created,
         "sourced_card_failures": len(failed_card_keys),
     }

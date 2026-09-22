@@ -102,6 +102,9 @@ const connectionLabel = computed(
   --mp-color-canvas: #0a1024;
   --mp-color-surface: rgba(16, 24, 48, .62);
   --mp-color-surface-elevated: rgba(29, 39, 74, .76);
+  --mp-color-body: #dce7f4;
+  --mp-color-mute: #b8c8dc;
+  --mp-color-ink: #ffffff;
 }
 
 .mp-shell[data-background='true'] .mp-shell__header {

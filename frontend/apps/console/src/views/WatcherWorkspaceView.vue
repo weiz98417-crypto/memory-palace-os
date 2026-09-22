@@ -32,7 +32,6 @@ const editingId = ref('')
 const assignments = reactive<Record<string, string>>({})
 const form = ref<WatcherPolicyUpsert>({ name: '', description: '', schedule_cron: '0 10 * * *', enabled: true, check_types: ['SLA', 'TASK', 'SOP'], config: { max_targets: 200 } })
 const assigneeMap = computed(() => Object.fromEntries(assignees.value.map((item) => [item.id, item.display_name || item.username || item.id])))
-const enabledPolicyCount = computed(() => policies.value.filter((item) => item.enabled).length)
 
 function format(value?: number): string {
   return value ? new Date(value * 1000).toLocaleString('zh-CN', { hour12: false }) : '—'
@@ -174,10 +173,7 @@ onMounted(load)
 
 <template>
   <section class="watcher-workspace">
-    <header class="workspace-head"><div><p class="eyebrow">EYE OF THE VENUE</p><h1>鹰眼巡检</h1><p class="muted">策略、Cron、版本、运行记录和发现均来自正式 Watcher 与 Scheduler 路径。</p></div><button class="primary" :disabled="busy" @click="openCreate">创建巡检策略</button></header>
-    <p v-if="!loading && policies.length && !enabledPolicyCount" class="policy-note">
-      当前 {{ policies.length }} 条策略全部停用，这是为了避免后台 Cron 持续消耗模型 token。演示可直接点击“立即运行”；需要定时巡检时，再启用单条低频策略。
-    </p>
+    <header class="workspace-head"><div><p class="eyebrow">EYE OF THE VENUE</p><h1>鹰眼巡检</h1></div><button class="primary" :disabled="busy" @click="openCreate">创建巡检策略</button></header>
     <StatePanel v-if="loading" state="loading" title="正在读取巡检数据" />
     <StatePanel v-else-if="error" state="error" title="巡检操作失败" :message="error" />
     <p v-else-if="notice" class="notice">{{ notice }}</p>
@@ -189,7 +185,7 @@ onMounted(load)
           <div class="card-head"><strong>{{ item.name }}</strong><StatusBadge :label="item.enabled ? '已启用' : '已停用'" :tone="item.enabled ? 'success' : 'neutral'" /></div>
           <p>{{ item.description || '无说明' }}</p>
           <div class="badges"><StatusBadge :label="`Cron ${item.schedule_cron || '—'}`" tone="info" /><StatusBadge :label="`v${item.version || 1}`" tone="neutral" /><StatusBadge v-for="type in item.check_types || []" :key="type" :label="type" tone="neutral" /></div>
-          <div class="row-actions"><button :disabled="busy" @click="openEdit(item)">编辑</button><button :disabled="busy" @click="toggle(item)">{{ item.enabled ? '停用' : '启用' }}</button><button class="primary" :disabled="busy || !item.enabled" @click="run(item)">立即运行</button></div>
+          <div class="row-actions"><button :disabled="busy" @click="openEdit(item)">编辑</button><button :disabled="busy" @click="toggle(item)">{{ item.enabled ? '停用' : '启用' }}</button><button class="primary" :disabled="busy || !item.enabled" :title="item.enabled ? '立即运行' : '先启用策略'" @click="run(item)">立即运行</button></div>
         </article>
       </div>
       <p v-else class="muted">暂无巡检策略。创建 SLA、任务或 SOP 巡检策略。</p>
@@ -251,7 +247,6 @@ td small { display: block; color: var(--mp-color-mute); font-size: 12px; }
 .form-panel label { display: grid; gap: 6px; color: var(--mp-color-body); font-size: 13px; }
 .form-panel .panel-head, .form-panel .wide, .form-panel > button { grid-column: 1 / -1; }
 .notice { color: var(--mp-color-success); font-size: 13px; }
-.policy-note { margin: 0; padding: 12px 14px; border: 1px solid var(--mp-color-hairline-strong); border-radius: var(--mp-radius-md); color: var(--mp-color-body); background: color-mix(in srgb, var(--mp-color-warning) 10%, transparent); font-size: 13px; }
 .empty { color: var(--mp-color-mute); text-align: center; }
 @media (max-width: 900px) { .workspace-head, .row-actions { flex-direction: column; } .split-grid, .form-panel { grid-template-columns: 1fr; } }
 </style>
