@@ -69,6 +69,7 @@ function onPointerLeave() {
       <img :src="backgroundImage" alt="">
     </picture>
     <div class="login-shell__wash" aria-hidden="true"></div>
+    <div class="login-shell__focus" aria-hidden="true"></div>
     <div class="login-shell__signal" aria-hidden="true">
       <span>{{ sceneLabel }}</span>
       <span>{{ title }}</span>
@@ -147,6 +148,8 @@ function onPointerLeave() {
 .login-shell__background { z-index: -3; }
 .login-shell__background img { object-fit: cover; object-position: 42% center; filter: saturate(1.02) contrast(1.02); animation: login-drift 22s ease-in-out infinite alternate; }
 .login-shell__wash { z-index: -2; background: linear-gradient(90deg, rgba(5,14,34,.06) 0%, rgba(5,14,34,.12) 48%, rgba(5,14,34,.42) 72%, rgba(5,14,34,.58) 100%), linear-gradient(180deg, rgba(4,12,30,.04), rgba(4,12,30,.30)); pointer-events: none; }
+.login-shell__focus { position: absolute; z-index: -1; inset: 0 0 0 42%; background: linear-gradient(90deg, transparent 0%, rgba(3,10,25,.12) 22%, rgba(3,10,25,.34) 100%); backdrop-filter: blur(9px) saturate(.9); -webkit-backdrop-filter: blur(9px) saturate(.9); mask-image: linear-gradient(90deg, transparent 0%, #000 24%); -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 24%); pointer-events: none; }
+.login-shell[data-variant='operations'] .login-shell__focus { inset-inline-start: 48%; background: linear-gradient(90deg, transparent 0%, rgba(3,10,25,.22) 22%, rgba(3,10,25,.66) 100%); backdrop-filter: blur(14px) saturate(.86); -webkit-backdrop-filter: blur(14px) saturate(.86); }
 .login-shell__signal { position: absolute; top: 28px; right: 36px; display: grid; justify-items: end; gap: 2px; color: rgba(234,246,255,.72); font-family: var(--mp-font-mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; text-shadow: 0 1px 18px rgba(0,18,42,.7); }
 .login-card { --login-rx: 0deg; --login-ry: 0deg; position: relative; z-index: 1; display: grid; gap: 16px; grid-column: 2; width: 100%; padding: 30px; border: 1px solid rgba(220,235,255,.20); border-radius: 22px; background: rgba(6,16,38,.72); box-shadow: 0 30px 80px rgba(0,0,0,.44), inset 0 1px 0 rgba(255,255,255,.12); backdrop-filter: blur(24px) saturate(1.18); -webkit-backdrop-filter: blur(24px) saturate(1.18); transform: perspective(900px) rotateX(var(--login-rx)) rotateY(var(--login-ry)); transition: border-color 220ms ease, box-shadow 220ms ease; animation: login-card-in 620ms cubic-bezier(.2,.78,.2,1) both; }
 .login-card::before { position: absolute; z-index: -1; inset: 0; border-radius: inherit; background: radial-gradient(circle at 18% 0%, rgba(255,255,255,.30), transparent 32%), linear-gradient(120deg, transparent 20%, rgba(115,177,255,.12) 48%, transparent 72%); content: ''; pointer-events: none; }
