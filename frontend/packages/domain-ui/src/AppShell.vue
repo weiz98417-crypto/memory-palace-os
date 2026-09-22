@@ -9,9 +9,12 @@ const props = withDefaults(
     lastUpdated: string
     theme?: 'ops' | 'field'
     backgroundImage?: string
+    showLogout?: boolean
+    logoutLabel?: string
   }>(),
-  { theme: 'ops' },
+  { theme: 'ops', showLogout: false, logoutLabel: '退出登录' },
 )
+const emit = defineEmits<{ logout: [] }>()
 
 const connectionLabel = computed(
   () =>
@@ -45,6 +48,14 @@ const connectionLabel = computed(
           {{ connectionLabel }}
         </span>
         <time>{{ lastUpdated }}</time>
+        <button
+          v-if="showLogout"
+          class="mp-shell__logout"
+          type="button"
+          @click="emit('logout')"
+        >
+          {{ logoutLabel }}
+        </button>
       </div>
     </header>
     <div class="mp-shell__body">
@@ -163,6 +174,24 @@ const connectionLabel = computed(
   color: var(--mp-color-mute);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
+}
+
+.mp-shell__logout {
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid var(--mp-color-hairline-strong);
+  border-radius: var(--mp-radius-md);
+  color: var(--mp-color-body);
+  background: color-mix(in srgb, var(--mp-color-surface-elevated) 84%, transparent);
+  font: inherit;
+  font-weight: 620;
+  cursor: pointer;
+}
+
+.mp-shell__logout:hover {
+  border-color: color-mix(in srgb, var(--mp-color-danger) 48%, var(--mp-color-hairline-strong));
+  color: var(--mp-color-danger);
+  background: color-mix(in srgb, var(--mp-color-danger) 12%, var(--mp-color-surface-elevated));
 }
 
 .mp-shell__connection::before {

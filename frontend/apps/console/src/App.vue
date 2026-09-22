@@ -34,6 +34,11 @@ function select(key: string) {
 function authenticated(user: any) {
   session.value = user
 }
+function logout() {
+  client.auth.clear()
+  session.value = null
+  if (route.path !== '/') router.replace('/')
+}
 </script>
 
 <template>
@@ -50,6 +55,8 @@ function authenticated(user: any) {
     last-updated="--"
     :theme="'ops'"
     :background-image="consoleBackground"
+    show-logout
+    @logout="logout"
   >
     <template #nav>
       <NavRail :items="items" :active-key="activeKey" @select="select" />
