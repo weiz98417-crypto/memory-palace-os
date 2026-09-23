@@ -2,9 +2,10 @@
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Optional
 
 
-def read_secret(name: str, default: str = "") -> str:
+def read_secret(name: str, default: Optional[str] = "") -> Optional[str]:
     """Read a secret from an environment variable or its Docker-style file."""
     value = os.environ.get(name)
     if value:
@@ -22,7 +23,7 @@ def read_secret(name: str, default: str = "") -> str:
 
 @dataclass(frozen=True)
 class Secrets:
-    DATABASE_URL: str = field(default_factory=lambda: os.environ.get("DATABASE_URL", ""))
+    DATABASE_URL: str = field(default_factory=lambda: read_secret("DATABASE_URL") or "")
     REDIS_URL: str = field(default_factory=lambda: os.environ.get("REDIS_URL", "redis://localhost:6379"))
     LLM_PRIMARY_API_KEY: str = field(
         default_factory=lambda: read_secret("DEEPSEEK_API_KEY")
@@ -35,9 +36,9 @@ class Secrets:
     WECHAT_CORP_SECRET: str = field(default_factory=lambda: os.environ.get("WECHAT_CORP_SECRET", ""))
     WECHAT_TOKEN: str = field(default_factory=lambda: os.environ.get("WECHAT_TOKEN", ""))
     WECHAT_ENCODING_AES_KEY: str = field(default_factory=lambda: os.environ.get("WECHAT_ENCODING_AES_KEY", ""))
-    JWT_SECRET: str = field(default_factory=lambda: os.environ.get("MEMORY_PALACE_JWT_SECRET", ""))
+    JWT_SECRET: str = field(default_factory=lambda: read_secret("MEMORY_PALACE_JWT_SECRET") or "")
     API_KEYS: str = field(default_factory=lambda: os.environ.get("MEMORY_PALACE_API_KEYS", ""))
-    ADMIN_PASSWORD: str = field(default_factory=lambda: os.environ.get("ADMIN_PASSWORD", ""))
+    ADMIN_PASSWORD: str = field(default_factory=lambda: read_secret("ADMIN_PASSWORD") or "")
 
     def validate(self, demo_mode: bool = False) -> list[str]:
         """Return list of missing REQUIRED secrets. Empty list = all good."""

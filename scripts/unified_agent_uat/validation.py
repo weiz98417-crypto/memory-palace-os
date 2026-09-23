@@ -21,11 +21,32 @@ _REQUIRED_FILES = (
     "llm-calls.json",
     "queue-recovery.json",
 )
+_REQUIRED_COMPLETE_RECORD_FILES = (
+    "pgvector-retrieval.json",
+    "db-assertions.json",
+    "llm-calls.json",
+    "queue-recovery.json",
+)
 _EXPECTED_ARCHITECTURE = {
     "business_data": "PostgreSQL",
     "queue": "Redis Streams",
     "vector_store": "PostgreSQL pgvector",
     "generative_model": "deepseek-flash",
+}
+EXPECTED_UAT_STEP_IDS = tuple(
+    [f"E2E-{number:02d}" for number in range(17)]
+    + [f"UAT-F{number:02d}" for number in range(1, 14)]
+)
+_EXPECTED_UAT_STEP_ID_SET = frozenset(EXPECTED_UAT_STEP_IDS)
+_REQUIRED_MODEL_AGENTS: dict[str, frozenset[str]] = {
+    "E2E-00": frozenset({"RuntimeDiagnostics"}),
+    "E2E-03": frozenset({"ContextTrigger", "Router", "MemoryOps", "Commander"}),
+    "E2E-05": frozenset({"TodoWrite"}),
+    "E2E-11": frozenset({"Watcher"}),
+    "E2E-12": frozenset({"PersonaExtract"}),
+    "E2E-13": frozenset({"PersonaExtract"}),
+    "E2E-15": frozenset({"Router", "MemoryOps", "Persona"}),
+    "UAT-F03": frozenset(),
 }
 _SENSITIVE_KEYS = {
     "access_token",
@@ -172,12 +193,46 @@ def _validate_step(run_path: Path, run_id: str, entry: Any, errors: list[str]) -
     if not isinstance(model_calls, list):
         errors.append(f"step {step_id} model_calls must be a list")
     else:
+        valid_call_agents: set[str] = set()
+        business_trace_ids = {
+            value
+            for key, value in (business_ids or {}).items()
+            if "trace_id" in str(key) and isinstance(value, str) and value.strip()
+        }
         for call in model_calls:
             if not isinstance(call, dict):
                 errors.append(f"step {step_id} model call must be an object")
                 continue
-            if call.get("model") != "deepseek-flash" or call.get("is_mock") is not False:
+            if (
+                call.get("provider") != "deepseek"
+                or call.get("model") != "deepseek-flash"
+                or call.get("is_mock") is not False
+                or call.get("status") not in {"SUCCEEDED", "COMPLETED"}
+            ):
                 errors.append(f"step {step_id} contains a mock or unsupported model call")
+                continue
+            call_id = call.get("call_id") or call.get("request_id")
+            trace_id = call.get("trace_id")
+            agent = call.get("agent") or call.get("agent_id")
+            if not isinstance(call_id, str) or not call_id.strip():
+                errors.append(f"step {step_id} model call has no stable call identifier")
+            if not isinstance(trace_id, str) or not trace_id.strip():
+                errors.append(f"step {step_id} model call has no trace_id")
+            elif business_trace_ids and trace_id not in business_trace_ids:
+                errors.append(f"step {step_id} model call trace is not linked to business_ids")
+            if isinstance(agent, str) and agent.strip():
+                valid_call_agents.add(agent)
+
+        required_agents = _REQUIRED_MODEL_AGENTS.get(step_id)
+        if status == "PASSED" and required_agents is not None:
+            if not model_calls:
+                errors.append(f"step {step_id} PASSED without required real model calls")
+            missing_agents = sorted(required_agents - valid_call_agents)
+            if missing_agents:
+                errors.append(
+                    f"step {step_id} is missing required model agents: "
+                    + ", ".join(missing_agents)
+                )
 
     artifacts = result.get("artifacts", [])
     if not isinstance(artifacts, list):
@@ -285,7 +340,53 @@ def _validate_sensitive_fields(run_path: Path, errors: list[str]) -> None:
             errors.append(f"sensitive field is not redacted in {relative_path}: {location}")
 
 
-def validate_evidence(run_directory: Path, *, registry_path: Path | None = None) -> ValidationReport:
+def _validate_complete_summaries(
+    run_path: Path,
+    *,
+    run_id: str,
+    errors: list[str],
+) -> None:
+    for filename in _REQUIRED_COMPLETE_RECORD_FILES:
+        summary_path = run_path / filename
+        if not summary_path.is_file():
+            continue
+        summary = _load_object(summary_path, errors)
+        if summary is None:
+            continue
+        if summary.get("uat_run_id") != run_id:
+            errors.append(f"required evidence summary has mismatched uat_run_id: {filename}")
+        records = summary.get("records")
+        if not isinstance(records, list) or not records:
+            errors.append(f"required evidence summary is empty: {filename}")
+        elif any(not isinstance(record, dict) or not record for record in records):
+            errors.append(f"required evidence summary contains an invalid record: {filename}")
+
+
+def _validate_source_fingerprint(manifest: dict[str, Any], errors: list[str]) -> None:
+    source = manifest.get("source")
+    if not isinstance(source, dict) or source.get("status") != "CAPTURED":
+        errors.append("source fingerprint is unavailable")
+        return
+    required_text = ("commit", "tracked_diff_sha256", "untracked_source_sha256")
+    for field in required_text:
+        value = source.get(field)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"source fingerprint has no {field}")
+    changed_paths = source.get("changed_paths")
+    if not isinstance(changed_paths, list) or any(
+        not isinstance(path, str) or not path.strip() for path in changed_paths
+    ):
+        errors.append("source fingerprint changed_paths is invalid")
+    if not isinstance(source.get("dirty"), bool):
+        errors.append("source fingerprint dirty flag is invalid")
+
+
+def validate_evidence(
+    run_directory: Path,
+    *,
+    registry_path: Path | None = None,
+    require_complete: bool = False,
+) -> ValidationReport:
     """Validate one run without changing evidence or registry state."""
 
     run_path = run_directory.resolve()
@@ -333,11 +434,34 @@ def validate_evidence(run_directory: Path, *, registry_path: Path | None = None)
                 if step["id"] in seen:
                     errors.append(f"manifest contains duplicate step: {step['id']}")
                 seen.add(step["id"])
+                if step["id"] not in _EXPECTED_UAT_STEP_ID_SET:
+                    errors.append(f"manifest contains unknown UAT step: {step['id']}")
                 if step.get("status") == "PASSED":
                     passed_steps.add(step["id"])
             _validate_step(run_path, run_id, step, errors)
 
+        if require_complete:
+            missing_step_ids = [
+                step_id for step_id in EXPECTED_UAT_STEP_IDS if step_id not in seen
+            ]
+            if missing_step_ids:
+                errors.append(
+                    "evidence run is missing required UAT steps: "
+                    + ", ".join(missing_step_ids)
+                )
+            non_passing_step_ids = [
+                step_id for step_id in EXPECTED_UAT_STEP_IDS if step_id not in passed_steps
+            ]
+            if not missing_step_ids and non_passing_step_ids:
+                errors.append(
+                    "evidence run contains non-passing required UAT steps: "
+                    + ", ".join(non_passing_step_ids)
+                )
+
     _validate_sensitive_fields(run_path, errors)
+    if require_complete:
+        _validate_source_fingerprint(manifest, errors)
+        _validate_complete_summaries(run_path, run_id=run_id, errors=errors)
     if registry_path is not None:
         _validate_registry(
             registry_path,

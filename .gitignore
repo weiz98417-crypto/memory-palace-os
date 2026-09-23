@@ -49,5 +49,8 @@ Thumbs.db
 chroma_db/
 .gstack/
 
+# Browser automation profiles can contain cookies, login data, and history.
+**/.chrome/
+
 # Graphify local curated-graph backups
 graphify-out/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/

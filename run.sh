@@ -1,21 +1,13 @@
-#!/bin/bash
-# Memory Palace OS - Quick Start Script
+#!/usr/bin/env bash
+set -euo pipefail
 
-set -e
+python_bin="${PYTHON_BIN:-python3}"
+python_version="$($python_bin -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
+if [[ "$python_version" != "3.11" && "$python_version" != "3.12" ]]; then
+  echo "Memory Palace OS requires Python 3.11 or 3.12; found $python_version" >&2
+  exit 2
+fi
 
-echo "Starting Memory Palace OS..."
-
-# 1. Install dependencies
-pip install -r requirements.txt
-
-# 2. Create data directory
+"$python_bin" -m pip install -r requirements.txt
 mkdir -p data
-
-# 3. Initialize database
-python -c "from src.memory_palace.knowledge.db_init import init_db; import asyncio; asyncio.run(init_db())"
-
-# 4. Seed initial data
-python -c "from src.memory_palace.knowledge.data_seeder import seed_data; import asyncio; asyncio.run(seed_data())"
-
-# 5. Start server
-uvicorn src.memory_palace.main:app --host 0.0.0.0 --port 8000 --reload
+exec "$python_bin" -m uvicorn main:app --host "${HOST:-0.0.0.0}" --port "${PORT:-8000}"

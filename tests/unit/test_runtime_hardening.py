@@ -416,6 +416,32 @@ def test_nginx_healthcheck_uses_ipv4_loopback():
     assert compose["services"]["nginx"]["healthcheck"]["test"][-1] == "http://127.0.0.1/health"
 
 
+def test_proxy_chain_uses_explicit_ingress_address_and_rebuilds_forwarded_for():
+    project_root = Path(__file__).resolve().parents[2]
+    compose = yaml.safe_load((project_root / "deploy" / "docker-compose.yml").read_text(encoding="utf-8"))
+    nginx = (project_root / "deploy" / "nginx.conf").read_text(encoding="utf-8")
+    dockerfile = (project_root / "deploy" / "Dockerfile").read_text(encoding="utf-8")
+    supervisor = (project_root / "deploy" / "supervisor.conf").read_text(encoding="utf-8")
+
+    app_environment = compose["services"]["app"]["environment"]
+    assert app_environment["TRUSTED_PROXY_HOSTS"] == "${TRUSTED_PROXY_HOSTS:-172.28.0.10}"
+    assert app_environment["FORWARDED_ALLOW_IPS"] == "${TRUSTED_PROXY_HOSTS:-172.28.0.10}"
+    assert compose["services"]["nginx"]["networks"]["data-plane"]["ipv4_address"] == "172.28.0.10"
+    assert "proxy_set_header X-Forwarded-For $remote_addr;" in nginx
+    assert "$proxy_add_x_forwarded_for" not in nginx
+    assert '"--forwarded-allow-ips", "*"' not in dockerfile
+    assert "--forwarded-allow-ips *" not in supervisor
+
+
+def test_default_advice_runtime_does_not_mount_hatchet_token_path():
+    project_root = Path(__file__).resolve().parents[2]
+    compose = yaml.safe_load((project_root / "deploy" / "docker-compose.yml").read_text(encoding="utf-8"))
+    app_environment = compose["services"]["app"]["environment"]
+
+    assert app_environment["ADVICE_EXECUTION_MODE"] == "${ADVICE_EXECUTION_MODE:-redis}"
+    assert app_environment["HATCHET_CLIENT_TOKEN_FILE"] == "${HATCHET_CLIENT_TOKEN_FILE:-}"
+
+
 def test_compose_passes_postgres_password_outside_database_url():
     compose_path = Path(__file__).resolve().parents[2] / "deploy" / "docker-compose.yml"
     compose = yaml.safe_load(compose_path.read_text(encoding="utf-8"))

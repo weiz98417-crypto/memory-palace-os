@@ -18,6 +18,9 @@ async def test_lifespan_uses_one_instance_id_for_recovery_and_runtime_diagnostic
         async def fetch_one(self, *_args, **_kwargs):
             return {"ok": 1}
 
+        async def fetch_all(self, *_args, **_kwargs):
+            return []
+
         async def close(self):
             return None
 
@@ -39,6 +42,21 @@ async def test_lifespan_uses_one_instance_id_for_recovery_and_runtime_diagnostic
 
     class QueueStub:
         _client = None
+
+        def __init__(self, **_kwargs):
+            pass
+
+        async def connect(self):
+            return None
+
+        async def enqueue(self, _message):
+            return None
+
+        async def claim(self):
+            return None
+
+        async def ack(self, _message):
+            return None
 
         async def close(self):
             return None
@@ -109,6 +127,9 @@ async def test_lifespan_uses_one_instance_id_for_recovery_and_runtime_diagnostic
     queue_worker_module = importlib.import_module("src.memory_palace.core.queue_worker")
     scheduler_module = importlib.import_module("src.memory_palace.core.scheduler")
     redis_module = importlib.import_module("src.memory_palace.core.redis_queue")
+    advice_queue_module = importlib.import_module(
+        "src.memory_palace.scenic.redis_advice_queue"
+    )
     recovery_module = importlib.import_module("src.memory_palace.core.runtime_recovery")
     db_init_module = importlib.import_module("src.memory_palace.knowledge.db_init")
     auth_module = importlib.import_module("src.memory_palace.api.v1.endpoints.auth")
@@ -122,6 +143,7 @@ async def test_lifespan_uses_one_instance_id_for_recovery_and_runtime_diagnostic
     monkeypatch.setattr(queue_worker_module, "set_message_queue", lambda _queue: None)
     monkeypatch.setattr(scheduler_module, "TaskScheduler", SchedulerStub)
     monkeypatch.setattr(redis_module, "RedisStreamsQueue", QueueStub)
+    monkeypatch.setattr(advice_queue_module, "RedisAdviceQueue", QueueStub)
     monkeypatch.setattr(recovery_module, "recover_application_runtime", recover_application_runtime)
     monkeypatch.setattr(db_init_module, "init_database", no_op_async)
     monkeypatch.setattr(auth_module, "bootstrap_identity_store", no_op_async)

@@ -31,3 +31,4 @@ README.md
 *.key
 .scratch
 artifacts
+**/.chrome

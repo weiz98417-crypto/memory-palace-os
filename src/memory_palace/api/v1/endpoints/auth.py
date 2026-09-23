@@ -12,6 +12,7 @@ import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
+from ....config.secrets import read_secret
 from ...auth import (
     create_token,
     decode_token,
@@ -101,7 +102,7 @@ async def bootstrap_identity_store(db: Any) -> None:
         return
 
     username = os.environ.get("ADMIN_USERNAME", "admin").strip().lower()
-    password = os.environ.get("ADMIN_PASSWORD", "")
+    password = read_secret("ADMIN_PASSWORD") or ""
     display_name = os.environ.get("ADMIN_DISPLAY_NAME", "系统管理员").strip()
     venue_id = os.environ.get("DEFAULT_VENUE_ID", "venue-hq").strip()
     venue_name = os.environ.get("DEFAULT_VENUE_NAME", "示范景区运营中心").strip()

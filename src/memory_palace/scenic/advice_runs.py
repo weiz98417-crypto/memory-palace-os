@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import os
 import time
 import uuid
 from dataclasses import dataclass
@@ -70,6 +71,8 @@ class AdviceRun:
     error_message: str | None
     created_at: float
     updated_at: float
+    execution_owner: str | None = None
+    lease_expires_at: float | None = None
 
 
 class AdviceRunRepository:
@@ -143,6 +146,51 @@ class AdviceRunRepository:
         )
         return [self._to_run(row) for row in rows or []]
 
+    async def list_dispatchable(self) -> list[AdviceRun]:
+        rows = await self._database.fetch_all(
+            """
+            SELECT * FROM scenic_commands
+            WHERE command_type = ? AND status = 'PENDING'
+            ORDER BY created_at
+            """,
+            (ADVICE_COMMAND_TYPE,),
+        )
+        return [self._to_run(row) for row in rows or []]
+
+    async def claim_execution(
+        self,
+        *,
+        venue_id: str,
+        run_id: str,
+        owner: str,
+        lease_seconds: float,
+    ) -> bool:
+        now = self._now()
+        return (
+            await self._database.execute(
+                """
+                UPDATE scenic_commands
+                SET status = 'RUNNING', execution_owner = ?, lease_expires_at = ?,
+                    updated_at = ?
+                WHERE venue_id = ? AND id = ? AND command_type = ?
+                  AND (
+                    status = 'PENDING'
+                    OR (status = 'RUNNING' AND COALESCE(lease_expires_at, 0) < ?)
+                  )
+                """,
+                (
+                    owner,
+                    now + max(1.0, lease_seconds),
+                    now,
+                    venue_id,
+                    run_id,
+                    ADVICE_COMMAND_TYPE,
+                    now,
+                ),
+            )
+            == 1
+        )
+
     async def transition(
         self,
         *,
@@ -153,6 +201,7 @@ class AdviceRunRepository:
         response: dict[str, Any] | None = None,
         error: Exception | None = None,
         system_context: str | None = None,
+        execution_owner: str | None = None,
     ) -> bool:
         expected_states = (expected,) if isinstance(expected, str) else tuple(expected)
         for state in expected_states:
@@ -173,13 +222,17 @@ class AdviceRunRepository:
                 body.setdefault("system_context", system_context)
             response_payload = json.dumps(body, ensure_ascii=False, sort_keys=True)
         placeholders = ",".join("?" for _ in expected_states)
+        owner_clause = " AND execution_owner = ?" if execution_owner else ""
+        owner_parameters = (execution_owner,) if execution_owner else ()
         return (
             await self._database.execute(
                 f"""
                 UPDATE scenic_commands
                 SET status = ?, response_json = COALESCE(?, response_json),
-                    error_type = ?, error_message = ?, updated_at = ?
-                WHERE venue_id = ? AND id = ? AND status IN ({placeholders})
+                    error_type = ?, error_message = ?, updated_at = ?,
+                    execution_owner = CASE WHEN ? IN ('READY', 'FAILED') THEN NULL ELSE execution_owner END,
+                    lease_expires_at = CASE WHEN ? IN ('READY', 'FAILED') THEN NULL ELSE lease_expires_at END
+                WHERE venue_id = ? AND id = ? AND status IN ({placeholders}){owner_clause}
                 """,
                 (
                     new_state,
@@ -187,9 +240,12 @@ class AdviceRunRepository:
                     type(error).__name__ if error else None,
                     str(error)[:500] if error else None,
                     now,
+                    new_state,
+                    new_state,
                     venue_id,
                     run_id,
                     *expected_states,
+                    *owner_parameters,
                 ),
             )
             == 1
@@ -248,6 +304,12 @@ class AdviceRunRepository:
             error_message=row.get("error_message"),
             created_at=float(row["created_at"]),
             updated_at=float(row["updated_at"]),
+            execution_owner=row.get("execution_owner"),
+            lease_expires_at=(
+                float(row["lease_expires_at"])
+                if row.get("lease_expires_at") is not None
+                else None
+            ),
         )
 
 
@@ -322,6 +384,8 @@ class AdviceWorker:
         self._command = incident_command
         self._sink = sink
         self._clock = clock or time.time
+        self._execution_owner = uuid.uuid4().hex
+        self._lease_seconds = float(os.environ.get("ADVICE_EXECUTION_LEASE_SECONDS", "300"))
 
     async def enqueue(self, run: AdviceRun) -> None:
         await self._queue.enqueue(
@@ -352,14 +416,17 @@ class AdviceWorker:
         if run is None or run.request is None:
             await self._queue.ack(message)
             return None
-        return await self._execute(run)
+        finalized = await self._execute(run)
+        if finalized is not None:
+            await self._queue.ack(message)
+        return finalized
 
     async def _execute(self, run: AdviceRun) -> AdviceFinalized:
         venue_id = run.venue_id
         run_id = run.run_id
         if run.state == "SUPERSEDED":
-            # The human advanced first. Keep the model's late answer as read-only
-            # evidence, but never publish a ready signal or let it reach dispatch.
+            if run.result and run.result.get("late_result") is not None:
+                return AdviceFinalized(run=run, state="SUPERSEDED")
             try:
                 late = await self._command.execute(run.request)
             except Exception:
@@ -372,20 +439,28 @@ class AdviceWorker:
                 )
             current = await self._repository.get(venue_id=venue_id, run_id=run_id)
             return AdviceFinalized(run=current or run, state="SUPERSEDED")
-        if run.state != "PENDING":
+        if run.state in {"READY", "FAILED"}:
+            result = dict(run.result or {})
+            await self._sink.finalize(
+                run=run,
+                state=run.state,
+                activity_type=("ADVICE_READY" if run.state == "READY" else "ADVICE_FAILED"),
+                payload={**result, "advice_run_id": run_id, "state": run.state},
+            )
+            return AdviceFinalized(run=run, state=run.state)
+        if run.state not in {"PENDING", "RUNNING"}:
             return AdviceFinalized(run=run, state=run.state)
 
-        if not await self._repository.transition(
+        if not await self._repository.claim_execution(
             venue_id=venue_id,
             run_id=run_id,
-            expected="PENDING",
-            new_state="RUNNING",
-            response={"advice_run_id": run_id, "incident_id": run.incident_id},
+            owner=self._execution_owner,
+            lease_seconds=self._lease_seconds,
         ):
-            current = await self._repository.get(venue_id=venue_id, run_id=run_id)
-            return AdviceFinalized(
-                run=current or run, state=(current.state if current else run.state)
-            )
+            return None
+        claimed_run = await self._repository.get(venue_id=venue_id, run_id=run_id)
+        if claimed_run is not None:
+            run = claimed_run
 
         try:
             result = await self._command.execute(run.request)
@@ -396,6 +471,7 @@ class AdviceWorker:
                 expected="RUNNING",
                 new_state="FAILED",
                 error=exc,
+                execution_owner=self._execution_owner,
             )
             final_run = await self._repository.get(venue_id=venue_id, run_id=run_id)
             if transitioned and final_run is not None:
@@ -419,6 +495,7 @@ class AdviceWorker:
             expected="RUNNING",
             new_state=advice_state,
             response=response_body,
+            execution_owner=self._execution_owner,
         )
         final_run = await self._repository.get(venue_id=venue_id, run_id=run_id)
         if final_run is None:

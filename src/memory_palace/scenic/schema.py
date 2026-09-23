@@ -163,6 +163,8 @@ def _statements(*, postgres: bool) -> tuple[str, ...]:
             request_json TEXT,
             error_type TEXT,
             error_message TEXT,
+            execution_owner TEXT,
+            lease_expires_at DOUBLE PRECISION,
             created_at DOUBLE PRECISION NOT NULL,
             updated_at DOUBLE PRECISION NOT NULL,
             UNIQUE (venue_id, idempotency_key)
@@ -244,24 +246,29 @@ async def init_scenic_schema(database) -> None:
     for statement in _statements(postgres=postgres):
         await database.execute(statement)
     await _ensure_scenic_commands_request_json(database, postgres=postgres)
+    await _ensure_scenic_command_execution_columns(database)
 
 
 async def _ensure_scenic_commands_request_json(database, *, postgres: bool) -> None:
     """Add the Agent-run request payload to pre-existing scenic_commands tables."""
 
     try:
-        rows = await database.fetch_all("SELECT * FROM scenic_commands LIMIT 0")
-    except Exception:
-        return
-    columns: set[str] = set()
-    for row in rows or []:
-        columns.update(str(key) for key in (row.keys() if hasattr(row, "keys") else row))
-    if columns and "request_json" in columns:
-        return
-    try:
         await database.execute(
             "ALTER TABLE scenic_commands ADD COLUMN request_json TEXT"
         )
     except Exception:
-        # A concurrent initialiser may have added it first; that is fine.
+        # Existing and concurrently added columns are both acceptable.
         return
+
+
+async def _ensure_scenic_command_execution_columns(database) -> None:
+    for column, column_type in (
+        ("execution_owner", "TEXT"),
+        ("lease_expires_at", "DOUBLE PRECISION"),
+    ):
+        try:
+            await database.execute(
+                f"ALTER TABLE scenic_commands ADD COLUMN {column} {column_type}"
+            )
+        except Exception:
+            continue

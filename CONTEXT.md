@@ -216,3 +216,17 @@ _Avoid_: 自由文本备注, 无理由忽略
 **迟到建议**:
 A model advice that arrived after a human already advanced the incident; it is retained as read-only SUPERSEDED evidence and cannot participate in later dispatch, tasks, or closure.
 _Avoid_: 已忽略建议, 静默丢弃
+
+## 内部业务验收
+
+**角色模拟验收**:
+由自动化执行者分别扮演员工、经理、专家、知识负责人和管理员，按各自权限完成真实业务操作并留存结果的内部验收。它验证从事件处置到另一名员工复用经验的连续过程。
+_Avoid_: 假业务演示, 客户签收, 直接生成完成状态
+
+**内部验收就绪**:
+当前版本的某项能力已满足约定的正常、异常和恢复验收条件，并具备可追溯证据的状态。就绪范围限于实际验收的环境和业务边界。
+_Avoid_: 页面能打开, 无条件可交付, 所有状态刷绿
+
+**安全禁用已验证**:
+未配置或不在交付范围内的外部渠道已经验证无法收发，且界面诚实呈现禁用原因的验收结果。
+_Avoid_: 渠道已可用, 消息已送达, 供应商验收通过

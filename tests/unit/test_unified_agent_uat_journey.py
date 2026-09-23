@@ -221,6 +221,7 @@ async def test_e2e_00_records_sanitized_live_runtime_evidence(tmp_path) -> None:
     }
     assert step["model_calls"] == [
         {
+            "agent": "RuntimeDiagnostics",
             "provider": "deepseek",
             "model": "deepseek-flash",
             "is_mock": False,

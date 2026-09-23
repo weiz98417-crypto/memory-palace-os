@@ -362,6 +362,7 @@ async def _run_e2e_00(
         "assertions": assertions,
         "model_calls": [
             {
+                "agent": model_call.get("agent_id"),
                 "provider": model_call.get("provider"),
                 "model": model_call.get("model_name"),
                 "is_mock": model_call.get("is_mock"),

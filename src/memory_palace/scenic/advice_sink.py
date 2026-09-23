@@ -108,7 +108,10 @@ class DatabaseAdviceSink:
         event_name: str,
         payload: dict[str, Any],
     ) -> dict[str, Any]:
-        event_id = uuid.uuid4().hex
+        event_id = uuid.uuid5(
+            uuid.NAMESPACE_URL,
+            f"memory-palace-advice-event:{venue_id}:{run_id}:{event_name}",
+        ).hex
         recorded_at = time.time()
         await self._database.execute(
             """
@@ -116,6 +119,7 @@ class DatabaseAdviceSink:
                 event_id, venue_id, run_id, event_type, resource_type,
                 resource_id, payload_json, simulated_at, recorded_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (event_id) DO NOTHING
             """,
             (
                 event_id,

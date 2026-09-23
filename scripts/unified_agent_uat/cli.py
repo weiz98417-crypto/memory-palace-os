@@ -85,6 +85,11 @@ def _parser() -> argparse.ArgumentParser:
     validate = commands.add_parser("validate", help="validate an evidence run without modifying it")
     validate.add_argument("--run", type=Path, required=True)
     validate.add_argument("--registry", type=Path)
+    validate.add_argument(
+        "--complete",
+        action="store_true",
+        help="require the complete 30-journey evidence contract without sealing the run",
+    )
 
     complete = commands.add_parser("complete", help="validate and seal an all-passing evidence run")
     complete.add_argument("--run", type=Path, required=True)
@@ -162,7 +167,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             _emit({"recorded": str(result_path)})
             return 0
         if args.command == "validate":
-            report = validate_evidence(args.run, registry_path=args.registry)
+            report = validate_evidence(
+                args.run,
+                registry_path=args.registry,
+                require_complete=args.complete,
+            )
             _emit({"valid": report.valid, "errors": list(report.errors)})
             return 0 if report.valid else 1
         if args.command == "complete":

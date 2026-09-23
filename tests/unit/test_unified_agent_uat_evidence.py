@@ -16,6 +16,47 @@ from scripts.unified_agent_uat.validation import validate_evidence
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+ALL_REQUIRED_UAT_STEPS = tuple(
+    [f"E2E-{number:02d}" for number in range(17)]
+    + [f"UAT-F{number:02d}" for number in range(1, 14)]
+)
+MODEL_AGENTS_BY_STEP = {
+    "E2E-00": ("RuntimeDiagnostics",),
+    "E2E-03": ("ContextTrigger", "Router", "MemoryOps", "Commander"),
+    "E2E-05": ("TodoWrite",),
+    "E2E-11": ("Watcher",),
+    "E2E-12": ("PersonaExtract",),
+    "E2E-13": ("PersonaExtract",),
+    "E2E-15": ("Router", "MemoryOps", "Persona"),
+    "UAT-F03": ("Router",),
+}
+
+
+def _record_all_required_steps(run: EvidenceRun) -> None:
+    for step_id in ALL_REQUIRED_UAT_STEPS:
+        trace_id = f"trace-{step_id.lower()}"
+        model_calls = [
+            {
+                "call_id": f"call-{step_id.lower()}-{agent.lower()}",
+                "agent": agent,
+                "provider": "deepseek",
+                "model": "deepseek-flash",
+                "is_mock": False,
+                "status": "SUCCEEDED",
+                "trace_id": trace_id,
+            }
+            for agent in MODEL_AGENTS_BY_STEP.get(step_id, ())
+        ]
+        run.record_step(
+            step_id,
+            status="PASSED",
+            evidence={
+                "business_ids": {"trace_id": trace_id},
+                "references": [f"GET /uat/{step_id}"],
+                "assertions": [{"name": f"{step_id} completed", "passed": True}],
+                "model_calls": model_calls,
+            },
+        )
 
 
 def test_create_run_builds_simulator_only_evidence_contract(tmp_path):
@@ -64,6 +105,13 @@ def test_create_run_builds_simulator_only_evidence_contract(tmp_path):
         encoding="utf-8"
     )
     manifest = json.loads((run.path / "manifest.json").read_text(encoding="utf-8"))
+    source = manifest.pop("source")
+    assert source["status"] == "CAPTURED"
+    assert len(source["commit"]) == 40
+    assert isinstance(source["dirty"], bool)
+    assert isinstance(source["changed_paths"], list)
+    assert len(source["tracked_diff_sha256"]) == 64
+    assert len(source["untracked_source_sha256"]) == 64
     assert manifest == {
         "schema_version": 1,
         "uat_run_id": "UAT-20260803T093000Z-AB12CD34",
@@ -366,11 +414,15 @@ def test_validator_accepts_consistent_running_evidence_package(tmp_path):
             ],
             "model_calls": [
                 {
-                    "call_id": "llm-call-e2e-03",
-                    "agent": "Router",
+                    "call_id": f"llm-call-e2e-03-{agent.lower()}",
+                    "agent": agent,
+                    "provider": "deepseek",
                     "model": "deepseek-flash",
                     "is_mock": False,
+                    "status": "SUCCEEDED",
+                    "trace_id": "trace-e2e-03",
                 }
+                for agent in ("ContextTrigger", "Router", "MemoryOps", "Commander")
             ],
             "artifacts": {
                 "event": {"event_id": "SJ-20260803-VALID001", "status": "OPEN"},
@@ -470,6 +522,45 @@ def test_validator_rejects_missing_files_empty_ids_references_and_mock_models(tm
     assert any("without non-empty references" in error for error in report.errors)
     assert any("mock or unsupported model call" in error for error in report.errors)
     assert any("artifact file is missing" in error for error in report.errors)
+
+
+def test_validator_rejects_passed_generative_step_without_a_real_linked_model_call(tmp_path):
+    run = EvidenceRun.create(
+        tmp_path,
+        run_id="UAT-20260803T111500Z-NOCALL01",
+        now=datetime(2026, 8, 3, 11, 15, tzinfo=timezone.utc),
+    )
+    run.record_baseline(
+        {
+            "channel": {
+                "mode": "WECOM_SIMULATOR_ONLY",
+                "identity_channel": "WECOM_SIMULATOR",
+                "real_wecom_enabled": False,
+            },
+            "process_counts": {"events": 0},
+        }
+    )
+    run.record_step(
+        "E2E-03",
+        status="PASSED",
+        evidence={
+            "business_ids": {
+                "trace_id": "trace-e2e-03",
+                "event_id": "SJ-20260803-NOCALL01",
+            },
+            "references": ["GET /api/v1/admin/events/SJ-20260803-NOCALL01"],
+            "assertions": [{"name": "四 Agent 受理完成", "passed": True}],
+            "model_calls": [],
+        },
+    )
+
+    report = validate_evidence(run.path)
+
+    assert report.valid is False
+    assert any(
+        "E2E-03 PASSED without required real model calls" in error
+        for error in report.errors
+    )
 
 
 def test_validator_rejects_sensitive_values_even_after_checksums_are_updated(tmp_path):
@@ -603,6 +694,17 @@ def test_validator_requires_ready_registry_to_reference_matching_step_file(tmp_p
             "business_ids": {"trace_id": "trace-ready-step"},
             "references": ["GET /api/v1/admin/diagnostics"],
             "assertions": [{"name": "运行配置可读", "passed": True}],
+            "model_calls": [
+                {
+                    "call_id": "llm-call-ready-step",
+                    "agent": "RuntimeDiagnostics",
+                    "provider": "deepseek",
+                    "model": "deepseek-flash",
+                    "is_mock": False,
+                    "status": "SUCCEEDED",
+                    "trace_id": "trace-ready-step",
+                }
+            ],
         },
     )
     registry_path = tmp_path / "feature_registry.yaml"
@@ -656,7 +758,7 @@ def test_validator_rejects_registry_evidence_path_traversal(tmp_path):
     assert any("registry evidence path escapes evidence run" in error for error in report.errors)
 
 
-def test_complete_seals_only_a_valid_all_passed_run(tmp_path):
+def test_complete_rejects_a_valid_but_partial_run(tmp_path):
     run = EvidenceRun.create(
         tmp_path,
         run_id="UAT-20260803T123000Z-COMPLETE",
@@ -686,15 +788,89 @@ def test_complete_seals_only_a_valid_all_passed_run(tmp_path):
         },
     )
 
+    with pytest.raises(RuntimeError, match="missing required UAT steps") as error:
+        run.complete(now=datetime(2026, 8, 3, 12, 32, tzinfo=timezone.utc))
+
+    assert "E2E-01" in str(error.value)
+    assert "E2E-16" in str(error.value)
+    assert "UAT-F01" in str(error.value)
+    assert "UAT-F13" in str(error.value)
+    manifest = json.loads((run.path / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["status"] == "RUNNING"
+    assert manifest["completed_at"] is None
+
+
+def test_complete_rejects_full_step_set_when_required_summary_evidence_is_empty(tmp_path):
+    run = EvidenceRun.create(
+        tmp_path,
+        run_id="UAT-20260803T124500Z-EMPTYSUM",
+        now=datetime(2026, 8, 3, 12, 45, tzinfo=timezone.utc),
+    )
+    run.record_baseline(
+        {
+            "channel": {
+                "mode": "WECOM_SIMULATOR_ONLY",
+                "identity_channel": "WECOM_SIMULATOR",
+                "real_wecom_enabled": False,
+            },
+            "process_counts": {"sessions": 0, "events": 0},
+        }
+    )
+    _record_all_required_steps(run)
+
+    with pytest.raises(RuntimeError, match="required evidence summary is empty") as error:
+        run.complete(now=datetime(2026, 8, 3, 12, 46, tzinfo=timezone.utc))
+
+    assert "llm-calls.json" in str(error.value)
+    assert "pgvector-retrieval.json" in str(error.value)
+    assert "db-assertions.json" in str(error.value)
+    assert "queue-recovery.json" in str(error.value)
+
+
+def test_complete_seals_full_run_with_non_empty_required_summaries(tmp_path):
+    run = EvidenceRun.create(
+        tmp_path,
+        run_id="UAT-20260803T125000Z-FULLPASS",
+        now=datetime(2026, 8, 3, 12, 50, tzinfo=timezone.utc),
+    )
+    run.record_baseline(
+        {
+            "channel": {
+                "mode": "WECOM_SIMULATOR_ONLY",
+                "identity_channel": "WECOM_SIMULATOR",
+                "real_wecom_enabled": False,
+            },
+            "process_counts": {"sessions": 0, "events": 0},
+        }
+    )
+    _record_all_required_steps(run)
+    run.record_summary(
+        "llm-calls.json",
+        [{"trace_id": "trace-e2e-03", "status": "SUCCEEDED", "is_mock": False}],
+    )
+    run.record_summary(
+        "pgvector-retrieval.json",
+        [{"venue_id": "venue-yueshan", "knowledge_id": "SOP-001", "dimension": 1024}],
+    )
+    run.record_summary(
+        "db-assertions.json",
+        [{"name": "business results are unique", "passed": True}],
+    )
+    run.record_summary(
+        "queue-recovery.json",
+        [{"stream_message_id": "1-0", "claimed": 1, "acked": 1}],
+    )
+
     manifest_path = run.complete(
-        now=datetime(2026, 8, 3, 12, 32, tzinfo=timezone.utc),
+        now=datetime(2026, 8, 3, 12, 51, tzinfo=timezone.utc),
     )
 
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     assert manifest["status"] == "COMPLETED"
-    assert manifest["completed_at"] == "2026-08-03T12:32:00Z"
+    assert manifest["completed_at"] == "2026-08-03T12:51:00Z"
+    assert len(manifest["steps"]) == 30
     with pytest.raises(RuntimeError, match="sealed"):
-        run.complete()
+        run.record_summary("db-assertions.json", [{"name": "late", "passed": True}])
 
 
 def test_cli_initializes_a_run_that_requires_bootstrap_before_validation(tmp_path, capsys):
@@ -708,6 +884,41 @@ def test_cli_initializes_a_run_that_requires_bootstrap_before_validation(tmp_pat
     assert evidence_cli_main(["validate", "--run", str(tmp_path / run_id)]) == 1
     validation_output = json.loads(capsys.readouterr().out)
     assert validation_output == {"valid": False, "errors": ["UAT baseline is missing"]}
+
+
+def test_cli_complete_validation_rejects_partial_progress_without_sealing(tmp_path, capsys):
+    run = EvidenceRun.create(
+        tmp_path,
+        run_id="UAT-20260803T130500Z-CLIPART1",
+        now=datetime(2026, 8, 3, 13, 5, tzinfo=timezone.utc),
+    )
+    run.record_baseline(
+        {
+            "channel": {
+                "mode": "WECOM_SIMULATOR_ONLY",
+                "identity_channel": "WECOM_SIMULATOR",
+                "real_wecom_enabled": False,
+            },
+            "process_counts": {"sessions": 0},
+        }
+    )
+    run.record_step(
+        "E2E-01",
+        status="PASSED",
+        evidence={
+            "business_ids": {"session_id": "session-1"},
+            "references": ["GET /api/v1/assistant/sessions"],
+            "assertions": [{"name": "session restored", "passed": True}],
+        },
+    )
+
+    assert evidence_cli_main(["validate", "--run", str(run.path)]) == 0
+    assert json.loads(capsys.readouterr().out) == {"valid": True, "errors": []}
+
+    assert evidence_cli_main(["validate", "--run", str(run.path), "--complete"]) == 1
+    validation_output = json.loads(capsys.readouterr().out)
+    assert validation_output["valid"] is False
+    assert any("missing required UAT steps" in error for error in validation_output["errors"])
 
 
 def test_cli_bootstrap_records_the_formal_api_baseline(tmp_path, capsys, monkeypatch):

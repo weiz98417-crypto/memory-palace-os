@@ -14,6 +14,7 @@ from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from loguru import logger
 
+from ..config.secrets import read_secret
 from ..core.tenant import set_venue_id
 from ..core.passwords import hash_password, verify_password
 
@@ -21,7 +22,7 @@ from ..core.passwords import hash_password, verify_password
 security = HTTPBearer(auto_error=False)
 ALLOWED_ROLES = {"admin", "manager", "operator", "api"}
 def _jwt_secret() -> str:
-    secret = os.environ.get("MEMORY_PALACE_JWT_SECRET", "")
+    secret = read_secret("MEMORY_PALACE_JWT_SECRET") or ""
     if len(secret) < 32:
         raise RuntimeError("MEMORY_PALACE_JWT_SECRET 必须至少 32 个字符")
     return secret

@@ -29,6 +29,9 @@ class Sink:
         self.fail_times = fail_times
 
     async def finalize(self, *, run, state, activity_type, payload, system_context=None):
+        if self.fail_times:
+            self.fail_times -= 1
+            raise RuntimeError("sink unavailable")
         self.events.append(
             {
                 "run_id": run.run_id,
@@ -156,11 +159,12 @@ async def test_worker_executes_the_trunk_and_finalizes_ready(tmp_path):
     repository = await _repository(tmp_path)
     queue = InMemoryAdviceQueue()
     sink = Sink()
+    command = StubCommand(_result())
     run, _ = await _create(repository, _request())
     worker = AdviceWorker(
         repository=repository,
         queue=queue,
-        incident_command=StubCommand(_result()),
+        incident_command=command,
         sink=sink,
     )
     await worker.enqueue(run)
@@ -198,15 +202,16 @@ async def test_worker_failure_marks_run_failed_and_signals_it(tmp_path):
     await repository._database.close()
 
 
-async def test_late_result_is_kept_without_resurrecting_a_superseded_run(tmp_path):
+async def test_late_superseded_result_is_recorded_once_without_publishing(tmp_path):
     repository = await _repository(tmp_path)
     queue = InMemoryAdviceQueue()
     sink = Sink()
+    command = StubCommand(_result())
     run, _ = await _create(repository, _request())
     worker = AdviceWorker(
         repository=repository,
         queue=queue,
-        incident_command=StubCommand(_result()),
+        incident_command=command,
         sink=sink,
     )
     await worker.enqueue(run)
@@ -224,8 +229,12 @@ async def test_late_result_is_kept_without_resurrecting_a_superseded_run(tmp_pat
     assert finalized.state == "SUPERSEDED"
     persisted = await repository.get(venue_id="venue-alpha", run_id=run.run_id)
     assert persisted.state == "SUPERSEDED"
+    assert command.calls == 1
     assert persisted.result["late_result"]["advice"]["evidence_status"] == "GROUNDED"
     assert sink.events == [], "a superseded run must not publish a second ready signal"
+    await worker.enqueue(run)
+    await worker.run_once()
+    assert command.calls == 1
     await repository._database.close()
 
 
@@ -245,4 +254,81 @@ async def test_duplicate_enqueue_does_not_re_run_a_finished_advice(tmp_path):
 
     assert finalized.state == "READY"
     assert command.calls == 1, "a replayed queue item must not charge the model twice"
+    await repository._database.close()
+
+
+async def test_worker_acks_only_after_terminal_side_effects_complete(tmp_path):
+    repository = await _repository(tmp_path)
+    queue = InMemoryAdviceQueue()
+    queue.acked = []
+
+    async def tracking_ack(message):
+        queue.acked.append(message["advice_run_id"])
+
+    queue.ack = tracking_ack
+    sink = Sink(fail_times=1)
+    command = StubCommand(_result())
+    run, _ = await _create(repository, _request())
+    worker = AdviceWorker(
+        repository=repository, queue=queue, incident_command=command, sink=sink
+    )
+    await worker.enqueue(run)
+
+    with pytest.raises(RuntimeError, match="sink unavailable"):
+        await worker.run_once()
+    assert queue.acked == []
+
+    await worker.enqueue(run)
+    finalized = await worker.run_once()
+
+    assert finalized.state == "READY"
+    assert command.calls == 1
+    assert queue.acked == [run.run_id]
+    assert [event["activity_type"] for event in sink.events] == ["ADVICE_READY"]
+    await repository._database.close()
+
+
+async def test_expired_execution_lease_can_be_reclaimed_and_old_owner_is_rejected(tmp_path):
+    now = [100.0]
+    database = AsyncDBClient(tmp_path / "lease.db")
+    await init_database(database)
+    repository = AdviceRunRepository(database, clock=lambda: now[0])
+    run, _ = await _create(repository, _request())
+
+    assert await repository.claim_execution(
+        venue_id=run.venue_id, run_id=run.run_id, owner="worker-old", lease_seconds=10
+    )
+    assert not await repository.claim_execution(
+        venue_id=run.venue_id, run_id=run.run_id, owner="worker-new", lease_seconds=10
+    )
+    now[0] = 111.0
+    assert await repository.claim_execution(
+        venue_id=run.venue_id, run_id=run.run_id, owner="worker-new", lease_seconds=10
+    )
+    assert not await repository.transition(
+        venue_id=run.venue_id,
+        run_id=run.run_id,
+        expected="RUNNING",
+        new_state="READY",
+        response={"outcome": "READY"},
+        execution_owner="worker-old",
+    )
+    assert await repository.transition(
+        venue_id=run.venue_id,
+        run_id=run.run_id,
+        expected="RUNNING",
+        new_state="READY",
+        response={"outcome": "READY"},
+        execution_owner="worker-new",
+    )
+    await database.close()
+
+
+async def test_pending_runs_are_available_for_startup_dispatch_reconciliation(tmp_path):
+    repository = await _repository(tmp_path)
+    run, _ = await _create(repository, _request())
+
+    pending = await repository.list_dispatchable()
+
+    assert [item.run_id for item in pending] == [run.run_id]
     await repository._database.close()

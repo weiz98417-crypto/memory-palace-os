@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 import asyncpg
 from loguru import logger
 
+from ..config.secrets import read_secret
 
 def _rowcount(result: str) -> int:
     try:
@@ -46,7 +47,9 @@ class PostgresDBClient:
     backend_name = "postgresql"
 
     def __init__(self, dsn: Optional[str] = None):
-        self.dsn = dsn or os.environ.get("DATABASE_URL", "postgresql://localhost:5432/memory_palace")
+        self.dsn = dsn or read_secret(
+            "DATABASE_URL", "postgresql://localhost:5432/memory_palace"
+        )
         self._pool: Optional[asyncpg.Pool] = None
 
     async def _ensure_pool(self) -> asyncpg.Pool:

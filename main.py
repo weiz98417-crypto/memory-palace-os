@@ -32,7 +32,7 @@ from loguru import logger
 load_dotenv()
 
 # ── 内部模块 ──────────────────────────────────────────────────────────────────
-from src.memory_palace.config.env_validator import validate_env  # P0: 启动校验
+from src.memory_palace.config.env_validator import validate_env_strict  # P0: 启动校验
 from src.memory_palace.incident.call_records import LLMCallLogRecorder
 from src.memory_palace.incident.command import (
     IncidentCommandConfig,
@@ -45,7 +45,6 @@ from src.memory_palace.scenic.advice_dispatch import InProcessAdviceDispatcher
 from src.memory_palace.scenic.advice_runs import (
     AdviceRunRepository,
     AdviceWorker,
-    InMemoryAdviceQueue,
 )
 from src.memory_palace.tools.logger_config import setup_logger  # 日志初始化
 
@@ -57,17 +56,7 @@ from src.memory_palace.tools.logger_config import setup_logger  # 日志初始�
 _DEMO_MODE = os.environ.get("DEMO_MODE", "").lower() == "true"
 # DEMO_MODE: 跳过环境变量严格校验，允许缺失 Key 运行时降级
 if not _DEMO_MODE:
-    validate_env()  # 内部会 sys.exit(1) + 打印缺失项
-    # Secrets validation (fail-fast on missing required secrets)
-    try:
-        from src.memory_palace.config.secrets import secrets as _secrets
-
-        missing = _secrets.validate(demo_mode=False)
-        if missing:
-            logger.error(f"缺少必需的密钥: {missing}")
-            sys.exit(1)
-    except Exception as e:
-        logger.warning(f"密钥校验跳过: {e}")
+    validate_env_strict()
 else:
     logger.info("🎮 DEMO_MODE 已启用 — 跳过环境变量严格校验")
 setup_logger()  # 初始化 loguru（多文件归档、自动旋转）
@@ -169,7 +158,12 @@ async def lifespan(app: FastAPI):
         raise RuntimeError("SCENIC_ACCOUNT_PASSWORD 或 SCENIC_ACCOUNT_PASSWORD_FILE 必须提供至少 12 位密码")
     scenic_bus = RedisSituationBus()
     advice_repository = AdviceRunRepository(app_container.db_client)
-    advice_queue = InMemoryAdviceQueue()
+    from src.memory_palace.scenic.advice_runtime import AdviceRuntimeConfig
+    from src.memory_palace.scenic.redis_advice_queue import RedisAdviceQueue
+
+    advice_runtime = AdviceRuntimeConfig.from_env()
+    advice_queue = RedisAdviceQueue(consumer_name=f"advice-{runtime_instance_id}")
+    await advice_queue.connect()
     incident_command = PydanticAIIncidentCommand(
         agent_registry=build_incident_agent_registry(),
         call_recorder=LLMCallLogRecorder(app_container.db_client),
@@ -199,13 +193,7 @@ async def lifespan(app: FastAPI):
         incident_command=incident_command,
         sink=advice_sink,
     )
-    # Durable dispatch when Hatchet is configured; the in-process dispatcher stays the
-    # default for the native stack so a local run needs no extra services.
-    hatchet_token_configured = bool(
-        os.environ.get("HATCHET_CLIENT_TOKEN", "").strip()
-        or os.environ.get("HATCHET_CLIENT_TOKEN_FILE", "").strip()
-    )
-    if hatchet_token_configured:
+    if advice_runtime.mode == "hatchet":
         from src.memory_palace.scenic.advice_dispatch import HatchetAdviceDispatcher
         from src.memory_palace.scenic.hatchet_workflow import build_workflow
 
@@ -231,11 +219,16 @@ async def lifespan(app: FastAPI):
             )
 
         advice_decision_publisher = _push_advice_decision
-        logger.info("advice dispatch: hatchet durable workflow")
+        logger.info("advice dispatch: explicit hatchet durable workflow")
     else:
         advice_dispatcher = InProcessAdviceDispatcher(advice_worker)
         advice_decision_publisher = None
-        logger.info("advice dispatch: in-process queue")
+        logger.info("advice dispatch: redis streams")
+    dispatchable_runs = await advice_repository.list_dispatchable()
+    for dispatchable_run in dispatchable_runs:
+        await advice_dispatcher.dispatch(dispatchable_run)
+    if dispatchable_runs:
+        logger.info("✅ 已对账补发 {} 条待处理建议运行", len(dispatchable_runs))
     # Injected after construction: ScenicAreaOperations is built before the worker that
     # resumes the durable wait, so this cannot be a constructor argument.
     scenic_operations.advice_decision_publisher = advice_decision_publisher
@@ -266,10 +259,12 @@ async def lifespan(app: FastAPI):
             if finalized is None:
                 await asyncio.sleep(0.5)
 
-    advice_consumer_task = asyncio.create_task(
-        _advice_consumer(), name="advice-consumer"
-    )
-    logger.info("✅ 建议运行队列消费者已启动")
+    advice_consumer_task = None
+    if advice_runtime.mode == "redis":
+        advice_consumer_task = asyncio.create_task(
+            _advice_consumer(), name="advice-consumer"
+        )
+        logger.info("✅ Redis 建议运行队列消费者已启动")
 
     # —— 启动定时任务调度器（Watcher 鹰眼巡检）——
     scheduler = TaskScheduler(container=app_container)
@@ -322,6 +317,7 @@ async def lifespan(app: FastAPI):
     app.state.advice_queue = advice_queue
     app.state.advice_worker = advice_worker
     app.state.advice_dispatcher = advice_dispatcher
+    app.state.advice_execution_mode = advice_runtime.mode
     app.state.incident_command = incident_command
 
     yield  # ← FastAPI 在此处理请求
@@ -340,11 +336,12 @@ async def lifespan(app: FastAPI):
         )
 
     # 停止领取新消息并取消阻塞中的消费循环。
-    advice_consumer_task.cancel()
-    try:
-        await advice_consumer_task
-    except asyncio.CancelledError:
-        pass
+    if advice_consumer_task is not None:
+        advice_consumer_task.cancel()
+        try:
+            await advice_consumer_task
+        except asyncio.CancelledError:
+            pass
     worker.stop()
     consumer_task.cancel()
     try:
@@ -375,6 +372,7 @@ async def lifespan(app: FastAPI):
 
         await scenic_runtime.stop()
         await scenic_bus.close()
+        await advice_queue.close()
         await runtime_queue.close()
         await app_container.db_client.close()
         close_vector_client()
@@ -410,8 +408,15 @@ install_error_handlers(app)
 if os.environ.get("TRUST_PROXY_HEADERS", "").strip().lower() in {"1", "true", "yes", "on"}:
     from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
-    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
-    logger.info("✅ 已信任反向代理转发头（TRUST_PROXY_HEADERS）")
+    trusted_proxy_hosts = [
+        host.strip()
+        for host in os.environ.get("TRUSTED_PROXY_HOSTS", "").split(",")
+        if host.strip()
+    ]
+    if not trusted_proxy_hosts or "*" in trusted_proxy_hosts:
+        raise RuntimeError("TRUSTED_PROXY_HOSTS 必须显式列出可信代理地址或网段，且不能包含通配符")
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=trusted_proxy_hosts)
+    logger.info("✅ 已启用受限反向代理转发头信任")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

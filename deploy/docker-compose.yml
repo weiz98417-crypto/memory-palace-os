@@ -43,9 +43,12 @@ services:
       SCENIC_ACCOUNT_PASSWORD_FILE: /run/memory-palace-secrets/scenic_account_password
       DEFAULT_VENUE_ID: ${DEFAULT_VENUE_ID:-venue-hq}
       DEFAULT_VENUE_NAME: ${DEFAULT_VENUE_NAME:-示范景区运营中心}
+      ADVICE_EXECUTION_MODE: ${ADVICE_EXECUTION_MODE:-redis}
       # App runs behind nginx only; trust its forwarding headers and the ingress host that
       # is allowed to drive the protected simulation-preparation entry.
       TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-true}
+      TRUSTED_PROXY_HOSTS: ${TRUSTED_PROXY_HOSTS:-172.28.0.10}
+      FORWARDED_ALLOW_IPS: ${TRUSTED_PROXY_HOSTS:-172.28.0.10}
       SCENIC_PREP_ALLOWED_HOSTS: ${SCENIC_PREP_ALLOWED_HOSTS:-}
       FRONTEND_V2_APPS: ${FRONTEND_V2_APPS:-}
       WECHAT_CORP_ID: ${WECHAT_CORP_ID:-}
@@ -72,12 +75,11 @@ services:
       SCENIC_TEI_EMBEDDING_URL: ${SCENIC_TEI_EMBEDDING_URL:-http://tei-embedding:80}
       SCENIC_TEI_EMBEDDING_HEALTH_URL: ${SCENIC_TEI_EMBEDDING_HEALTH_URL:-http://tei-embedding:80/health}
       SCENIC_TEI_RERANKER_URL: ${SCENIC_TEI_RERANKER_URL:-}
-      # Hatchet client: present => the API dispatches advice runs as durable
-      # workflows instead of an in-process queue (see main.py).
+      # Hatchet is opt-in; a token path alone never selects this mode.
       HATCHET_CLIENT_HOST_PORT: ${HATCHET_CLIENT_HOST_PORT:-hatchet-engine:7077}
       HATCHET_CLIENT_SERVER_URL: ${HATCHET_CLIENT_SERVER_URL:-http://hatchet-api:8080}
       HATCHET_CLIENT_TLS_STRATEGY: ${HATCHET_CLIENT_TLS_STRATEGY:-none}
-      HATCHET_CLIENT_TOKEN_FILE: ${HATCHET_CLIENT_TOKEN_FILE:-/tokens/worker}
+      HATCHET_CLIENT_TOKEN_FILE: ${HATCHET_CLIENT_TOKEN_FILE:-}
       TEI_EMBEDDING_TIMEOUT: ${TEI_EMBEDDING_TIMEOUT:-20}
       TEI_RERANKER_TIMEOUT: ${TEI_RERANKER_TIMEOUT:-20}
       TEI_MAX_CLIENT_BATCH_SIZE: ${TEI_MAX_CLIENT_BATCH_SIZE:-16}
@@ -575,8 +577,9 @@ services:
       app:
         condition: service_healthy
     networks:
-      - data-plane
-      - egress
+      data-plane:
+        ipv4_address: 172.28.0.10
+      egress:
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/health"]
       interval: 15s
@@ -602,6 +605,9 @@ volumes:
 networks:
   data-plane:
     internal: true
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
   egress:
   agent-plane:
     internal: true

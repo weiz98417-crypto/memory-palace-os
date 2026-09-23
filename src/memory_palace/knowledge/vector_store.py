@@ -9,6 +9,7 @@ from typing import Any, Callable, Optional
 
 from loguru import logger
 
+from ..config.secrets import read_secret
 from ..tools.embedding_client import EMBEDDING_DIMENSION, build_embedding_backend
 
 
@@ -40,7 +41,7 @@ class PalaceVectorStore:
         connection_factory: Optional[Callable[[], Any]] = None,
         dsn: Optional[str] = None,
     ) -> None:
-        self._dsn = dsn or os.environ.get(
+        self._dsn = dsn or read_secret(
             "DATABASE_URL", "postgresql://localhost:5432/memory_palace"
         )
         self._connection_factory = connection_factory or self._default_connection

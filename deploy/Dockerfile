@@ -131,6 +131,5 @@ CMD ["gunicorn", "main:app", \
      "--bind", "0.0.0.0:8000", \
      "--timeout", "120", \
      "--keep-alive", "5", \
-     "--forwarded-allow-ips", "*", \
      "--access-logfile", "-", \
      "--error-logfile", "-"]

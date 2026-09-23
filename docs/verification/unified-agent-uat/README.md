@@ -21,6 +21,7 @@ python -m scripts.unified_agent_uat.cli init
 python -m scripts.unified_agent_uat.cli bootstrap --run docs/verification/unified-agent-uat/<uat_run_id>
 python -m scripts.unified_agent_uat.cli record --run docs/verification/unified-agent-uat/<uat_run_id> --step E2E-00 --status PASSED --input evidence.json
 python -m scripts.unified_agent_uat.cli validate --run docs/verification/unified-agent-uat/<uat_run_id> --registry src/memory_palace/config/feature_registry.yaml
+python -m scripts.unified_agent_uat.cli validate --complete --run docs/verification/unified-agent-uat/<uat_run_id> --registry src/memory_palace/config/feature_registry.yaml
 python -m scripts.unified_agent_uat.cli complete --run docs/verification/unified-agent-uat/<uat_run_id>
 ```
 
@@ -29,7 +30,7 @@ The required order is `init -> bootstrap -> record -> validate -> complete`.
 - `init` atomically creates one unique append-only run before any journey data exists, including `api/`, `traces/`, `execution-report.md`, and the required root JSON evidence scaffolds.
 - `bootstrap` uses only formal management HTTP APIs, refuses a non-empty process baseline, and records `artifacts/uat-baseline.json` plus its SHA-256 in the manifest through a recoverable transaction.
 - `record` recursively redacts recognized secret fields, writes evidence atomically, and preserves failed steps under `failures/`.
-- `validate` rejects runs without a pristine baseline and checks architecture, the complete evidence scaffold, simulator-only channel policy, checksums, step references, assertions, model truthfulness, and registry evidence paths. A `READY` registry item must reference the matching `steps/<journey_id>.json` inside the current run.
+- `validate` supports partial progress and checks every recorded artifact without sealing the run. `validate --complete` additionally requires the exact 30-journey contract (`E2E-00` through `E2E-16` and `UAT-F01` through `UAT-F13`) plus substantive model, pgvector, database, and recovery summaries. Fixed test fixtures and deterministic model substitutes remain test inputs and are never accepted as Live evidence. A `READY` registry item must reference the matching `steps/<journey_id>.json` inside the current run.
 - `complete` requires a recorded baseline and only passing steps before sealing the run.
 
 For the deployed MVP stack, initialize the run locally first and pass it explicitly to the operations command:

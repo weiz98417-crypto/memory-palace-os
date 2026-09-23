@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from src.memory_palace.config.env_validator import EnvValidator
-from src.memory_palace.config.secrets import read_secret
+from src.memory_palace.config.secrets import Secrets, read_secret
 from src.memory_palace.tools.llm_wrapper import LLMClient
 
 
@@ -146,6 +146,73 @@ def test_environment_validation_accepts_file_backed_deepseek_key(tmp_path, monke
     result = EnvValidator().validate()
 
     assert not any(error.startswith("DEEPSEEK_API_KEY:") for error in result.errors)
+
+
+@pytest.mark.parametrize(
+    ("name", "value"),
+    [
+        ("DATABASE_URL", "postgresql://file-user@localhost:5432/file-db"),
+        ("MEMORY_PALACE_JWT_SECRET", "file-jwt-secret-with-at-least-32-characters"),
+        ("ADMIN_PASSWORD", "file-admin-password"),
+    ],
+)
+def test_environment_validation_accepts_all_file_backed_required_secrets(
+    name, value, tmp_path, monkeypatch
+):
+    secret_file = tmp_path / name.lower()
+    secret_file.write_text(f"{value}\n", encoding="utf-8")
+    monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv(f"{name}_FILE", str(secret_file))
+
+    result = EnvValidator().validate()
+
+    assert not any(error.startswith(f"{name}:") for error in result.errors)
+
+
+def test_secrets_snapshot_reads_all_file_backed_required_values(tmp_path, monkeypatch):
+    values = {
+        "DATABASE_URL": "postgresql://file-user@localhost:5432/file-db",
+        "DEEPSEEK_API_KEY": "sk-file-backed-test-secret",
+        "MEMORY_PALACE_JWT_SECRET": "file-jwt-secret-with-at-least-32-characters",
+        "ADMIN_PASSWORD": "file-admin-password",
+    }
+    for name, value in values.items():
+        secret_file = tmp_path / name.lower()
+        secret_file.write_text(value, encoding="utf-8")
+        monkeypatch.delenv(name, raising=False)
+        monkeypatch.setenv(f"{name}_FILE", str(secret_file))
+
+    configured = Secrets()
+
+    assert configured.DATABASE_URL == values["DATABASE_URL"]
+    assert configured.LLM_PRIMARY_API_KEY == values["DEEPSEEK_API_KEY"]
+    assert configured.JWT_SECRET == values["MEMORY_PALACE_JWT_SECRET"]
+    assert configured.ADMIN_PASSWORD == values["ADMIN_PASSWORD"]
+
+
+def test_empty_required_secret_file_is_rejected_without_leaking_value(tmp_path, monkeypatch):
+    secret_file = tmp_path / "admin_password"
+    secret_file.write_text("\n", encoding="utf-8")
+    monkeypatch.delenv("ADMIN_PASSWORD", raising=False)
+    monkeypatch.setenv("ADMIN_PASSWORD_FILE", str(secret_file))
+
+    result = EnvValidator().validate()
+
+    assert any(error.startswith("ADMIN_PASSWORD:") for error in result.errors)
+    assert str(secret_file) not in "\n".join(result.errors)
+
+
+def test_missing_secret_file_error_names_only_the_configuration_key(tmp_path, monkeypatch):
+    missing_file = tmp_path / "secret-value-must-not-appear"
+    monkeypatch.delenv("MEMORY_PALACE_JWT_SECRET", raising=False)
+    monkeypatch.setenv("MEMORY_PALACE_JWT_SECRET_FILE", str(missing_file))
+
+    with pytest.raises(RuntimeError) as exc_info:
+        read_secret("MEMORY_PALACE_JWT_SECRET")
+
+    message = str(exc_info.value)
+    assert "MEMORY_PALACE_JWT_SECRET_FILE" in message
+    assert str(missing_file) not in message
 
 
 @pytest.mark.asyncio

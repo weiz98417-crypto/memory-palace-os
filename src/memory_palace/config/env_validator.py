@@ -344,12 +344,12 @@ class EnvValidator:
         result = ValidationResult()
 
         for rule in self.rules:
-            value = (
-                read_secret(rule.env_key)
-                if rule.env_key == "DEEPSEEK_API_KEY"
-                else os.environ.get(rule.env_key)
-            )
             env_key = rule.env_key
+            try:
+                value = read_secret(env_key, default=None)
+            except RuntimeError:
+                result.add_error(env_key, f"无法读取 {env_key}_FILE")
+                continue
 
             # 检查是否存在
             if value is None:
@@ -432,10 +432,13 @@ def validate_env() -> ValidationResult:
     return validator.validate()
 
 
-def validate_env_strict():
+def validate_env_strict() -> ValidationResult:
     """严格验证，失败则退出"""
     validator = get_validator()
-    validator.validate_and_raise()
+    result = validator.validate()
+    result.log_summary()
+    result.raise_if_invalid()
+    return result
 
 
 # ==============================================================================

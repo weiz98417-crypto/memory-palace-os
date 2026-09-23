@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import subprocess
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -39,6 +40,19 @@ _SENSITIVE_KEYS = {
     "token",
     "access_token",
 }
+_SOURCE_ROOTS = frozenset({"deploy", "docs", "frontend", "openspec", "scripts", "src", "static", "tests"})
+_SOURCE_FILES = frozenset(
+    {
+        ".dockerignore",
+        ".gitignore",
+        "CONTEXT.md",
+        "main.py",
+        "pyproject.toml",
+        "requirements.txt",
+        "run.sh",
+        "uv.lock",
+    }
+)
 
 
 def _utc_timestamp(value: datetime) -> str:
@@ -83,6 +97,75 @@ def _file_sha256(path: Path) -> str:
     return sha256(path.read_bytes()).hexdigest()
 
 
+def _git(repository_root: Path, *arguments: str) -> subprocess.CompletedProcess[bytes]:
+    return subprocess.run(
+        ["git", *arguments],
+        cwd=repository_root,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+
+def _is_source_path(relative_path: str) -> bool:
+    normalized = relative_path.replace("\\", "/").strip("/")
+    if not normalized or normalized.startswith("docs/verification/unified-agent-uat/"):
+        return False
+    first_part = normalized.split("/", 1)[0]
+    return normalized in _SOURCE_FILES or first_part in _SOURCE_ROOTS
+
+
+def capture_source_fingerprint(repository_root: Path | None = None) -> dict[str, Any]:
+    """Capture the exact tracked diff and relevant untracked source without storing content."""
+
+    candidate = (repository_root or Path.cwd()).resolve()
+    try:
+        root = Path(
+            _git(candidate, "rev-parse", "--show-toplevel").stdout.decode("utf-8-sig").strip()
+        ).resolve()
+        commit = _git(root, "rev-parse", "HEAD").stdout.decode("ascii").strip()
+        status_lines = [
+            line
+            for line in _git(root, "status", "--short", "--untracked-files=all").stdout.decode(
+                "utf-8-sig"
+            ).splitlines()
+            if len(line) > 3 and _is_source_path(line[3:])
+        ]
+        tracked_diff = _git(root, "diff", "--binary", "--no-ext-diff", "HEAD", "--").stdout
+        untracked_paths = [
+            path
+            for path in _git(root, "ls-files", "--others", "--exclude-standard", "-z").stdout.decode(
+                "utf-8-sig"
+            ).split("\0")
+            if path and _is_source_path(path)
+        ]
+        untracked_digest = sha256()
+        for relative_path in sorted(untracked_paths):
+            source_path = root / relative_path
+            if not source_path.is_file():
+                continue
+            untracked_digest.update(relative_path.replace("\\", "/").encode("utf-8"))
+            untracked_digest.update(b"\0")
+            untracked_digest.update(bytes.fromhex(_file_sha256(source_path)))
+        return {
+            "status": "CAPTURED",
+            "commit": commit,
+            "dirty": bool(status_lines or tracked_diff or untracked_paths),
+            "changed_paths": [line[3:].replace("\\", "/") for line in status_lines],
+            "tracked_diff_sha256": sha256(tracked_diff).hexdigest(),
+            "untracked_source_sha256": untracked_digest.hexdigest(),
+        }
+    except (OSError, subprocess.CalledProcessError, UnicodeError):
+        return {
+            "status": "UNAVAILABLE",
+            "commit": None,
+            "dirty": None,
+            "changed_paths": [],
+            "tracked_diff_sha256": None,
+            "untracked_source_sha256": None,
+        }
+
+
 @dataclass(frozen=True)
 class EvidenceRun:
     """A single append-only UAT evidence directory."""
@@ -124,6 +207,7 @@ class EvidenceRun:
                 "entrypoint": "/simulator/wecom/",
                 "real_wecom_enabled": False,
             },
+            "source": capture_source_fingerprint(),
             "baseline": None,
             "steps": [],
         }
@@ -282,6 +366,41 @@ class EvidenceRun:
             raise
         return baseline_path
 
+    def record_summary(
+        self,
+        filename: str,
+        records: list[Mapping[str, Any]],
+    ) -> Path:
+        """Append sanitized records to one of the run-level evidence summaries."""
+
+        if filename not in _RUN_JSON_SCAFFOLDS:
+            raise ValueError(f"unsupported UAT evidence summary: {filename}")
+        if not records or any(not isinstance(record, Mapping) or not record for record in records):
+            raise ValueError("evidence summary records must contain non-empty objects")
+
+        self._recover_baseline_transaction()
+        manifest = _read_json(self.path / "manifest.json")
+        if manifest.get("status") != "RUNNING":
+            raise RuntimeError(f"evidence run is sealed with status {manifest.get('status')}")
+
+        summary_path = self.path / filename
+        summary = _read_json(summary_path)
+        if summary.get("uat_run_id") != self.run_id:
+            raise RuntimeError(f"evidence summary run id does not match: {filename}")
+        existing_records = summary.get("records")
+        if not isinstance(existing_records, list):
+            raise RuntimeError(f"evidence summary records are invalid: {filename}")
+        sanitized_records = _redact(deepcopy(records))
+        _write_json(
+            summary_path,
+            {
+                "schema_version": 1,
+                "uat_run_id": self.run_id,
+                "records": [*existing_records, *sanitized_records],
+            },
+        )
+        return summary_path
+
     def _recover_baseline_transaction(self) -> bool:
         transaction_path = self.path / _BASELINE_TRANSACTION_DIRECTORY
         if not transaction_path.exists():
@@ -326,7 +445,7 @@ class EvidenceRun:
         registry_path: Path | None = None,
         now: datetime | None = None,
     ) -> Path:
-        from .validation import validate_evidence
+        from .validation import EXPECTED_UAT_STEP_IDS, validate_evidence
 
         self._recover_baseline_transaction()
         manifest_path = self.path / "manifest.json"
@@ -340,8 +459,22 @@ class EvidenceRun:
             raise RuntimeError("evidence run requires a recorded UAT baseline")
         if any(not isinstance(step, dict) or step.get("status") != "PASSED" for step in steps):
             raise RuntimeError("evidence run contains a non-passing step")
+        recorded_step_ids = {
+            str(step.get("id")) for step in steps if isinstance(step, dict)
+        }
+        missing_step_ids = [
+            step_id for step_id in EXPECTED_UAT_STEP_IDS if step_id not in recorded_step_ids
+        ]
+        if missing_step_ids:
+            raise RuntimeError(
+                "evidence run is missing required UAT steps: " + ", ".join(missing_step_ids)
+            )
 
-        report = validate_evidence(self.path, registry_path=registry_path)
+        report = validate_evidence(
+            self.path,
+            registry_path=registry_path,
+            require_complete=True,
+        )
         if not report.valid:
             raise RuntimeError("evidence validation failed: " + "; ".join(report.errors))
 
