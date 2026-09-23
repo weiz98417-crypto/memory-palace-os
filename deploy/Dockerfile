@@ -125,11 +125,4 @@ EXPOSE 8000
 
 # 生产启动命令：单 worker（asyncio 不需要多 worker）
 # --forwarded-allow-ips 信任 nginx 的 X-Forwarded-For
-CMD ["gunicorn", "main:app", \
-     "-k", "uvicorn.workers.UvicornWorker", \
-     "-w", "1", \
-     "--bind", "0.0.0.0:8000", \
-     "--timeout", "120", \
-     "--keep-alive", "5", \
-     "--access-logfile", "-", \
-     "--error-logfile", "-"]
+CMD ["sh", "-c", "exec gunicorn main:app -k uvicorn.workers.UvicornWorker -w 1 --bind 0.0.0.0:8000 --timeout 120 --keep-alive 5 --forwarded-allow-ips \"${FORWARDED_ALLOW_IPS:-127.0.0.1}\" --access-logfile - --error-logfile -"]

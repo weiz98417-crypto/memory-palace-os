@@ -12,6 +12,7 @@ import os
 import time
 import asyncio
 import traceback
+from pathlib import Path
 from typing import Optional, Dict, Any, List, Callable, Awaitable
 from dataclasses import dataclass, field, asdict
 from enum import Enum
@@ -185,6 +186,39 @@ class HTTPHealthChecker(BaseHealthChecker):
                 error=f"{type(exc).__name__}: {exc}",
                 details={"url": self.url},
             )
+
+
+class FileHealthChecker(BaseHealthChecker):
+    """Checks a local readiness marker written by a durable worker."""
+
+    def __init__(self, *, name: str, path: str, required: bool) -> None:
+        self.name = name
+        self.path = path.strip()
+        self.required = required
+
+    async def check(self) -> DependencyCheckResult:
+        if not self.path:
+            return DependencyCheckResult(
+                name=self.name,
+                status=CheckStatus.SKIP,
+                message="未配置，跳过检查",
+            )
+        failure_status = CheckStatus.FAIL if self.required else CheckStatus.WARN
+        marker = Path(self.path)
+        if marker.is_file() and marker.stat().st_size > 0:
+            return DependencyCheckResult(
+                name=self.name,
+                status=CheckStatus.PASS,
+                message="文件就绪标记存在",
+                details={"path": self.path},
+            )
+        return DependencyCheckResult(
+            name=self.name,
+            status=failure_status,
+            message="文件就绪标记不存在",
+            details={"path": self.path},
+        )
+
 
 class HealthCheckerRegistry:
     """健康检查器注册表"""
@@ -568,16 +602,18 @@ _CONFIGURED_HTTP_CHECKS = (
 def register_configured_http_checks(
     registry: HealthCheckerRegistry,
     environment: Optional[Dict[str, str]] = None,
+    required_overrides: Optional[Dict[str, bool]] = None,
 ) -> None:
     """Register optional runtime endpoints; empty URLs remain visible as SKIP."""
     values = os.environ if environment is None else environment
+    overrides = required_overrides or {}
     for name, env_key, required in _CONFIGURED_HTTP_CHECKS:
         registry.register(
             name,
             HTTPHealthChecker(
                 name=name,
                 url=str(values.get(env_key) or ""),
-                required=required,
+                required=overrides.get(name, required),
             ),
         )
 
@@ -782,6 +818,7 @@ __all__ = [
     # 检查器
     "BaseHealthChecker",
     "HTTPHealthChecker",
+    "FileHealthChecker",
     "HealthCheckerRegistry",
     "MessageQueueHealthChecker",
     "DatabaseHealthChecker",

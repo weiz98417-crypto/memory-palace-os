@@ -430,20 +430,7 @@ class AdviceWorker:
         venue_id = run.venue_id
         run_id = run.run_id
         if run.state == "SUPERSEDED":
-            if run.result and run.result.get("late_result") is not None:
-                return AdviceFinalized(run=run, state="SUPERSEDED")
-            try:
-                late = await self._command.execute(run.request)
-            except Exception:
-                late = None
-            else:
-                await self._repository.record_late_result(
-                    venue_id=venue_id,
-                    run_id=run_id,
-                    response=late.model_dump(mode="json"),
-                )
-            current = await self._repository.get(venue_id=venue_id, run_id=run_id)
-            return AdviceFinalized(run=current or run, state="SUPERSEDED")
+            return AdviceFinalized(run=run, state="SUPERSEDED")
         if run.state in {"READY", "FAILED"}:
             result = dict(run.result or {})
             await self._sink.finalize(

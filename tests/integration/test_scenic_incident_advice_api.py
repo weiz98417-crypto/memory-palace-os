@@ -446,7 +446,7 @@ async def test_advice_endpoint_refuses_operators(tmp_path, monkeypatch):
         await database.close()
 
 
-async def test_proceed_without_waiting_supersedes_and_keeps_the_late_result(
+async def test_proceed_without_waiting_supersedes_without_regenerating_advice(
     tmp_path, monkeypatch
 ):
     app, database = await build_app(tmp_path, monkeypatch)
@@ -521,7 +521,7 @@ async def test_proceed_without_waiting_supersedes_and_keeps_the_late_result(
         assert run_response.status_code == 200
         run = run_response.json()
         assert run["state"] == "SUPERSEDED"
-        assert run["result"]["late_result"]["advice"]["evidence_status"] == "GROUNDED"
+        assert run["result"]["superseded_by"]
         # ADVICE_READY carries state=SUPERSEDED on the decision event, per the SSE
         # contract table in docs/architecture/incident-command-contract.md.
         event_types = [row["event_type"] for row in events]

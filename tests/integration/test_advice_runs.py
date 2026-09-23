@@ -202,7 +202,7 @@ async def test_worker_failure_marks_run_failed_and_signals_it(tmp_path):
     await repository._database.close()
 
 
-async def test_late_superseded_result_is_recorded_once_without_publishing(tmp_path):
+async def test_superseded_run_is_read_only_and_does_not_generate_again(tmp_path):
     repository = await _repository(tmp_path)
     queue = InMemoryAdviceQueue()
     sink = Sink()
@@ -229,12 +229,12 @@ async def test_late_superseded_result_is_recorded_once_without_publishing(tmp_pa
     assert finalized.state == "SUPERSEDED"
     persisted = await repository.get(venue_id="venue-alpha", run_id=run.run_id)
     assert persisted.state == "SUPERSEDED"
-    assert command.calls == 1
-    assert persisted.result["late_result"]["advice"]["evidence_status"] == "GROUNDED"
+    assert command.calls == 0
+    assert persisted.result["superseded_by"] == "manager-decision"
     assert sink.events == [], "a superseded run must not publish a second ready signal"
     await worker.enqueue(run)
     await worker.run_once()
-    assert command.calls == 1
+    assert command.calls == 0
     await repository._database.close()
 
 

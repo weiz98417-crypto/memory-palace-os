@@ -76,13 +76,21 @@ class RedisAdviceQueue:
         digest = hashlib.sha256(run_id.encode()).hexdigest()
         dedup_key = f"memory_palace:advice_dispatch:{digest}"
         script = """
-        if not redis.call('SET', KEYS[2], '1', 'NX') then
-            return false
+        local existing = redis.call('GET', KEYS[2])
+        if existing then
+            return existing
         end
-        return redis.call('XADD', KEYS[1], '*', 'data', ARGV[1])
+        local message_id = redis.call('XADD', KEYS[1], '*', 'data', ARGV[1])
+        redis.call('SET', KEYS[2], message_id, 'PX', ARGV[2])
+        return message_id
         """
+        dedup_ttl_ms = max(
+            1,
+            int(os.environ.get("ADVICE_DISPATCH_DEDUP_TTL_SECONDS", "86400"))
+            * 1000,
+        )
         await self._client.eval(
-            script, 2, ADVICE_STREAM_KEY, dedup_key, payload
+            script, 2, ADVICE_STREAM_KEY, dedup_key, payload, str(dedup_ttl_ms)
         )
 
     async def claim(self) -> dict[str, Any] | None:

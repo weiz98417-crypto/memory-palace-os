@@ -64,10 +64,16 @@ async def provide_worker() -> AdviceWorker:
 
 def main() -> None:
     tracing_provider = configure_tracing("scenic-agent-worker")
+    ready_path = Path(
+        os.environ.get("HATCHET_WORKER_READY_FILE", "/tmp/scenic-agent-worker.ready")
+    )
     try:
         worker, _client = build_worker(worker_provider=provide_worker)
+        ready_path.parent.mkdir(parents=True, exist_ok=True)
+        ready_path.write_text("ready\n", encoding="utf-8")
         worker.start()
     finally:
+        ready_path.unlink(missing_ok=True)
         if tracing_provider is not None:
             tracing_provider.shutdown()
 

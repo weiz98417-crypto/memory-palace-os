@@ -66,4 +66,5 @@ async def test_advice_enqueue_is_atomically_deduplicated_by_run_id():
 
     call = client.eval_calls[0]
     assert ADVICE_STREAM_KEY in call
-    assert "run-1" in call[-1]
+    assert "run-1" in call[-2]
+    assert call[-1] == "86400000"

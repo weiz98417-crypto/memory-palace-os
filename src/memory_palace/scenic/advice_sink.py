@@ -113,7 +113,7 @@ class DatabaseAdviceSink:
             f"memory-palace-advice-event:{venue_id}:{run_id}:{event_name}",
         ).hex
         recorded_at = time.time()
-        await self._database.execute(
+        inserted = await self._database.execute(
             """
             INSERT INTO scenic_situation_events (
                 event_id, venue_id, run_id, event_type, resource_type,
@@ -137,7 +137,7 @@ class DatabaseAdviceSink:
             "SELECT * FROM scenic_situation_events WHERE event_id = ?", (event_id,)
         )
         event = dict(row or {})
-        if self._publisher is not None:
+        if inserted and self._publisher is not None:
             await self._publisher(event)
         return event
 

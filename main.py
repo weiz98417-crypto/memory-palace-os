@@ -45,6 +45,7 @@ from src.memory_palace.scenic.advice_dispatch import InProcessAdviceDispatcher
 from src.memory_palace.scenic.advice_runs import (
     AdviceRunRepository,
     AdviceWorker,
+    InMemoryAdviceQueue,
 )
 from src.memory_palace.tools.logger_config import setup_logger  # 日志初始化
 
@@ -162,8 +163,12 @@ async def lifespan(app: FastAPI):
     from src.memory_palace.scenic.redis_advice_queue import RedisAdviceQueue
 
     advice_runtime = AdviceRuntimeConfig.from_env()
-    advice_queue = RedisAdviceQueue(consumer_name=f"advice-{runtime_instance_id}")
-    await advice_queue.connect()
+    await advice_runtime.validate_dependencies()
+    if advice_runtime.mode == "redis":
+        advice_queue = RedisAdviceQueue(consumer_name=f"advice-{runtime_instance_id}")
+        await advice_queue.connect()
+    else:
+        advice_queue = InMemoryAdviceQueue()
     incident_command = PydanticAIIncidentCommand(
         agent_registry=build_incident_agent_registry(),
         call_recorder=LLMCallLogRecorder(app_container.db_client),
@@ -297,7 +302,26 @@ async def lifespan(app: FastAPI):
                 )
             except Exception:
                 pass
-        register_configured_http_checks(registry)
+        health_environment = None
+        if advice_runtime.mode != "hatchet":
+            health_environment = dict(os.environ)
+            health_environment["HATCHET_HEALTH_URL"] = ""
+        register_configured_http_checks(
+            registry,
+            health_environment,
+            required_overrides={"hatchet": advice_runtime.mode == "hatchet"},
+        )
+        if advice_runtime.mode == "hatchet":
+            from src.memory_palace.core.health import FileHealthChecker
+
+            registry.register(
+                "hatchet_worker",
+                FileHealthChecker(
+                    name="hatchet_worker",
+                    path=os.environ.get("HATCHET_WORKER_READY_FILE", ""),
+                    required=True,
+                ),
+            )
         logger.info("✅ 健康检查器已注册")
     except Exception as e:
         logger.debug(f"健康检查器注册跳过: {e}")
@@ -372,7 +396,8 @@ async def lifespan(app: FastAPI):
 
         await scenic_runtime.stop()
         await scenic_bus.close()
-        await advice_queue.close()
+        if hasattr(advice_queue, "close"):
+            await advice_queue.close()
         await runtime_queue.close()
         await app_container.db_client.close()
         close_vector_client()

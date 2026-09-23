@@ -80,11 +80,12 @@ services:
       HATCHET_CLIENT_SERVER_URL: ${HATCHET_CLIENT_SERVER_URL:-http://hatchet-api:8080}
       HATCHET_CLIENT_TLS_STRATEGY: ${HATCHET_CLIENT_TLS_STRATEGY:-none}
       HATCHET_CLIENT_TOKEN_FILE: ${HATCHET_CLIENT_TOKEN_FILE:-}
+      HATCHET_WORKER_READY_FILE: ${HATCHET_WORKER_READY_FILE:-/tokens/worker.ready}
       TEI_EMBEDDING_TIMEOUT: ${TEI_EMBEDDING_TIMEOUT:-20}
       TEI_RERANKER_TIMEOUT: ${TEI_RERANKER_TIMEOUT:-20}
       TEI_MAX_CLIENT_BATCH_SIZE: ${TEI_MAX_CLIENT_BATCH_SIZE:-16}
       SCENIC_TEI_RERANKER_HEALTH_URL: ${SCENIC_TEI_RERANKER_HEALTH_URL:-}
-      HATCHET_HEALTH_URL: ${HATCHET_HEALTH_URL:-}
+      HATCHET_HEALTH_URL: ${HATCHET_HEALTH_URL:-http://hatchet-api:8080/api/live}
       JAEGER_HEALTH_URL: ${JAEGER_HEALTH_URL:-}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     volumes:
@@ -351,7 +352,11 @@ services:
     profiles: ["agent-runtime"]
     restart: unless-stopped
     healthcheck:
-      disable: true
+      test: ["CMD-SHELL", "test -s /tokens/worker.ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
     command: ["python", "-m", "scripts.scenic_agent.worker"]
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-mp_user}@postgres:5432/${POSTGRES_DB:-memory_palace}
@@ -365,10 +370,12 @@ services:
       HATCHET_CLIENT_SERVER_URL: http://hatchet-api:8080
       HATCHET_CLIENT_TLS_STRATEGY: none
       HATCHET_CLIENT_TOKEN_FILE: /tokens/worker
+      ADVICE_EXECUTION_MODE: hatchet
+      HATCHET_WORKER_READY_FILE: /tokens/worker.ready
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     volumes:
       - app-secrets:/run/memory-palace-secrets:ro
-      - hatchet-tokens:/tokens:ro
+      - hatchet-tokens:/tokens
     depends_on:
       hatchet-token:
         condition: service_completed_successfully
