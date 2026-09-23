@@ -147,13 +147,18 @@ class AdviceRunRepository:
         return [self._to_run(row) for row in rows or []]
 
     async def list_dispatchable(self) -> list[AdviceRun]:
+        now = self._now()
         rows = await self._database.fetch_all(
             """
             SELECT * FROM scenic_commands
-            WHERE command_type = ? AND status = 'PENDING'
+            WHERE command_type = ?
+              AND (
+                status = 'PENDING'
+                OR (status = 'RUNNING' AND COALESCE(lease_expires_at, 0) < ?)
+              )
             ORDER BY created_at
             """,
-            (ADVICE_COMMAND_TYPE,),
+            (ADVICE_COMMAND_TYPE, now),
         )
         return [self._to_run(row) for row in rows or []]
 

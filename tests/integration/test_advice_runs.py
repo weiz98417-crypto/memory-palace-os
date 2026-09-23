@@ -332,3 +332,30 @@ async def test_pending_runs_are_available_for_startup_dispatch_reconciliation(tm
 
     assert [item.run_id for item in pending] == [run.run_id]
     await repository._database.close()
+
+
+async def test_startup_reconciliation_recovers_only_expired_running_leases(tmp_path):
+    now = [100.0]
+    database = AsyncDBClient(tmp_path / "recovery.db")
+    await init_database(database)
+    repository = AdviceRunRepository(database, clock=lambda: now[0])
+    expired, _ = await _create(repository, _request())
+    active, _ = await repository.create_or_get(
+        venue_id="venue-alpha",
+        incident_id="incident-2",
+        step="ADVICE",
+        attempt=1,
+        request=_request(incident=_request().incident.model_copy(update={"title": "second"})),
+    )
+    assert await repository.claim_execution(
+        venue_id=expired.venue_id, run_id=expired.run_id, owner="old", lease_seconds=10
+    )
+    assert await repository.claim_execution(
+        venue_id=active.venue_id, run_id=active.run_id, owner="new", lease_seconds=100
+    )
+    now[0] = 111.0
+
+    dispatchable = await repository.list_dispatchable()
+
+    assert [item.run_id for item in dispatchable] == [expired.run_id]
+    await database.close()
