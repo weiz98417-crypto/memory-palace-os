@@ -17,10 +17,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # 先复制依赖文件，利用 Docker 层缓存
-COPY requirements.txt requirements-scenic-agent-local-embeddings.txt .
+COPY requirements.lock requirements-scenic-agent-local-embeddings.txt .
 ARG LOCAL_EMBEDDINGS=false
 RUN pip install --upgrade pip && \
-    pip install --prefix=/install --no-cache-dir -r requirements.txt && \
+    pip install --prefix=/install --no-cache-dir -r requirements.lock && \
     if [ "$LOCAL_EMBEDDINGS" = "true" ]; then \
         pip install --prefix=/install --no-cache-dir -r requirements-scenic-agent-local-embeddings.txt; \
     fi
