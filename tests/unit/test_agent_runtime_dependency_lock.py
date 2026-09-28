@@ -97,12 +97,33 @@ def _load_vectors(name: str) -> dict:
     return json.loads((PARITY_ARTIFACT_DIR / name).read_text(encoding="utf-8"))
 
 
+def _parity_artifacts_available() -> bool:
+    # 一致性产物（artifacts/tei-migration/）是本地生成的一次性测量证据，不入库；
+    # 全新 checkout 没有它们时跳过向量一致性断言，而不是让整批测试报失败。
+    return all(
+        (PARITY_ARTIFACT_DIR / name).is_file()
+        for name in (
+            "local_vectors.json",
+            "tei_vectors.json",
+            "db_retrieval_distribution.json",
+            "score_distribution.json",
+        )
+    )
+
+
+requires_parity_artifacts = pytest.mark.skipif(
+    not _parity_artifacts_available(),
+    reason="artifacts/tei-migration parity artifacts not present; generate them per ADR-0020 first",
+)
+
+
 def _cosine(left: list[float], right: list[float]) -> float:
     left_norm = math.sqrt(sum(value * value for value in left))
     right_norm = math.sqrt(sum(value * value for value in right))
     return sum(a * b for a, b in zip(left, right)) / (left_norm * right_norm)
 
 
+@requires_parity_artifacts
 @pytest.mark.parametrize("group", ["documents", "queries"])
 def test_tei_and_local_bge_m3_vectors_stay_within_the_parity_tolerance(group):
     local = _load_vectors("local_vectors.json")[group]
@@ -125,6 +146,7 @@ def test_tei_and_local_bge_m3_vectors_stay_within_the_parity_tolerance(group):
     assert max_norm_error <= MAX_NORM_ERROR
 
 
+@requires_parity_artifacts
 def test_tei_migration_retrieval_regression_keeps_top_k_and_thresholds():
     retrieval = _load_vectors("db_retrieval_distribution.json")
     assert retrieval["all_top5_ids_same"] is True
