@@ -8,6 +8,22 @@ from src.memory_palace.knowledge.db_client import AsyncDBClient
 from src.memory_palace.knowledge.db_init import init_database
 
 
+def test_daily_quota_window_starts_at_local_midnight():
+    from datetime import datetime
+
+    from src.memory_palace.incident.model_policy import _day_start
+
+    now = datetime(2026, 9, 28, 10, 0, 0).astimezone().timestamp()
+    window_start = _day_start(now)
+
+    # 窗口起点必须是当日零点（时分秒全为 0），且覆盖“零点到现在”
+    start_local = datetime.fromtimestamp(window_start)
+    assert (start_local.hour, start_local.minute, start_local.second) == (0, 0, 0)
+    assert start_local.date() == datetime.fromtimestamp(now).date()
+    assert window_start <= now < window_start + 86400
+    assert window_start > now - 86400
+
+
 def test_llm_client_defaults_to_required_deepseek_model(monkeypatch):
     monkeypatch.delenv("LLM_DEFAULT_MODEL", raising=False)
 

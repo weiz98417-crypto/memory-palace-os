@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 
 import pytest
@@ -98,6 +99,20 @@ async def test_run_is_created_once_and_replays_resolve_to_the_same_run(tmp_path)
     assert first.state == "PENDING"
     assert first.request is not None
     assert first.request.trace_id == request.trace_id
+    await repository._database.close()
+
+
+async def test_http_retry_with_fresh_trace_id_resolves_to_the_same_run(tmp_path):
+    """A client retry of the same POST generates a new server-side trace_id; the
+    replay must still resolve to the original run instead of raising a conflict."""
+    repository = await _repository(tmp_path)
+    first, created = await _create(repository, _request(trace_id="c" * 32))
+    retried, created_again = await repo_create(repository, _request(trace_id="d" * 32))
+
+    assert created is True
+    assert created_again is False
+    assert retried.run_id == first.run_id
+    assert retried.state == "PENDING"
     await repository._database.close()
 
 
@@ -359,3 +374,85 @@ async def test_startup_reconciliation_recovers_only_expired_running_leases(tmp_p
 
     assert [item.run_id for item in dispatchable] == [expired.run_id]
     await database.close()
+
+
+async def test_lease_renewal_only_extends_the_current_owner_lease(tmp_path):
+    now = [100.0]
+    database = AsyncDBClient(tmp_path / "renewal.db")
+    await init_database(database)
+    repository = AdviceRunRepository(database, clock=lambda: now[0])
+    run, _ = await _create(repository, _request())
+    assert await repository.claim_execution(
+        venue_id=run.venue_id, run_id=run.run_id, owner="worker-a", lease_seconds=10
+    )
+
+    # 租约未过期时，其他 owner 不能抢占
+    now[0] = 105.0
+    assert not await repository.claim_execution(
+        venue_id=run.venue_id, run_id=run.run_id, owner="worker-b", lease_seconds=10
+    )
+    # 心跳续租把租约延到 now+10
+    assert await repository.renew_lease(
+        venue_id=run.venue_id, run_id=run.run_id, owner="worker-a", lease_seconds=10
+    )
+    now[0] = 112.0
+    assert not await repository.claim_execution(
+        venue_id=run.venue_id, run_id=run.run_id, owner="worker-b", lease_seconds=10
+    )
+    # 租约真正过期后可以被抢走，原 owner 的续租随即失效
+    now[0] = 125.0
+    assert await repository.claim_execution(
+        venue_id=run.venue_id, run_id=run.run_id, owner="worker-b", lease_seconds=10
+    )
+    assert not await repository.renew_lease(
+        venue_id=run.venue_id, run_id=run.run_id, owner="worker-a", lease_seconds=10
+    )
+    await database.close()
+
+
+async def test_long_execution_renews_lease_and_blocks_reclaim(tmp_path, monkeypatch):
+    monkeypatch.setenv("ADVICE_EXECUTION_LEASE_SECONDS", "2")
+
+    class SlowCommand:
+        def __init__(self) -> None:
+            self.done = asyncio.Event()
+
+        async def execute(self, request):
+            await asyncio.sleep(3.5)
+            return _result()
+
+    repository = await _repository(tmp_path)
+    run, _ = await _create(repository, _request())
+    command = SlowCommand()
+    worker = AdviceWorker(
+        repository=repository,
+        queue=InMemoryAdviceQueue(),
+        incident_command=command,
+        sink=Sink(),
+    )
+
+    execution = asyncio.create_task(
+        worker.run_run_id(venue_id=run.venue_id, run_id=run.run_id)
+    )
+    intruder_claims: list[bool] = []
+    async def intruder() -> None:
+        for _ in range(18):
+            await asyncio.sleep(0.2)
+            if execution.done():
+                break
+            intruder_claims.append(
+                await repository.claim_execution(
+                    venue_id=run.venue_id,
+                    run_id=run.run_id,
+                    owner="intruder",
+                    lease_seconds=2,
+                )
+            )
+
+    watcher = asyncio.create_task(intruder())
+    finalized = await execution
+    await watcher
+
+    assert finalized is not None and finalized.state == "READY"
+    assert intruder_claims and not any(intruder_claims)
+    await repository._database.close()

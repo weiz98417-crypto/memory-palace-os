@@ -36,6 +36,7 @@ from ....scenic.knowledge_gaps import (
     KnowledgeGapNotFound,
     KnowledgeGapRepository,
 )
+from ....scenic.advice_runs import AdviceRunConflict
 from ....scenic.operations import (
     Actor,
     Command,
@@ -668,13 +669,19 @@ async def scenic_incident_advice(
     command_request, step = await _build_advice_request(
         request, operations, actor, incident_id
     )
-    run, _created = await repository.create_or_get(
-        venue_id=actor.venue_id,
-        incident_id=incident_id,
-        step=step,
-        attempt=attempt,
-        request=command_request,
-    )
+    try:
+        run, _created = await repository.create_or_get(
+            venue_id=actor.venue_id,
+            incident_id=incident_id,
+            step=step,
+            attempt=attempt,
+            request=command_request,
+        )
+    except AdviceRunConflict as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"code": "SCENIC_ADVICE_INPUT_CONFLICT", "message": str(exc)},
+        ) from exc
     if run.state == "PENDING":
         if dispatcher is not None:
             await dispatcher.dispatch(run)

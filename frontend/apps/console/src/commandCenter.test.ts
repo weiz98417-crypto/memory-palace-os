@@ -133,4 +133,29 @@ describe('console command center projection', () => {
     expect(model.charts.find((chart) => chart.key === 'knowledgeSource')?.data).toEqual([{ name: '外部导入', value: 1 }])
     expect(model.charts.find((chart) => chart.key === 'findingSource')?.data).toEqual([{ name: '事件巡检', value: 1 }])
   })
+
+  it('degrades supplementary sources individually instead of failing the whole load', async () => {
+    const degraded: string[] = []
+    const model = await loadCommandCenter({
+      async request<T>(path: string) {
+        if (path === '/scenic/snapshot') return { incidents: [{ lifecycle: 'OPEN' }] } as T
+        if (path.startsWith('/admin/events')) return { events: [{ severity: 'P1', status: 'OPEN' }] } as T
+        if (path.startsWith('/admin/push_logs')) throw new Error('push logs unavailable')
+        return {} as T
+      },
+    }, { onDegraded: (source) => degraded.push(source) })
+
+    expect(degraded).toEqual(['/admin/push_logs?limit=500'])
+    expect(model.metrics.events).toBe(1)
+    expect(model.charts).toHaveLength(22)
+  })
+
+  it('still fails the load when the scenic snapshot is unavailable', async () => {
+    await expect(loadCommandCenter({
+      async request<T>(path: string) {
+        if (path === '/scenic/snapshot') throw new Error('core down')
+        return {} as T
+      },
+    })).rejects.toThrow('core down')
+  })
 })

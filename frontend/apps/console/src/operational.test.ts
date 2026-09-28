@@ -24,10 +24,10 @@ describe('console operational API seam', () => {
   it('sends event updates, closure gates and watcher checks', async () => {
     const request = vi.fn().mockResolvedValue({ ok: true })
     await updateEvent({ request }, 'e1', { severity: 'P2' })
-    await closeEvent({ request }, 'e1')
+    await closeEvent({ request }, 'e1', '现场处置完毕，秩序恢复')
     await runEventWatcher({ request }, 'e1')
     expect(request).toHaveBeenNthCalledWith(1, '/admin/events/e1', { method: 'PATCH', json: { severity: 'P2' } })
-    expect(request).toHaveBeenNthCalledWith(2, '/admin/events/e1/close', { method: 'POST' })
+    expect(request).toHaveBeenNthCalledWith(2, '/admin/events/e1/close', { method: 'POST', json: { resolution: '现场处置完毕，秩序恢复' } })
     expect(request).toHaveBeenNthCalledWith(3, '/admin/events/e1/watcher-check', { method: 'POST' })
   })
 

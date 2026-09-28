@@ -266,6 +266,88 @@ async def test_simulator_reuses_existing_conversation_session_id(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_closed_conversation_is_rejected_without_creating_session_rows(tmp_path):
+    app, _queue, db = await _build_app(tmp_path)
+    app.state.test_principal = {
+        "user_id": "manager-west",
+        "username": "manager-west",
+        "role": "manager",
+        "venue_id": "venue-west",
+        "auth_type": "test",
+    }
+    now = time.time()
+    await db.execute(
+        """
+        INSERT INTO channel_conversations (
+            session_id, venue_id, channel, external_conversation_id,
+            user_id, status, created_at, updated_at
+        ) VALUES ('archived-session', 'venue-west', 'WECOM_SIMULATOR',
+                  'closed-conversation', 'operator-west', 'CLOSED', ?, ?)
+        """,
+        (now, now),
+    )
+    sessions_before = (await db.fetch_one("SELECT COUNT(*) AS n FROM sessions"))["n"]
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+
+    try:
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post(
+                "/api/v1/channels/simulator/messages",
+                json={
+                    "user_id": "operator-west",
+                    "content": "关闭会话不能再投递",
+                    "external_message_id": "sim-closed-001",
+                    "external_conversation_id": "closed-conversation",
+                },
+            )
+
+        assert response.status_code == 409
+        assert response.json()["detail"]["code"] == "CONVERSATION_NOT_AVAILABLE"
+        sessions_after = (await db.fetch_one("SELECT COUNT(*) AS n FROM sessions"))["n"]
+        assert sessions_after == sessions_before
+    finally:
+        await db.close()
+
+
+@pytest.mark.asyncio
+async def test_whitespace_conversation_id_falls_back_to_fresh_session(tmp_path):
+    app, queue, db = await _build_app(tmp_path)
+    app.state.test_principal = {
+        "user_id": "manager-west",
+        "username": "manager-west",
+        "role": "manager",
+        "venue_id": "venue-west",
+        "auth_type": "test",
+    }
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+
+    try:
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post(
+                "/api/v1/channels/simulator/messages",
+                json={
+                    "user_id": "operator-west",
+                    "content": "空白会话 id 不塌缩",
+                    "external_message_id": "sim-blank-conv-001",
+                    "external_conversation_id": "   ",
+                },
+            )
+
+        assert response.status_code == 202
+        accepted = response.json()
+        mapping = await db.fetch_one(
+            "SELECT external_conversation_id, session_id FROM channel_conversations WHERE session_id = ?",
+            (accepted["session_id"],),
+        )
+        assert mapping is not None
+        assert mapping["external_conversation_id"] != ""
+        assert mapping["external_conversation_id"] != "   "
+        assert (await queue.get())["session_id"] == accepted["session_id"]
+    finally:
+        await db.close()
+
+
+@pytest.mark.asyncio
 async def test_real_wecom_adapter_rejects_before_persistence_even_when_credentials_exist(
     tmp_path,
     monkeypatch,

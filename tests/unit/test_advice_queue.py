@@ -15,6 +15,7 @@ class FakeRedis:
         self.acks = []
         self.reads = []
         self.claimed = []
+        self.dead_letters = []
 
     async def eval(self, *args):
         self.eval_calls.append(args)
@@ -25,6 +26,10 @@ class FakeRedis:
 
     async def xreadgroup(self, *args, **kwargs):
         return self.reads
+
+    async def xadd(self, key, fields):
+        self.dead_letters.append((key, fields))
+        return b"9-0"
 
     async def xack(self, stream, group, message_id):
         self.acks.append((stream, group, message_id))
@@ -68,3 +73,19 @@ async def test_advice_enqueue_is_atomically_deduplicated_by_run_id():
     assert ADVICE_STREAM_KEY in call
     assert "run-1" in call[-2]
     assert call[-1] == "86400000"
+
+
+async def test_poison_message_is_dead_lettered_and_acked_instead_of_churning():
+    client = FakeRedis()
+    client.claimed = [(b"3-0", {b"data": b"not-valid-json"})]
+    queue = RedisAdviceQueue(client=client, consumer_name="poison-consumer")
+
+    message = await queue.claim()
+
+    assert message is None
+    assert client.acks == [(ADVICE_STREAM_KEY, ADVICE_GROUP_NAME, "3-0")]
+    assert len(client.dead_letters) == 1
+    dead_key, dead_fields = client.dead_letters[0]
+    assert dead_key == f"{ADVICE_STREAM_KEY}:dead"
+    assert dead_fields["original_id"] == "3-0"
+    assert dead_fields["error"] == "decode_failed"

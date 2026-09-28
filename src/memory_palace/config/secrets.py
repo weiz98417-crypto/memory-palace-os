@@ -5,6 +5,10 @@ from pathlib import Path
 from typing import Optional
 
 
+def _demo_mode_enabled() -> bool:
+    return os.environ.get("DEMO_MODE", "").strip().lower() == "true"
+
+
 def read_secret(name: str, default: Optional[str] = "") -> Optional[str]:
     """Read a secret from an environment variable or its Docker-style file."""
     value = os.environ.get(name)
@@ -18,6 +22,9 @@ def read_secret(name: str, default: Optional[str] = "") -> Optional[str]:
     try:
         return Path(file_path).read_text(encoding="utf-8-sig").strip() or default
     except OSError as exc:
+        if _demo_mode_enabled():
+            # 演示模式允许缺密钥文件降级运行；不能在 import 期抛裸异常
+            return default
         raise RuntimeError(f"无法读取 {name}_FILE 指向的密钥文件") from exc
 
 

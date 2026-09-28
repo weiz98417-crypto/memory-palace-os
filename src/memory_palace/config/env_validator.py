@@ -34,6 +34,7 @@ class ValidationResult:
         self.passed: List[str] = []
         self.warnings: List[str] = []
         self.errors: List[str] = []
+        self.infos: List[str] = []
 
     @property
     def is_valid(self) -> bool:
@@ -41,6 +42,9 @@ class ValidationResult:
 
     def add_pass(self, key: str):
         self.passed.append(key)
+
+    def add_info(self, key: str, message: str):
+        self.infos.append(f"{key}: {message}")
 
     def add_warning(self, key: str, message: str):
         self.warnings.append(f"{key}: {message}")
@@ -58,7 +62,13 @@ class ValidationResult:
 
     def log_summary(self):
         """输出验证摘要"""
-        logger.info(f"📋 环境变量验证完成 | 通过: {len(self.passed)} | 警告: {len(self.warnings)} | 错误: {len(self.errors)}")
+        logger.info(
+            f"📋 环境变量验证完成 | 通过: {len(self.passed)} | 信息: {len(self.infos)} | "
+            f"警告: {len(self.warnings)} | 错误: {len(self.errors)}"
+        )
+        if self.infos:
+            for info in self.infos:
+                logger.debug(f"  ℹ️ {info}")
         if self.warnings:
             for w in self.warnings:
                 logger.warning(f"  ⚠️ {w}")
@@ -367,10 +377,7 @@ class EnvValidator:
                             rule.error_message or f"环境变量 {env_key} 未设置"
                         )
                 else:
-                    result.add_info(
-                        env_key,
-                        f"未设置，可选配置"
-                    ) if hasattr(result, 'add_info') else None
+                    result.add_info(env_key, "未设置，可选配置")
                 continue
 
             # 执行自定义验证

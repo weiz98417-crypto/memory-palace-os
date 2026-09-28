@@ -312,37 +312,50 @@ export function buildCommandCenter(snapshot: Record<string, any>): CommandCenter
   }
 }
 
-export async function loadCommandCenter(client: { request<T>(path: string): Promise<T> }) {
-  const [
-    snapshot,
-    eventPayload,
-    taskPayload,
-    approvalPayload,
-    pushPayload,
-    knowledgePayload,
-    experiencePayload,
-    findingPayload,
-    sopPayload,
-  ] = await Promise.all([
-    client.request<Record<string, any>>('/scenic/snapshot'),
-    client.request<{ events?: any[] }>('/admin/events?limit=500'),
-    client.request<{ tasks?: any[] }>('/admin/tasks?limit=500'),
-    client.request<any[]>('/admin/approvals?status=ALL&limit=500'),
-    client.request<{ push_logs?: any[] }>('/admin/push_logs?limit=500'),
-    client.request<{ knowledge?: any[] }>('/admin/knowledge?limit=500'),
-    client.request<{ experience_cards?: any[] }>('/admin/experience-cards?limit=500'),
-    client.request<{ findings?: any[] }>('/admin/watcher/findings?limit=500'),
-    client.request<{ sops?: any[] }>('/admin/sops'),
-  ])
+const SUPPLEMENTARY_SOURCES: Array<{
+  key: 'events' | 'tasks' | 'approvals' | 'push_logs' | 'knowledge' | 'experience_cards' | 'findings' | 'sops'
+  path: string
+  list: (payload: any) => unknown
+}> = [
+  { key: 'events', path: '/admin/events?limit=500', list: (payload) => payload?.events },
+  { key: 'tasks', path: '/admin/tasks?limit=500', list: (payload) => payload?.tasks },
+  { key: 'approvals', path: '/admin/approvals?status=ALL&limit=500', list: (payload) => payload },
+  { key: 'push_logs', path: '/admin/push_logs?limit=500', list: (payload) => payload?.push_logs },
+  { key: 'knowledge', path: '/admin/knowledge?limit=500', list: (payload) => payload?.knowledge },
+  { key: 'experience_cards', path: '/admin/experience-cards?limit=500', list: (payload) => payload?.experience_cards },
+  { key: 'findings', path: '/admin/watcher/findings?limit=500', list: (payload) => payload?.findings },
+  { key: 'sops', path: '/admin/sops', list: (payload) => payload?.sops },
+]
+
+export async function loadCommandCenter(
+  client: { request<T>(path: string): Promise<T> },
+  options: { onDegraded?: (source: string) => void } = {},
+) {
+  // 态势快照是整页的地基，失败必须整页报错；其余数据源单点失败只降级对应区块。
+  const snapshot = await client.request<Record<string, any>>('/scenic/snapshot')
+  const settled = await Promise.allSettled(
+    SUPPLEMENTARY_SOURCES.map((source) => client.request<unknown>(source.path)),
+  )
+  const supplementary: Record<string, unknown[]> = {}
+  SUPPLEMENTARY_SOURCES.forEach((source, index) => {
+    const result = settled[index]
+    if (result.status === 'fulfilled') {
+      const value = source.list(result.value)
+      supplementary[source.key] = Array.isArray(value) ? value : []
+    } else {
+      supplementary[source.key] = []
+      options.onDegraded?.(source.path)
+    }
+  })
   return buildCommandCenter({
     ...snapshot,
-    events: Array.isArray(eventPayload.events) ? eventPayload.events : [],
-    tasks: Array.isArray(taskPayload.tasks) ? taskPayload.tasks : [],
-    approvals: Array.isArray(approvalPayload) ? approvalPayload : [],
-    push_logs: Array.isArray(pushPayload.push_logs) ? pushPayload.push_logs : [],
-    knowledge: Array.isArray(knowledgePayload.knowledge) ? knowledgePayload.knowledge : [],
-    experience_cards: Array.isArray(experiencePayload.experience_cards) ? experiencePayload.experience_cards : [],
-    findings: Array.isArray(findingPayload.findings) ? findingPayload.findings : [],
-    sops: Array.isArray(sopPayload.sops) ? sopPayload.sops : [],
+    events: supplementary.events,
+    tasks: supplementary.tasks,
+    approvals: supplementary.approvals,
+    push_logs: supplementary.push_logs,
+    knowledge: supplementary.knowledge,
+    experience_cards: supplementary.experience_cards,
+    findings: supplementary.findings,
+    sops: supplementary.sops,
   })
 }

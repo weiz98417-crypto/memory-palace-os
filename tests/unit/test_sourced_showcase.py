@@ -1,4 +1,10 @@
-from src.memory_palace.operations.sourced_showcase import SCENARIOS, SOURCES, neutral_answers, watcher_policy_metadata
+from src.memory_palace.operations.sourced_showcase import (
+    SCENARIOS,
+    SOURCES,
+    find_existing_interview,
+    neutral_answers,
+    watcher_policy_metadata,
+)
 
 
 def test_sourced_showcase_has_three_x_volume_and_provenance():
@@ -22,3 +28,56 @@ def test_sourced_watcher_policy_copy_is_production_safe():
     assert description == "依据国家安全发展示范城市建设指导手册开展的安全巡检。"
     assert "公开资料改编" not in name + description
     assert "演示" not in name + description
+
+
+def test_seed_reuses_legacy_titled_interview_instead_of_duplicating():
+    legacy_row = {
+        "id": "iv-1",
+        "source_event_id": "event-1",
+        "expert_id": "expert-1",
+        "title": "【公开资料改编·结构化】缆车急停疏散",
+    }
+    exact_index = {
+        ("event-1", "缆车急停疏散（结构化）", "expert-2"): {"id": "iv-2"},
+    }
+    grouped = {("event-1", "expert-1"): [legacy_row]}
+
+    matched = find_existing_interview(
+        title="缆车急停疏散（结构化）",
+        scenario_title="缆车急停疏散",
+        event_id="event-1",
+        expert_id="expert-1",
+        exact_index=exact_index,
+        grouped=grouped,
+    )
+
+    assert matched is legacy_row
+
+
+def test_seed_exact_match_wins_and_unknown_rows_are_created_fresh():
+    exact_row = {"id": "iv-exact"}
+    exact_index = {("event-2", "旱厕满溢处置（结构化）", "expert-1"): exact_row}
+    grouped: dict[tuple[str, str], list] = {}
+
+    assert (
+        find_existing_interview(
+            title="旱厕满溢处置（结构化）",
+            scenario_title="旱厕满溢处置",
+            event_id="event-2",
+            expert_id="expert-1",
+            exact_index=exact_index,
+            grouped=grouped,
+        )
+        is exact_row
+    )
+    assert (
+        find_existing_interview(
+            title="全新场景（结构化）",
+            scenario_title="全新场景",
+            event_id="event-3",
+            expert_id="expert-9",
+            exact_index={},
+            grouped={},
+        )
+        is None
+    )

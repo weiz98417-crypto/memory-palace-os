@@ -34,8 +34,8 @@ function select(key: string) {
 function authenticated(user: any) {
   session.value = user
 }
-function logout() {
-  client.auth.clear()
+async function logout() {
+  await client.auth.logout()
   session.value = null
   if (route.path !== '/') router.replace('/')
 }

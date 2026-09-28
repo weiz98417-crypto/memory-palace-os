@@ -53,8 +53,11 @@ export async function runEventWatcher(client: RequestClient, eventId: string): P
   return client.request<Record<string, any>>(`/admin/events/${encodeURIComponent(eventId)}/watcher-check`, { method: 'POST' })
 }
 
-export async function closeEvent(client: RequestClient, eventId: string): Promise<unknown> {
-  return client.request(`/admin/events/${encodeURIComponent(eventId)}/close`, { method: 'POST' })
+export async function closeEvent(client: RequestClient, eventId: string, resolution: string): Promise<unknown> {
+  return client.request(`/admin/events/${encodeURIComponent(eventId)}/close`, {
+    method: 'POST',
+    json: { resolution },
+  })
 }
 
 export async function retryEventExperienceCandidate(client: RequestClient, eventId: string): Promise<Record<string, any>> {

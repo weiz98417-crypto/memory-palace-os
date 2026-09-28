@@ -44,11 +44,14 @@ services:
       DEFAULT_VENUE_ID: ${DEFAULT_VENUE_ID:-venue-hq}
       DEFAULT_VENUE_NAME: ${DEFAULT_VENUE_NAME:-示范景区运营中心}
       ADVICE_EXECUTION_MODE: ${ADVICE_EXECUTION_MODE:-redis}
+      # hatchet 模式（ADVICE_EXECUTION_MODE=hatchet）必须同时以 --profile agent-runtime
+      # 启动 scenic-agent-worker：app 启动时强校验 worker.ready 标记，标记缺失会快速失败
+      # 并由 restart 策略重试，直到 worker 线程完成连接并写入就绪文件。
       # App runs behind nginx only; trust its forwarding headers and the ingress host that
       # is allowed to drive the protected simulation-preparation entry.
       TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-true}
-      TRUSTED_PROXY_HOSTS: ${TRUSTED_PROXY_HOSTS:-172.28.0.10}
-      FORWARDED_ALLOW_IPS: ${TRUSTED_PROXY_HOSTS:-172.28.0.10}
+      TRUSTED_PROXY_HOSTS: ${TRUSTED_PROXY_HOSTS:-172.30.0.10}
+      FORWARDED_ALLOW_IPS: ${TRUSTED_PROXY_HOSTS:-172.30.0.10}
       SCENIC_PREP_ALLOWED_HOSTS: ${SCENIC_PREP_ALLOWED_HOSTS:-}
       FRONTEND_V2_APPS: ${FRONTEND_V2_APPS:-}
       WECHAT_CORP_ID: ${WECHAT_CORP_ID:-}
@@ -263,7 +266,7 @@ services:
       DATABASE_URL: postgresql://${HATCHET_POSTGRES_USER:-hatchet}:${HATCHET_POSTGRES_PASSWORD:-hatchet-local}@hatchet-postgres:5432/${HATCHET_POSTGRES_DB:-hatchet}?sslmode=disable
       SERVER_PORT: "8080"
       SERVER_URL: ${HATCHET_SERVER_URL:-http://localhost:8091}
-      SERVER_AUTH_COOKIE_DOMAIN: localhost
+      SERVER_AUTH_COOKIE_DOMAIN: ${HATCHET_AUTH_COOKIE_DOMAIN:-127.0.0.1}
       SERVER_AUTH_COOKIE_INSECURE: "true"
       SERVER_GRPC_PORT: "7077"
       SERVER_GRPC_BROADCAST_ADDRESS: hatchet-engine:7077
@@ -290,7 +293,7 @@ services:
       - /hatchet/hatchet-admin token create --config /config --name scenic-agent-prototype --expiresIn 720h > /tokens/worker
     environment:
       DATABASE_URL: postgresql://${HATCHET_POSTGRES_USER:-hatchet}:${HATCHET_POSTGRES_PASSWORD:-hatchet-local}@hatchet-postgres:5432/${HATCHET_POSTGRES_DB:-hatchet}?sslmode=disable
-      SERVER_AUTH_COOKIE_DOMAIN: localhost
+      SERVER_AUTH_COOKIE_DOMAIN: ${HATCHET_AUTH_COOKIE_DOMAIN:-127.0.0.1}
       SERVER_GRPC_INSECURE: "true"
     volumes:
       - hatchet-config:/config:ro
@@ -326,7 +329,7 @@ services:
       HATCHET_CLIENT_SERVER_URL: http://hatchet-api:8080
       HATCHET_CLIENT_TLS_STRATEGY: none
       HATCHET_CLIENT_TOKEN_FILE: /tokens/worker
-      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://jaeger:4317}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
       SCENIC_ACCOUNT_PASSWORD_FILE: /run/memory-palace-secrets/scenic_account_password
       SCENIC_E2E_BASE_URL: ${SCENIC_E2E_BASE_URL:-http://nginx}
     volumes:
@@ -404,7 +407,7 @@ services:
       SERVER_URL: ${HATCHET_SERVER_URL:-http://localhost:8091}
       SERVER_HEALTHCHECK: "true"
       SERVER_HEALTHCHECK_PORT: "8733"
-      SERVER_AUTH_COOKIE_DOMAIN: localhost
+      SERVER_AUTH_COOKIE_DOMAIN: ${HATCHET_AUTH_COOKIE_DOMAIN:-127.0.0.1}
       SERVER_AUTH_COOKIE_INSECURE: "true"
       SERVER_GRPC_PORT: "7077"
       SERVER_GRPC_BIND_ADDRESS: 0.0.0.0
@@ -445,7 +448,7 @@ services:
       DATABASE_URL: postgresql://${HATCHET_POSTGRES_USER:-hatchet}:${HATCHET_POSTGRES_PASSWORD:-hatchet-local}@hatchet-postgres:5432/${HATCHET_POSTGRES_DB:-hatchet}?sslmode=disable
       SERVER_PORT: "8080"
       SERVER_URL: ${HATCHET_SERVER_URL:-http://localhost:8091}
-      SERVER_AUTH_COOKIE_DOMAIN: localhost
+      SERVER_AUTH_COOKIE_DOMAIN: ${HATCHET_AUTH_COOKIE_DOMAIN:-127.0.0.1}
       SERVER_AUTH_COOKIE_INSECURE: "true"
       SERVER_GRPC_PORT: "7077"
       SERVER_GRPC_BROADCAST_ADDRESS: hatchet-engine:7077
@@ -585,7 +588,7 @@ services:
         condition: service_healthy
     networks:
       data-plane:
-        ipv4_address: 172.28.0.10
+        ipv4_address: 172.30.0.10
       egress:
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/health"]
@@ -614,7 +617,7 @@ networks:
     internal: true
     ipam:
       config:
-        - subnet: 172.28.0.0/24
+        - subnet: 172.30.0.0/24
   egress:
   agent-plane:
     internal: true

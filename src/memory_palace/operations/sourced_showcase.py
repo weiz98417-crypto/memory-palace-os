@@ -127,6 +127,31 @@ async def _list_all(api: Any, path: str, key: str) -> list[dict[str, Any]]:
         offset += len(page)
 
 
+def find_existing_interview(
+    *,
+    title: str,
+    scenario_title: str,
+    event_id: str,
+    expert_id: str,
+    exact_index: dict[tuple[str, str, str], dict[str, Any]],
+    grouped: dict[tuple[str, str], list[dict[str, Any]]],
+) -> dict[str, Any] | None:
+    """Locate an existing interview for (event, expert), tolerating legacy titles.
+
+    Older releases seeded a different interview title format, so an exact
+    (event, title, expert) match misses rows created by an older build and a
+    naive re-seed would create duplicate interviews and experience cards.
+    Fall back to (event, expert) + scenario-title containment before creating.
+    """
+    interview = exact_index.get((event_id, title, expert_id))
+    if interview is not None:
+        return interview
+    for candidate in grouped.get((event_id, expert_id), []):
+        if scenario_title and scenario_title in str(candidate.get("title") or ""):
+            return candidate
+    return None
+
+
 async def seed_sourced_showcase(api: Any) -> tuple[dict[str, int], dict[str, int]]:
     """Seed source-labelled showcase data without direct database writes."""
     users_payload = await api.request("GET", "/api/v1/admin/users")
@@ -269,6 +294,15 @@ async def seed_sourced_showcase(api: Any) -> tuple[dict[str, int], dict[str, int
         ): item
         for item in existing_interviews
     }
+    interviews_by_event_expert: dict[tuple[str, str], list[dict]] = {}
+    for item in existing_interviews:
+        interviews_by_event_expert.setdefault(
+            (
+                str(item.get("source_event_id") or ""),
+                str(item.get("expert_id") or ""),
+            ),
+            [],
+        ).append(item)
     cards_by_interview = {
         str((item.get("source") or {}).get("interview_id") or ""): item
         for item in existing_cards
@@ -281,8 +315,14 @@ async def seed_sourced_showcase(api: Any) -> tuple[dict[str, int], dict[str, int
         event = event_by_key[scenario["key"]]
         suffix = "结构化V3" if scenario["key"] == "capacity-check" else "结构化"
         title = f"{scenario['title']}（{suffix}）"
-        identity = (str(event["event_id"]), title, str(expert["id"]))
-        interview = interviews_by_identity.get(identity)
+        interview = find_existing_interview(
+            title=title,
+            scenario_title=scenario["title"],
+            event_id=str(event["event_id"]),
+            expert_id=str(expert["id"]),
+            exact_index=interviews_by_identity,
+            grouped=interviews_by_event_expert,
+        )
         if interview is None:
             response = await api.request(
                 "POST",

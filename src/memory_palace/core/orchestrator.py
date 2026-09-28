@@ -522,7 +522,16 @@ class Orchestrator:
             if hasattr(result, 'structured_data'):
                 sd = result.structured_data
                 intent = str(sd.get("intent") or "other").strip().lower()
-                target_agent = self._intent_to_agent(intent)
+                raw_reply = sd.get("reply_text") or result.reply_text
+                if (
+                    intent in self._GENERAL_REPLY_INTENTS
+                    and isinstance(raw_reply, str)
+                    and raw_reply.strip()
+                ):
+                    # router.txt 约定：通用意图在不依赖景区实时数据时可直接给出简洁答案
+                    target_agent = None
+                else:
+                    target_agent = self._intent_to_agent(intent)
                 router_severity = sd.get("severity", "P3")
                 trigger_severity = (context_trigger_data or {}).get("severity")
                 severity = self._highest_severity(router_severity, trigger_severity)
@@ -537,10 +546,7 @@ class Orchestrator:
                     "reply_text": (
                         None
                         if target_agent
-                        else self._general_assistant_reply(
-                            intent,
-                            sd.get("reply_text") or result.reply_text,
-                        )
+                        else self._general_assistant_reply(intent, raw_reply)
                     ),
                     "from_user": payload.get("from_user", "unknown"),
                     "content": raw_text,
@@ -583,10 +589,14 @@ class Orchestrator:
         }
         return intent_agent_map.get(intent)
 
-    @staticmethod
-    def _general_assistant_reply(intent: str, reply_text: Optional[str] = None) -> str:
-        candidate = str(reply_text or "").strip()
-        if candidate:
+    # 只有这些通用意图允许把模型 reply_text 直达用户；
+    # 未映射/未知意图一律回退固定话术，避免模型自由文本冒充业务答复。
+    _GENERAL_REPLY_INTENTS = frozenset({"chitchat", "other"})
+
+    @classmethod
+    def _general_assistant_reply(cls, intent: str, reply_text: Optional[str] = None) -> str:
+        candidate = reply_text.strip() if isinstance(reply_text, str) else ""
+        if candidate and intent in cls._GENERAL_REPLY_INTENTS:
             return candidate
         if intent == "chitchat":
             return (

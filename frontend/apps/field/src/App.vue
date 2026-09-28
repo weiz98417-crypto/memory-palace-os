@@ -31,8 +31,8 @@ async function login() {
     authenticating.value = false
   }
 }
-function logout() {
-  client.auth.clear()
+async function logout() {
+  await client.auth.logout()
   session.value = null
 }
 </script>

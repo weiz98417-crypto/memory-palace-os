@@ -9,6 +9,7 @@ a human already superseded.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import hashlib
 import json
 import os
@@ -48,8 +49,10 @@ def advice_idempotency_key(incident_id: str, *, step: str, attempt: int) -> str:
 
 
 def _request_hash(request: IncidentCommandRequest) -> str:
+    # trace_id 是服务端每次请求重新生成的，不是业务输入；
+    # 客户端带同一 Idempotency-Key 重试时必须仍解析到同一 run。
     return hashlib.sha256(
-        request.model_dump_json(exclude_none=False).encode("utf-8")
+        request.model_dump_json(exclude_none=False, exclude={"trace_id"}).encode("utf-8")
     ).hexdigest()
 
 
@@ -191,6 +194,37 @@ class AdviceRunRepository:
                     run_id,
                     ADVICE_COMMAND_TYPE,
                     now,
+                ),
+            )
+            == 1
+        )
+
+    async def renew_lease(
+        self,
+        *,
+        venue_id: str,
+        run_id: str,
+        owner: str,
+        lease_seconds: float,
+    ) -> bool:
+        """Extend the lease of a still-RUNNING run owned by `owner` (heartbeat)."""
+
+        now = self._now()
+        return (
+            await self._database.execute(
+                """
+                UPDATE scenic_commands
+                SET lease_expires_at = ?, updated_at = ?
+                WHERE venue_id = ? AND id = ? AND command_type = ?
+                  AND status = 'RUNNING' AND execution_owner = ?
+                """,
+                (
+                    now + max(1.0, lease_seconds),
+                    now,
+                    venue_id,
+                    run_id,
+                    ADVICE_COMMAND_TYPE,
+                    owner,
                 ),
             )
             == 1
@@ -401,6 +435,22 @@ class AdviceWorker:
             }
         )
 
+    async def _renew_lease_loop(self, *, venue_id: str, run_id: str) -> None:
+        interval = max(1.0, self._lease_seconds / 3.0)
+        while True:
+            await asyncio.sleep(interval)
+            try:
+                await self._repository.renew_lease(
+                    venue_id=venue_id,
+                    run_id=run_id,
+                    owner=self._execution_owner,
+                    lease_seconds=self._lease_seconds,
+                )
+            except Exception:
+                # 续租失败（例如数据库抖动）不中断执行；即便租约被抢，
+                # 发布结果的 execution_owner 闸门也会挡住旧 owner。
+                continue
+
     async def run_run_id(
         self, *, venue_id: str, run_id: str
     ) -> AdviceFinalized | None:
@@ -454,6 +504,11 @@ class AdviceWorker:
         if claimed_run is not None:
             run = claimed_run
 
+        # 心跳续租：执行可能超过单个租约时长，不续租会被另一个副本当作
+        # 过期租约重新执行，造成双倍模型调用。
+        renewal = asyncio.create_task(
+            self._renew_lease_loop(venue_id=venue_id, run_id=run_id)
+        )
         try:
             result = await self._command.execute(run.request)
         except Exception as exc:  # provider/trunk failure
@@ -478,6 +533,10 @@ class AdviceWorker:
                     },
                 )
             return AdviceFinalized(run=final_run or run, state="FAILED")
+        finally:
+            renewal.cancel()
+            with contextlib.suppress(BaseException):
+                await renewal
 
         advice_state = "READY" if result.outcome in {"READY", "DEGRADED"} else "FAILED"
         response_body = result.model_dump(mode="json")

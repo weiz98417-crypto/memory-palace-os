@@ -41,6 +41,39 @@ describe('api-client session seam', () => {
     client.auth.clear()
     expect(storage.getItem('mp_operations_user')).toBeNull()
   })
+
+  it('revokes the refresh token server-side and clears local state', async () => {
+    const fetchImpl = vi.fn(
+      async (_input: RequestInfo | URL, _init?: RequestInit) => new Response(null, { status: 204 }),
+    )
+    const storage = createMemoryStorage(session())
+    const client = createApiClient({ fetch: fetchImpl, storage })
+
+    await client.auth.logout()
+
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+    const [url, init] = fetchImpl.mock.calls[0]
+    expect(String(url)).toContain('/auth/logout')
+    expect(init!.method).toBe('POST')
+    expect(JSON.parse(String(init!.body))).toEqual({ refresh_token: 'refresh-1' })
+    expect(new Headers(init!.headers).get('Authorization')).toBe('Bearer access-1')
+    expect(storage.getItem('mp_access_token')).toBeNull()
+    expect(storage.getItem('mp_refresh_token')).toBeNull()
+    expect(storage.getItem('mp_user')).toBeNull()
+  })
+
+  it('clears local state even when the server logout fails', async () => {
+    const fetchImpl = vi.fn(
+      async (_input: RequestInfo | URL, _init?: RequestInit) =>
+        new Response(JSON.stringify({ detail: 'boom' }), { status: 500 }),
+    )
+    const storage = createMemoryStorage(session())
+    const client = createApiClient({ fetch: fetchImpl, storage })
+
+    await expect(client.auth.logout()).resolves.toBeUndefined()
+    expect(storage.getItem('mp_access_token')).toBeNull()
+    expect(storage.getItem('mp_refresh_token')).toBeNull()
+  })
 })
 
 describe('api-client request behaviour', () => {

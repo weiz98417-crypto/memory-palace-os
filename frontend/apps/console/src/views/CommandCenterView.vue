@@ -196,7 +196,7 @@ async function executeNextAction() {
         json: { kind: action.kind, payload: action.payload || {} },
       })
       notice.value = '动作已提交，正在刷新态势'
-      model.value = await loadCommandCenter(createApiClient())
+      await load()
       return
     }
     notice.value = '该动作需要在对应业务页面继续处理'
@@ -209,11 +209,21 @@ async function executeNextAction() {
 
 const loading = ref(true)
 const error = ref<string | null>(null)
+const degradedSources = ref<string[]>([])
+
+async function load() {
+  const degraded: string[] = []
+  const next = await loadCommandCenter(createApiClient(), {
+    onDegraded: (source) => degraded.push(source),
+  })
+  degradedSources.value = degraded
+  model.value = next
+}
 
 onMounted(async () => {
   browser.window.addEventListener('keydown', handleKeydown)
   try {
-    model.value = await loadCommandCenter(createApiClient())
+    await load()
   } catch (cause) {
     error.value = cause instanceof Error ? cause.message : '指挥中心加载失败'
   } finally {
@@ -240,6 +250,7 @@ onBeforeUnmount(() => {
 
     <StatePanel v-if="loading" state="loading" title="正在读取态势快照" />
     <StatePanel v-else-if="error" state="error" title="指挥中心加载失败" :message="error" />
+    <p v-else-if="degradedSources.length" class="muted degraded-note">部分数据源加载失败，相关统计已留空：{{ degradedSources.join('、') }}</p>
 
     <template v-else>
       <div class="overview-grid">
@@ -380,6 +391,7 @@ onBeforeUnmount(() => {
 .command-center__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
 .command-center__header h1 { margin: 4px 0 8px; color: var(--mp-color-ink); font-size: 30px; }
 .muted { color: var(--mp-color-mute); font-size: 13px; }
+.degraded-note { margin: 0; padding: 8px 12px; border: 1px solid var(--mp-color-hairline); border-radius: var(--mp-radius-card); }
 .eyebrow { margin: 0; color: var(--mp-color-primary); font-size: 11px; font-weight: 700; letter-spacing: .12em; }
 .overview-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(310px, .75fr); gap: 14px; align-items: stretch; }
 .overview-side { display: grid; gap: 12px; align-content: start; }

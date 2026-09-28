@@ -108,11 +108,8 @@ class CanonicalMessageIngress:
                 status_code=exc.status_code,
             ) from exc
 
-        external_conversation_id = (
-            message.external_conversation_id.strip()
-            if message.external_conversation_id
-            else uuid.uuid4().hex
-        )
+        raw_conversation_id = (message.external_conversation_id or "").strip()
+        external_conversation_id = raw_conversation_id or uuid.uuid4().hex
         stable_session_id = self._stable_session_id(
             venue_id=venue_id,
             channel=channel,
@@ -410,13 +407,22 @@ class CanonicalMessageIngress:
         now = time.time()
         mapping = await self._db.fetch_one(
             """
-            SELECT session_id FROM channel_conversations
+            SELECT session_id, status FROM channel_conversations
             WHERE venue_id = ? AND channel = ?
-              AND external_conversation_id = ? AND user_id = ? AND status = 'ACTIVE'
+              AND external_conversation_id = ? AND user_id = ?
             """,
             (venue_id, channel, external_conversation_id, user_id),
         )
-        effective_session_id = mapping["session_id"] if mapping else session_id
+        if mapping and mapping["status"] != "ACTIVE":
+            # 已关闭的会话不能复活，也不能为其创建新的会话影子行。
+            raise CanonicalIngressError(
+                "CONVERSATION_NOT_AVAILABLE",
+                "The external conversation is no longer active.",
+                status_code=409,
+            )
+        if mapping:
+            return str(mapping["session_id"])
+        effective_session_id = session_id
         await self._db.execute(
             """
             INSERT INTO sessions (
@@ -446,7 +452,7 @@ class CanonicalMessageIngress:
                 now,
             ),
         )
-        mapping = await self._db.fetch_one(
+        final_mapping = await self._db.fetch_one(
             """
             SELECT session_id FROM channel_conversations
             WHERE venue_id = ? AND channel = ?
@@ -454,13 +460,13 @@ class CanonicalMessageIngress:
             """,
             (venue_id, channel, external_conversation_id, user_id),
         )
-        if not mapping:
+        if not final_mapping:
             raise CanonicalIngressError(
                 "CONVERSATION_NOT_AVAILABLE",
                 "The external conversation could not be mapped.",
                 status_code=409,
             )
-        return mapping["session_id"]
+        return final_mapping["session_id"]
 
     async def _write_audit(
         self,

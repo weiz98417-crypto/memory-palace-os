@@ -438,7 +438,8 @@ if os.environ.get("TRUST_PROXY_HEADERS", "").strip().lower() in {"1", "true", "y
         for host in os.environ.get("TRUSTED_PROXY_HOSTS", "").split(",")
         if host.strip()
     ]
-    if not trusted_proxy_hosts or "*" in trusted_proxy_hosts:
+    wildcard_entries = {"*", "0.0.0.0/0", "::/0"}
+    if not trusted_proxy_hosts or any(host in wildcard_entries for host in trusted_proxy_hosts):
         raise RuntimeError("TRUSTED_PROXY_HOSTS 必须显式列出可信代理地址或网段，且不能包含通配符")
     app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=trusted_proxy_hosts)
     logger.info("✅ 已启用受限反向代理转发头信任")

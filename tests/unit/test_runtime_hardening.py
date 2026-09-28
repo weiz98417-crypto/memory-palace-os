@@ -424,9 +424,9 @@ def test_proxy_chain_uses_explicit_ingress_address_and_rebuilds_forwarded_for():
     supervisor = (project_root / "deploy" / "supervisor.conf").read_text(encoding="utf-8")
 
     app_environment = compose["services"]["app"]["environment"]
-    assert app_environment["TRUSTED_PROXY_HOSTS"] == "${TRUSTED_PROXY_HOSTS:-172.28.0.10}"
-    assert app_environment["FORWARDED_ALLOW_IPS"] == "${TRUSTED_PROXY_HOSTS:-172.28.0.10}"
-    assert compose["services"]["nginx"]["networks"]["data-plane"]["ipv4_address"] == "172.28.0.10"
+    assert app_environment["TRUSTED_PROXY_HOSTS"] == "${TRUSTED_PROXY_HOSTS:-172.30.0.10}"
+    assert app_environment["FORWARDED_ALLOW_IPS"] == "${TRUSTED_PROXY_HOSTS:-172.30.0.10}"
+    assert compose["services"]["nginx"]["networks"]["data-plane"]["ipv4_address"] == "172.30.0.10"
     assert "proxy_set_header X-Forwarded-For $remote_addr;" in nginx
     assert "$proxy_add_x_forwarded_for" not in nginx
     assert '"--forwarded-allow-ips", "*"' not in dockerfile

@@ -119,3 +119,113 @@ class TestRouting:
         assert default["target_agent"] == "router"
         assert default["status"] == "failed"
         assert "未能判断" in default["reply_text"]
+
+    @staticmethod
+    def _routing_orchestrator(router_output):
+        def get_skill(name):
+            if name == "context_trigger":
+                m = MagicMock()
+                m.run = AsyncMock(return_value=SkillOutput(
+                    success=True,
+                    structured_data={"should_trigger": False, "excluded": False},
+                    action_taken="passive",
+                ))
+                return m
+            if name == "router":
+                m = MagicMock()
+                m.run = AsyncMock(return_value=router_output)
+                return m
+            return None
+
+        orch = Orchestrator()
+        return orch, get_skill
+
+    @pytest.mark.asyncio
+    async def test_other_intent_with_reply_text_answers_directly(self):
+        """other 意图带 reply_text 时按 router 约定直答，不落入 memory_ops。"""
+
+        router_output = SkillOutput(
+            success=True,
+            structured_data={
+                "intent": "other",
+                "severity": "P4",
+                "confidence": 0.9,
+                "reply_text": "我无法读取实时天气，请以景区正式气象系统或值班经理确认为准。",
+            },
+            action_taken="llm_semantic_analysis",
+        )
+        orch, get_skill = self._routing_orchestrator(router_output)
+        with patch.object(orch, "_save_message", new_callable=AsyncMock):
+            with patch.object(orch, "_execute_agent", new_callable=AsyncMock) as execute_agent:
+                with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
+                    result = await orch.process({
+                        "msg_id": "route_other_001",
+                        "trace_id": "trace_other",
+                        "from_user": "employee_a",
+                        "content": "今天景区天气怎么样？",
+                    })
+
+        assert result["route"]["status"] == "responded"
+        assert result["route"]["target_agent"] is None
+        assert "值班经理确认" in result["reply_text"]
+        execute_agent.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_other_intent_without_reply_text_still_routes_to_memory_ops(self):
+        """other 意图没有可直答内容时，仍走确权知识检索。"""
+
+        router_output = SkillOutput(
+            success=True,
+            structured_data={
+                "intent": "other",
+                "severity": "P4",
+                "confidence": 0.8,
+                "reply_text": None,
+            },
+            action_taken="llm_semantic_analysis",
+        )
+        orch, get_skill = self._routing_orchestrator(router_output)
+        with patch.object(orch, "_save_message", new_callable=AsyncMock):
+            with patch.object(orch, "_execute_agent", new_callable=AsyncMock) as execute_agent:
+                with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
+                    result = await orch.process({
+                        "msg_id": "route_other_002",
+                        "trace_id": "trace_other_2",
+                        "from_user": "employee_a",
+                        "content": "查一下缆车巡检记录",
+                    })
+
+        assert result["route"]["status"] == "routed"
+        assert result["route"]["target_agent"] == "memory_ops"
+        execute_agent.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_unknown_intent_never_delivers_model_free_text(self):
+        """未映射意图不得把模型自由文本直投给用户，必须回退固定话术。"""
+
+        router_output = SkillOutput(
+            success=True,
+            structured_data={
+                "intent": "emergency_advise",
+                "severity": "P1",
+                "confidence": 0.9,
+                "reply_text": "我已经替你派单处理了。",
+            },
+            action_taken="llm_semantic_analysis",
+        )
+        orch, get_skill = self._routing_orchestrator(router_output)
+        with patch.object(orch, "_save_message", new_callable=AsyncMock):
+            with patch.object(orch, "_execute_agent", new_callable=AsyncMock) as execute_agent:
+                with patch("src.memory_palace.core.orchestrator.get_skill_by_name", side_effect=get_skill):
+                    result = await orch.process({
+                        "msg_id": "route_unknown_001",
+                        "trace_id": "trace_unknown",
+                        "from_user": "employee_a",
+                        "content": "缆车上有游客被困",
+                    })
+
+        assert result["route"]["status"] == "responded"
+        assert result["route"]["target_agent"] is None
+        assert "派单" not in result["reply_text"]
+        assert "无法确认" in result["reply_text"]
+        execute_agent.assert_not_called()

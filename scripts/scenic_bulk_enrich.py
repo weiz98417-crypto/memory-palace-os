@@ -157,6 +157,7 @@ class CreatedTask:
     session_id: str
     assigned_user_id: str
     status: str
+    dependency_blocked: bool = False
 
 
 class FormalAPI:
@@ -428,7 +429,9 @@ def _create_tasks(
         )
         first_task_id = first_task_id or task.task_id
         if dependencies:
-            task.status = "BLOCKED"
+            # 依赖未满足：任务留在服务端真实状态，只标记本地跳过推进，
+            # 不把服务器没有的 BLOCKED 状态写进证据。
+            task.dependency_blocked = True
         else:
             mode = status_modes[(index + slot) % len(status_modes)]
             task = _advance_task(api, task, mode, index)
@@ -468,7 +471,6 @@ def _create_approvals(
             else "请关注当前事件并同步调度处置进展",
             "priority": "critical" if tool_name == "send_in_app_alert" else "high",
         }
-        last_error: EnrichmentError | None = None
         for attempt in range(3):
             try:
                 response = api.post(
@@ -487,14 +489,9 @@ def _create_approvals(
                 )
                 break
             except EnrichmentError as exc:
-                last_error = exc
                 if "ACTION_COOLDOWN" not in str(exc) or attempt == 2:
                     raise
                 time.sleep(62)
-        else:
-            raise last_error or EnrichmentError(
-                "approval creation failed without an error"
-            )
     return created
 
 
@@ -665,7 +662,11 @@ def main() -> int:
                     flush=True,
                 )
 
-        candidates = [task for task in created_tasks if task.status == "PENDING"]
+        candidates = [
+            task
+            for task in created_tasks
+            if task.status == "PENDING" and not task.dependency_blocked
+        ]
         approval_rows = _create_approvals(
             api, candidates, args.approval_count, args.approval_interval
         )

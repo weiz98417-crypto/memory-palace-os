@@ -258,6 +258,23 @@ export function createApiClient(options: ApiClientOptions = {}) {
         })
         return setSession(payload)
       },
+      async logout(): Promise<void> {
+        const session = readSession()
+        try {
+          if (session?.refresh_token) {
+            await request('/auth/logout', {
+              method: 'POST',
+              json: { refresh_token: session.refresh_token },
+              skipRefresh: true,
+              idempotencyKey: false,
+            })
+          }
+        } catch {
+          // 服务端撤销失败（离线/凭据过期）不阻塞登出，本地会话必须清除
+        } finally {
+          clear()
+        }
+      },
       async refresh(): Promise<boolean> {
         return refresh()
       },

@@ -17,7 +17,7 @@
 | nginx | `nginx` | 统一 HTTP 入口 | `http://127.0.0.1:8090/` |
 | Jaeger | `jaeger` | 可选链路追踪 UI | 端口 `16686` |
 
-Hatchet Dashboard 使用独立登录，不走业务系统会话；本机 quickstart 默认为 `admin@example.com` / `Admin123!!`。登录状态由 Hatchet Cookie 管理，演示时不要清除该站点的 Cookie。
+Hatchet Dashboard 使用独立登录，不走业务系统会话；本机 quickstart 的管理员账号见本地 `.env` 的 Hatchet 配置（凭据不入文档）。登录状态由 Hatchet Cookie 管理，演示时不要清除该站点的 Cookie。
 
 ### 本机演示账号与密码
 
@@ -25,11 +25,15 @@ Hatchet Dashboard 使用独立登录，不走业务系统会话；本机 quickst
 
 | 角色 | 用户名 | 密码 | 入口 |
 |---|---|---|---|
-| 模拟运行准备员 | `simulation-ops` | `Scenic-E2E-Users-2026!` | `/operations/scenic/`、`/operations/evaluation/` |
-| 值班经理 | `wangfang` | `Scenic-E2E-Users-2026!` | `/admin/`、`/simulator/wecom/` |
-| 设备检修员 | `chenyu` | `Scenic-E2E-Users-2026!` | `/assistant/` |
-| 现场运营员 | `liming` | `Scenic-E2E-Users-2026!` | `/assistant/` |
-| Hatchet | `admin@example.com` | `Admin123!!` | `http://127.0.0.1:8091/` |
+业务账号（`simulation-ops` / `wangfang` / `liming` / `chenyu`）的统一密码由 `SCENIC_ACCOUNT_PASSWORD`（容器内密钥卷）设置，Hatchet 管理员账号由 Hatchet quickstart 配置；凭据一律不入文档。
+
+| 账号 | 入口 |
+| --- | --- |
+| 模拟运行准备员 `simulation-ops` | `/operations/scenic/`、`/operations/evaluation/` |
+| 值班经理 `wangfang` | `/admin/`、`/simulator/wecom/` |
+| 设备检修员 `chenyu` | `/assistant/` |
+| 现场运营员 `liming` | `/assistant/` |
+| Hatchet 管理员 | `http://127.0.0.1:8091/` |
 
 启动脚本包含 Jaeger 时会设置 `OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317`。如果手工启动，需要同时设置该变量再重启 `app` 和 `scenic-agent-worker`；否则 Jaeger 页面会停留在无 trace 的空态。
 
@@ -235,7 +239,7 @@ CI 或不需要窗口时加 `-Headless`。
 
 窗口：Hatchet `http://127.0.0.1:8091/`
 
-操作：如出现登录页使用 `admin@example.com` / `Admin123!!`；进入 `Runs`，必要时点击 `Search past 7 days`。
+操作：如出现登录页使用 Hatchet quickstart 管理员账号登录；进入 `Runs`，必要时点击 `Search past 7 days`。
 
 预期：看到 `scenic-agent-advice`、暂停/恢复/重试/失败记录。讲解时强调 Hatchet 只保存运行历史，不替代 PostgreSQL 业务事实。
 

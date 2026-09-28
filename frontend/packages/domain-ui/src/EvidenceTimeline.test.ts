@@ -20,4 +20,13 @@ describe('EvidenceTimeline', () => {
     expect(wrapper.text()).not.toContain('1785283200')
     expect(wrapper.text()).toContain('2026')
   })
+
+  it('renders millisecond timestamps as dates instead of year ~58000', () => {
+    const wrapper = mount(EvidenceTimeline, {
+      props: {
+        items: [{ title: '现场照片', detail: '右后轮照片', status: 'RECORDED', created_at: 1785283200000 }],
+      },
+    })
+    expect(wrapper.text()).toContain('2026')
+  })
 })

@@ -4,6 +4,8 @@ import StatusBadge from './StatusBadge.vue'
 import type { StateTone } from './agentRun'
 
 const props = defineProps<{ items: unknown[] }>()
+// 秒级 epoch 上界约 1e11（公元 5138 年）；再往上视为毫秒级 epoch
+const MS_EPOCH_THRESHOLD = 1e11
 function record(value: unknown): Record<string, any> | null {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, any>)
@@ -16,7 +18,8 @@ function timeText(value: unknown): string {
   if (value === null || value === undefined || value === '') return ''
   const numeric = Number(value)
   if (Number.isFinite(numeric) && numeric > 1_000_000_000) {
-    return new Date(numeric * 1000).toLocaleString('zh-CN', { hour12: false })
+    const epochMs = numeric >= MS_EPOCH_THRESHOLD ? numeric : numeric * 1000
+    return new Date(epochMs).toLocaleString('zh-CN', { hour12: false })
   }
   return text(value)
 }

@@ -13,6 +13,7 @@ import redis.asyncio as redis
 
 ADVICE_STREAM_KEY = "memory_palace:advice_runs"
 ADVICE_GROUP_NAME = "mp_advice_workers"
+ADVICE_DEAD_LETTER_KEY = f"{ADVICE_STREAM_KEY}:dead"
 DEFAULT_ADVICE_PENDING_IDLE_MS = 300_000
 
 
@@ -106,8 +107,7 @@ class RedisAdviceQueue:
             )
             entries = claimed[1] if len(claimed) > 1 else []
             if entries:
-                message = self._decode(*entries[0])
-                message["_recovered"] = True
+                message = await self._claim_entry(*entries[0], recovered=True)
                 return message
         rows = await self._client.xreadgroup(
             ADVICE_GROUP_NAME,
@@ -118,8 +118,37 @@ class RedisAdviceQueue:
         )
         for _stream, entries in rows or []:
             if entries:
-                return self._decode(*entries[0])
+                return await self._claim_entry(*entries[0], recovered=False)
         return None
+
+    async def _claim_entry(self, message_id: Any, fields: Mapping[Any, Any], *, recovered: bool) -> dict[str, Any] | None:
+        try:
+            message = self._decode(message_id, fields)
+        except Exception:
+            # 毒消息：不能留在 PEL 里被 XAUTOCLAIM 每 300 秒重新捞起无限空转。
+            # 运行事实在 scenic_commands 里是持久的，丢失唤醒消息可由启动对账兜底。
+            await self._dead_letter(message_id, fields)
+            return None
+        if recovered:
+            message["_recovered"] = True
+        return message
+
+    async def _dead_letter(self, message_id: Any, fields: Mapping[Any, Any]) -> None:
+        raw = _text(_field(fields, "data"))
+        try:
+            await self._client.xadd(
+                ADVICE_DEAD_LETTER_KEY,
+                {
+                    "data": raw if isinstance(raw, str) else "",
+                    "error": "decode_failed",
+                    "original_id": str(_text(message_id)),
+                },
+            )
+        except Exception:
+            pass  # 死信写失败时不阻塞 ACK；唤醒丢失由持久层启动对账兜底
+        await self._client.xack(
+            ADVICE_STREAM_KEY, ADVICE_GROUP_NAME, str(_text(message_id))
+        )
 
     async def ack(self, message: dict[str, Any]) -> None:
         await self._ensure_client()
@@ -142,4 +171,9 @@ class RedisAdviceQueue:
         self._initialized = False
 
 
-__all__ = ["ADVICE_GROUP_NAME", "ADVICE_STREAM_KEY", "RedisAdviceQueue"]
+__all__ = [
+    "ADVICE_DEAD_LETTER_KEY",
+    "ADVICE_GROUP_NAME",
+    "ADVICE_STREAM_KEY",
+    "RedisAdviceQueue",
+]

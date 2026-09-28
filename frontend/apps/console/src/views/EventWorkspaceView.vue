@@ -109,7 +109,7 @@ async function close() {
   if (!selected.value || !resolution.value.trim() || busy.value) return
   busy.value = true
   try {
-    const result: any = await closeEvent(createApiClient(), selected.value.event_id)
+    const result: any = await closeEvent(createApiClient(), selected.value.event_id, resolution.value.trim())
     notice.value = String(result.experience_candidate?.outcome || '事件已闭环')
     await load()
     await open(selected.value)
@@ -185,7 +185,7 @@ onMounted(load)
       </div>
       <div v-if="!isClosed" class="closure-grid">
         <label>闭环结果<textarea v-model="resolution" rows="3" placeholder="记录现场处置结果，闭环后不可继续修改。"></textarea></label>
-        <button class="danger" :disabled="busy || !resolution.trim()" @click="close">提交闭环</button>
+        <button class="danger" :disabled="busy || resolution.trim().length < 3" @click="close">提交闭环</button>
       </div>
     </article>
     </ModalShell>

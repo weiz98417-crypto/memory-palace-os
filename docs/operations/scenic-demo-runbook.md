@@ -12,8 +12,8 @@
 | 内部系统接入环境 | `/simulator/wecom/` —— 内部通知与回执 |
 | 受保护运行准备 | `/operations/scenic/` —— 仅 `simulation-ops`，仅本机/受信入口 |
 | 账号 | `simulation-ops`、`wangfang`、`liming`、`chenyu` |
-| 业务账号统一密码 | `Scenic-E2E-Users-2026!`（仅本机演示，发布前必须移除） |
-| Hatchet 账号 | `admin@example.com` / `Admin123!!`（仅本机 quickstart） |
+| 业务账号统一密码 | 由 `SCENIC_ACCOUNT_PASSWORD`（容器内密钥卷）统一设置，不入文档与截图 |
+| Hatchet 账号 | 由 Hatchet quickstart 配置的本地管理员账号，凭据不入文档 |
 
 启动演示环境（Docker 栈，完整 Agent + Hatchet + Jaeger）：
 
@@ -79,7 +79,7 @@ powershell -ExecutionPolicy Bypass -File scripts/scenic-demo-open.ps1 -Mode Veri
 13. **运行准备 → 到风险恢复**：点击「到风险恢复」（单步 60 秒）。预期：设备与客流信号恢复到阈值内。
 14. **指挥中心 → 核验并解除风险 → 关闭并形成审计卷宗**：先点「核验并解除风险」，再点「关闭并形成审计卷宗」。预期：状态 `RESOLVED → CLOSED`，出现「事件已闭环」，可点「查看事件卷宗」。
 15. **内部通知接入环境 → 查看通知**：切到第 5 个窗口，检查通知投递与回执记录。预期：能看到本场地内部通知的送达/接单/回执，短信与语音显示未配置（不产生假回执）。
-16. **Hatchet → 查看持久化运行历史**：打开 `http://127.0.0.1:8091/`；如出现登录页使用 `admin@example.com` / `Admin123!!`，并在 `Runs` 点击 `Search past 7 days`。预期：看到 `scenic-agent-advice`、暂停、恢复、重试和失败记录。讲解时强调 Hatchet 只保存运行历史，不替代 PostgreSQL 业务事实。
+16. **Hatchet → 查看持久化运行历史**：打开 `http://127.0.0.1:8091/`；如出现登录页使用 Hatchet quickstart 管理员账号登录（凭据见本地 `.env`，不入文档），并在 `Runs` 点击 `Search past 7 days`。预期：看到 `scenic-agent-advice`、暂停、恢复、重试和失败记录。讲解时强调 Hatchet 只保存运行历史，不替代 PostgreSQL 业务事实。
 17. **Jaeger → 查看 Agent 技术调用链**：打开 `http://127.0.0.1:16686/`，`Service=scenic-agent-trunk`，点击 `Find Traces` 后打开 `scenic.incident_command` trace。预期：看到 `context_trigger`、`router`、`memory_ops` span、耗时和重试；Jaeger 不参与关闭门禁。
 
 ## 四、成功判据

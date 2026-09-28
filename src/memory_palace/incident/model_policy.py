@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import time
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Literal, Protocol
 
 from ..agent_contracts.models import AgentRole
@@ -57,7 +58,9 @@ def _recovery_seconds() -> float:
 
 
 def _day_start(now: float) -> float:
-    return now - (now % 86400)
+    # “今日配额”按服务器本地日切（场馆运营按本地日对账），不是 UTC 零点。
+    local_now = datetime.fromtimestamp(now).astimezone()
+    return local_now.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
 
 
 class LLMCallLogFailureCounter:
