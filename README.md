@@ -218,48 +218,39 @@ SOP/知识导入走正式发布链路：`python scripts/import_sops.py --input a
 ```
 src/memory_palace/
 ├── api/
-│   ├── v1/endpoints/       # admin / sessions / messages / skills
-│   └── v2/                 # dispatch / context / handoff
-├── config/                 # 配置加载 & 环境校验
-├── core/
-│   ├── orchestrator.py     # 主控调度器
-│   ├── gateway.py           # 企微回调入口
-│   ├── skill_base.py       # Agent/Skill 基类
-│   ├── context_tier.py      # [Phase 1] 三层上下文压缩
-│   ├── agent_memory.py      # [Phase 1] Agent 内存隔离
-│   ├── permissions.py       # [Phase 2] 权限引擎
-│   ├── task_graph.py        # [Phase 3] 任务依赖图
-│   ├── workspace.py         # [Phase 4] 工作区隔离
-│   ├── session_state.py     # 会话状态管理
-│   ├── health.py            # 三层健康检查
-│   └── hot_reload.py        # 技能热更新
-├── skills/
-│   ├── router/              # 情境感知 + 意图识别
-│   ├── commander/           # SOP 下发 + 通知
-│   ├── memory_ops/          # RAG 检索 + SOP 萃取
-│   ├── persona/             # 数字分身对话
-│   ├── persona_extract/     # 老员工访谈萃取 (F-013)
-│   ├── watcher/             # SLA 巡检 + 催办
-│   └── todo/                # 任务分解
-├── knowledge/
-│   ├── db_client.py         # SQLite 元数据
-│   ├── vector_store.py      # PostgreSQL pgvector 向量检索
-│   └── db_init.py           # 建表脚本
-└── tools/
-    ├── llm_wrapper.py       # LLM 统一接口
-    ├── wechat_client.py     # 企微消息
-    ├── sms_client.py        # 短信/语音
-    ├── tool_executor.py     # 工具执行器 + 权限 hook
-    └── circuit_breaker.py   # 熔断器
+│   ├── v1/endpoints/        # auth / admin / assistant / messages / scenic / watcher
+│   └── v2/                  # 预留路由，占位中未提供稳定公开端点
+├── agent_contracts/         # Agent 输入、输出和模型契约
+├── config/                  # 配置、Secret、环境校验和功能注册表
+├── core/                    # 消息、队列、任务、权限、租户、审计和运行恢复
+├── demo/                    # 受控 DEMO_MODE 场景与适配器
+├── incident/                # IncidentCommand 与四 Agent 生产主干
+├── knowledge/               # 来源、SOP、经验资产和 PostgreSQL pgvector
+├── metrics/                 # Prometheus 指标、告警和仪表盘定义
+├── operations/              # 运行诊断、UAT bootstrap 和展示数据
+├── scenic/                  # 景区事件、建议运行、实时视图和 Hatchet/Redis 编排
+├── skills/                  # context_trigger / router / commander / memory_ops /
+│                           # persona / persona_extract / watcher / todo
+├── static/                  # 服务端静态资源与前端入口
+└── tools/                   # LLM、嵌入、企微、数据库和工具执行器
+
+deploy/                      # Docker Compose、Dockerfile 和部署 profile
+scripts/                     # MVP 生命周期、景区演示、导入和验证命令
+frontend/                    # Vue 前端源码与离线构建目标
+static/                      # Nginx/应用直接提供的静态页面和资源
+docs/                        # ADR、架构图、运维手册和 UAT 证据
+evals/                       # Scenic Agent contract/live eval 数据集
+artifacts/knowledge/         # 可移植知识与 SOP 夹具
+tests/                       # unit / integration / js / powershell 测试
 ```
 
 ---
 
-## 旧版本地开发运行（非企业 MVP 入口）
+## 兼容本地开发运行（非企业 MVP 入口）
 
 ### 前置
 
-- Python 3.10+
+- Python 3.11（以 `requirements.lock` 和 Dockerfile 为准）
 - 企业微信应用（CorpID + AgentID + CorpSecret + EncodingAESKey）
 - LLM API（OpenAI / 通义千问 / 智谱GLM）可选，Demo 模式可跳过
 
@@ -355,40 +346,31 @@ DeepSeek API Key 不写入 EnvFile，而是通过 `scripts/set_deepseek_secret.p
 
 ## API 端点
 
-### v1
+### 运行与 v1 业务 API
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| `GET` | `/api/v1/health` | 健康检查 |
-| `GET` | `/api/v1/stats` | 系统统计 |
-| `GET` | `/api/v1/stats/sla` | SLA 合规率 |
-| `GET` | `/api/v1/sessions` | 会话列表 |
-| `POST` | `/api/v1/sessions` | 创建会话 |
-| `DELETE` | `/api/v1/sessions/{id}` | 关闭会话 |
-| `GET` | `/api/v1/messages/{id}` | 消息详情 |
-| `GET` | `/api/v1/skills` | 注册技能列表 |
-| `GET` | `/api/v1/admin/dashboard` | 仪表盘统计 |
-| `GET` | `/api/v1/admin/events` | 事件记忆库列表 |
-| `POST` | `/api/v1/admin/events` | 手动录入事件 |
-| `GET` | `/api/v1/admin/push_logs` | 推送日志 |
-| `GET` | `/api/v1/admin/personas` | 数字分身列表 |
-| `POST` | `/api/v1/admin/personas` | 创建数字分身 |
-| `DELETE` | `/api/v1/admin/personas/{id}` | 删除数字分身 |
-| `POST` | `/api/v1/admin/personas/{id}/interview/start` | 启动访谈萃取 |
-| `POST` | `/api/v1/admin/personas/{id}/interview/continue` | 继续访谈 |
-| `POST` | `/api/v1/admin/personas/{id}/interview/finalize` | 完成访谈萃取 |
-| `POST` | `/api/v1/admin/personas/{id}/chat` | 向分身提问 |
-| `GET` | `/api/v1/admin/approvals` | 列出待审批请求 |
-| `POST` | `/api/v1/admin/approvals/{id}/approve` | 批准审批 |
-| `POST` | `/api/v1/admin/approvals/{id}/reject` | 拒绝审批 |
+| `GET` | `/health` | 轻量健康页或 JSON |
+| `GET` | `/ready` | 依赖就绪检查 |
+| `POST` | `/api/v1/auth/login` | 登录并获取访问令牌 |
+| `GET` | `/api/v1/auth/me` | 当前用户身份 |
+| `POST` | `/api/v1/messages/` | 接收消息并返回运行 ID |
+| `GET` | `/api/v1/messages/{message_id}` | 查询消息运行状态 |
+| `GET` | `/api/v1/sessions/` | 会话列表 |
+| `GET` | `/api/v1/skills/` | 已注册技能 |
+| `GET` | `/api/v1/scenic/snapshot` | 景区当前态势快照 |
+| `POST` | `/api/v1/scenic/commands` | 提交受保护的景区命令 |
+| `GET` | `/api/v1/scenic/stream` | 景区态势 SSE |
+| `GET` | `/api/v1/admin/health` | 管理员依赖健康状态 |
+| `GET` | `/api/v1/admin/dashboard` | 管理后台统计 |
+| `GET` | `/api/v1/admin/events` | 事件卷宗列表 |
+| `GET` | `/api/v1/admin/tasks` | 任务列表 |
+| `GET` | `/api/v1/admin/approvals` | 待审批请求 |
+| `GET` | `/api/v1/admin/diagnostics` | 运维诊断 |
+| `GET` | `/api/v1/admin/knowledge` | 知识文档管理 |
+| `GET` | `/api/v1/admin/sops` | SOP 生命周期管理 |
 
-### v2
-
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| `POST` | `/api/v2/dispatch` | 直接派发消息 |
-| `GET` | `/api/v2/sessions/{id}/context` | 获取会话上下文 |
-| `POST` | `/api/v2/sessions/{id}/handoff` | 跨 Agent 交接 |
+`/api/v2` 当前只保留路由占位，没有稳定公开端点；正式客户端使用 `/api/v1` 和受保护的页面入口。
 
 ---
 
@@ -411,9 +393,9 @@ memory_palace_circuit_breaker_failures_total{name}
 
 健康检查：
 ```
-GET /health/live    → Kubernetes liveness probe
-GET /health/ready   → Kubernetes readiness probe
-GET /health/deep    → 深度检查（数据库 + LLM 连通性）
+GET /health          → 进程健康页或 JSON
+GET /ready           → 依赖就绪检查
+GET /api/v1/admin/health → 管理员依赖、队列和 pgvector 健康状态
 ```
 
 ---
@@ -422,13 +404,15 @@ GET /health/deep    → 深度检查（数据库 + LLM 连通性）
 
 ```bash
 # 运行全部测试
-pytest tests/ -v
+uv run --no-project --with-requirements requirements.txt pytest -q
 
-# 只跑 P0 全链路
-pytest tests/integration/test_p0_full_chain.py -v
+# 运行景区 Agent contract eval
+uv run --no-project --with-requirements requirements-eval.txt `
+  python evals/scenic_agent/run_deepeval.py --mode contract `
+  --report artifacts/scenic-agent-eval/contract-report-local.json
 
 # 只跑单元测试
-pytest tests/unit/ -v
+uv run --no-project --with-requirements requirements.txt pytest -q tests/unit
 ```
 
 ---
