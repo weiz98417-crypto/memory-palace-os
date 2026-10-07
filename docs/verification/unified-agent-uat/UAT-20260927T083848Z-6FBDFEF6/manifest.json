@@ -1,0 +1,360 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T083848Z-6FBDFEF6",
+  "status": "COMPLETED",
+  "created_at": "2026-09-27T08:38:48Z",
+  "completed_at": "2026-09-27T08:50:24Z",
+  "architecture": {
+    "business_data": "PostgreSQL",
+    "queue": "Redis Streams",
+    "vector_store": "PostgreSQL pgvector",
+    "generative_model": "deepseek-flash"
+  },
+  "channel": {
+    "mode": "WECOM_SIMULATOR_ONLY",
+    "entrypoint": "/simulator/wecom/",
+    "real_wecom_enabled": false
+  },
+  "source": {
+    "status": "CAPTURED",
+    "commit": "611609513c5bf2ebd0e8f9fa6cb1fd49789f2b44",
+    "dirty": true,
+    "changed_paths": [
+      "deploy/docker-compose.yml",
+      "docs/architecture.md",
+      "frontend/scripts/generate-openapi-types.mjs",
+      "scripts/import_knowledge_batch.py",
+      "scripts/unified_agent_uat/cli.py",
+      "scripts/unified_agent_uat/journey.py",
+      "scripts/unified_agent_uat/validation.py",
+      "src/memory_palace/api/v1/endpoints/admin.py",
+      "src/memory_palace/config/feature_registry.yaml",
+      "src/memory_palace/core/event_experience_candidates.py",
+      "src/memory_palace/core/orchestrator.py",
+      "src/memory_palace/operations/uat_bootstrap.py",
+      "static/assistant/styles.css",
+      "static/simulator/wecom/styles.css",
+      "tests/unit/test_experience_assets.py",
+      "tests/unit/test_runtime_hardening.py",
+      "tests/unit/test_unified_agent_uat_evidence.py",
+      "deploy/docker-compose.uat.yml",
+      "docs/architecture/diagrams/01-system-overview.architecture.html",
+      "docs/architecture/diagrams/01-system-overview.architecture.json",
+      "docs/architecture/diagrams/01-system-overview.architecture.visual-check.1440x900.dark.png",
+      "docs/architecture/diagrams/01-system-overview.architecture.visual-check.1440x900.light.png",
+      "docs/architecture/diagrams/01-system-overview.architecture.visual-check.2048x1320.dark.png",
+      "docs/architecture/diagrams/01-system-overview.architecture.visual-check.2048x1320.light.png",
+      "docs/architecture/diagrams/01-system-overview.architecture.visual-check.html",
+      "docs/architecture/diagrams/01-system-overview.architecture.visual-check.json",
+      "docs/architecture/diagrams/02-message-ingress.sequence.html",
+      "docs/architecture/diagrams/02-message-ingress.sequence.json",
+      "docs/architecture/diagrams/02-message-ingress.sequence.visual-check.1440x900.dark.png",
+      "docs/architecture/diagrams/02-message-ingress.sequence.visual-check.1440x900.light.png",
+      "docs/architecture/diagrams/02-message-ingress.sequence.visual-check.2048x1320.dark.png",
+      "docs/architecture/diagrams/02-message-ingress.sequence.visual-check.2048x1320.light.png",
+      "docs/architecture/diagrams/02-message-ingress.sequence.visual-check.html",
+      "docs/architecture/diagrams/02-message-ingress.sequence.visual-check.json",
+      "docs/architecture/diagrams/03-agent-trunk.workflow.html",
+      "docs/architecture/diagrams/03-agent-trunk.workflow.json",
+      "docs/architecture/diagrams/03-agent-trunk.workflow.visual-check.1440x900.dark.png",
+      "docs/architecture/diagrams/03-agent-trunk.workflow.visual-check.1440x900.light.png",
+      "docs/architecture/diagrams/03-agent-trunk.workflow.visual-check.2048x1320.dark.png",
+      "docs/architecture/diagrams/03-agent-trunk.workflow.visual-check.2048x1320.light.png",
+      "docs/architecture/diagrams/03-agent-trunk.workflow.visual-check.html",
+      "docs/architecture/diagrams/03-agent-trunk.workflow.visual-check.json",
+      "docs/architecture/diagrams/04-knowledge-rag.dataflow.html",
+      "docs/architecture/diagrams/04-knowledge-rag.dataflow.json",
+      "docs/architecture/diagrams/04-knowledge-rag.dataflow.visual-check.1440x900.dark.png",
+      "docs/architecture/diagrams/04-knowledge-rag.dataflow.visual-check.1440x900.light.png",
+      "docs/architecture/diagrams/04-knowledge-rag.dataflow.visual-check.2048x1320.dark.png",
+      "docs/architecture/diagrams/04-knowledge-rag.dataflow.visual-check.2048x1320.light.png",
+      "docs/architecture/diagrams/04-knowledge-rag.dataflow.visual-check.html",
+      "docs/architecture/diagrams/04-knowledge-rag.dataflow.visual-check.json",
+      "docs/architecture/diagrams/05-advice-state.architecture.html",
+      "docs/architecture/diagrams/05-advice-state.architecture.json",
+      "docs/architecture/diagrams/05-advice-state.architecture.visual-check.1440x900.dark.png",
+      "docs/architecture/diagrams/05-advice-state.architecture.visual-check.1440x900.light.png",
+      "docs/architecture/diagrams/05-advice-state.architecture.visual-check.2048x1320.dark.png",
+      "docs/architecture/diagrams/05-advice-state.architecture.visual-check.2048x1320.light.png",
+      "docs/architecture/diagrams/05-advice-state.architecture.visual-check.html",
+      "docs/architecture/diagrams/05-advice-state.architecture.visual-check.json",
+      "docs/architecture/diagrams/06-frontend-api.architecture.html",
+      "docs/architecture/diagrams/06-frontend-api.architecture.json",
+      "docs/architecture/diagrams/06-frontend-api.architecture.visual-check.1440x900.dark.png",
+      "docs/architecture/diagrams/06-frontend-api.architecture.visual-check.1440x900.light.png",
+      "docs/architecture/diagrams/06-frontend-api.architecture.visual-check.2048x1320.dark.png",
+      "docs/architecture/diagrams/06-frontend-api.architecture.visual-check.2048x1320.light.png",
+      "docs/architecture/diagrams/06-frontend-api.architecture.visual-check.html",
+      "docs/architecture/diagrams/06-frontend-api.architecture.visual-check.json",
+      "docs/architecture/diagrams/07-business-closure.workflow.html",
+      "docs/architecture/diagrams/07-business-closure.workflow.json",
+      "docs/architecture/diagrams/07-business-closure.workflow.visual-check.1440x900.dark.png",
+      "docs/architecture/diagrams/07-business-closure.workflow.visual-check.1440x900.light.png",
+      "docs/architecture/diagrams/07-business-closure.workflow.visual-check.2048x1320.dark.png",
+      "docs/architecture/diagrams/07-business-closure.workflow.visual-check.2048x1320.light.png",
+      "docs/architecture/diagrams/07-business-closure.workflow.visual-check.html",
+      "docs/architecture/diagrams/07-business-closure.workflow.visual-check.json",
+      "docs/architecture/diagrams/08-deployment.architecture.html",
+      "docs/architecture/diagrams/08-deployment.architecture.json",
+      "docs/architecture/diagrams/08-deployment.architecture.visual-check.1440x900.dark.png",
+      "docs/architecture/diagrams/08-deployment.architecture.visual-check.1440x900.light.png",
+      "docs/architecture/diagrams/08-deployment.architecture.visual-check.2048x1320.dark.png",
+      "docs/architecture/diagrams/08-deployment.architecture.visual-check.2048x1320.light.png",
+      "docs/architecture/diagrams/08-deployment.architecture.visual-check.html",
+      "docs/architecture/diagrams/08-deployment.architecture.visual-check.json",
+      "docs/architecture/diagrams/09-platform-services.architecture.html",
+      "docs/architecture/diagrams/09-platform-services.architecture.json",
+      "docs/architecture/diagrams/09-platform-services.architecture.visual-check.1440x900.dark.png",
+      "docs/architecture/diagrams/09-platform-services.architecture.visual-check.1440x900.light.png",
+      "docs/architecture/diagrams/09-platform-services.architecture.visual-check.2048x1320.dark.png",
+      "docs/architecture/diagrams/09-platform-services.architecture.visual-check.2048x1320.light.png",
+      "docs/architecture/diagrams/09-platform-services.architecture.visual-check.html",
+      "docs/architecture/diagrams/09-platform-services.architecture.visual-check.json",
+      "docs/architecture/diagrams/10-experience-governance.workflow.html",
+      "docs/architecture/diagrams/10-experience-governance.workflow.json",
+      "docs/architecture/diagrams/10-experience-governance.workflow.visual-check.1440x900.dark.png",
+      "docs/architecture/diagrams/10-experience-governance.workflow.visual-check.1440x900.light.png",
+      "docs/architecture/diagrams/10-experience-governance.workflow.visual-check.2048x1320.dark.png",
+      "docs/architecture/diagrams/10-experience-governance.workflow.visual-check.2048x1320.light.png",
+      "docs/architecture/diagrams/10-experience-governance.workflow.visual-check.html",
+      "docs/architecture/diagrams/10-experience-governance.workflow.visual-check.json",
+      "docs/architecture/diagrams/11-quality-observability.architecture.html",
+      "docs/architecture/diagrams/11-quality-observability.architecture.json",
+      "docs/architecture/diagrams/11-quality-observability.architecture.visual-check.1440x900.dark.png",
+      "docs/architecture/diagrams/11-quality-observability.architecture.visual-check.1440x900.light.png",
+      "docs/architecture/diagrams/11-quality-observability.architecture.visual-check.2048x1320.dark.png",
+      "docs/architecture/diagrams/11-quality-observability.architecture.visual-check.2048x1320.light.png",
+      "docs/architecture/diagrams/11-quality-observability.architecture.visual-check.html",
+      "docs/architecture/diagrams/11-quality-observability.architecture.visual-check.json",
+      "docs/architecture/diagrams/12-demo-boundary.workflow.html",
+      "docs/architecture/diagrams/12-demo-boundary.workflow.json",
+      "docs/architecture/diagrams/12-demo-boundary.workflow.visual-check.1440x900.dark.png",
+      "docs/architecture/diagrams/12-demo-boundary.workflow.visual-check.1440x900.light.png",
+      "docs/architecture/diagrams/12-demo-boundary.workflow.visual-check.2048x1320.dark.png",
+      "docs/architecture/diagrams/12-demo-boundary.workflow.visual-check.2048x1320.light.png",
+      "docs/architecture/diagrams/12-demo-boundary.workflow.visual-check.html",
+      "docs/architecture/diagrams/12-demo-boundary.workflow.visual-check.json",
+      "docs/architecture/diagrams/13-api-domains.architecture.json",
+      "docs/architecture/diagrams/README.md",
+      "scripts/unified_agent_uat/fault_model.py"
+    ],
+    "tracked_diff_sha256": "56cc5c0b90a5020b1cee7aa6a93a91ca3b37155f4a773f80fe9ccdfbf1c44ec1",
+    "untracked_source_sha256": "a0db5103a1d872a4bbe3e48c1003eb6f91212e75f2157966f5fe87b1add904b7"
+  },
+  "baseline": {
+    "path": "artifacts/uat-baseline.json",
+    "sha256": "daedca177eb9682f8dcceef3a32ecf6fb4b5769143c88f3c3389a7e0c0481ff0"
+  },
+  "steps": [
+    {
+      "id": "E2E-00",
+      "status": "PASSED",
+      "result": "steps/E2E-00.json",
+      "failure": null,
+      "sha256": "ce8207f1fce06b0412ae6dc806018bc80a60666b84d3837c60260cf4eb793610"
+    },
+    {
+      "id": "E2E-01",
+      "status": "PASSED",
+      "result": "steps/E2E-01.json",
+      "failure": null,
+      "sha256": "7a86b5ff1f86bc8818e39bc9985248718897984b1a39700e529ed53e70453246"
+    },
+    {
+      "id": "E2E-02",
+      "status": "PASSED",
+      "result": "steps/E2E-02.json",
+      "failure": null,
+      "sha256": "4133ec6bec0fcaf425ef8750d134f1bcf110cce993ed132feb6fca95fbf3502b"
+    },
+    {
+      "id": "E2E-03",
+      "status": "PASSED",
+      "result": "steps/E2E-03.json",
+      "failure": null,
+      "sha256": "f3552502dadb83ebc59999855b7c136e2ef239f812ce9372f702b1717657f742"
+    },
+    {
+      "id": "E2E-04",
+      "status": "PASSED",
+      "result": "steps/E2E-04.json",
+      "failure": null,
+      "sha256": "21a6c8573c03d2f3483581366def9b4ca692b6feeec62c3c7a89439b2f71f83b"
+    },
+    {
+      "id": "E2E-05",
+      "status": "PASSED",
+      "result": "steps/E2E-05.json",
+      "failure": null,
+      "sha256": "75172b5a513f0aa27f68c6753ee9c5eeb6dc3d8bb903aa1e619f12e9bba94804"
+    },
+    {
+      "id": "E2E-06",
+      "status": "PASSED",
+      "result": "steps/E2E-06.json",
+      "failure": null,
+      "sha256": "42221c143ce1f209b202249f07ebee7506c42ff2350848d0784b84931910d5f0"
+    },
+    {
+      "id": "E2E-07",
+      "status": "PASSED",
+      "result": "steps/E2E-07.json",
+      "failure": null,
+      "sha256": "f9c1013af685fd2dccc681fca59f9c63f66e261bde01ff8c53b775ecdb57e299"
+    },
+    {
+      "id": "E2E-08",
+      "status": "PASSED",
+      "result": "steps/E2E-08.json",
+      "failure": null,
+      "sha256": "5c6c7d1217715ddba8f434bbbf241844596d79d740488308abc7f007702a51a6"
+    },
+    {
+      "id": "E2E-09",
+      "status": "PASSED",
+      "result": "steps/E2E-09.json",
+      "failure": null,
+      "sha256": "264d0ea82a26a1c80ea82d64e0ca2540e244875cedbefec2b43d36d66ed22a75"
+    },
+    {
+      "id": "E2E-10",
+      "status": "PASSED",
+      "result": "steps/E2E-10.json",
+      "failure": null,
+      "sha256": "1002e0c236b61316cc274b32c3eea96a33f4f946b526e04b8fc17bf400827986"
+    },
+    {
+      "id": "E2E-11",
+      "status": "PASSED",
+      "result": "steps/E2E-11.json",
+      "failure": null,
+      "sha256": "ca835028d05db43ab00e07cb5bfa0d587dc6d5fe537681f511701c486dfa312e"
+    },
+    {
+      "id": "E2E-12",
+      "status": "PASSED",
+      "result": "steps/E2E-12.json",
+      "failure": null,
+      "sha256": "f0713681ad2e68d6ce65303df31239b28bb3faf633d1678929a0f792dc87e0c6"
+    },
+    {
+      "id": "E2E-13",
+      "status": "PASSED",
+      "result": "steps/E2E-13.json",
+      "failure": null,
+      "sha256": "fdb2aa9652ee52403b8a35f1165768a580fea9ca71b5ae259182d9a008ef8b8b"
+    },
+    {
+      "id": "E2E-14",
+      "status": "PASSED",
+      "result": "steps/E2E-14.json",
+      "failure": null,
+      "sha256": "6d557b963373a38b473c874745822bc530ba90785039fd3e2fe033f2ff0bebe6"
+    },
+    {
+      "id": "E2E-15",
+      "status": "PASSED",
+      "result": "steps/E2E-15.json",
+      "failure": null,
+      "sha256": "50fdd65e1f530dd3517c717ec5f790d0c99609e43e1ff2c1da3fd5daa3bff3f6"
+    },
+    {
+      "id": "E2E-16",
+      "status": "PASSED",
+      "result": "steps/E2E-16.json",
+      "failure": null,
+      "sha256": "9d62e1874f8d13c86f477a7d9569198e85977fc3ba7dbe8c4dca62e340e53ced"
+    },
+    {
+      "id": "UAT-F07",
+      "status": "PASSED",
+      "result": "steps/UAT-F07.json",
+      "failure": null,
+      "sha256": "03dfdb27c9cce5f28809aa9f94b9c93d145005971e7757f85b512eb2f50167b6"
+    },
+    {
+      "id": "UAT-F08",
+      "status": "PASSED",
+      "result": "steps/UAT-F08.json",
+      "failure": null,
+      "sha256": "b6eab15b12a0931b0c15c5ed438297c0b61eb5ca1aa42dada5fc87018eef38e4"
+    },
+    {
+      "id": "UAT-F01",
+      "status": "PASSED",
+      "result": "steps/UAT-F01.json",
+      "failure": null,
+      "sha256": "ebe25de0d735e04bf84922a17a22d23caf5120e8d5e8a1299b5d70dbdddb1521"
+    },
+    {
+      "id": "UAT-F05",
+      "status": "PASSED",
+      "result": "steps/UAT-F05.json",
+      "failure": null,
+      "sha256": "0450e1206cf9e83520956f0d54587cb9c5b7c47b19118ca9c8f01d05d56cc27e"
+    },
+    {
+      "id": "UAT-F09",
+      "status": "PASSED",
+      "result": "steps/UAT-F09.json",
+      "failure": null,
+      "sha256": "aac86c856b76f676c192ce7423b36bbf0a5c6ac328d8d64249e3b779ed4c2abc"
+    },
+    {
+      "id": "UAT-F10",
+      "status": "PASSED",
+      "result": "steps/UAT-F10.json",
+      "failure": null,
+      "sha256": "b341596172ccdb2b87db40a7b86db5dedbf0e80f60d0f3bcc3a3ad6733409110"
+    },
+    {
+      "id": "UAT-F11",
+      "status": "PASSED",
+      "result": "steps/UAT-F11.json",
+      "failure": null,
+      "sha256": "b74f33081f8dfb8df72bbac2fe68c97242cc90155e7f87b9e2bff1465218ffca"
+    },
+    {
+      "id": "UAT-F12",
+      "status": "PASSED",
+      "result": "steps/UAT-F12.json",
+      "failure": null,
+      "sha256": "3d488325d0d7e8dddc1504cb414677b645b7a91bf0fa09f23dba2d86ef128839"
+    },
+    {
+      "id": "UAT-F13",
+      "status": "PASSED",
+      "result": "steps/UAT-F13.json",
+      "failure": null,
+      "sha256": "a9302be5f0a7df39705559747d819677eb529a5826c32bc0b8f253f1e4b9ac3d"
+    },
+    {
+      "id": "UAT-F04",
+      "status": "PASSED",
+      "result": "steps/UAT-F04.json",
+      "failure": null,
+      "sha256": "a59e6aedb8084fe293a1d99ea9fd47a0ac692681a40b1bca911f7590910210c8"
+    },
+    {
+      "id": "UAT-F06",
+      "status": "PASSED",
+      "result": "steps/UAT-F06.json",
+      "failure": null,
+      "sha256": "fd3654ff9aaaf607bc6475a8a4cd59cefdc3b9704a8c8de36f982eaa4cb06689"
+    },
+    {
+      "id": "UAT-F02",
+      "status": "PASSED",
+      "result": "steps/UAT-F02.json",
+      "failure": null,
+      "sha256": "f22eddc1c425bfc7bd2887d1c88260594fead2985c3758a3b15bc1b8d4ee6329"
+    },
+    {
+      "id": "UAT-F03",
+      "status": "PASSED",
+      "result": "steps/UAT-F03.json",
+      "failure": null,
+      "sha256": "27c906548a5894adc641bc936caf0efa10b61f0b1eed50ea5aab0d5157f5110b"
+    }
+  ]
+}

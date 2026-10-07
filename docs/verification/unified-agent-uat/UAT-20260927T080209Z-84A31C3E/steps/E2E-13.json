@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T080209Z-84A31C3E",
+  "step_id": "E2E-13",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:04:00Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "event_id": "79af7e2b-0353-4a0d-ae2d-d54fd7c6c1f0",
+    "expert_id": "4ed9e9d4a47a4e0bb0397f27f70a0332",
+    "interview_id": "41bacb95c0404018b7f6d1ec24f77e0f",
+    "experience_card_id": "bb7d17019af3424981ee677327341c8e",
+    "trace_id": "3c5ced5bcb8f4956ba779b6ac957537e"
+  },
+  "references": [
+    "POST /api/v1/admin/experience-interviews",
+    "POST /api/v1/assistant/experience/interviews/41bacb95c0404018b7f6d1ec24f77e0f/accept",
+    "POST /api/v1/assistant/experience/interviews/41bacb95c0404018b7f6d1ec24f77e0f/answers",
+    "POST /api/v1/assistant/experience/interviews/41bacb95c0404018b7f6d1ec24f77e0f/complete",
+    "POST /api/v1/assistant/experience/cards/bb7d17019af3424981ee677327341c8e/confirm"
+  ],
+  "assertions": [
+    {
+      "name": "已授权专家以独立身份接受本事件访谈",
+      "passed": true,
+      "actual": {
+        "expert_id": "4ed9e9d4a47a4e0bb0397f27f70a0332",
+        "interview_id": "41bacb95c0404018b7f6d1ec24f77e0f",
+        "source_event_id": "79af7e2b-0353-4a0d-ae2d-d54fd7c6c1f0"
+      }
+    },
+    {
+      "name": "四轮回答去重且暂停刷新后可恢复",
+      "passed": true,
+      "actual": {
+        "turn_numbers": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "replay": true,
+        "restored_progress": {
+          "answered": 1,
+          "total": 4,
+          "percent": 25
+        }
+      }
+    },
+    {
+      "name": "PersonaExtract 真实调用生成并由专家确认经验卡",
+      "passed": true,
+      "actual": {
+        "card_id": "bb7d17019af3424981ee677327341c8e",
+        "status": "EXPERT_CONFIRMED",
+        "model_calls": 1
+      }
+    }
+  ],
+  "model_calls": [
+    {
+      "agent": "PersonaExtract",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "b1a395c1-0652-406c-850d-1cafd9540c69",
+      "trace_id": "3c5ced5bcb8f4956ba779b6ac957537e",
+      "status": "SUCCEEDED"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "interview",
+      "path": "artifacts/E2E-13/interview.json",
+      "sha256": "fa093c8740dfc3da2864c6b3d32311bd735b45e1895e4ccf2b0a2d69de8f6ec2"
+    },
+    {
+      "name": "turns",
+      "path": "artifacts/E2E-13/turns.json",
+      "sha256": "15f843ed37d7c71722a0b856e2ab5b8db83d60e35d378347a968d60760ffb2b4"
+    },
+    {
+      "name": "replay",
+      "path": "artifacts/E2E-13/replay.json",
+      "sha256": "ac85d495d3413e35537e6c30405483ffdbb883ef59fc2c7ea59e02a961b6517a"
+    },
+    {
+      "name": "paused",
+      "path": "artifacts/E2E-13/paused.json",
+      "sha256": "667aae4d659024a040119d3813c5cd6a0db3fe0f68afd3d7e6748e29342b2caf"
+    },
+    {
+      "name": "restored",
+      "path": "artifacts/E2E-13/restored.json",
+      "sha256": "b87dd93450183a42df6f0fbdb28fa49579955904c0fd34813b087c7512942131"
+    },
+    {
+      "name": "resumed",
+      "path": "artifacts/E2E-13/resumed.json",
+      "sha256": "bb47b5f615b623d4fcf0519aa6cb9e01055e2992f5505fe13aafa313194f1d3c"
+    },
+    {
+      "name": "card-confirmed",
+      "path": "artifacts/E2E-13/card-confirmed.json",
+      "sha256": "14581d6e131554d897d5dbb5b8b43ee95fc969968d0db7c0f761edb04351fac5"
+    }
+  ]
+}

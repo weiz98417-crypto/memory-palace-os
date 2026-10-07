@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T074541Z-2FAD6B30",
+  "step_id": "E2E-09",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T07:46:51Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "event_id": "c5057e90-573e-41a9-a147-3fd51d077e09",
+    "approval_id": "1f4642d4-9956-4062-aade-265c28097080",
+    "push_id": "b111531d-fa0"
+  },
+  "references": [
+    "POST /api/v1/admin/approvals/1f4642d4-9956-4062-aade-265c28097080/approve",
+    "GET /api/v1/admin/approvals/1f4642d4-9956-4062-aade-265c28097080",
+    "GET /api/v1/channels/simulator/sessions/4262efdb-dc5f-5782-9ebf-e0f8a4ee5816/outbox"
+  ],
+  "assertions": [
+    {
+      "name": "值班经理批准后受控动作执行成功",
+      "passed": true,
+      "actual": {
+        "status": "APPROVED",
+        "execution_status": "SUCCEEDED"
+      }
+    },
+    {
+      "name": "本次审批只生成一条已送达通知",
+      "passed": true,
+      "actual": {
+        "delivered_count": 1,
+        "push_ids": [
+          "b111531d-fa0"
+        ]
+      }
+    },
+    {
+      "name": "被拒绝的审批仍保持未执行",
+      "passed": true,
+      "actual": {
+        "outbox_count": 2
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "approved",
+      "path": "artifacts/E2E-09/approved.json",
+      "sha256": "b74b91ffc2c34f1141dafcd6a0262914f0e47be079fce4dce3591023f4350d46"
+    },
+    {
+      "name": "approval",
+      "path": "artifacts/E2E-09/approval.json",
+      "sha256": "36a742fdfad1c3d4a319b6801dbc494f9cb6f40ab7cab37db1f2abf20574569d"
+    },
+    {
+      "name": "outbox",
+      "path": "artifacts/E2E-09/outbox.json",
+      "sha256": "070098f03488a670624b9e978b50e0baaf62620c88a78f45d24d3ca02bf23e39"
+    }
+  ]
+}

@@ -2,7 +2,9 @@ from src.memory_palace.operations.sourced_showcase import (
     SCENARIOS,
     SOURCES,
     find_existing_interview,
+    knowledge_content,
     neutral_answers,
+    source_notes,
     watcher_policy_metadata,
 )
 
@@ -15,17 +17,21 @@ def test_sourced_showcase_has_three_x_volume_and_provenance():
         assert scenario["source"] in SOURCES
         answers = neutral_answers(scenario)
         assert len(answers) == 4
-        assert all(SOURCES[scenario["source"]]["title"] in answer for answer in answers)
-        assert "本条目依据公开资料整理" in answers[3]
-        assert SOURCES[scenario["source"]]["url"] in answers[3]
+        assert all(SOURCES[scenario["source"]]["title"] not in answer for answer in answers)
+        assert "非现场" not in "".join(answers)
+        assert "实际处置以现场制度为准" in answers[3]
+        assert SOURCES[scenario["source"]]["url"] in source_notes(scenario["source"])
+        assert "公开资料中性改编" not in knowledge_content(scenario)
+        assert "资料整理示例" not in knowledge_content(scenario)
+        assert SOURCES[scenario["source"]]["url"] in knowledge_content(scenario)
 
 
 def test_sourced_watcher_policy_copy_is_production_safe():
     scenario = next(item for item in SCENARIOS if item["source"] == "safe-city")
     name, description = watcher_policy_metadata(scenario)
 
-    assert name == f"基于国家安全发展示范城市建设指导手册的安全巡检-{scenario['title']}"
-    assert description == "依据国家安全发展示范城市建设指导手册开展的安全巡检。"
+    assert name == f"安全巡检-{scenario['title']}"
+    assert scenario["signals"] in description
     assert "公开资料改编" not in name + description
     assert "演示" not in name + description
 

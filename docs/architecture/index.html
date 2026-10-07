@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Memory Palace OS · 架构图集</title>
+  <style>
+    :root { color-scheme: dark; font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; background: #0d1422; color: #e9f0fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { max-width: 1230px; margin: auto; padding: 64px 28px 90px; }
+    .eyebrow { color: #65c9d8; font-size: 12px; font-weight: 700; letter-spacing: .16em; }
+    h1 { margin: 12px 0 12px; font-size: clamp(34px, 5vw, 58px); letter-spacing: -.03em; }
+    .intro { max-width: 780px; margin: 0; color: #a9bbcf; font-size: 17px; line-height: 1.8; }
+    .note { display: flex; flex-wrap: wrap; gap: 10px; margin: 28px 0 40px; }
+    .note span { border: 1px solid #29465c; border-radius: 999px; padding: 8px 13px; color: #b6dbe1; font-size: 13px; }
+    h2 { margin: 42px 0 18px; color: #f5f8fe; font-size: 22px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 15px; }
+    a.card { display: block; min-height: 166px; padding: 20px; border: 1px solid #253b51; border-radius: 16px; background: #142236; color: inherit; text-decoration: none; transition: transform .15s ease, border-color .15s ease, background .15s ease; }
+    a.card:hover, a.card:focus-visible { transform: translateY(-3px); border-color: #60c5d4; background: #1b3048; outline: none; }
+    .topline { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #65c9d8; font-size: 12px; font-weight: 700; letter-spacing: .09em; }
+    .arrow { font-size: 21px; line-height: 1; }
+    .card h3 { margin: 27px 0 7px; font-size: 19px; }
+    .card p { margin: 0; color: #a9bbcf; line-height: 1.6; font-size: 14px; }
+    footer { margin-top: 46px; padding-top: 22px; border-top: 1px solid #253b51; color: #8ca3bb; font-size: 13px; line-height: 1.7; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="eyebrow">MEMORY PALACE OS / ARCHITECTURE ATLAS</div>
+      <h1>从全景到运行细节</h1>
+      <p class="intro">按当前源码重绘的 17 张离线可交互图。先看共享入口和事实源，再沿消息、事件、知识、执行治理与部署边界逐层阅读。</p>
+      <div class="note"><span>17 张独立 HTML</span><span>同名 JSON 可编辑</span><span>完整离线图集</span></div>
+    </header>
+    <section>
+      <h2>起点与核心链路</h2>
+      <div class="grid">
+        <a class="card" href="diagrams/01-system-overview.architecture.html"><div class="topline">01 / 全景 <span class="arrow">↗</span></div><h3>系统全景</h3><p>共享 FastAPI、PostgreSQL、Redis，连接消息与处置建议两条异步路径。</p></a>
+        <a class="card" href="diagrams/02-advice-runtime.architecture.html"><div class="topline">02 / 建议 <span class="arrow">↗</span></div><h3>建议运行</h3><p>scenic_commands、Redis 默认执行、Hatchet 选用、租约、恢复与 SSE。</p></a>
+        <a class="card" href="diagrams/03-incident-lifecycle.workflow.html"><div class="topline">03 / 状态 <span class="arrow">↗</span></div><h3>事件七状态</h3><p>从 DETECTED 到 CLOSED，区分处置完成和最终关闭。</p></a>
+        <a class="card" href="diagrams/04-message-ingress.sequence.html"><div class="topline">04 / 时序 <span class="arrow">↗</span></div><h3>消息接报</h3><p>认证、幂等、落库、入队与 202 响应。</p></a>
+        <a class="card" href="diagrams/05-agent-trunk.workflow.html"><div class="topline">05 / Agent <span class="arrow">↗</span></div><h3>Agent 主干</h3><p>ContextTrigger、Router、MemoryOps、Commander 的模式分支和降级。</p></a>
+        <a class="card" href="diagrams/06-knowledge-paths.architecture.html"><div class="topline">06 / 知识 <span class="arrow">↗</span></div><h3>知识双路径</h3><p>发布建索引、同模型查询向量化、实时来源核验和快照。</p></a>
+      </div>
+    </section>
+    <section>
+      <h2>产品与运行边界</h2>
+      <div class="grid">
+        <a class="card" href="diagrams/07-deployment.architecture.html"><div class="topline">07 / 部署 <span class="arrow">↗</span></div><h3>Compose 部署</h3><p>默认服务、内部网络、可选 profiles 和 Hatchet 显式切换。</p></a>
+        <a class="card" href="diagrams/08-experience-governance.workflow.html"><div class="topline">08 / 经验 <span class="arrow">↗</span></div><h3>经验治理</h3><p>萃取、确权、审核、驳回、发布、废弃与授权使用。</p></a>
+        <a class="card" href="diagrams/09-frontend-api.architecture.html"><div class="topline">09 / 产品 <span class="arrow">↗</span></div><h3>前端与 API</h3><p>四个 Vue 应用、共享入口、Console 工作区与 API 业务域。</p></a>
+        <a class="card" href="diagrams/10-resolution-gate.architecture.html"><div class="topline">10 / 门禁 <span class="arrow">↗</span></div><h3>高风险关闭</h3><p>五项处置完成条件，以及 RESOLVED 后单独的关闭动作。</p></a>
+        <a class="card" href="diagrams/11-recovery-watcher.architecture.html"><div class="topline">11 / 恢复 <span class="arrow">↗</span></div><h3>恢复与巡检</h3><p>启动恢复、Watcher 调度、运行记录、发现与健康边界。</p></a>
+        <a class="card" href="diagrams/12-demo-boundary.architecture.html"><div class="topline">12 / 演示 <span class="arrow">↗</span></div><h3>Demo 模式边界</h3><p>正式与演示是互斥进程模式，模拟证据不等于外部送达。</p></a>
+      </div>
+    </section>
+    <section>
+      <h2>执行与治理细节</h2>
+      <div class="grid">
+        <a class="card" href="diagrams/13-scenic-command.architecture.html"><div class="topline">13 / 景区 <span class="arrow">↗</span></div><h3>景区命令</h3><p>实际执行者、命令账本、领域事实与实时态势视图。</p></a>
+        <a class="card" href="diagrams/14-permission-task.architecture.html"><div class="topline">14 / 权限 <span class="arrow">↗</span></div><h3>审批与任务</h3><p>人工决策、受控动作、TaskGraph 依赖和执行日志。</p></a>
+        <a class="card" href="diagrams/15-message-worker.workflow.html"><div class="topline">15 / 消息 <span class="arrow">↗</span></div><h3>Worker 失败处理</h3><p>结果与交付、普通重试、直接死信和策略失败。</p></a>
+        <a class="card" href="diagrams/16-observability.architecture.html"><div class="topline">16 / 观测 <span class="arrow">↗</span></div><h3>运行观测</h3><p>持久化调用事实、健康指标与可选 OTel/Jaeger。</p></a>
+        <a class="card" href="diagrams/17-message-result.sequence.html"><div class="topline">17 / 时序 <span class="arrow">↗</span></div><h3>消息处理与轮询</h3><p>Worker 保存结果、交付、标记终态，客户端主动查询状态。</p></a>
+      </div>
+    </section>
+    <footer>所有图可直接离线打开。图形校验确认布局与 HTML 完整性；具体业务语义仍以各图同目录的 JSON 和项目源码为准。</footer>
+  </main>
+</body>
+</html>

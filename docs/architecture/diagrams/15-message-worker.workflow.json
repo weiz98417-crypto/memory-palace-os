@@ -1,0 +1,34 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {"title": "消息 Worker · 处理、交付、重试与死信", "locale": "zh-CN", "quality_profile": "showcase"},
+  "lanes": [
+    {"id": "normal", "label": "正常处理"},
+    {"id": "failure", "label": "可恢复失败"}
+  ],
+  "nodes": [
+    {"id": "stream", "lane": "normal", "col": 0, "type": "messagebus", "label": "messages Stream", "sublabel": "Redis 消费组", "width": 120},
+    {"id": "claim", "lane": "normal", "col": 1, "type": "backend", "label": "Worker 领取", "sublabel": "去重与运行认领"},
+    {"id": "dispatch", "lane": "normal", "col": 2, "type": "backend", "label": "Orchestrator", "sublabel": "Agent 路由与结果"},
+    {"id": "save", "lane": "normal", "col": 3, "type": "database", "label": "保存结果", "sublabel": "message_runs"},
+    {"id": "delivery", "lane": "normal", "col": 4, "type": "backend", "label": "渠道交付", "sublabel": "模拟回执 / 内部输出"},
+    {"id": "complete", "lane": "normal", "col": 5, "type": "database", "label": "COMPLETED", "sublabel": "标终态并 ACK"},
+    {"id": "retry", "lane": "failure", "col": 3, "type": "messagebus", "label": "重试入队", "sublabel": "未达 MAX_RETRIES"},
+    {"id": "dead", "lane": "failure", "col": 4, "type": "messagebus", "label": "死信", "sublabel": "等待人工重试"}
+  ],
+  "mainPath": ["stream", "claim", "dispatch", "save", "delivery", "complete"],
+  "edges": [
+    {"from": "stream", "to": "claim", "label": "消费", "role": "main"},
+    {"from": "claim", "to": "dispatch", "label": "可执行", "role": "main"},
+    {"from": "dispatch", "to": "save", "label": "先存结果", "role": "main"},
+    {"from": "save", "to": "delivery", "label": "再交付", "role": "main"},
+    {"from": "delivery", "to": "complete", "label": "成功", "role": "main"},
+    {"from": "dispatch", "to": "retry", "label": "普通失败"},
+    {"from": "retry", "to": "dead", "label": "Worker 再失败且达上限"},
+    {"from": "delivery", "to": "dead", "label": "禁止自动重试"}
+  ],
+  "cards": [
+    {"dot": "amber", "title": "三个不同失败结局", "items": ["普通失败在重试次数未达 MAX_RETRIES 时重新入队；达到上限后由 Worker 转入死信。", "不允许自动重试的交付失败直接死信；MessagePolicyFailure 直接标 FAILED 并 ACK，不进死信。"]},
+    {"dot": "cyan", "title": "恢复与交付边界", "items": ["已有可交付结果可只重试交付，避免重复调用 Agent；Redis pending 在重启恢复时可重新领取。", "真实企微投递被项目策略禁用；企微模拟器回执不能视为外部送达。"]}
+  ]
+}

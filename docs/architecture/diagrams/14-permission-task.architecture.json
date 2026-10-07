@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "权限审批、受控动作与任务依赖", "locale": "zh-CN", "quality_profile": "showcase", "viewBox": [1390, 630]},
+  "components": [
+    {"id": "command", "type": "backend", "label": "业务命令", "sublabel": "景区处置 / 工作流 API", "pos": [40, 254], "size": [250, 82]},
+    {"id": "permission", "type": "security", "label": "PermissionEngine", "sublabel": "分级、冷却与审批预检", "pos": [370, 111], "size": [250, 82]},
+    {"id": "approval", "type": "security", "label": "人工审批决策", "sublabel": "approval_requests 留痕", "pos": [700, 111], "size": [250, 82]},
+    {"id": "action", "type": "backend", "label": "受控动作执行", "sublabel": "执行结果另记成功 / 失败", "pos": [1030, 111], "size": [250, 82]},
+    {"id": "task_graph", "type": "backend", "label": "TaskGraph", "sublabel": "依赖检查 · 调度 · 恢复", "pos": [370, 404], "size": [250, 82]},
+    {"id": "tasks", "type": "database", "label": "tasks", "sublabel": "责任人 · 依赖 · 回执状态", "pos": [700, 404], "size": [250, 82]},
+    {"id": "activities", "type": "database", "label": "活动与调用日志", "sublabel": "事件 / 任务活动 · tool_invocation_logs", "pos": [1030, 404], "size": [250, 82]}
+  ],
+  "connections": [
+    {"from": "command", "to": "permission", "label": "动作预检"},
+    {"from": "permission", "to": "approval", "label": "Level 2 创建审批", "labelAt": [660, 207]},
+    {"from": "approval", "to": "action", "label": "批准触发引擎执行", "labelAt": [990, 207]},
+    {"from": "command", "to": "task_graph", "label": "任务创建与推进"},
+    {"from": "task_graph", "to": "tasks", "label": "依赖与状态事实"},
+    {"from": "action", "to": "activities", "label": "执行留痕", "labelAt": [1155, 207]},
+    {"from": "tasks", "to": "activities", "label": "任务回执"}
+  ],
+  "cards": [
+    {"dot": "rose", "title": "授权边界", "items": ["图中上路径是 Level 2：待审批单获准后尝试执行；Level 0 直接执行，Level 1 留痕后执行。", "审批通过与执行成功是两个事实；关闭门禁要求两者齐备，失败另记执行状态。"]},
+    {"dot": "cyan", "title": "任务事实", "items": ["TaskGraph 从 PostgreSQL 恢复任务与依赖，工作流 API 写入分配、开始、完成、失败、重试等活动。", "任务完成状态不能由建议结果代替，景区事件关闭另有证据与告警门禁。"]}
+  ]
+}

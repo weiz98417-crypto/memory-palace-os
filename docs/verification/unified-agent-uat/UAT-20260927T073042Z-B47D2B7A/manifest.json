@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T073042Z-B47D2B7A",
+  "status": "FAILED",
+  "created_at": "2026-09-27T07:30:42Z",
+  "completed_at": "2026-09-27T07:38:08Z",
+  "architecture": {
+    "business_data": "PostgreSQL",
+    "queue": "Redis Streams",
+    "vector_store": "PostgreSQL pgvector",
+    "generative_model": "deepseek-flash"
+  },
+  "channel": {
+    "mode": "WECOM_SIMULATOR_ONLY",
+    "entrypoint": "/simulator/wecom/",
+    "real_wecom_enabled": false
+  },
+  "source": {
+    "status": "CAPTURED",
+    "commit": "611609513c5bf2ebd0e8f9fa6cb1fd49789f2b44",
+    "dirty": true,
+    "changed_paths": [
+      "deploy/docker-compose.yml",
+      "frontend/scripts/generate-openapi-types.mjs",
+      "scripts/import_knowledge_batch.py",
+      "scripts/unified_agent_uat/cli.py",
+      "scripts/unified_agent_uat/journey.py",
+      "scripts/unified_agent_uat/validation.py",
+      "src/memory_palace/config/feature_registry.yaml",
+      "src/memory_palace/core/orchestrator.py",
+      "src/memory_palace/operations/uat_bootstrap.py",
+      "static/assistant/styles.css",
+      "static/simulator/wecom/styles.css",
+      "tests/unit/test_runtime_hardening.py",
+      "tests/unit/test_unified_agent_uat_evidence.py",
+      "deploy/docker-compose.uat.yml"
+    ],
+    "tracked_diff_sha256": "ea9e2ac9c0287def5164c7780e0788ec7aa9e58f5f7e3a16408b82e9c90472aa",
+    "untracked_source_sha256": "be5f791b06cb08a0a90b0a09e457080aecc63367a925c420b4d3799c73a5f040"
+  },
+  "baseline": {
+    "path": "artifacts/uat-baseline.json",
+    "sha256": "af761c4246bba07941cedf59fca33c470ad19d7867af799ef78d89019c8197d5"
+  },
+  "steps": [
+    {
+      "id": "E2E-00",
+      "status": "PASSED",
+      "result": "steps/E2E-00.json",
+      "failure": null,
+      "sha256": "c5e351e4b8b959a32484fd0fe3f7ef387e0defc811fd6e508630ae0732dd95d9"
+    },
+    {
+      "id": "E2E-01",
+      "status": "PASSED",
+      "result": "steps/E2E-01.json",
+      "failure": null,
+      "sha256": "4ec12084d6dcf1a74e4a6e5545f04a7327cb9d263234129b3cc9c21aaf0fd85f"
+    },
+    {
+      "id": "E2E-02",
+      "status": "PASSED",
+      "result": "steps/E2E-02.json",
+      "failure": null,
+      "sha256": "830313ce17dc78b92eb337c36632136d5f2ebecb5c170f22b171a88f977c2fc2"
+    },
+    {
+      "id": "UAT-F05",
+      "status": "PASSED",
+      "result": "steps/UAT-F05.json",
+      "failure": null,
+      "sha256": "43e4dde7e738da96559641174d28038712c97faf3c986236c42010b50c26a568"
+    },
+    {
+      "id": "E2E-03",
+      "status": "PASSED",
+      "result": "steps/E2E-03.json",
+      "failure": null,
+      "sha256": "2565b69ef3fd1050ea71907f1020ccef6b0c54fc47a909e55cf70f120636065b"
+    },
+    {
+      "id": "UAT-F11",
+      "status": "PASSED",
+      "result": "steps/UAT-F11.json",
+      "failure": null,
+      "sha256": "4fce8608870dbb2884fcf0def36d2eaec0c052d07d6c15fce5843360b06a9629"
+    },
+    {
+      "id": "UAT-F12",
+      "status": "PASSED",
+      "result": "steps/UAT-F12.json",
+      "failure": null,
+      "sha256": "a85e959d2ab92aebbf557f261b4a1736ab33bbdf1c679bcf648c8fa440947a71"
+    },
+    {
+      "id": "UAT-F13",
+      "status": "PASSED",
+      "result": "steps/UAT-F13.json",
+      "failure": null,
+      "sha256": "92b736a53ea819f5af17755dfef63896730282144e63f9f9f055f27a8db2d67b"
+    },
+    {
+      "id": "E2E-04",
+      "status": "PASSED",
+      "result": "steps/E2E-04.json",
+      "failure": null,
+      "sha256": "7d29f36d6d00a0e3b3184d1e1d2080a9798a6a9507eb24a4c317d1cfe946ce97"
+    },
+    {
+      "id": "E2E-05",
+      "status": "PASSED",
+      "result": "steps/E2E-05.json",
+      "failure": null,
+      "sha256": "2f687b507e63031463146e1df7c0ae3fef408b7ef91bbe1693a2d1fc26538c6d"
+    },
+    {
+      "id": "E2E-06",
+      "status": "PASSED",
+      "result": "steps/E2E-06.json",
+      "failure": null,
+      "sha256": "fa740b8660fee6a82881133def825735af611e5c346585f92eeb73d29cd09f08"
+    },
+    {
+      "id": "E2E-07",
+      "status": "FAILED",
+      "result": "steps/E2E-07.json",
+      "failure": "failures/E2E-07.json",
+      "sha256": "c56cfd33af5332f6eab391cacbe0ebc4a2d78ffb22d3c4a4ecb77431b5e9e080"
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 # 🏗️ Memory Palace OS 系统架构与流转设计白皮书 (V1.3.0)
 
+[查看可交互架构图集](architecture/index.html)。
+
 本文件详述 **Memory Palace OS** 的核心架构设计。景区场景的正式主干是 **Agent 主干化**：一条由
 `IncidentCommand` 作为唯一深 seam 的 Agent 链，承载事件从接报到建议、采纳、派单、闭环的完整
 处置路径。系统的严肃性来自可审计的事实源与门禁，而不是来自某个 Agent 的自主权。

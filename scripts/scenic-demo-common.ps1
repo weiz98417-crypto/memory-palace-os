@@ -121,6 +121,21 @@ function Wait-ScenicAppContainerHealthy {
     throw "Scenic app container did not become healthy within $TimeoutSeconds seconds."
 }
 
+function Wait-ScenicWorkerContainerHealthy {
+    param([int]$TimeoutSeconds = 360)
+
+    $container = "$($script:ScenicProjectName)-scenic-agent-worker-1"
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    do {
+        $status = (& docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' $container 2>$null)
+        if ($LASTEXITCODE -eq 0 -and $status -and $status.Trim() -eq 'healthy') {
+            return
+        }
+        Start-Sleep -Seconds 2
+    } while ((Get-Date) -lt $deadline)
+    throw "Scenic worker container did not become healthy within $TimeoutSeconds seconds."
+}
+
 function Wait-ScenicDemoHealth {
     param([int]$TimeoutSeconds = 360)
 

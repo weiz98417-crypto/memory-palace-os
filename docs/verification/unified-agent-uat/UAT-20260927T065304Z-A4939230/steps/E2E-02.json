@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T065304Z-A4939230",
+  "step_id": "E2E-02",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T06:54:51Z",
+  "role": "李明 / 东门运营员",
+  "entrypoint": "/simulator/wecom/",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "user_id": "1e17127f9dde47e3b3630a96459bdf6a",
+    "session_id": "ca491a4b-eaf0-5993-8e8d-3d81d4aad43c",
+    "message_id": "fbcf8b3a-41b5-4deb-82dd-dbad8f75fcfc",
+    "trace_id": "76fac22a4396408e810dc5e5e671df51",
+    "attachment_id": "2092eae62f834190a263754488d69bea",
+    "external_message_id": "uat-20260927t065304z-a4939230-e2e-02-message"
+  },
+  "references": [
+    "POST /api/v1/auth/login",
+    "GET /api/v1/channels/simulator-identities",
+    "POST /api/v1/channels/simulator/attachments",
+    "POST /api/v1/channels/simulator/messages",
+    "GET /api/v1/assistant/sessions?acting_user_id={user_id}",
+    "GET /api/v1/assistant/sessions/{session_id}/messages",
+    "GET /api/v1/admin/traces/{trace_id}",
+    "GET /api/v1/admin/audit-logs?trace_id={trace_id}"
+  ],
+  "assertions": [
+    {
+      "name": "授权演示人员属于冻结 UAT 场地",
+      "passed": true,
+      "actual": {
+        "role": "admin",
+        "venue_id": "venue-yueshan"
+      }
+    },
+    {
+      "name": "现场 PNG 已真实上传并通过附件安全检查",
+      "passed": true,
+      "actual": {
+        "attachment_id": "2092eae62f834190a263754488d69bea",
+        "business_id": "FJ-20260927-2092EAE6",
+        "name": "uat-simulated-vehicle.png",
+        "content_type": "image/png",
+        "size_bytes": 6550,
+        "sha256": "0486cb27e9813e3c3bd406c28e843983d91f3b83fee8df6ac74c41e9684aeed0",
+        "scan_status": "PASSED",
+        "scan_engine": "MVP_SIGNATURE_SCAN_V1",
+        "external_ref": "<redacted>",
+        "thumbnail_url": "<redacted>",
+        "description": "",
+        "uploaded_by": "1e17127f9dde47e3b3630a96459bdf6a",
+        "uploaded_by_name": "企业员工",
+        "created_at": 1790492091.1089966
+      }
+    },
+    {
+      "name": "消息由服务端绑定李明和悦山景区并以排队状态受理",
+      "passed": true,
+      "actual": {
+        "duplicate": false,
+        "status": "QUEUED",
+        "channel": "WECOM_SIMULATOR",
+        "identity": {
+          "user_id": "1e17127f9dde47e3b3630a96459bdf6a",
+          "display_name": "李明",
+          "role": "operator",
+          "venue_id": "venue-yueshan",
+          "status": "ACTIVE",
+          "external_tenant_id": "wecom-yueshan",
+          "external_user_id": "wecom-li-ming"
+        }
+      }
+    },
+    {
+      "name": "伪造场地元数据未覆盖服务端场地绑定",
+      "passed": true,
+      "actual": {
+        "requested_venue_id": "forged-venue-must-be-ignored",
+        "accepted_venue_id": "venue-yueshan",
+        "persisted_venue_id": "venue-yueshan"
+      }
+    },
+    {
+      "name": "相同外部消息编号重放只返回原消息、Trace 和会话",
+      "passed": true,
+      "actual": {
+        "duplicate": true,
+        "message_id": "fbcf8b3a-41b5-4deb-82dd-dbad8f75fcfc",
+        "trace_id": "76fac22a4396408e810dc5e5e671df51",
+        "session_id": "ca491a4b-eaf0-5993-8e8d-3d81d4aad43c"
+      }
+    },
+    {
+      "name": "李明会话中只持久化一条业务入站消息和一个 run",
+      "passed": true,
+      "actual": {
+        "matching_session_count": 1,
+        "message_count": 1,
+        "matching_user_message_count": 1,
+        "trace_message_id": "fbcf8b3a-41b5-4deb-82dd-dbad8f75fcfc"
+      }
+    },
+    {
+      "name": "刷新后原文和附件元数据、说明、上传人及时间完整恢复",
+      "passed": true,
+      "actual": {
+        "history_stable": true,
+        "message_id": "fbcf8b3a-41b5-4deb-82dd-dbad8f75fcfc",
+        "attachment": {
+          "attachment_id": "2092eae62f834190a263754488d69bea",
+          "business_id": "FJ-20260927-2092EAE6",
+          "name": "uat-simulated-vehicle.png",
+          "content_type": "image/png",
+          "size_bytes": 6550,
+          "sha256": "0486cb27e9813e3c3bd406c28e843983d91f3b83fee8df6ac74c41e9684aeed0",
+          "scan_status": "PASSED",
+          "scan_engine": "MVP_SIGNATURE_SCAN_V1",
+          "external_ref": "<redacted>",
+          "thumbnail_url": "<redacted>",
+          "description": "右后轮内侧有水迹，车辆已断电，现场无人受伤",
+          "uploaded_by": "1e17127f9dde47e3b3630a96459bdf6a",
+          "uploaded_by_name": "李明",
+          "created_at": 1790492091.1089966
+        }
+      }
+    },
+    {
+      "name": "消息创建与 Redis 入队审计均可由 Trace 读取",
+      "passed": true,
+      "actual": {
+        "trace_id": "76fac22a4396408e810dc5e5e671df51",
+        "audit_actions": [
+          "MESSAGE_ENQUEUED",
+          "MESSAGE_RUN_CREATED"
+        ],
+        "stream_message_id": "1790492091173-0"
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "uploaded-attachment",
+      "path": "artifacts/E2E-02/uploaded-attachment.json",
+      "sha256": "ebf59f4e95862c359a5cb9c8424f8e262fde34fc8df49d92e63cc74c121f9839"
+    },
+    {
+      "name": "accepted-message",
+      "path": "artifacts/E2E-02/accepted-message.json",
+      "sha256": "bfdac670852304880ead8c1a9c0132a114823d3b180cacf8b86c81a88f75238a"
+    },
+    {
+      "name": "replayed-message",
+      "path": "artifacts/E2E-02/replayed-message.json",
+      "sha256": "719397ba96a45068a5febd646c7358f5a285c49c53f9cca87a08ff745884211e"
+    },
+    {
+      "name": "session-list",
+      "path": "artifacts/E2E-02/session-list.json",
+      "sha256": "403b5afa6ecb9c3beb78e80bf1a3789be29e5aa63073bd0daecb69070afe313f"
+    },
+    {
+      "name": "initial-history",
+      "path": "artifacts/E2E-02/initial-history.json",
+      "sha256": "ccdf67783b5df9eaf68c7ece172de73ed2b1d0e97fb2c11c6516a7253efc4fbc"
+    },
+    {
+      "name": "restored-history",
+      "path": "artifacts/E2E-02/restored-history.json",
+      "sha256": "ccdf67783b5df9eaf68c7ece172de73ed2b1d0e97fb2c11c6516a7253efc4fbc"
+    },
+    {
+      "name": "trace-timeline",
+      "path": "artifacts/E2E-02/trace-timeline.json",
+      "sha256": "7260df053259998c61f883ba8992becdcce701e8254275065386e8459ecb8dd2"
+    },
+    {
+      "name": "enqueue-audit",
+      "path": "artifacts/E2E-02/enqueue-audit.json",
+      "sha256": "f4e5c82cca58e3d510ffaa9359a31e0ae2741913ff9ec72087988ba306b4259e"
+    }
+  ]
+}

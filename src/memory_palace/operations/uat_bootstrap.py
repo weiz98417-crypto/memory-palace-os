@@ -206,6 +206,7 @@ async def bootstrap_uat_master_data(
         base_url=config.base_url.rstrip("/"),
         timeout=config.timeout_seconds,
         follow_redirects=True,
+        trust_env=False,
     )
     api = _FormalAPI(active_client)
     try:

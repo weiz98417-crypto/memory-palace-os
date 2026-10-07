@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T083848Z-6FBDFEF6",
+  "step_id": "UAT-F01",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:43:24Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "session_id": "9eb5727a-16e7-5e5d-aba6-ef37433ef1cc",
+    "message_id": "1ffb09f7-963f-4cbb-98b7-2a002542fb2d",
+    "decomposition_id": "1855b828784946489be15ef5f2d58143"
+  },
+  "references": [
+    "POST /api/v1/channels/simulator/messages",
+    "POST /api/v1/admin/tasks/decompose",
+    "GET /api/v1/admin/tasks",
+    "GET /api/v1/admin/audit-logs"
+  ],
+  "assertions": [
+    {
+      "name": "重复消息返回原消息、Trace 与会话",
+      "passed": true,
+      "actual": {
+        "duplicate": true,
+        "message_id": "1ffb09f7-963f-4cbb-98b7-2a002542fb2d"
+      }
+    },
+    {
+      "name": "重复消息不再次产生入队审计",
+      "passed": true,
+      "actual": {
+        "audit_before": 2,
+        "audit_after": 2
+      }
+    },
+    {
+      "name": "TodoWrite 幂等重放保持原四任务图",
+      "passed": true,
+      "actual": {
+        "decomposition_id": "1855b828784946489be15ef5f2d58143",
+        "task_count_before": 5,
+        "task_count_after": 5
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "replayed-message",
+      "path": "artifacts/UAT-F01/replayed-message.json",
+      "sha256": "21abf4ec5dbe7503f80d07d898ea9252af676dc3b8aaf645f285bf6c4cc0a596"
+    },
+    {
+      "name": "replayed-decomposition",
+      "path": "artifacts/UAT-F01/replayed-decomposition.json",
+      "sha256": "44419badb729119a7cc39577070d443b36197d62e925c2f67d3dfcc4f4fad141"
+    },
+    {
+      "name": "tasks-before",
+      "path": "artifacts/UAT-F01/tasks-before.json",
+      "sha256": "ec08e78cb2766a8cecc49a0227ea627fd94f99d68d293b79f4bd2c8c60ac3d82"
+    },
+    {
+      "name": "tasks-after",
+      "path": "artifacts/UAT-F01/tasks-after.json",
+      "sha256": "ec08e78cb2766a8cecc49a0227ea627fd94f99d68d293b79f4bd2c8c60ac3d82"
+    }
+  ]
+}

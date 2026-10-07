@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T080209Z-84A31C3E",
+  "step_id": "UAT-F09",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:13:48Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "event_id": "d8bfaec7-77d3-47a6-90cf-5a2ffc70d6e1",
+    "task_id": "b2893f19-9af6-459e-8a15-30badf6c6c68",
+    "trace_id": "a0698232948449b4897f1bbb4888a701",
+    "finding_id": "c3a03d5d6e6c428db887dcba37019130"
+  },
+  "references": [
+    "POST /api/v1/channels/simulator/messages",
+    "POST /api/v1/admin/tasks",
+    "POST /api/v1/admin/events/d8bfaec7-77d3-47a6-90cf-5a2ffc70d6e1/watcher-check"
+  ],
+  "assertions": [
+    {
+      "name": "独立新事件与未完成任务通过正式入口创建",
+      "passed": true,
+      "actual": {
+        "event_id": "d8bfaec7-77d3-47a6-90cf-5a2ffc70d6e1",
+        "task_id": "b2893f19-9af6-459e-8a15-30badf6c6c68",
+        "task_status": "PENDING"
+      }
+    },
+    {
+      "name": "Watcher 两次实际运行均发现相同任务闭环阻断",
+      "passed": true,
+      "actual": {
+        "first_run_id": "6828c6bcb8a541b0ab88c9ee6ef3f69e",
+        "second_run_id": "965f6a2f62cb4aafbfe1fc62bc68bb2c",
+        "finding_id": "c3a03d5d6e6c428db887dcba37019130"
+      }
+    },
+    {
+      "name": "重复运行复用原 finding 而非生成副本",
+      "passed": true,
+      "actual": {
+        "first_id": "c3a03d5d6e6c428db887dcba37019130",
+        "second_id": "c3a03d5d6e6c428db887dcba37019130",
+        "reused": true
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "message",
+      "path": "artifacts/UAT-F09/message.json",
+      "sha256": "6d09e27ec4eb3788d5420622fc86b4057f03db634632fdef0f5d43209b433de1"
+    },
+    {
+      "name": "task",
+      "path": "artifacts/UAT-F09/task.json",
+      "sha256": "2a778fde14adf5c4ebb4190513cb8121034c40a9bd16ed5c64c05d3b78a6ecd4"
+    },
+    {
+      "name": "first-watcher",
+      "path": "artifacts/UAT-F09/first-watcher.json",
+      "sha256": "0be8bb7dfe4a1415c30530e22483af78e2e854782b41db2ed69828d898c42859"
+    },
+    {
+      "name": "second-watcher",
+      "path": "artifacts/UAT-F09/second-watcher.json",
+      "sha256": "455274b8ac64bddaa6557c93c28d1f2fdf55df25e502417a96fc2ccb0cabd6d7"
+    }
+  ]
+}

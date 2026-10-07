@@ -29,6 +29,8 @@ def test_default_services_and_optional_profiles_are_explicit():
         "hatchet-engine": ["agent-runtime"],
         "hatchet-api": ["agent-runtime"],
         "hatchet-dashboard": ["agent-runtime"],
+        "scenic-agent-worker": ["agent-runtime"],
+        "scenic-agent-prototype": ["agent-prototype"],
         "jaeger": ["tracing"],
     }
     for service, profiles in expected_profiles.items():

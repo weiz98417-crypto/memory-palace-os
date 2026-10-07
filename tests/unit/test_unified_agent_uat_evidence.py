@@ -431,10 +431,7 @@ def test_validator_accepts_consistent_running_evidence_package(tmp_path):
         now=datetime(2026, 8, 3, 10, 31, tzinfo=timezone.utc),
     )
 
-    report = validate_evidence(
-        run.path,
-        registry_path=Path("src/memory_palace/config/feature_registry.yaml"),
-    )
+    report = validate_evidence(run.path)
 
     assert report.valid is True
     assert report.errors == ()

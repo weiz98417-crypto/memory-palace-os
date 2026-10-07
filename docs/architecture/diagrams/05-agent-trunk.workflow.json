@@ -1,0 +1,32 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {"title": "IncidentCommand · 模式分支与降级", "locale": "zh-CN", "quality_profile": "showcase"},
+  "lanes": [
+    {"id": "common", "label": "共同前置"},
+    {"id": "advice", "label": "ADVICE"},
+    {"id": "command", "label": "DISPATCH_DRAFT / CLOSURE_SUMMARY"}
+  ],
+  "nodes": [
+    {"id": "request", "lane": "common", "col": 0, "type": "backend", "label": "IncidentCommand", "sublabel": "租户已核验的事实", "width": 140},
+    {"id": "context", "lane": "common", "col": 1, "type": "backend", "label": "ContextTrigger", "sublabel": "情境与优先级"},
+    {"id": "router", "lane": "common", "col": 2, "type": "backend", "label": "Router", "sublabel": "意图与处理模式"},
+    {"id": "memory", "lane": "advice", "col": 3, "type": "backend", "label": "MemoryOps", "sublabel": "可靠依据检索"},
+    {"id": "advice_result", "lane": "advice", "col": 4, "type": "database", "label": "处置参考建议", "sublabel": "READY 可含 DEGRADED"},
+    {"id": "commander", "lane": "command", "col": 3, "type": "backend", "label": "Commander", "sublabel": "派单草案 / 关闭总结"},
+    {"id": "draft_result", "lane": "command", "col": 4, "type": "database", "label": "结构化产物", "sublabel": "不自动执行高风险动作"}
+  ],
+  "mainPath": ["request", "context", "router", "memory", "advice_result"],
+  "edges": [
+    {"from": "request", "to": "context", "label": "预检", "role": "main"},
+    {"from": "context", "to": "router", "label": "结构化输出", "role": "main"},
+    {"from": "router", "to": "memory", "label": "ADVICE", "role": "main"},
+    {"from": "memory", "to": "advice_result", "label": "建议 / 无依据", "role": "main"},
+    {"from": "router", "to": "commander", "label": "草案或总结"},
+    {"from": "commander", "to": "draft_result", "label": "结构化产物"}
+  ],
+  "cards": [
+    {"dot": "amber", "title": "逐环节降级", "items": ["ContextTrigger 失败时截取原文；Router 失败时保留原优先级。", "MemoryOps 无结果返回不可用建议；无可靠命中必须显式说明没有依据。", "每个 Agent 有独立开关、超时、重试与熔断；降级不能伪装成成功模型调用。"]},
+    {"dot": "cyan", "title": "模型与证据", "items": ["PydanticAI 输出经契约校验；LiteLLM 调用 deepseek-flash。", "llm_call_logs 记录真实调用与失败，供审计和熔断；人的采纳或忽略针对建议结果。"]}
+  ]
+}

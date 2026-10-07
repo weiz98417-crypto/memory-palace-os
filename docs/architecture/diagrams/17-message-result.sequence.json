@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {"title": "消息异步处理与客户端轮询", "locale": "zh-CN", "quality_profile": "showcase", "column_fit": "spread", "viewBox": [1060, 490]},
+  "participants": [
+    {"id": "client", "type": "frontend", "label": "客户端", "sublabel": "按 message_id 轮询"},
+    {"id": "api", "type": "backend", "label": "消息 API", "sublabel": "鉴权与租户范围"},
+    {"id": "database", "type": "database", "label": "PostgreSQL", "sublabel": "message_runs"},
+    {"id": "stream", "type": "messagebus", "label": "Redis Stream", "sublabel": "messages 消费组"},
+    {"id": "worker", "type": "backend", "label": "MessageQueueWorker", "sublabel": "编排、交付与 ACK"}
+  ],
+  "messages": [
+    {"from": "stream", "to": "worker", "y": 165, "label": "领取已接收的消息"},
+    {"from": "worker", "to": "database", "y": 197, "label": "认领运行 / 标记 PROCESSING"},
+    {"from": "worker", "to": "database", "y": 229, "label": "Orchestrator 结果先保存"},
+    {"from": "worker", "to": "database", "y": 261, "label": "交付后记录终态"},
+    {"from": "client", "to": "api", "y": 293, "label": "GET /api/v1/messages/{message_id}"},
+    {"from": "api", "to": "database", "y": 325, "label": "按 venue_id 与 user_id 读取"},
+    {"from": "database", "to": "api", "y": 357, "label": "当前运行状态", "variant": "return"},
+    {"from": "api", "to": "client", "y": 389, "label": "200 + 状态 / 回复", "variant": "return"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "异步边界", "items": ["04 的 202 只表示已接收并入队；本图发生在原 HTTP 请求结束以后。", "Worker 保存可复用结果后才执行渠道交付；交付成功后标 COMPLETED 并 ACK。"]},
+    {"dot": "amber", "title": "失败与可见性", "items": ["重试、直接死信、策略 FAILED 的条件见 15；已有结果的交付恢复避免重复执行 Agent。", "客户端主动 GET 状态，不把轮询误画成服务端向客户端推送。"]}
+  ]
+}

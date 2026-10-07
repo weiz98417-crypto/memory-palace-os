@@ -1,0 +1,81 @@
+{
+  "runtime": {
+    "app": {
+      "status": "healthy",
+      "version": "1.0.0",
+      "instance_id": "897ff0cf65574945bb18b8e4cfb2339c"
+    },
+    "postgresql": {
+      "status": "healthy"
+    },
+    "redis": {
+      "status": "healthy",
+      "backend": "redis_streams",
+      "stream_depth": 2,
+      "pending": 0,
+      "lag": 0,
+      "dead_letter_depth": 0
+    },
+    "pgvector": {
+      "status": "healthy",
+      "backend": "postgresql_pgvector",
+      "extension_version": "0.8.1",
+      "index_name": "knowledge_vectors_bge_m3_v1",
+      "model": "BAAI/bge-m3",
+      "dimension": 1024,
+      "device": "custom"
+    },
+    "worker": {
+      "status": "healthy",
+      "running": true,
+      "backend": "redis_streams",
+      "concurrency": 5,
+      "inflight": 0,
+      "started_at": 1790496113.139452
+    }
+  },
+  "runtime_identity": null,
+  "queue": {
+    "backend": "redis_streams",
+    "connected": true,
+    "stream": "memory_palace:messages",
+    "group": "mp_workers",
+    "stream_depth": 2,
+    "pending": 0,
+    "lag": 0,
+    "consumers": [
+      {
+        "name": "worker_1",
+        "pending": 0,
+        "idle_ms": 3815
+      }
+    ],
+    "dead_letter_stream": "memory_palace:dead_letter",
+    "dead_letter_depth": 0
+  },
+  "uat_recovery_task": {
+    "id": "f5109081-a5dd-4748-b1ad-4242f6afc581",
+    "business_id": "RW-20260927-F5109081",
+    "session_id": "a1479819-e567-52eb-b951-5b55f84248ae",
+    "venue_id": "venue-yueshan",
+    "event_id": null,
+    "description": "UAT App 重启前保持执行中的恢复任务",
+    "status": "RUNNING",
+    "dependencies": [],
+    "due_at": null,
+    "result_schema_json": {},
+    "evidence_refs_json": [],
+    "result": null,
+    "error": null,
+    "block_reason": null,
+    "assigned_agent": null,
+    "assigned_user_id": null,
+    "decomposition_id": null,
+    "created_at": 1790496362.0429308,
+    "updated_at": 1790496362.0513837,
+    "started_at": 1790496362.0513835,
+    "completed_at": null,
+    "attempts": 1,
+    "max_attempts": 3
+  }
+}

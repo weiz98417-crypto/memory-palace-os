@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {"title": "消息接报 · 认证、幂等与 202 响应", "locale": "zh-CN", "quality_profile": "showcase", "column_fit": "spread", "viewBox": [1060, 490]},
+  "participants": [
+    {"id": "client", "type": "frontend", "label": "现场助手 / 模拟器", "sublabel": "Web / 企微模拟"},
+    {"id": "api", "type": "backend", "label": "FastAPI", "sublabel": "鉴权与 202 响应"},
+    {"id": "ingress", "type": "backend", "label": "统一接报", "sublabel": "身份解析与幂等"},
+    {"id": "database", "type": "database", "label": "PostgreSQL", "sublabel": "message_runs"},
+    {"id": "stream", "type": "messagebus", "label": "Redis Stream", "sublabel": "memory_palace:messages"}
+  ],
+  "messages": [
+    {"from": "client", "to": "api", "y": 170, "label": "POST 助手 / 模拟器消息", "variant": "emphasis"},
+    {"from": "api", "to": "ingress", "y": 205, "label": "已认证 actor", "variant": "security"},
+    {"from": "ingress", "to": "database", "y": 240, "label": "解析渠道身份；按外部 ID 去重"},
+    {"from": "ingress", "to": "database", "y": 275, "label": "创建会话与 message_runs"},
+    {"from": "ingress", "to": "stream", "y": 310, "label": "持久化后入队", "variant": "emphasis"},
+    {"from": "ingress", "to": "api", "y": 345, "label": "accepted + message_id", "variant": "return"},
+    {"from": "api", "to": "client", "y": 380, "label": "202 / accepted", "variant": "return"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "另一种入口", "items": ["统一接报只接受 WEB 与 WECOM_SIMULATOR；POST /api/v1/messages/ 直接创建 message_runs 并入队，不经过 CanonicalMessageIngress。", "两种入口共用 PostgreSQL、消息 Stream 和 Worker。"]},
+    {"dot": "amber", "title": "条件分支", "items": ["CanonicalMessageIngress 遇到重复外部消息 ID 直接返回已有 accepted，不重复入队。", "入队失败将运行标为 FAILED 并返回 503；Worker 普通失败按上限重试，部分交付失败直接死信，策略失败直接 FAILED。"]}
+  ]
+}

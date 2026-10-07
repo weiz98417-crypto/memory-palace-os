@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T083848Z-6FBDFEF6",
+  "step_id": "UAT-F03",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:47:30Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "session_id": "b5b70684-b5b8-5618-a3b2-e0cc072ac28e",
+    "decomposition_id": "2a676ab9af204cd1a5df85087eeee0bc",
+    "failure_trace_id": "abb900d028364c39aa34a41ac42b28e9"
+  },
+  "references": [
+    "POST /api/v1/admin/tasks/decompose",
+    "GET /api/v1/admin/llm-calls",
+    "GET /api/v1/admin/diagnostics"
+  ],
+  "assertions": [
+    {
+      "name": "两个 401 与一个超时均明确失败且可追踪",
+      "passed": true,
+      "actual": {
+        "probes": [
+          {
+            "mode": "unauthorized-1",
+            "trace_id": "abb900d028364c39aa34a41ac42b28e9",
+            "http_status": 502
+          },
+          {
+            "mode": "unauthorized-2",
+            "trace_id": "c0af4667a5994e2688895d9937badf11",
+            "http_status": 502
+          },
+          {
+            "mode": "timeout",
+            "trace_id": "7b5a564f36ce44f1a607347ff4b37acf",
+            "http_status": 502
+          }
+        ]
+      }
+    },
+    {
+      "name": "故障期不生成假任务且诊断进入熔断状态",
+      "passed": true,
+      "actual": {
+        "circuit": {
+          "state": "OPEN",
+          "source": "llm_call_logs",
+          "consecutive_failures": 3,
+          "failure_threshold": 3,
+          "recovery_timeout_seconds": 60.0,
+          "retry_after_seconds": 12.223
+        },
+        "unchanged_task_counts": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "恢复真实 DeepSeek 后原业务动作可用同一幂等键重试",
+      "passed": true,
+      "actual": {
+        "decomposition_id": "2a676ab9af204cd1a5df85087eeee0bc",
+        "task_count": 4,
+        "circuit": {
+          "state": "CLOSED",
+          "source": "llm_call_logs",
+          "consecutive_failures": 0,
+          "failure_threshold": 3,
+          "recovery_timeout_seconds": 60.0,
+          "retry_after_seconds": null
+        }
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "unauthorized-1",
+      "path": "artifacts/UAT-F03/unauthorized-1.json",
+      "sha256": "9ce91f1aa64e63551b0a833f9fd0addd78ab8eb20f068e234de40fa05bf76416"
+    },
+    {
+      "name": "unauthorized-2",
+      "path": "artifacts/UAT-F03/unauthorized-2.json",
+      "sha256": "961f62e9be1363f34917f3bc1978d62f0633d8f585bc1c35b2ebb66e96cfada5"
+    },
+    {
+      "name": "timeout",
+      "path": "artifacts/UAT-F03/timeout.json",
+      "sha256": "6d0f43f68cb3512ebbd3b380aa1a8d706ee5905f5907eeab9f351294c466525b"
+    },
+    {
+      "name": "recovered-decomposition",
+      "path": "artifacts/UAT-F03/recovered-decomposition.json",
+      "sha256": "31afb590afc2d9963b09af77c141a8051bf2887a6739afdac4bbedd43f9accac"
+    },
+    {
+      "name": "diagnostics-after",
+      "path": "artifacts/UAT-F03/diagnostics-after.json",
+      "sha256": "0bb5fbd0a2a79d66e1f2d65116c03f5b2a26f8b0dbcc3f64001dbe5c2b5cb6d4"
+    }
+  ]
+}

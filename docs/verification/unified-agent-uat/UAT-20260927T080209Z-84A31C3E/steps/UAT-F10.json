@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T080209Z-84A31C3E",
+  "step_id": "UAT-F10",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:09:44Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "foreign_venue_id": "venue-uat-foreign-84a31c3e",
+    "foreign_user_id": "fbd0613b6a874db28d5d38f128896f18",
+    "event_id": "79af7e2b-0353-4a0d-ae2d-d54fd7c6c1f0",
+    "experience_card_id": "bb7d17019af3424981ee677327341c8e"
+  },
+  "references": [
+    "POST /api/v1/admin/venues",
+    "POST /api/v1/admin/users",
+    "POST /api/v1/auth/login",
+    "GET /api/v1/admin/events/79af7e2b-0353-4a0d-ae2d-d54fd7c6c1f0",
+    "GET /api/v1/admin/tasks/1b6bd45f-d583-4322-8a70-ced3a80cc855",
+    "GET /api/v1/admin/experience-cards/bb7d17019af3424981ee677327341c8e"
+  ],
+  "assertions": [
+    {
+      "name": "测试经理属于独立正式场地",
+      "passed": true,
+      "actual": {
+        "venue_id": "venue-uat-foreign-84a31c3e",
+        "role": "manager"
+      }
+    },
+    {
+      "name": "跨场地事件、任务、审批和经验读取均拒绝",
+      "passed": true,
+      "actual": {
+        "event": {
+          "status_code": 404,
+          "detail": {
+            "code": "EVENT_NOT_FOUND",
+            "message": "事件不存在。",
+            "trace_id": "e7f97ebe38594577b4afb83ff327ae60",
+            "retryable": false,
+            "action": "刷新事件列表后重试。"
+          }
+        },
+        "task": {
+          "status_code": 404,
+          "detail": {
+            "code": "TASK_NOT_FOUND",
+            "message": "任务不存在。",
+            "trace_id": "23218f02a9054207b9730a70d2d0e279",
+            "retryable": false,
+            "action": "刷新任务列表后重试。"
+          }
+        },
+        "approval": {
+          "status_code": 404,
+          "detail": {
+            "code": "APPROVAL_NOT_FOUND",
+            "message": "审批请求不存在。",
+            "trace_id": "88bf292547f647f4977af28a351692f4",
+            "retryable": false,
+            "action": "刷新审批列表后重试。"
+          }
+        },
+        "experience": {
+          "status_code": 404,
+          "detail": {
+            "code": "EXPERIENCE_NOT_FOUND",
+            "message": "当前场地不存在该经验卡。",
+            "trace_id": "aa74b49aa1c446bea734c775b67a7ecc",
+            "retryable": false,
+            "action": "刷新经验列表后重试。"
+          }
+        },
+        "session": {
+          "status_code": 404,
+          "detail": {
+            "code": "HTTP_404",
+            "message": "Session not found",
+            "trace_id": "2615fd4a82774a33a2da18a91020530c",
+            "retryable": false,
+            "action": "检查请求和当前权限后重试。"
+          }
+        }
+      }
+    },
+    {
+      "name": "跨场地会话内容在读取前拒绝",
+      "passed": true,
+      "actual": {
+        "status_code": 404,
+        "detail": {
+          "code": "HTTP_404",
+          "message": "Session not found",
+          "trace_id": "2615fd4a82774a33a2da18a91020530c",
+          "retryable": false,
+          "action": "检查请求和当前权限后重试。"
+        }
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "foreign-principal",
+      "path": "artifacts/UAT-F10/foreign-principal.json",
+      "sha256": "e1ffd65ac38a3ce87e17899a36998484fae51f605929bb2e37a6330db1d8af04"
+    },
+    {
+      "name": "authorization-rejections",
+      "path": "artifacts/UAT-F10/authorization-rejections.json",
+      "sha256": "1ab826c659a63d076b81a3751e3f1e43e9f0ebd3126fd9d9a61448d2f4e1037c"
+    }
+  ]
+}

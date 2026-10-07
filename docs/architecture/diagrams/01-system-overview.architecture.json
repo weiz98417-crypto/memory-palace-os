@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "Memory Palace OS · 系统全景", "locale": "zh-CN", "quality_profile": "showcase", "viewBox": [1390, 630]},
+  "components": [
+    {"id": "clients", "type": "frontend", "label": "四个 Vue 应用", "sublabel": "控制台 · 现场 · 运营 · 集成", "pos": [40, 57], "size": [270, 82]},
+    {"id": "nginx", "type": "security", "label": "Nginx", "sublabel": "HTTPS 入口与静态资源", "pos": [380, 57], "size": [270, 82]},
+    {"id": "api", "type": "backend", "label": "FastAPI", "sublabel": "鉴权 · API v1 · SSE · 健康检查", "pos": [720, 57], "size": [270, 82]},
+    {"id": "postgres", "type": "database", "label": "PostgreSQL + pgvector", "sublabel": "业务事实 · 运行账本 · 知识向量", "pos": [1060, 57], "size": [270, 82]},
+    {"id": "message_ingress", "type": "backend", "label": "消息接报与 message_runs", "sublabel": "直入 API / 认证后统一接报", "pos": [380, 210], "size": [270, 82]},
+    {"id": "messages_stream", "type": "messagebus", "label": "Redis · messages Stream", "sublabel": "memory_palace:messages", "pos": [380, 349], "size": [270, 82]},
+    {"id": "message_worker", "type": "backend", "label": "MessageQueueWorker", "sublabel": "Orchestrator · 回复 · 重试 / 死信", "pos": [380, 489], "size": [270, 82]},
+    {"id": "model", "type": "external", "label": "DeepSeek", "sublabel": "LiteLLM 网关调用 deepseek-flash", "pos": [720, 489], "size": [270, 82]},
+    {"id": "scenic", "type": "backend", "label": "ScenicAreaOperations", "sublabel": "事件 · 任务 · 审批 · scenic_commands", "pos": [1060, 210], "size": [270, 82]},
+    {"id": "advice_stream", "type": "messagebus", "label": "Redis · advice_runs Stream", "sublabel": "memory_palace:advice_runs · 默认模式", "pos": [1060, 349], "size": [270, 82]},
+    {"id": "advice_worker", "type": "backend", "label": "AdviceWorker / IncidentCommand", "sublabel": "Agent 编排 · 人工决策前的参考建议", "pos": [1060, 489], "size": [270, 82]},
+    {"id": "tei", "type": "backend", "label": "TEI · bge-m3", "sublabel": "知识嵌入 · 可选重排 profile", "pos": [720, 349], "size": [270, 82]}
+  ],
+  "connections": [
+    {"from": "clients", "to": "nginx", "label": "HTTPS"},
+    {"from": "nginx", "to": "api", "label": "代理 API / SSE", "labelAt": [685, 40]},
+    {"from": "api", "to": "postgres", "label": "租户内读写"},
+    {"from": "api", "to": "message_ingress", "label": "消息端点"},
+    {"from": "api", "to": "scenic", "label": "景区命令"},
+    {"from": "message_ingress", "to": "messages_stream", "label": "先写运行记录，再入队", "labelAt": [515, 306]},
+    {"from": "messages_stream", "to": "message_worker", "label": "消费与 ACK", "labelAt": [515, 445]},
+    {"from": "message_worker", "to": "model", "label": "按策略调用"},
+    {"from": "scenic", "to": "advice_stream", "label": "先写 GENERATE_ADVICE，再入队", "labelAt": [1195, 306]},
+    {"from": "advice_stream", "to": "advice_worker", "label": "租约执行", "labelAt": [1195, 445]},
+    {"from": "advice_worker", "to": "tei", "label": "检索时嵌入查询"},
+    {"from": "advice_worker", "to": "model", "label": "生成式调用", "labelAt": [1025, 604]}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "共享边界", "items": ["两条异步路径共用 FastAPI、PostgreSQL 和同一个 Redis 服务；运行记录分别存于 message_runs 与 scenic_commands。", "API 接报、Worker 执行、SSE / 轮询读取是不同阶段；图中纵向并列不表示系统相互独立。"]},
+    {"dot": "amber", "title": "运行选择", "items": ["Compose 默认 ADVICE_EXECUTION_MODE=redis；Hatchet 只有显式切换模式并启用 agent-runtime profile 才参与建议执行。", "TEI bge-m3 是默认嵌入服务；重排和 Jaeger 需按配置启用。"]}
+  ]
+}

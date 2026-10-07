@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T083848Z-6FBDFEF6",
+  "step_id": "E2E-04",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:40:42Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "event_id": "b450242b-607e-44f1-84a8-48d5aba02829",
+    "session_id": "9eb5727a-16e7-5e5d-aba6-ef37433ef1cc",
+    "message_id": "16a55113-cbfa-473f-8a80-12621ed62297",
+    "trace_id": "0729fbd069d04411852a152dd9c1e12b"
+  },
+  "references": [
+    "POST /api/v1/channels/simulator/messages",
+    "GET /api/v1/admin/traces/0729fbd069d04411852a152dd9c1e12b",
+    "GET /api/v1/admin/events/b450242b-607e-44f1-84a8-48d5aba02829"
+  ],
+  "assertions": [
+    {
+      "name": "补充消息复用李明原会话",
+      "passed": true,
+      "actual": {
+        "session_id": "9eb5727a-16e7-5e5d-aba6-ef37433ef1cc",
+        "duplicate": false
+      }
+    },
+    {
+      "name": "补充消息完成且关联原事件",
+      "passed": true,
+      "actual": {
+        "run_status": "COMPLETED",
+        "result_event_id": "b450242b-607e-44f1-84a8-48d5aba02829"
+      }
+    },
+    {
+      "name": "原事件追加补充信息并保留开放状态",
+      "passed": true,
+      "actual": {
+        "event_id": "b450242b-607e-44f1-84a8-48d5aba02829",
+        "status": "OPEN",
+        "before_length": 61,
+        "after_length": 111
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "accepted-message",
+      "path": "artifacts/E2E-04/accepted-message.json",
+      "sha256": "9f7f840e8acb60117e435084a4360227adf921a08debaaf705476257d098bc31"
+    },
+    {
+      "name": "before-event",
+      "path": "artifacts/E2E-04/before-event.json",
+      "sha256": "fc31aa4feeb7113e23b32f56502c8a8f20baf6d40a0e73229806e075462deb8f"
+    },
+    {
+      "name": "after-event",
+      "path": "artifacts/E2E-04/after-event.json",
+      "sha256": "bbeee0649607b6ac538adb1b41af122187a8a3c3e9ee8dd90f468c4dcea717bb"
+    },
+    {
+      "name": "message-result",
+      "path": "artifacts/E2E-04/message-result.json",
+      "sha256": "15a784e557d4d7dffe7d61462019648c8313910ca7fa66cd56134cc7ad2ebe10"
+    }
+  ]
+}

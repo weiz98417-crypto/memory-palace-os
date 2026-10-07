@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T083848Z-6FBDFEF6",
+  "step_id": "E2E-06",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:40:45Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "employee_user_id": "b8d1211da73949c3807921b2e1b56b5d",
+    "first_task_id": "7fbf72d1-1e9d-448c-8a64-dd0dca54aa82",
+    "second_task_id": "efcafae5-9b5f-4592-909d-419b86b733f7",
+    "third_task_id": "a27c0d1e-ea56-4fe5-a4f3-b64d69a94ca7"
+  },
+  "references": [
+    "PATCH /api/v1/admin/tasks/{task_id}/assignment",
+    "GET /api/v1/admin/tasks/{task_id}",
+    "POST /api/v1/admin/tasks/{task_id}/start",
+    "POST /api/v1/admin/tasks/{task_id}/complete"
+  ],
+  "assertions": [
+    {
+      "name": "两项任务正式分配给李明",
+      "passed": true,
+      "actual": {
+        "employee_id": "b8d1211da73949c3807921b2e1b56b5d"
+      }
+    },
+    {
+      "name": "其他员工不能读取李明任务",
+      "passed": true,
+      "actual": {
+        "status_code": 404,
+        "detail": {
+          "code": "TASK_NOT_FOUND",
+          "message": "任务不存在。",
+          "trace_id": "57d9d356f2984b63b6cb9f2b6316935d",
+          "retryable": false,
+          "action": "刷新任务列表后重试。"
+        }
+      }
+    },
+    {
+      "name": "前置未完成时任务2被拒绝",
+      "passed": true,
+      "actual": {
+        "status_code": 409,
+        "detail": {
+          "code": "TASK_NOT_RUNNABLE",
+          "message": "任务当前不可执行，可能仍在等待依赖。",
+          "trace_id": "16a2a13be12744abbc14807547fa09c8",
+          "retryable": false,
+          "action": "先完成依赖任务或恢复失败任务。"
+        }
+      }
+    },
+    {
+      "name": "李明完成隔离和检修并提交结构化测量",
+      "passed": true,
+      "actual": {
+        "first_status": "DONE",
+        "second_status": "DONE",
+        "result": {
+          "summary": "防尘护板复位，已检查制动盘和涉水痕迹",
+          "brake_disc_gap_mm": 3.2,
+          "wheel_temperature_c": 31,
+          "water_trace": "右后轮可见轻微水迹",
+          "evidence_message_id": "1ffb09f7-963f-4cbb-98b7-2a002542fb2d"
+        }
+      }
+    },
+    {
+      "name": "任务3在检修完成后解锁",
+      "passed": true,
+      "actual": {
+        "task_id": "a27c0d1e-ea56-4fe5-a4f3-b64d69a94ca7",
+        "status": "PENDING"
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "task-1",
+      "path": "artifacts/E2E-06/task-1.json",
+      "sha256": "adcfdcf87748fa0922a8e4e45b02be0f3922e16ea6c53ea2ba7c21d8a6c954b5"
+    },
+    {
+      "name": "task-2",
+      "path": "artifacts/E2E-06/task-2.json",
+      "sha256": "e036092a266a3cadd3bd7aac7fe2bdc085e1551fe573121eda2a9df655674c9a"
+    },
+    {
+      "name": "task-3",
+      "path": "artifacts/E2E-06/task-3.json",
+      "sha256": "d0518dd09f5ecca2ffe303475f9e6c32b536cbefa19f4c4582b325cd01d9d0d6"
+    },
+    {
+      "name": "dependency-rejection",
+      "path": "artifacts/E2E-06/dependency-rejection.json",
+      "sha256": "d29c37a12571e41c6ced863a02db56f0e04ad24ad4d4c550b8cd62038b898d5e"
+    },
+    {
+      "name": "other-employee-rejection",
+      "path": "artifacts/E2E-06/other-employee-rejection.json",
+      "sha256": "c7778889dc57dd3f8249fd0edaf7313e95dee824bc859577a5f30321f2649cb6"
+    }
+  ]
+}

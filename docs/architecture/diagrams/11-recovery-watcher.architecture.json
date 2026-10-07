@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "启动恢复与 Watcher 巡检运行", "locale": "zh-CN", "quality_profile": "showcase", "viewBox": [1390, 630]},
+  "components": [
+    {"id": "startup", "type": "backend", "label": "FastAPI lifespan", "sublabel": "初始化数据库与容器", "pos": [40, 74], "size": [250, 82]},
+    {"id": "recovery", "type": "backend", "label": "Runtime Recovery", "sublabel": "任务 · 审批 · 巡检 · 消息 pending", "pos": [370, 74], "size": [250, 82]},
+    {"id": "audit", "type": "database", "label": "runtime_recovery_runs", "sublabel": "阶段、数量、trace 与结果", "pos": [700, 74], "size": [250, 82]},
+    {"id": "health", "type": "security", "label": "启动向量健康检查", "sublabel": "pgvector + bge-m3", "pos": [40, 366], "size": [250, 82]},
+    {"id": "scheduler", "type": "backend", "label": "TaskScheduler", "sublabel": "恢复中断巡检 · 注册 Cron", "pos": [370, 366], "size": [250, 82]},
+    {"id": "policies", "type": "database", "label": "watcher_policies", "sublabel": "场地 · 启用状态 · 时间表", "pos": [700, 366], "size": [250, 82]},
+    {"id": "runs", "type": "database", "label": "watcher_runs", "sublabel": "快照、执行状态与结果", "pos": [1030, 366], "size": [250, 82]},
+    {"id": "findings", "type": "database", "label": "watcher_findings", "sublabel": "异常发现与人工复核", "pos": [1030, 496], "size": [250, 82]}
+  ],
+  "connections": [
+    {"from": "startup", "to": "recovery", "label": "启动恢复"},
+    {"from": "recovery", "to": "audit", "label": "持久化阶段证据"},
+    {"from": "startup", "to": "health", "label": "启动期检查", "labelAt": [165, 170]},
+    {"from": "health", "to": "scheduler", "label": "初始化后启动"},
+    {"from": "scheduler", "to": "policies", "label": "重载已启用策略"},
+    {"from": "policies", "to": "runs", "label": "定时执行"},
+    {"from": "runs", "to": "findings", "label": "记录异常", "labelAt": [1155, 462]}
+  ],
+  "cards": [
+    {"dot": "amber", "title": "恢复不等于就绪探针", "items": ["Recovery 会恢复中断的 watcher_runs；TaskScheduler.start 还会再执行一次中断巡检恢复。", "runtime_recovery_runs 可能暂为 RUNNING，由 Redis observer 后续收尾；/ready 不检查这张表。"]},
+    {"dot": "cyan", "title": "健康与运维入口", "items": ["启动健康门禁检查 pgvector 与 bge-m3；/ready 检查 PostgreSQL、Redis，以及已配置的 Hatchet 服务。", "/health 报进程和队列状态，/api/v1/admin/metrics 提供受保护指标。"]}
+  ]
+}

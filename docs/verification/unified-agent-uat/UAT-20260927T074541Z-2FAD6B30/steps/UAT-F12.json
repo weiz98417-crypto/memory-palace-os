@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T074541Z-2FAD6B30",
+  "step_id": "UAT-F12",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T07:46:26Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan"
+  },
+  "references": [
+    "GET /api/v1/admin/integrations",
+    "GET /api/v1/admin/diagnostics"
+  ],
+  "assertions": [
+    {
+      "name": "真实企业微信由策略禁用且未初始化或投递",
+      "passed": true,
+      "actual": {
+        "integration_status": "DISABLED_BY_POLICY",
+        "runtime": {
+          "status": "DISABLED_BY_POLICY",
+          "policy_mode": "WECOM_SIMULATOR_ONLY",
+          "client_initialized": false,
+          "enqueue_enabled": false,
+          "delivery_enabled": false
+        }
+      }
+    },
+    {
+      "name": "短信和语音未配置且安全禁用",
+      "passed": true,
+      "actual": {
+        "sms": {
+          "id": "sms",
+          "name": "短信",
+          "status": "DISABLED_REQUIRES_CONFIG",
+          "configured": false,
+          "safe_disabled_verified": true,
+          "live_verified": false,
+          "missing": [
+            "SMS_PROVIDER",
+            "SMS_API_KEY"
+          ],
+          "evidence": null,
+          "blocked_reason": null
+        },
+        "voice": {
+          "id": "voice",
+          "name": "语音电话",
+          "status": "DISABLED_REQUIRES_CONFIG",
+          "configured": false,
+          "safe_disabled_verified": true,
+          "live_verified": false,
+          "missing": [
+            "VOICE_PROVIDER",
+            "VOICE_API_KEY"
+          ],
+          "evidence": null,
+          "blocked_reason": null
+        }
+      }
+    },
+    {
+      "name": "内部模拟渠道仍可用",
+      "passed": true,
+      "actual": {
+        "runtime": {
+          "status": "SIMULATOR_READY",
+          "entrypoint": "/simulator/wecom/",
+          "active_user_count": 7,
+          "mapped_active_user_count": 7,
+          "unmapped_active_user_count": 0
+        }
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "integration-statuses",
+      "path": "artifacts/UAT-F12/integration-statuses.json",
+      "sha256": "40f04da9d8b114f45df7226a464e55e2aad505cf210b6849e9715809d756ea55"
+    },
+    {
+      "name": "channel-diagnostics",
+      "path": "artifacts/UAT-F12/channel-diagnostics.json",
+      "sha256": "1d3cbcb663cee7055b4f49cb5c1e28832c8c5b5f6359ed5181eb16005c61c66a"
+    }
+  ]
+}

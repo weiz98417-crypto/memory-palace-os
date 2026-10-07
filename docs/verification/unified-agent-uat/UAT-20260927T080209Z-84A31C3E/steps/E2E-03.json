@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T080209Z-84A31C3E",
+  "step_id": "E2E-03",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:02:52Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "trace_id": "60c1b64bb6a545ee9640e45bae4646d1",
+    "message_id": "44c55aa7-447b-4517-8960-ba8a12b7b267",
+    "event_id": "79af7e2b-0353-4a0d-ae2d-d54fd7c6c1f0"
+  },
+  "references": [
+    "GET /api/v1/admin/traces/60c1b64bb6a545ee9640e45bae4646d1",
+    "GET /api/v1/admin/llm-calls?trace_id=60c1b64bb6a545ee9640e45bae4646d1",
+    "GET /api/v1/admin/events"
+  ],
+  "assertions": [
+    {
+      "name": "同一消息由 worker 完成智能受理",
+      "passed": true,
+      "actual": {
+        "trace_status": "SUCCEEDED",
+        "run_status": "COMPLETED",
+        "message_id": "44c55aa7-447b-4517-8960-ba8a12b7b267"
+      }
+    },
+    {
+      "name": "四个 Agent 均有同一 Trace 的真实模型成功记录",
+      "passed": true,
+      "actual": {
+        "agents": [
+          "Commander",
+          "ContextTrigger",
+          "MemoryOps",
+          "Router"
+        ]
+      }
+    },
+    {
+      "name": "正式检索返回当前场地的已发布 SOP",
+      "passed": true,
+      "actual": {
+        "sop_ids": [
+          "1"
+        ],
+        "versions": [
+          "2.1"
+        ]
+      }
+    },
+    {
+      "name": "事件与答复绑定本次 Trace",
+      "passed": true,
+      "actual": {
+        "event_id": "79af7e2b-0353-4a0d-ae2d-d54fd7c6c1f0",
+        "status": "OPEN",
+        "reply_present": true
+      }
+    }
+  ],
+  "model_calls": [
+    {
+      "agent": "Commander",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "c0197aef-601c-44d8-aa69-92a729b600c3",
+      "trace_id": "60c1b64bb6a545ee9640e45bae4646d1",
+      "status": "SUCCEEDED"
+    },
+    {
+      "agent": "MemoryOps",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "8776e0a8-d001-4805-bd06-978e902e8f2e",
+      "trace_id": "60c1b64bb6a545ee9640e45bae4646d1",
+      "status": "SUCCEEDED"
+    },
+    {
+      "agent": "Router",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "6da31f0a-422e-46c3-a087-f600a293e3c0",
+      "trace_id": "60c1b64bb6a545ee9640e45bae4646d1",
+      "status": "SUCCEEDED"
+    },
+    {
+      "agent": "ContextTrigger",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "5d0cad91-7ae2-4498-aaf7-b031ac73798c",
+      "trace_id": "60c1b64bb6a545ee9640e45bae4646d1",
+      "status": "SUCCEEDED"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "message-run",
+      "path": "artifacts/E2E-03/message-run.json",
+      "sha256": "19e128abc3c45f8c541528c0877a68882673af09a5055182d73dd209e7d69a19"
+    },
+    {
+      "name": "published-sops",
+      "path": "artifacts/E2E-03/published-sops.json",
+      "sha256": "71162159f365aaa56e4a22718db1d307cbcedf9d92cb6abc058f435325ab7ffe"
+    },
+    {
+      "name": "event",
+      "path": "artifacts/E2E-03/event.json",
+      "sha256": "5268aba5c9e9c3efefed35e7757644a02dbee904621f6c2d1d02ce52e3b6ec34"
+    },
+    {
+      "name": "model-call-metadata",
+      "path": "artifacts/E2E-03/model-call-metadata.json",
+      "sha256": "0e33621957e5ec76c08b1f49ee9e6ef5a58e7be1bd97915a066126b5db70cc81"
+    }
+  ]
+}

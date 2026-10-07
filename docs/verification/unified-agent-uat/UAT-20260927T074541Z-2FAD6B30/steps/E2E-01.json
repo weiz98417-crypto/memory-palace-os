@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T074541Z-2FAD6B30",
+  "step_id": "E2E-01",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T07:45:59Z",
+  "role": "李明 / 东门运营员",
+  "entrypoint": "/simulator/wecom/",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "user_id": "93f8b3c0ab63424e91c69a47d5c38670"
+  },
+  "references": [
+    "POST /api/v1/auth/login",
+    "GET /api/v1/channels/simulator-identities",
+    "GET /api/v1/assistant/sessions?acting_user_id={user_id}",
+    "GET /api/v1/admin/uat-pristine/venue-yueshan"
+  ],
+  "assertions": [
+    {
+      "name": "授权演示人员属于冻结 UAT 场地",
+      "passed": true,
+      "actual": {
+        "role": "admin",
+        "venue_id": "venue-yueshan"
+      }
+    },
+    {
+      "name": "李明身份由服务端映射并包含完整组织信息",
+      "passed": true,
+      "actual": {
+        "user_id": "93f8b3c0ab63424e91c69a47d5c38670",
+        "username": "li-ming",
+        "display_name": "李明",
+        "role": "operator",
+        "venue_id": "venue-yueshan",
+        "organization_name": "悦山文旅集团",
+        "venue_name": "悦山景区",
+        "department": "东门运营组",
+        "job_title": "东门运营员",
+        "external_tenant_id": "wecom-yueshan",
+        "external_user_id": "wecom-li-ming",
+        "wecom_binding_status": "ACTIVE",
+        "status": "ACTIVE"
+      }
+    },
+    {
+      "name": "刷新前后从服务端恢复相同会话集合",
+      "passed": true,
+      "actual": {
+        "session_count": 0
+      }
+    },
+    {
+      "name": "返回会话仅属于李明和悦山景区",
+      "passed": true,
+      "actual": {
+        "session_count": 0
+      }
+    },
+    {
+      "name": "伪造员工身份在读取前被拒绝",
+      "passed": true,
+      "actual": {
+        "status_code": 404,
+        "detail": {
+          "code": "HTTP_404",
+          "message": "Employee identity not found",
+          "trace_id": "6070fc847b104d269928cd24d03d015a",
+          "retryable": false,
+          "action": "检查请求和当前权限后重试。"
+        }
+      }
+    },
+    {
+      "name": "身份和会话检查未创建业务过程数据",
+      "passed": true,
+      "actual": {
+        "sessions": 0,
+        "channel_conversations": 0,
+        "messages": 0,
+        "conversation_turns": 0,
+        "message_runs": 0,
+        "message_attachments": 0,
+        "message_attachment_links": 0,
+        "events": 0,
+        "event_activities": 0,
+        "tasks": 0,
+        "task_decompositions": 0,
+        "approvals": 0,
+        "push_logs": 0,
+        "tool_invocations": 0,
+        "personas": 0,
+        "persona_interviews": 0,
+        "non_sop_knowledge_documents": 0,
+        "knowledge_retrieval_snapshots": 0,
+        "watcher_policies": 0,
+        "watcher_runs": 0,
+        "watcher_findings": 0,
+        "experience_candidates": 0,
+        "experience_candidate_attempts": 0,
+        "experience_interviews": 0,
+        "experience_interview_turns": 0,
+        "experience_interview_authorizations": 0,
+        "experience_cards": 0,
+        "experience_card_versions": 0,
+        "experience_authorizations": 0,
+        "experience_reviews": 0,
+        "experience_usage_logs": 0,
+        "llm_call_logs": 1,
+        "runtime_recovery_runs": 0
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "server-bound-identity",
+      "path": "artifacts/E2E-01/server-bound-identity.json",
+      "sha256": "6c6216ef3a81e8ac3abc68671d010f07984b226d6462683bbef076bc3e74508b"
+    },
+    {
+      "name": "initial-sessions",
+      "path": "artifacts/E2E-01/initial-sessions.json",
+      "sha256": "f48c55b0d3c6e665f7fefed55d0936c10610b3f4034f63d88e9ad4ab10cc55d7"
+    },
+    {
+      "name": "restored-sessions",
+      "path": "artifacts/E2E-01/restored-sessions.json",
+      "sha256": "f48c55b0d3c6e665f7fefed55d0936c10610b3f4034f63d88e9ad4ab10cc55d7"
+    },
+    {
+      "name": "forged-identity-rejection",
+      "path": "artifacts/E2E-01/forged-identity-rejection.json",
+      "sha256": "0945403fe8042ff32760b216b331b2cad0b14b977372184325cfba0274df7704"
+    },
+    {
+      "name": "post-check-process-counts",
+      "path": "artifacts/E2E-01/post-check-process-counts.json",
+      "sha256": "6ffbbe8f7fe54982e7e8319dc278341d4c0089de34d1087abd75ff0ca3111720"
+    }
+  ]
+}

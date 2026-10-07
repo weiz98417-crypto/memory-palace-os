@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T080209Z-84A31C3E",
+  "step_id": "E2E-14",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:04:01Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "event_id": "79af7e2b-0353-4a0d-ae2d-d54fd7c6c1f0",
+    "experience_card_id": "bb7d17019af3424981ee677327341c8e",
+    "published_version": "2",
+    "vector_doc_id": "experience:venue-yueshan:bb7d17019af3424981ee677327341c8e:v2"
+  },
+  "references": [
+    "POST /api/v1/admin/experience-cards/bb7d17019af3424981ee677327341c8e/submit",
+    "POST /api/v1/admin/experience-cards/bb7d17019af3424981ee677327341c8e/reject",
+    "PUT /api/v1/assistant/experience/cards/bb7d17019af3424981ee677327341c8e",
+    "POST /api/v1/admin/experience-cards/bb7d17019af3424981ee677327341c8e/publish",
+    "GET /api/v1/admin/experience-cards/bb7d17019af3424981ee677327341c8e"
+  ],
+  "assertions": [
+    {
+      "name": "审核退回并由专家修订后重新确认",
+      "passed": true,
+      "actual": {
+        "submitted": "IN_REVIEW",
+        "rejected": "DRAFT",
+        "revised_version": 2,
+        "resubmitted": "IN_REVIEW"
+      }
+    },
+    {
+      "name": "旧版本快照不可变且审核轨迹完整",
+      "passed": true,
+      "actual": {
+        "versions": [
+          2,
+          1
+        ],
+        "actions": [
+          "CONFIRM",
+          "SUBMIT",
+          "REJECT",
+          "REVISE",
+          "CONFIRM",
+          "SUBMIT",
+          "PUBLISH"
+        ]
+      }
+    },
+    {
+      "name": "经验发布版本与 pgvector 索引一致",
+      "passed": true,
+      "actual": {
+        "status": "PUBLISHED",
+        "index_status": "INDEXED",
+        "published_version": 2,
+        "vector_doc_id": "experience:venue-yueshan:bb7d17019af3424981ee677327341c8e:v2"
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "card-before",
+      "path": "artifacts/E2E-14/card-before.json",
+      "sha256": "6191471659478ca5d3ee042d657f9c8e946369982092afce30d186075579b47b"
+    },
+    {
+      "name": "card-rejected",
+      "path": "artifacts/E2E-14/card-rejected.json",
+      "sha256": "b30f9a6c747592f5710665702a73b17b44b1bdaaf4919107100151febea14c87"
+    },
+    {
+      "name": "card-revised",
+      "path": "artifacts/E2E-14/card-revised.json",
+      "sha256": "70e632a65473cb45f04d2b64813e0f6cb4d14713205403ea9af3641fdd73fc92"
+    },
+    {
+      "name": "card-published",
+      "path": "artifacts/E2E-14/card-published.json",
+      "sha256": "9101487e4a176b2b442f1343d9384142336e9232ffaea56c25c0cefd8979ce34"
+    },
+    {
+      "name": "card-detail",
+      "path": "artifacts/E2E-14/card-detail.json",
+      "sha256": "83d10e347eeed173090ad103eeff936ea8242ad760cc742ef2b732add0e8f7d5"
+    }
+  ]
+}

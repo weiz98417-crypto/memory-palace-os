@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T065304Z-A4939230",
+  "step_id": "UAT-F13",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T07:05:16Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "employee_user_id": "a96fb11a4b874b7881ea1d4c0c96fdde",
+    "identity_id": "69b5fafe-075d-571b-8076-0dbcf9b4fe02"
+  },
+  "references": [
+    "POST /api/v1/admin/users",
+    "POST /api/v1/channels/simulator/messages",
+    "POST /api/v1/channels/identities",
+    "GET /api/v1/assistant/sessions"
+  ],
+  "assertions": [
+    {
+      "name": "有正式用户但无渠道映射时消息被拒绝",
+      "passed": true,
+      "actual": {
+        "status_code": 403,
+        "detail": {
+          "code": "IDENTITY_NOT_BOUND",
+          "message": "The employee does not have an active WeCom identity binding.",
+          "trace_id": "e6ff047ec8554baea244b5b3cf22e489",
+          "retryable": false,
+          "action": "请根据提示修正后重试。"
+        }
+      }
+    },
+    {
+      "name": "停用渠道映射仍不能进入受理链",
+      "passed": true,
+      "actual": {
+        "identity_status": "DISABLED",
+        "rejection": {
+          "status_code": 403,
+          "detail": {
+            "code": "IDENTITY_NOT_BOUND",
+            "message": "The employee does not have an active WeCom identity binding.",
+            "trace_id": "9cd5c87789ed41f1b07ec0378209afda",
+            "retryable": false,
+            "action": "请根据提示修正后重试。"
+          }
+        }
+      }
+    },
+    {
+      "name": "两次拒绝均未创建员工会话",
+      "passed": true,
+      "actual": {
+        "session_count": 0
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "employee",
+      "path": "artifacts/UAT-F13/employee.json",
+      "sha256": "c9c66bac728792764da9b48af28f106c4925f9fc5bb3476c771155833ba720d6"
+    },
+    {
+      "name": "unbound-rejection",
+      "path": "artifacts/UAT-F13/unbound-rejection.json",
+      "sha256": "1234fc90617da1a3a4b2911883c62d2bfc3d55e6257722487127741073a97907"
+    },
+    {
+      "name": "disabled-binding",
+      "path": "artifacts/UAT-F13/disabled-binding.json",
+      "sha256": "6ba9688dfea66b253920a0687677f72850a211f454a7d0939678beb000ed84f0"
+    },
+    {
+      "name": "disabled-rejection",
+      "path": "artifacts/UAT-F13/disabled-rejection.json",
+      "sha256": "2d08b88917d04b82e8d0acca4290acebb889553dea6be6abfb3d3ed4e0a77cef"
+    },
+    {
+      "name": "sessions",
+      "path": "artifacts/UAT-F13/sessions.json",
+      "sha256": "f48c55b0d3c6e665f7fefed55d0936c10610b3f4034f63d88e9ad4ab10cc55d7"
+    }
+  ]
+}

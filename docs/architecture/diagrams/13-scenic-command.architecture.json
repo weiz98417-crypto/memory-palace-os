@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "景区命令 · 执行者、事实账本与实时视图", "locale": "zh-CN", "quality_profile": "showcase", "viewBox": [1390, 630]},
+  "components": [
+    {"id": "operator", "type": "frontend", "label": "景区操作端", "sublabel": "受保护的人员与场地", "pos": [40, 81], "size": [250, 82]},
+    {"id": "api", "type": "security", "label": "景区 API", "sublabel": "鉴权 · venue_id · 幂等键", "pos": [370, 81], "size": [250, 82]},
+    {"id": "operations", "type": "backend", "label": "ScenicAreaOperations", "sublabel": "校验并执行景区命令", "pos": [700, 81], "size": [250, 82]},
+    {"id": "commands", "type": "database", "label": "scenic_commands", "sublabel": "命令类型 · 输入哈希 · 状态", "pos": [1030, 81], "size": [250, 82]},
+    {"id": "facts", "type": "database", "label": "景区业务事实", "sublabel": "信号 · 告警 · 事件 · 证据", "pos": [1030, 387], "size": [250, 82]},
+    {"id": "publisher", "type": "backend", "label": "RedisSituationBus", "sublabel": "Redis 实时唤醒", "pos": [700, 387], "size": [250, 82]},
+    {"id": "stream", "type": "backend", "label": "景区快照与 SSE", "sublabel": "/scenic/snapshot · /scenic/stream", "pos": [370, 387], "size": [250, 82]},
+    {"id": "screen", "type": "frontend", "label": "态势屏", "sublabel": "读快照 · 接收增量事件", "pos": [40, 387], "size": [250, 82]}
+  ],
+  "connections": [
+    {"from": "operator", "to": "api", "label": "命令请求"},
+    {"from": "api", "to": "operations", "label": "授权后执行"},
+    {"from": "operations", "to": "commands", "label": "持久化幂等命令"},
+    {"from": "operations", "to": "facts", "label": "更新领域事实"},
+    {"from": "operations", "to": "publisher", "label": "发布增量", "labelAt": [825, 177]},
+    {"from": "publisher", "to": "stream", "label": "实时唤醒"},
+    {"from": "stream", "to": "screen", "label": "SSE / 快照"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "持久化事实", "items": ["scenic_commands 保存 GENERATE_ADVICE、DRAFT_DISPATCH、SUMMARIZE_CLOSURE 等命令运行；不存在单独 advice_runs 表。", "事件、告警、信号、现场证据与增量活动由 ScenicAreaOperations 写入相应事实表。"]},
+    {"dot": "amber", "title": "读写方向", "items": ["执行者是 ScenicAreaOperations；数据库表不互相执行命令。", "SSE 是状态变化的通知，页面仍以服务器快照和业务事实为准。"]}
+  ]
+}

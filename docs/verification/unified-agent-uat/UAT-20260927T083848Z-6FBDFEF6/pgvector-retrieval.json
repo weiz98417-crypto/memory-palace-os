@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T083848Z-6FBDFEF6",
+  "records": [
+    {
+      "step_id": "E2E-15",
+      "card_id": "af153ca3e0234c19b7114c5a71a37277",
+      "vector_doc_id": "experience:venue-yueshan:af153ca3e0234c19b7114c5a71a37277:v2",
+      "published_version": 2,
+      "score": 0.750272,
+      "retrieved_by_user_id": "ba09a9f49f87411b802a059c239e6d56"
+    },
+    {
+      "step_id": "UAT-F04",
+      "card_id": "af153ca3e0234c19b7114c5a71a37277",
+      "service_stopped": true,
+      "failure_code": "EXPERIENCE_SEARCH_FAILED",
+      "restored_hit_id": "af153ca3e0234c19b7114c5a71a37277"
+    }
+  ]
+}

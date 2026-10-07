@@ -12,18 +12,19 @@ $cache = Get-ScenicModelCache -Override $ModelCache
 $env:BGE_M3_CACHE_DIR = $cache
 Assert-ScenicDocker
 if (-not $env:OTEL_EXPORTER_OTLP_ENDPOINT) { $env:OTEL_EXPORTER_OTLP_ENDPOINT = 'http://jaeger:4317' }
+$env:ADVICE_EXECUTION_MODE = 'hatchet'
+$env:HATCHET_CLIENT_TOKEN_FILE = '/tokens/worker'
 
 # Docker Desktop can assign a different bridge gateway after a network recreate.
 # The protected operations entry trusts the local ingress, so keep this value in sync.
 $gateway = Get-ScenicEgressGateway
 if ($gateway) { $env:SCENIC_PREP_ALLOWED_HOSTS = Merge-ScenicAllowedHosts -Gateway $gateway }
 
-$arguments = @('up', '-d')
-if (-not $NoBuild) { $arguments += '--build' }
-$arguments += @('app', 'nginx', 'scenic-agent-worker', 'hatchet-api', 'hatchet-dashboard', 'jaeger')
-
 Write-Host "Starting scenic demo stack ($script:ScenicProjectName)..." -ForegroundColor Cyan
-Invoke-ScenicCompose -Arguments $arguments
+if (-not $NoBuild) { Invoke-ScenicCompose -Arguments @('build', 'app') }
+Invoke-ScenicCompose -Arguments @('up', '-d', 'scenic-agent-worker', 'hatchet-api', 'hatchet-dashboard', 'jaeger')
+Wait-ScenicWorkerContainerHealthy -TimeoutSeconds $TimeoutSeconds
+Invoke-ScenicCompose -Arguments @('up', '-d', 'app', 'nginx')
 Wait-ScenicAppContainerHealthy -TimeoutSeconds $TimeoutSeconds
 
 # On a cold start the network is created by the command above. Re-read its gateway

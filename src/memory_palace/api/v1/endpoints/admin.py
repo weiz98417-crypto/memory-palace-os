@@ -543,7 +543,8 @@ async def request_controlled_action(
     if supersedes_approval_id:
         previous = await db.fetch_one(
             """
-            SELECT approval_id, status, event_id, task_id, tool_name, args
+            SELECT approval_id, status, event_id, task_id, tool_name, args,
+                   evidence_snapshot_json
             FROM approval_requests
             WHERE approval_id = ? AND venue_id = ?
             """,
@@ -578,7 +579,9 @@ async def request_controlled_action(
                 "从原审批详情执行重新提交。",
             )
         previous_args = _decode_json_value(previous.get("args"), {})
-        if action_code and previous_args.get("decision") != action_code:
+        previous_snapshot = _decode_json_value(previous.get("evidence_snapshot_json"), {})
+        previous_action_code = previous_snapshot.get("action_code") or previous_args.get("decision")
+        if action_code and previous_action_code != action_code:
             raise api_error(
                 request,
                 409,

@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T074541Z-2FAD6B30",
+  "step_id": "E2E-10",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T07:48:27Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "event_id": "c5057e90-573e-41a9-a147-3fd51d077e09",
+    "task_id": "40645114-f7f8-47a2-be73-87de206792c8",
+    "manager_user_id": "08388026bf6242f0b36bf6dbc6cde2d7"
+  },
+  "references": [
+    "POST /api/v1/admin/events/c5057e90-573e-41a9-a147-3fd51d077e09/close",
+    "PATCH /api/v1/admin/tasks/40645114-f7f8-47a2-be73-87de206792c8/assignment",
+    "POST /api/v1/admin/tasks/40645114-f7f8-47a2-be73-87de206792c8/complete",
+    "GET /api/v1/admin/tasks/40645114-f7f8-47a2-be73-87de206792c8"
+  ],
+  "assertions": [
+    {
+      "name": "末项任务未完成时服务端拒绝关闭事件",
+      "passed": true,
+      "actual": {
+        "rejection": {
+          "status_code": 409,
+          "detail": {
+            "code": "EVENT_CLOSE_BLOCKED",
+            "message": "仍有未完成任务：汇总证据提交值班经理复运审批并通知调度",
+            "trace_id": "1aadfdc181754df9892688c728887acc",
+            "retryable": false,
+            "action": "完成提示中的任务、审批或动作执行后，再次提交闭环。",
+            "closure_conditions": {
+              "ready": false,
+              "checked_at": 1790495307.8024879,
+              "task_count": 4,
+              "approval_count": 2,
+              "blocker_count": 1,
+              "blocker_counts": {
+                "UNFINISHED_TASK": 1
+              },
+              "blockers": [
+                {
+                  "code": "UNFINISHED_TASK",
+                  "message": "仍有未完成任务：汇总证据提交值班经理复运审批并通知调度",
+                  "resource_type": "task",
+                  "resource_id": "40645114-f7f8-47a2-be73-87de206792c8",
+                  "business_id": "RW-20260927-40645114",
+                  "status": "PENDING"
+                }
+              ]
+            }
+          }
+        },
+        "task_status": "PENDING"
+      }
+    },
+    {
+      "name": "值班经理以独立身份执行末项任务",
+      "passed": true,
+      "actual": {
+        "manager_id": "08388026bf6242f0b36bf6dbc6cde2d7",
+        "started": "RUNNING"
+      }
+    },
+    {
+      "name": "末项任务提交审批关联结果并持久化",
+      "passed": true,
+      "actual": {
+        "status": "DONE",
+        "result": {
+          "summary": "三轮试车证据、调度审批与送达记录已核对，保持停运观察后进入闭环检查",
+          "approval_id": "1f4642d4-9956-4062-aade-265c28097080",
+          "evidence_complete": true
+        }
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "close-rejection",
+      "path": "artifacts/E2E-10/close-rejection.json",
+      "sha256": "98b8674c59c018d2fc3c7cc4c38c00fdbfa027178f2699c84171ac4ce3dfcb9b"
+    },
+    {
+      "name": "task-before",
+      "path": "artifacts/E2E-10/task-before.json",
+      "sha256": "dfed04e0f7433e9dd68591b25e3a2ee8387b9c789061bbe537e0f1568558507d"
+    },
+    {
+      "name": "task-completed",
+      "path": "artifacts/E2E-10/task-completed.json",
+      "sha256": "95b7549d459d5eee32c9d5a816fdfc151016f93a8c9b356421d60a8bfd928a1a"
+    },
+    {
+      "name": "task-after",
+      "path": "artifacts/E2E-10/task-after.json",
+      "sha256": "6f785d1fb4e2555ccdc2cc797ae0542e017748b3b6eacd130385de8e627c644e"
+    }
+  ]
+}

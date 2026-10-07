@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T083848Z-6FBDFEF6",
+  "step_id": "UAT-F11",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:44:04Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "employee_user_id": "b8d1211da73949c3807921b2e1b56b5d"
+  },
+  "references": [
+    "POST /api/v1/auth/login",
+    "GET /api/v1/admin/users",
+    "GET /api/v1/admin/diagnostics",
+    "GET /api/v1/admin/assignees",
+    "POST /api/v1/admin/tasks"
+  ],
+  "assertions": [
+    {
+      "name": "普通员工使用独立正式账号",
+      "passed": true,
+      "actual": {
+        "role": "operator",
+        "username": "li-ming"
+      }
+    },
+    {
+      "name": "员工读取用户、诊断和治理目录均被拒绝",
+      "passed": true,
+      "actual": {
+        "users": {
+          "status_code": 403,
+          "detail": {
+            "code": "AUTH_FORBIDDEN",
+            "message": "当前角色无权执行此操作。",
+            "trace_id": "b6ed733d8a8c4d8f9210ff5ebad47334",
+            "retryable": false,
+            "action": "请联系场地管理员调整权限。"
+          }
+        },
+        "diagnostics": {
+          "status_code": 403,
+          "detail": {
+            "code": "AUTH_FORBIDDEN",
+            "message": "当前角色无权执行此操作。",
+            "trace_id": "ade6a132c4cf4d8b8e74933a650a75bf",
+            "retryable": false,
+            "action": "请联系场地管理员调整权限。"
+          }
+        },
+        "assignees": {
+          "status_code": 403,
+          "detail": {
+            "code": "AUTH_FORBIDDEN",
+            "message": "当前角色无权执行此操作。",
+            "trace_id": "0a99bea1915c4f22aab0c559b958ee50",
+            "retryable": false,
+            "action": "请联系场地管理员调整权限。"
+          }
+        },
+        "task_creation": {
+          "status_code": 403,
+          "detail": {
+            "code": "AUTH_FORBIDDEN",
+            "message": "当前角色无权执行此操作。",
+            "trace_id": "06f07816790049818df7d253b37333e8",
+            "retryable": false,
+            "action": "请联系场地管理员调整权限。"
+          }
+        }
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "employee-principal",
+      "path": "artifacts/UAT-F11/employee-principal.json",
+      "sha256": "b3e90f3539c01c9001f658503502d4b4d214aed48162083111b06238ecaa761c"
+    },
+    {
+      "name": "authorization-rejections",
+      "path": "artifacts/UAT-F11/authorization-rejections.json",
+      "sha256": "9163840aeafc14cea5033e544a6fd02df2171a75b56cbfd2b98fbb4389c80277"
+    }
+  ]
+}

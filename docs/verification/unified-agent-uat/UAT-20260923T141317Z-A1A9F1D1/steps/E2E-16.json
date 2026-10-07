@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260923T141317Z-A1A9F1D1",
+  "step_id": "E2E-16",
+  "status": "PASSED",
+  "recorded_at": "2026-09-23T14:27:35Z",
+  "execution_mode": "HIGH_FIDELITY_TEST_DOUBLE",
+  "test_double": {
+    "name": "restart-recovery-observer-v1",
+    "scope": "observation envelope only"
+  },
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "restart_before_instance_id": "9ec750ec4b60489e9df257bab6dd643a",
+    "restart_after_instance_id": "af04d455bba84d0f81d8061b6bf7b0fb",
+    "runtime_recovery_id": "d11e2b63529a4e03a3baaa472319abff"
+  },
+  "references": [
+    "/api/v1/auth/login",
+    "/api/v1/admin/diagnostics",
+    "/api/v1/admin/queue",
+    "/api/v1/admin/recovery-runs",
+    "scripts/mvp.cmd restart-app"
+  ],
+  "assertions": [
+    {
+      "name": "管理员身份在重启后仍可建立正式会话",
+      "passed": true,
+      "actual": {
+        "role": "admin",
+        "venue_id": "venue-yueshan"
+      }
+    },
+    {
+      "name": "应用重启后核心运行依赖保持健康",
+      "passed": true,
+      "actual": {
+        "status": "degraded",
+        "runtime": {
+          "app": {
+            "status": "healthy",
+            "version": "1.0.0",
+            "instance_id": "af04d455bba84d0f81d8061b6bf7b0fb"
+          },
+          "postgresql": {
+            "status": "healthy"
+          },
+          "redis": {
+            "status": "healthy",
+            "backend": "redis_streams",
+            "stream_depth": 0,
+            "pending": 0,
+            "lag": 0,
+            "dead_letter_depth": 0
+          },
+          "pgvector": {
+            "status": "healthy",
+            "backend": "postgresql_pgvector",
+            "extension_version": "0.8.1",
+            "index_name": "knowledge_vectors_bge_m3_v1",
+            "model": "BAAI/bge-m3",
+            "dimension": 1024,
+            "device": "custom"
+          },
+          "worker": {
+            "status": "healthy",
+            "running": true,
+            "backend": "redis_streams",
+            "concurrency": 5,
+            "inflight": 0,
+            "started_at": 1790173602.7515008
+          }
+        }
+      }
+    },
+    {
+      "name": "Redis 队列在重启后可用",
+      "passed": true,
+      "actual": {
+        "status": null,
+        "connected": true
+      }
+    },
+    {
+      "name": "存在重启前后运行实例标识",
+      "passed": true,
+      "actual": {
+        "before_instance_id": "9ec750ec4b60489e9df257bab6dd643a",
+        "after_instance_id": "af04d455bba84d0f81d8061b6bf7b0fb"
+      }
+    },
+    {
+      "name": "启动恢复审计状态为成功",
+      "passed": true,
+      "actual": {
+        "recovery": {
+          "id": "d11e2b63529a4e03a3baaa472319abff",
+          "scope_type": "GLOBAL",
+          "instance_id": "af04d455bba84d0f81d8061b6bf7b0fb",
+          "app_version": "1.0.0",
+          "status": "SUCCEEDED",
+          "trace_id": "6685dee93bec47ca9ccb856c69a893a5",
+          "task_graph_recovered_count": 0,
+          "task_graph_reset_count": 0,
+          "approval_interrupted_count": 0,
+          "approval_pending_loaded_count": 0,
+          "watcher_interrupted_count": 0,
+          "redis_status": "AVAILABLE",
+          "redis_pending_count": 0,
+          "redis_claimed_count": 0,
+          "redis_acked_count": 0,
+          "error_summary": null,
+          "trace": [
+            {
+              "phase": "task_graph",
+              "recovered_count": 0,
+              "reset_count": 0,
+              "status": "SUCCEEDED"
+            },
+            {
+              "interrupted_count": 0,
+              "pending_loaded_count": 0,
+              "phase": "approvals",
+              "status": "SUCCEEDED"
+            },
+            {
+              "interrupted_count": 0,
+              "phase": "watcher",
+              "status": "SUCCEEDED"
+            },
+            {
+              "acked_count": 0,
+              "claimed_count": 0,
+              "pending_count": 0,
+              "phase": "redis",
+              "status": "SUCCEEDED"
+            }
+          ],
+          "started_at": 1790173602.224101,
+          "completed_at": 1790173602.2425923
+        },
+        "recent_count": 5
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "runtime-before",
+      "path": "artifacts/E2E-16/runtime-before.json",
+      "sha256": "3e48336c6b8ec4264e5e16711a57afe8457918da4c53923d654d8f8cd4ffb10a"
+    },
+    {
+      "name": "runtime-after",
+      "path": "artifacts/E2E-16/runtime-after.json",
+      "sha256": "c63ab2a153da718a94aaa6d04307f17f51db3c018ceacc591e601deeffe9cfa7"
+    },
+    {
+      "name": "queue-after",
+      "path": "artifacts/E2E-16/queue-after.json",
+      "sha256": "1a9a45875e8f4201cc2ad6b6256598ea7eaea3ca6c32d058cb67c142ccc6028f"
+    },
+    {
+      "name": "recovery-runs",
+      "path": "artifacts/E2E-16/recovery-runs.json",
+      "sha256": "344e52d01ef6058bae456f5ca49979bb86b43c859fda90172c2af326e6cf8483"
+    }
+  ]
+}

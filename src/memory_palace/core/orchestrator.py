@@ -1129,7 +1129,7 @@ class Orchestrator:
                 SET raw_text = ?, severity = ?, context_trigger_data = ?,
                     memory_content = ?, updated_at = ?
                 WHERE event_id = ? AND venue_id = ? AND status = 'OPEN'
-                  AND COALESCE(updated_at, -1) = COALESCE(?, -1)
+                  AND COALESCE(updated_at, -1) = COALESCE(CAST(? AS DOUBLE PRECISION), -1)
                 """,
                 (
                     updated_raw_text,

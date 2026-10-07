@@ -1,0 +1,4 @@
+graphify-out/** linguist-generated=true
+static/product/index.html linguist-generated=true
+docs/architecture/index.html linguist-generated=true
+docs/architecture/diagrams/*.html linguist-generated=true

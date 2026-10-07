@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T080209Z-84A31C3E",
+  "step_id": "E2E-00",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:02:32Z",
+  "role": "刘海 / 系统管理员",
+  "entrypoint": "/admin/diagnostics",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "trace_id": "586de2a656714d229a207efec59b1999",
+    "model_request_id": "59efe98c-9afc-4acc-9351-57de123098eb"
+  },
+  "references": [
+    "POST /api/v1/auth/login",
+    "POST /api/v1/admin/diagnostics/deepseek-probe",
+    "GET /api/v1/admin/diagnostics",
+    "GET /api/v1/admin/llm-calls?trace_id={trace_id}",
+    "GET /api/v1/admin/audit-logs?trace_id={trace_id}"
+  ],
+  "assertions": [
+    {
+      "name": "管理员身份属于冻结 UAT 场地",
+      "passed": true,
+      "actual": {
+        "role": "admin",
+        "venue_id": "venue-yueshan"
+      }
+    },
+    {
+      "name": "正式运行依赖全部健康",
+      "passed": true,
+      "actual": {
+        "overall": "healthy",
+        "components": {
+          "app": "healthy",
+          "postgresql": "healthy",
+          "redis": "healthy",
+          "pgvector": "healthy",
+          "worker": "healthy"
+        }
+      }
+    },
+    {
+      "name": "八个 Agent 已注册",
+      "passed": true,
+      "actual": {
+        "status": "healthy",
+        "registered_agent_count": 8,
+        "verified_agent_count": 0,
+        "required_agent_count": 8,
+        "complete": false
+      }
+    },
+    {
+      "name": "DeepSeek 真实探针使用指定模型并已落库",
+      "passed": true,
+      "actual": {
+        "probe_status": "READY",
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "is_mock": false,
+        "persisted_status": "SUCCEEDED"
+      }
+    },
+    {
+      "name": "企业内部系统接入环境已就绪",
+      "passed": true,
+      "actual": {
+        "status": "SIMULATOR_READY",
+        "entrypoint": "/simulator/wecom/",
+        "active_user_count": 7,
+        "mapped_active_user_count": 7,
+        "unmapped_active_user_count": 0
+      }
+    },
+    {
+      "name": "生产外部渠道保持策略禁用且无副作用",
+      "passed": true,
+      "actual": {
+        "status": "DISABLED_BY_POLICY",
+        "policy_mode": "WECOM_SIMULATOR_ONLY",
+        "client_initialized": false,
+        "enqueue_enabled": false,
+        "delivery_enabled": false
+      }
+    },
+    {
+      "name": "DeepSeek 探针审计已持久化",
+      "passed": true,
+      "actual": {
+        "action": "DEEPSEEK_PROBE_RUN",
+        "outcome": "SUCCEEDED",
+        "trace_id": "586de2a656714d229a207efec59b1999"
+      }
+    }
+  ],
+  "model_calls": [
+    {
+      "agent": "RuntimeDiagnostics",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "59efe98c-9afc-4acc-9351-57de123098eb",
+      "trace_id": "586de2a656714d229a207efec59b1999",
+      "status": "SUCCEEDED"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "runtime-diagnostics",
+      "path": "artifacts/E2E-00/runtime-diagnostics.json",
+      "sha256": "eefa90f197c4e2d7b797e6068dabfb7446c5d9447933f25b6248520792bb3d07"
+    },
+    {
+      "name": "deepseek-probe",
+      "path": "artifacts/E2E-00/deepseek-probe.json",
+      "sha256": "2b5aad203ce6416fc57a5cc85158bbee4c7af3a13813b6806dec70275dc2943d"
+    },
+    {
+      "name": "llm-call",
+      "path": "artifacts/E2E-00/llm-call.json",
+      "sha256": "e8ae0a350f1b643ab7f1aad8a8158e22d363c6ea9b742dc270af3cdb2b4e092e"
+    },
+    {
+      "name": "probe-audit",
+      "path": "artifacts/E2E-00/probe-audit.json",
+      "sha256": "a80fc8ca16f679c8faa66837f501c4a44f6b22045f76ea088b2acc6cd7483bed"
+    }
+  ]
+}

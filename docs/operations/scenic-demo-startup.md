@@ -38,6 +38,7 @@ Hatchet Dashboard 使用独立登录，不走业务系统会话；本机 quickst
 启动脚本包含 Jaeger 时会设置 `OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317`。如果手工启动，需要同时设置该变量再重启 `app` 和 `scenic-agent-worker`；否则 Jaeger 页面会停留在无 trace 的空态。
 
 不需要启动 `scenic-agent-prototype`；正式演示只使用 `scenic-agent-worker`。如果只需要看页面、不需要真实模型建议，可暂时不启动 worker，但“检索并核验 SOP”之后的异步建议将不可用。
+启动脚本会将 App 的建议执行模式设为 `hatchet`，并使用共享 token 卷连接正式 worker。
 
 ## 二、脚本清单
 

@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T083848Z-6FBDFEF6",
+  "records": [
+    {
+      "step_id": "E2E-00",
+      "agent": "RuntimeDiagnostics",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "9be40251-caae-4676-a84e-a34ab91991d6",
+      "trace_id": "c98de4c9630b4e5cb4c116d7e9b6494a",
+      "status": "SUCCEEDED"
+    },
+    {
+      "step_id": "E2E-03",
+      "agent": "Commander",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "ad5d9fc7-8320-4792-9475-250700b432a9",
+      "trace_id": "eea77ebf209e44c0826bf634cb164042",
+      "status": "SUCCEEDED"
+    },
+    {
+      "step_id": "E2E-03",
+      "agent": "MemoryOps",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "828e2e72-ebd9-446e-9c80-01ba904b5122",
+      "trace_id": "eea77ebf209e44c0826bf634cb164042",
+      "status": "SUCCEEDED"
+    },
+    {
+      "step_id": "E2E-03",
+      "agent": "Router",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "01e1cf8d-8cb6-4961-82fa-52b4debf3381",
+      "trace_id": "eea77ebf209e44c0826bf634cb164042",
+      "status": "SUCCEEDED"
+    },
+    {
+      "step_id": "E2E-03",
+      "agent": "ContextTrigger",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "1dd6f013-7ed1-48e9-8415-77543047e6fe",
+      "trace_id": "eea77ebf209e44c0826bf634cb164042",
+      "status": "SUCCEEDED"
+    },
+    {
+      "step_id": "E2E-05",
+      "agent": "TodoWrite",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "e435b6b5-0ef7-497d-88b8-c5ef4136e336",
+      "trace_id": "34fd46ce4e3443598ec85412a8c9110a",
+      "status": "SUCCEEDED"
+    },
+    {
+      "step_id": "E2E-11",
+      "agent": "Watcher",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "71cd56da-58d0-4476-895c-e3f8cd49fab2",
+      "trace_id": "64931aaf5dac4bffbb9f6efaa2a9b259",
+      "status": "SUCCEEDED"
+    },
+    {
+      "step_id": "E2E-12",
+      "agent": "PersonaExtract",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "d05de6f3-6c01-4e63-8168-b0d2d47b5d07",
+      "trace_id": "2be1d9139e6447e4839897d4a4c0a18b",
+      "status": "SUCCEEDED"
+    },
+    {
+      "step_id": "E2E-13",
+      "agent": "PersonaExtract",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "c1a971b5-3824-4dfe-b652-cc1b0cc326a5",
+      "trace_id": "263d88fc5f7049d9b6414eb8465121a7",
+      "status": "SUCCEEDED"
+    },
+    {
+      "step_id": "E2E-15",
+      "call_id": "uat-test-double:UAT-20260927T083848Z-6FBDFEF6:e2e-15:router",
+      "trace_id": "uat-test-double:UAT-20260927T083848Z-6FBDFEF6:e2e-15",
+      "provider": "test-double",
+      "model": "deepseek-flash",
+      "is_mock": true,
+      "status": "COMPLETED",
+      "agent": "Router",
+      "execution_mode": "HIGH_FIDELITY_TEST_DOUBLE"
+    },
+    {
+      "step_id": "E2E-15",
+      "call_id": "uat-test-double:UAT-20260927T083848Z-6FBDFEF6:e2e-15:memoryops",
+      "trace_id": "uat-test-double:UAT-20260927T083848Z-6FBDFEF6:e2e-15",
+      "provider": "test-double",
+      "model": "deepseek-flash",
+      "is_mock": true,
+      "status": "COMPLETED",
+      "agent": "MemoryOps",
+      "execution_mode": "HIGH_FIDELITY_TEST_DOUBLE"
+    },
+    {
+      "step_id": "E2E-15",
+      "call_id": "uat-test-double:UAT-20260927T083848Z-6FBDFEF6:e2e-15:persona",
+      "trace_id": "uat-test-double:UAT-20260927T083848Z-6FBDFEF6:e2e-15",
+      "provider": "test-double",
+      "model": "deepseek-flash",
+      "is_mock": true,
+      "status": "COMPLETED",
+      "agent": "Persona",
+      "execution_mode": "HIGH_FIDELITY_TEST_DOUBLE"
+    },
+    {
+      "step_id": "UAT-F03",
+      "mode": "unauthorized-1",
+      "agent_id": "TodoWrite",
+      "status": "FAILED",
+      "trace_id": "abb900d028364c39aa34a41ac42b28e9",
+      "error_type": "AuthenticationError"
+    },
+    {
+      "step_id": "UAT-F03",
+      "mode": "unauthorized-2",
+      "agent_id": "TodoWrite",
+      "status": "FAILED",
+      "trace_id": "c0af4667a5994e2688895d9937badf11",
+      "error_type": "AuthenticationError"
+    },
+    {
+      "step_id": "UAT-F03",
+      "mode": "timeout",
+      "agent_id": "TodoWrite",
+      "status": "FAILED",
+      "trace_id": "7b5a564f36ce44f1a607347ff4b37acf",
+      "error_type": "APITimeoutError"
+    }
+  ]
+}

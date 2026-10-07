@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T083848Z-6FBDFEF6",
+  "step_id": "E2E-12",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:40:54Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "event_id": "b450242b-607e-44f1-84a8-48d5aba02829",
+    "candidate_id": "073e68954d775215be89193fc85552ec",
+    "trace_id": "2be1d9139e6447e4839897d4a4c0a18b"
+  },
+  "references": [
+    "POST /api/v1/admin/events/b450242b-607e-44f1-84a8-48d5aba02829/close",
+    "GET /api/v1/admin/events/b450242b-607e-44f1-84a8-48d5aba02829",
+    "POST /api/v1/admin/events/b450242b-607e-44f1-84a8-48d5aba02829/experience-candidate/retry",
+    "GET /api/v1/admin/llm-calls"
+  ],
+  "assertions": [
+    {
+      "name": "事件在闭环门禁通过后成功关闭",
+      "passed": true,
+      "actual": {
+        "closed": true,
+        "status": "CLOSED"
+      }
+    },
+    {
+      "name": "PersonaExtract 真实模型生成本事件草稿候选",
+      "passed": true,
+      "actual": {
+        "outcome": "CREATED",
+        "candidate_id": "073e68954d775215be89193fc85552ec",
+        "extraction_status": "SUCCEEDED",
+        "call_count": 1
+      }
+    },
+    {
+      "name": "候选尚未发布或建立检索索引",
+      "passed": true,
+      "actual": {
+        "status": "DRAFT",
+        "index_status": "NOT_INDEXED"
+      }
+    }
+  ],
+  "model_calls": [
+    {
+      "agent": "PersonaExtract",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "d05de6f3-6c01-4e63-8168-b0d2d47b5d07",
+      "trace_id": "2be1d9139e6447e4839897d4a4c0a18b",
+      "status": "SUCCEEDED"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "close-result",
+      "path": "artifacts/E2E-12/close-result.json",
+      "sha256": "bc4c7b0951d2e06337df1f5002bc483bdfb9a49bb80b61a2d52f5c1978a84c06"
+    },
+    {
+      "name": "event-after",
+      "path": "artifacts/E2E-12/event-after.json",
+      "sha256": "cb43989fce4ab012bbca94832d38169b4123eefaf426b340ba099176fddd8249"
+    },
+    {
+      "name": "candidate-result",
+      "path": "artifacts/E2E-12/candidate-result.json",
+      "sha256": "4d8e2b837cec2dcd7f1d52656cff9947f4c08b1995c552b7eb2a28e44ac73a90"
+    },
+    {
+      "name": "candidate-retries",
+      "path": "artifacts/E2E-12/candidate-retries.json",
+      "sha256": "e734d5d0959ce875042011a852db9034d201588636b6cb6fbde4ed37d41c678a"
+    },
+    {
+      "name": "model-call-metadata",
+      "path": "artifacts/E2E-12/model-call-metadata.json",
+      "sha256": "1364b05c5aff3afc8af6e3fe907194d0da5209c0f5d45440c0ad613a490cc983"
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T063641Z-270FD422",
+  "step_id": "UAT-F05",
+  "status": "FAILED",
+  "recorded_at": "2026-09-27T06:45:24Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "session_id": "uat-dependency-270fd422",
+    "parent_task_id": "76037b08-b9d0-45f8-a8d2-e8ea3269775f",
+    "child_task_id": "23657982-8509-4a38-9cb7-c3b573b06826"
+  },
+  "references": [
+    "POST /api/v1/admin/tasks",
+    "POST /api/v1/admin/tasks/23657982-8509-4a38-9cb7-c3b573b06826/start",
+    "POST /api/v1/admin/tasks/76037b08-b9d0-45f8-a8d2-e8ea3269775f/complete",
+    "GET /api/v1/admin/tasks/23657982-8509-4a38-9cb7-c3b573b06826"
+  ],
+  "assertions": [
+    {
+      "name": "后续任务持久化前置依赖",
+      "passed": true,
+      "actual": {
+        "id": "23657982-8509-4a38-9cb7-c3b573b06826",
+        "business_id": "RW-20260927-23657982",
+        "session_id": "uat-dependency-270fd422",
+        "venue_id": "venue-yueshan",
+        "event_id": null,
+        "description": "UAT 依赖完成后的复运任务",
+        "status": "BLOCKED",
+        "dependencies": [
+          "76037b08-b9d0-45f8-a8d2-e8ea3269775f"
+        ],
+        "due_at": null,
+        "result_schema_json": {},
+        "evidence_refs_json": [],
+        "result": null,
+        "error": null,
+        "block_reason": null,
+        "assigned_agent": null,
+        "assigned_user_id": null,
+        "decomposition_id": null,
+        "created_at": 1790491524.2988396,
+        "updated_at": 1790491524.2988396,
+        "started_at": null,
+        "completed_at": null,
+        "attempts": 0,
+        "max_attempts": 3
+      }
+    },
+    {
+      "name": "前置未完成时启动被拒绝且状态不变",
+      "passed": true,
+      "actual": {
+        "rejection": {
+          "status_code": 409,
+          "detail": {
+            "code": "TASK_NOT_RUNNABLE",
+            "message": "任务当前不可执行，可能仍在等待依赖。",
+            "trace_id": "bf20ec54cffa450fa8247e2d5dda6760",
+            "retryable": false,
+            "action": "先完成依赖任务或恢复失败任务。"
+          }
+        },
+        "status": "BLOCKED"
+      }
+    },
+    {
+      "name": "前置任务经正式接口启动并完成",
+      "passed": false,
+      "actual": {
+        "started": "RUNNING",
+        "completed": "DONE"
+      }
+    },
+    {
+      "name": "依赖完成后后续任务可启动",
+      "passed": true,
+      "actual": {
+        "status": "RUNNING"
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "parent-created",
+      "path": "artifacts/UAT-F05/parent-created.json",
+      "sha256": "7390a07478d43a355925fd0793b75ebfc10059605a3501435dd30e9099b19748"
+    },
+    {
+      "name": "child-created",
+      "path": "artifacts/UAT-F05/child-created.json",
+      "sha256": "eac9e76e2cd6c1aac517aa638bcaec3eb1f709870b96d72ad95d5d53232ae408"
+    },
+    {
+      "name": "blocked-attempt",
+      "path": "artifacts/UAT-F05/blocked-attempt.json",
+      "sha256": "4479a8f1574d85afb65c7bc6b8ff0a13a48dae4175a6471e9212e6664bf12b34"
+    },
+    {
+      "name": "child-blocked",
+      "path": "artifacts/UAT-F05/child-blocked.json",
+      "sha256": "5faeed3526c48197d0fad58d640eb815058be41bde4780bb8de30c51111bf6b5"
+    },
+    {
+      "name": "parent-completed",
+      "path": "artifacts/UAT-F05/parent-completed.json",
+      "sha256": "b074dc9923d3f95b49b932d8e9c491db222dbfcf597831f38f75f0b02e4f5564"
+    },
+    {
+      "name": "child-started",
+      "path": "artifacts/UAT-F05/child-started.json",
+      "sha256": "331445fd096a77559de43c447f47a64904af0dce3e82f761d1e3498434d549e5"
+    }
+  ]
+}

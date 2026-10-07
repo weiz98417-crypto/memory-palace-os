@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T083848Z-6FBDFEF6",
+  "step_id": "E2E-05",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:40:45Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "event_id": "b450242b-607e-44f1-84a8-48d5aba02829",
+    "session_id": "9eb5727a-16e7-5e5d-aba6-ef37433ef1cc",
+    "trace_id": "34fd46ce4e3443598ec85412a8c9110a",
+    "decomposition_id": "1855b828784946489be15ef5f2d58143",
+    "idempotency_key": "uat-20260927t083848z-6fbdfef6-e2e-05"
+  },
+  "references": [
+    "POST /api/v1/admin/tasks/decompose",
+    "GET /api/v1/admin/tasks/decompositions/status",
+    "GET /api/v1/admin/tasks",
+    "GET /api/v1/admin/llm-calls"
+  ],
+  "assertions": [
+    {
+      "name": "TodoWrite 真实模型调用并完成任务分解",
+      "passed": true,
+      "actual": {
+        "status": "created",
+        "call_count": 1
+      }
+    },
+    {
+      "name": "同一事件形成四任务三依赖图",
+      "passed": true,
+      "actual": {
+        "task_ids": [
+          "7fbf72d1-1e9d-448c-8a64-dd0dca54aa82",
+          "efcafae5-9b5f-4592-909d-419b86b733f7",
+          "a27c0d1e-ea56-4fe5-a4f3-b64d69a94ca7",
+          "cae00a60-7cc9-4741-a518-92bb10cde76d"
+        ],
+        "dependencies": [
+          [],
+          [
+            "7fbf72d1-1e9d-448c-8a64-dd0dca54aa82"
+          ],
+          [
+            "efcafae5-9b5f-4592-909d-419b86b733f7"
+          ],
+          [
+            "a27c0d1e-ea56-4fe5-a4f3-b64d69a94ca7"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "任务已原子激活并可由正式接口读取",
+      "passed": true,
+      "actual": {
+        "persisted_ids": [
+          "7fbf72d1-1e9d-448c-8a64-dd0dca54aa82",
+          "a27c0d1e-ea56-4fe5-a4f3-b64d69a94ca7",
+          "cae00a60-7cc9-4741-a518-92bb10cde76d",
+          "efcafae5-9b5f-4592-909d-419b86b733f7"
+        ],
+        "statuses": [
+          "BLOCKED",
+          "BLOCKED",
+          "BLOCKED",
+          "PENDING"
+        ]
+      }
+    },
+    {
+      "name": "任务带同一事件和业务编号",
+      "passed": true,
+      "actual": {
+        "business_ids": [
+          "RW-20260927-CAE00A60",
+          "RW-20260927-A27C0D1E",
+          "RW-20260927-EFCAFAE5",
+          "RW-20260927-7FBF72D1"
+        ]
+      }
+    }
+  ],
+  "model_calls": [
+    {
+      "agent": "TodoWrite",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "e435b6b5-0ef7-497d-88b8-c5ef4136e336",
+      "trace_id": "34fd46ce4e3443598ec85412a8c9110a",
+      "status": "SUCCEEDED"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "decomposition",
+      "path": "artifacts/E2E-05/decomposition.json",
+      "sha256": "44419badb729119a7cc39577070d443b36197d62e925c2f67d3dfcc4f4fad141"
+    },
+    {
+      "name": "persisted-tasks",
+      "path": "artifacts/E2E-05/persisted-tasks.json",
+      "sha256": "9ed24e4163e1fc2218d2ec9106368e24ea6d66ef42a2cbda18854040b398cfbc"
+    },
+    {
+      "name": "model-call-metadata",
+      "path": "artifacts/E2E-05/model-call-metadata.json",
+      "sha256": "091d1708794c6adcb1280e2d466c95ccd11c56e41a40488038b72238b3836f05"
+    }
+  ]
+}

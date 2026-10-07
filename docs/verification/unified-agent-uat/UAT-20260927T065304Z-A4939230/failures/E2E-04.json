@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T065304Z-A4939230",
+  "step_id": "E2E-04",
+  "status": "FAILED",
+  "recorded_at": "2026-09-27T07:13:09Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "event_id": "7f017e36-84f2-4efe-9ebf-e9c03942800c",
+    "session_id": "ca491a4b-eaf0-5993-8e8d-3d81d4aad43c",
+    "message_id": "2c558bd9-8c9f-44a7-8987-01685283671d",
+    "trace_id": "1abfe8e407444712afee232139469035"
+  },
+  "references": [
+    "POST /api/v1/channels/simulator/messages",
+    "GET /api/v1/admin/traces/1abfe8e407444712afee232139469035",
+    "GET /api/v1/admin/events/7f017e36-84f2-4efe-9ebf-e9c03942800c"
+  ],
+  "assertions": [
+    {
+      "name": "补充消息复用李明原会话",
+      "passed": true,
+      "actual": {
+        "session_id": "ca491a4b-eaf0-5993-8e8d-3d81d4aad43c",
+        "duplicate": false
+      }
+    },
+    {
+      "name": "补充消息完成且关联原事件",
+      "passed": false,
+      "actual": {
+        "run_status": "PROCESSING",
+        "result_event_id": null
+      }
+    },
+    {
+      "name": "原事件追加补充信息并保留开放状态",
+      "passed": false,
+      "actual": {
+        "event_id": "7f017e36-84f2-4efe-9ebf-e9c03942800c",
+        "status": "OPEN",
+        "before_length": 61,
+        "after_length": 61
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "accepted-message",
+      "path": "artifacts/E2E-04/accepted-message.json",
+      "sha256": "2c25edf5f489fb33fdeb87b1f1938af3ebf41f84e7f27066be4d55cfb909464a"
+    },
+    {
+      "name": "before-event",
+      "path": "artifacts/E2E-04/before-event.json",
+      "sha256": "09dbb86d3ff2ebcddc45fd9497a3eb9ad2cecd48177c6f668483192a8b8c3b58"
+    },
+    {
+      "name": "after-event",
+      "path": "artifacts/E2E-04/after-event.json",
+      "sha256": "09dbb86d3ff2ebcddc45fd9497a3eb9ad2cecd48177c6f668483192a8b8c3b58"
+    },
+    {
+      "name": "message-result",
+      "path": "artifacts/E2E-04/message-result.json",
+      "sha256": "bbb5cd3e5337ebbf91519286485680f366eaaae2cc14be0d21a830621bbd1334"
+    }
+  ]
+}

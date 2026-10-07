@@ -1,0 +1,12 @@
+{
+  "interview_id": "6ffd6ca27f27459498fced1ea9e21928",
+  "first_answer": "雨后轮端摩擦声和水迹要停运检查，防尘护板间隙低于2毫米时不得载客。",
+  "first_idempotency_key": "uat-20260927t080209z-84a31c3e-f07-first",
+  "instance_id": "cecafdb1ecd14803bf4fbcf55fd3c85e",
+  "status": "PAUSED",
+  "progress": {
+    "answered": 1,
+    "total": 4,
+    "percent": 25
+  }
+}

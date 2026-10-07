@@ -68,7 +68,7 @@ source_excerpts 必须逐字复制证据中的原文。候选仅供后续专家�
                 user_prompt=user_prompt,
                 model=self.model_name,
                 temperature=0.2,
-                max_tokens=1800,
+                max_tokens=3000,
                 json_mode=True,
                 trace_id=trace_id,
                 venue_id=venue_id,
@@ -131,6 +131,47 @@ def _json_text(value: Any) -> str:
 
 def _fingerprint(evidence: Mapping[str, Any]) -> str:
     return hashlib.sha256(_json_text(evidence).encode("utf-8")).hexdigest()
+
+
+def _extraction_source_corpus(evidence: Mapping[str, Any]) -> str:
+    event = evidence["event"]
+    tasks = evidence["task_results"]
+    approvals = evidence["approval_evidence"]
+    watcher = evidence["watcher_evidence"]
+    watcher_run = watcher.get("run") or {}
+    return _json_text(
+        {
+            "event": {
+                "business_id": event.get("business_id"),
+                "event_type": event.get("event_type"),
+                "severity": event.get("severity"),
+                "raw_text": event.get("raw_text"),
+                "resolution": event.get("resolution"),
+            },
+            "task_results": [
+                {
+                    "description": task.get("description"),
+                    "status": task.get("status"),
+                    "result": task.get("result"),
+                }
+                for task in tasks
+            ],
+            "approval_evidence": [
+                {
+                    "status": approval.get("status"),
+                    "comment": approval.get("comment"),
+                    "execution_status": approval.get("execution_status"),
+                    "execution_result": approval.get("execution_result"),
+                }
+                for approval in approvals
+            ],
+            "watcher_evidence": {
+                "summary": watcher_run.get("summary"),
+                "finding_count": watcher_run.get("finding_count"),
+                "findings": [finding.get("description") for finding in watcher.get("findings", [])],
+            },
+        }
+    )
 
 
 def _validate_candidate_draft(draft: Any, source_corpus: str) -> dict[str, Any]:
@@ -339,7 +380,7 @@ async def _collect_evidence(
             "watcher_evidence": watcher_snapshot,
         }
     )
-    evidence["source_corpus"] = _json_text(evidence)
+    evidence["source_corpus"] = _extraction_source_corpus(evidence)
     return dict(event), evidence
 
 

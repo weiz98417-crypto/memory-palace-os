@@ -50,10 +50,9 @@ SOURCES: dict[str, dict[str, str]] = {
 }
 
 def watcher_policy_metadata(scenario: dict[str, str]) -> tuple[str, str]:
-    source_title = SOURCES[scenario["source"]]["title"]
     return (
-        f"基于{source_title}的安全巡检-{scenario['title']}",
-        f"依据{source_title}开展的安全巡检。",
+        f"安全巡检-{scenario['title']}",
+        f"关注{scenario['signals']}；发现异常时{scenario['actions']}。",
     )
 
 
@@ -90,21 +89,40 @@ EXPERT_USERNAMES = ("knowledge-owner", "wangfang", "chenyu", "liming")
 
 def source_notes(source_key: str) -> str:
     source = SOURCES[source_key]
-    return f"资料来源：{source['title']}｜{source['url']}"
+    return f"参考依据：{source['title']}｜{source['url']}"
 
 
 def neutral_answers(scenario: dict[str, str]) -> tuple[str, str, str, str]:
-    source = SOURCES[scenario["source"]]
-    short = f"来源：{source['title']}。"
     return (
-        f"建议观察：{scenario['signals']}。{short}",
-        f"处置顺序：{scenario['actions']}。{short}",
-        f"风险红线：{scenario['redlines']}。{short}",
-        (
-            f"适用范围：{scenario['context']}。"
-            "本条目依据公开资料整理，不替代现场制度和专业判断。"
-            f"来源：{source['title']}｜{source['url']}"
-        ),
+        f"建议观察：{scenario['signals']}。",
+        f"处置顺序：{scenario['actions']}。",
+        f"风险红线：{scenario['redlines']}。",
+        f"适用范围：{scenario['context']}。实际处置以现场制度为准。",
+    )
+
+
+def knowledge_content(scenario: dict[str, str]) -> str:
+    source = SOURCES[scenario["source"]]
+    return (
+        f"观察信号：{scenario['signals']}\n"
+        f"处置顺序：{scenario['actions']}\n"
+        f"风险红线：{scenario['redlines']}\n"
+        f"适用场景：{scenario['context']}\n"
+        f"参考依据：{source['title']}（{source['publisher']}）\n"
+        f"原文链接：{source['url']}"
+    )
+
+
+def _legacy_knowledge_content(scenario: dict[str, str]) -> str:
+    source = SOURCES[scenario["source"]]
+    return (
+        f"来源：{source['title']}（{source['publisher']}）\n"
+        f"链接：{source['url']}\n"
+        f"观察信号：{scenario['signals']}\n"
+        f"处置顺序：{scenario['actions']}\n"
+        f"风险红线：{scenario['redlines']}\n"
+        f"适用场景：{scenario['context']}\n"
+        "说明：本条目为公开资料中性改编，不代表真实个人访谈或现场事故记录。"
     )
 
 
@@ -175,7 +193,7 @@ async def seed_sourced_showcase(api: Any) -> tuple[dict[str, int], dict[str, int
                 body={
                     "user_id": str(user["id"]),
                     "display_name": str(user.get("display_name") or user.get("username") or username),
-                    "job_title": "资料来源整理员",
+                    "job_title": "知识运营专员",
                     "department": "知识运营部",
                     "years_experience": 5 + index,
                     "expertise": ["资料整理", "应急流程复核", "运营安全"],
@@ -192,25 +210,27 @@ async def seed_sourced_showcase(api: Any) -> tuple[dict[str, int], dict[str, int
 
     # Source knowledge records carry the public provenance into the existing memory UI.
     existing_knowledge = await _list_all(api, "/api/v1/admin/knowledge", "knowledge")
-    existing_source_ids = {str(item.get("source_id") or "") for item in existing_knowledge}
+    knowledge_by_source = {
+        str(item.get("source_id") or ""): item for item in existing_knowledge
+    }
     knowledge_entries = []
+    knowledge_updated = 0
     for scenario in SCENARIOS:
-        source = SOURCES[scenario["source"]]
         source_id = f"public-source:{scenario['key']}"
-        if source_id in existing_source_ids:
+        existing = knowledge_by_source.get(source_id)
+        if existing:
+            if existing.get("content") == _legacy_knowledge_content(scenario):
+                await api.request(
+                    "PUT",
+                    f"/api/v1/admin/knowledge/{existing['id']}",
+                    body={"content": knowledge_content(scenario)},
+                )
+                knowledge_updated += 1
             continue
         knowledge_entries.append(
             {
                 "title": scenario['title'],
-                "content": (
-                    f"来源：{source['title']}（{source['publisher']}）\n"
-                    f"链接：{source['url']}\n"
-                    f"观察信号：{scenario['signals']}\n"
-                    f"处置顺序：{scenario['actions']}\n"
-                    f"风险红线：{scenario['redlines']}\n"
-                    f"适用场景：{scenario['context']}\n"
-                    "说明：本条目为公开资料中性改编，不代表真实个人访谈或现场事故记录。"
-                ),
+                "content": knowledge_content(scenario),
                 "category": scenario["type"],
                 "source_type": "IMPORT",
                 "source_id": source_id,
@@ -453,6 +473,7 @@ async def seed_sourced_showcase(api: Any) -> tuple[dict[str, int], dict[str, int
     created = {
         "sourced_experts": experts_created,
         "sourced_knowledge": len(knowledge_entries),
+        "sourced_knowledge_updated": knowledge_updated,
         "sourced_events": events_created,
         "sourced_tasks": tasks_created,
         "sourced_interviews": interviews_created,

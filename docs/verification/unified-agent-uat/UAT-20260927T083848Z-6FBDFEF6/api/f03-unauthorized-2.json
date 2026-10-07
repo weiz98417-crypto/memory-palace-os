@@ -1,0 +1,36 @@
+{
+  "mode": "unauthorized-2",
+  "session_id": "b5b70684-b5b8-5618-a3b2-e0cc072ac28e",
+  "idempotency_key": "uat-20260927t083848z-6fbdfef6-f03-unauthorized-2",
+  "http_status": 502,
+  "detail": {
+    "code": "TASK_DECOMPOSITION_FAILED",
+    "message": "模型未能生成合法的任务结构。",
+    "trace_id": "c0af4667a5994e2688895d9937badf11",
+    "retryable": true,
+    "action": "稍后重试；如持续失败，请使用 Trace ID 联系管理员。"
+  },
+  "trace_id": "c0af4667a5994e2688895d9937badf11",
+  "failed_model_calls": [
+    {
+      "agent_id": "TodoWrite",
+      "status": "FAILED",
+      "trace_id": "c0af4667a5994e2688895d9937badf11",
+      "error_type": "AuthenticationError"
+    }
+  ],
+  "task_ids_before": [
+    "38753afd-4cfe-486b-a284-5b4ddf5be391"
+  ],
+  "task_ids_after": [
+    "38753afd-4cfe-486b-a284-5b4ddf5be391"
+  ],
+  "circuit_breaker": {
+    "state": "CLOSED",
+    "source": "llm_call_logs",
+    "consecutive_failures": 2,
+    "failure_threshold": 3,
+    "recovery_timeout_seconds": 60.0,
+    "retry_after_seconds": null
+  }
+}

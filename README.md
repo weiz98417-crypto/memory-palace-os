@@ -10,6 +10,8 @@
 
 当前交付面是正式客户端，不是动画或播放器。正式链路使用 Nginx、App、PostgreSQL + pgvector、Redis Streams、本地 `BAAI/bge-m3`（1024 维）与真实 `deepseek-flash`。
 
+`master` 是 GitHub 的默认发布分支。接手项目或准备发布前，先阅读 [`REPRODUCE.md`](REPRODUCE.md)，并以仓库锁定的 Python 3.11、Node 24、pnpm 11、TEI CPU 1.9.4 以及依赖锁定文件为准。
+
 Windows + Docker Desktop 快速启动：
 
 ```powershell
@@ -477,6 +479,13 @@ Docker Desktop 无法连接镜像仓库、但固定版本镜像已在本机缓�
 [企业 MVP 备份、恢复与诊断](docs/operations/mvp-backup-restore.md)。
 
 ---
+
+## 发布与后续维护
+
+- 功能开发使用独立分支，通过 Pull Request 合并到 `master`；合并前确认 `git status`，不要把 `.env`、Docker secrets、数据库卷、日志、模型缓存、依赖目录或运行时输出加入提交。
+- 生成的代码图和产品单页已通过 `.gitattributes` 标记为 GitHub Linguist 生成文件，避免它们扭曲语言占比；模板和生成脚本仍保留在仓库中。
+- 代码变更后运行受影响的 pytest、契约 eval 和 `git diff --check`。真实 DeepSeek live eval 只在凭据通过外部 secret 注入时运行，报告不要把本机模型响应当作新的金标准。
+- 数据集保存在 `evals/`，可移植知识夹具保存在 `artifacts/knowledge/`；通过正式 HTTP API 或已有导入脚本更新，不直接写入本机数据库文件。
 
 ## License
 

@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T083848Z-6FBDFEF6",
+  "step_id": "UAT-F06",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:44:41Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "event_id": "0c232793-4858-4a7a-929c-3e1ec1ef20ad",
+    "task_id": "38753afd-4cfe-486b-a284-5b4ddf5be391",
+    "approval_id": "d67c8224-44a1-47b3-8e5e-2e38dcb2037c",
+    "recipient_user_id": "ba09a9f49f87411b802a059c239e6d56"
+  },
+  "references": [
+    "POST /api/v1/admin/action-requests",
+    "POST /api/v1/admin/approvals/d67c8224-44a1-47b3-8e5e-2e38dcb2037c/approve",
+    "GET /api/v1/admin/approvals/d67c8224-44a1-47b3-8e5e-2e38dcb2037c",
+    "POST /api/v1/channels/identities"
+  ],
+  "assertions": [
+    {
+      "name": "并发审批只有一次成功领取终态",
+      "passed": true,
+      "actual": {
+        "http_statuses": [
+          200,
+          404
+        ]
+      }
+    },
+    {
+      "name": "失效身份使已批准动作显式执行失败",
+      "passed": true,
+      "actual": {
+        "approval_status": "APPROVED",
+        "execution_status": "FAILED",
+        "execution_error": "内部系统接入收件人尚未就绪"
+      }
+    },
+    {
+      "name": "动作失败不产生已送达通知且测试身份恢复",
+      "passed": true,
+      "actual": {
+        "delivered_count": 0,
+        "restored_status": "ACTIVE"
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "approval-request",
+      "path": "artifacts/UAT-F06/approval-request.json",
+      "sha256": "237c7d31e9a83f9832feec850be2fd6163342234f7dc27d94ce53582382d3521"
+    },
+    {
+      "name": "failed-approval",
+      "path": "artifacts/UAT-F06/failed-approval.json",
+      "sha256": "f015e051d0ebad2723b7eaf78ea450cbafea2c41da85698bb2fa3073dcb36289"
+    },
+    {
+      "name": "outbox-after",
+      "path": "artifacts/UAT-F06/outbox-after.json",
+      "sha256": "d9cafa2ee9054f6d21234fea0378992815320cb280bc2ca561d041064a0ac617"
+    },
+    {
+      "name": "disabled-identity",
+      "path": "artifacts/UAT-F06/disabled-identity.json",
+      "sha256": "9d33b78d5607c0843be33d099d62ebb3fa9675980a80aabf854b228f54e85be1"
+    },
+    {
+      "name": "restored-identity",
+      "path": "artifacts/UAT-F06/restored-identity.json",
+      "sha256": "493e3e48bf3788c77ec50219a2b1769f6a0643d9d9a84ad695564e762c52c5c3"
+    }
+  ]
+}

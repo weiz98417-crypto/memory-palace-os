@@ -1,4 +1,5 @@
 from copy import deepcopy
+import json
 from pathlib import Path
 
 import pytest
@@ -123,12 +124,21 @@ def test_all_registry_evidence_references_existing_files():
                 )
 
 
-def test_new_uat_journeys_start_blocked_without_reusing_legacy_evidence():
+def test_ready_uat_journeys_reference_one_completed_evidence_run():
     registry = load_feature_registry()
-
-    for journey in registry["uat_journeys"]:
-        assert journey["status"] == "BLOCKED"
-        assert journey["evidence"] == []
+    journeys = registry["uat_journeys"]
+    assert len(journeys) == 30
+    assert all(journey["status"] == "READY" for journey in journeys)
+    run_ids = set()
+    for journey in journeys:
+        assert len(journey["evidence"]) == 1
+        evidence_path = PROJECT_ROOT / journey["evidence"][0]
+        assert evidence_path.is_file()
+        assert evidence_path.name == f"{journey['id']}.json"
+        run_ids.add(evidence_path.parent.parent.name)
+    assert len(run_ids) == 1
+    manifest_path = PROJECT_ROOT / "docs/verification/unified-agent-uat" / run_ids.pop() / "manifest.json"
+    assert json.loads(manifest_path.read_text(encoding="utf-8"))["status"] == "COMPLETED"
 
 
 def test_registry_declares_event_watcher_candidate_recovery_and_dossier_contracts():

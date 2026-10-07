@@ -14,6 +14,9 @@ from .journey import (
     SUPPORTED_UAT_STEPS,
     UATJourneyConfig,
     UATJourneyError,
+    prepare_uat_interview_restart,
+    prepare_uat_restart,
+    probe_uat_f03,
     run_uat_steps,
 )
 from .validation import validate_evidence
@@ -59,11 +62,32 @@ def _parser() -> argparse.ArgumentParser:
         choices=SUPPORTED_UAT_STEPS,
         required=True,
     )
+
+    fault_probe = commands.add_parser("probe-f03", help="capture a live DeepSeek failure probe")
+    fault_probe.add_argument("--run", type=Path, required=True)
+    fault_probe.add_argument("--mode", choices=("unauthorized-1", "unauthorized-2", "timeout"), required=True)
     execute.add_argument(
         "--attachment",
         type=Path,
         help="explicit PNG attachment required by E2E-02",
     )
+    execute.add_argument(
+        "--runtime-before",
+        type=Path,
+        help="JSON runtime snapshot captured before App recreation for E2E-16",
+    )
+
+    restart_prepare = commands.add_parser(
+        "prepare-restart",
+        help="create an in-progress task and capture the pre-restart runtime",
+    )
+    restart_prepare.add_argument("--run", type=Path, required=True)
+
+    interview_restart_prepare = commands.add_parser(
+        "prepare-interview-restart",
+        help="pause a live expert interview and capture its pre-restart state",
+    )
+    interview_restart_prepare.add_argument("--run", type=Path, required=True)
 
     showcase = commands.add_parser(
         "showcase-seed",
@@ -137,6 +161,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     run,
                     args.steps,
                     attachment_path=args.attachment,
+                    runtime_before_path=args.runtime_before,
                 )
             )
             _emit(
@@ -145,6 +170,21 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "recorded": [str(path) for path in recorded],
                 }
             )
+            return 0
+        if args.command == "probe-f03":
+            journey_config = UATJourneyConfig.from_environment()
+            path = asyncio.run(probe_uat_f03(journey_config, _open_run(args.run), args.mode))
+            _emit({"recorded": str(path)})
+            return 0
+        if args.command == "prepare-restart":
+            journey_config = UATJourneyConfig.from_environment()
+            snapshot = asyncio.run(prepare_uat_restart(journey_config, _open_run(args.run)))
+            _emit({"uat_run_id": args.run.resolve().name, "runtime_before": str(snapshot)})
+            return 0
+        if args.command == "prepare-interview-restart":
+            journey_config = UATJourneyConfig.from_environment()
+            snapshot = asyncio.run(prepare_uat_interview_restart(journey_config, _open_run(args.run)))
+            _emit({"uat_run_id": args.run.resolve().name, "interview_before": str(snapshot)})
             return 0
         if args.command == "showcase-seed":
             showcase_config = UATShowcaseConfig.from_environment()

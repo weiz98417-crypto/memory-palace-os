@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T080209Z-84A31C3E",
+  "step_id": "UAT-F04",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:25:16Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "experience_card_id": "bb7d17019af3424981ee677327341c8e",
+    "tei_container_id": "21a7ee9e865998f410559b2694072023192c77a6e3884d256d4272a685aa1d12"
+  },
+  "references": [
+    "POST /api/v1/assistant/experience/search",
+    "Docker Engine /containers/tei-embedding/stop",
+    "Docker Engine /containers/tei-embedding/start"
+  ],
+  "assertions": [
+    {
+      "name": "故障前真实 pgvector 检索命中已发布经验",
+      "passed": true,
+      "actual": {
+        "card_id": "bb7d17019af3424981ee677327341c8e",
+        "hit_count": 1
+      }
+    },
+    {
+      "name": "TEI 停止时经验检索明确返回可重试失败",
+      "passed": true,
+      "actual": {
+        "status_code": 503,
+        "detail": {
+          "code": "EXPERIENCE_SEARCH_FAILED",
+          "message": "经验检索暂时失败。",
+          "trace_id": "16d2689e66224302a5c42520e1243c84",
+          "retryable": true,
+          "action": "稍后重试；紧急问题请升级人工负责人。"
+        }
+      }
+    },
+    {
+      "name": "TEI 恢复健康后同一经验再次检索成功",
+      "passed": true,
+      "actual": {
+        "health": "healthy",
+        "card_id": "bb7d17019af3424981ee677327341c8e",
+        "version": 2
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "search-before",
+      "path": "artifacts/UAT-F04/search-before.json",
+      "sha256": "c5a0b942f6a844d9e35cdffda3703eae00ec00da2b4269935fef445c2af37b8f"
+    },
+    {
+      "name": "tei-stopped",
+      "path": "artifacts/UAT-F04/tei-stopped.json",
+      "sha256": "706fad9691a3f0652281d81bfc02719da0cee44a1b7268aefc23729324a7a24b"
+    },
+    {
+      "name": "search-failure",
+      "path": "artifacts/UAT-F04/search-failure.json",
+      "sha256": "b58e5cb694f4b40874eb61ef06fe53a5615a2dcf3d6ef840521ecf988f0e2241"
+    },
+    {
+      "name": "tei-restored",
+      "path": "artifacts/UAT-F04/tei-restored.json",
+      "sha256": "1e49eb6999228bdada8bf87d40a070806bb12ead5738c2127945b3a392eb5b59"
+    },
+    {
+      "name": "search-after",
+      "path": "artifacts/UAT-F04/search-after.json",
+      "sha256": "c5a0b942f6a844d9e35cdffda3703eae00ec00da2b4269935fef445c2af37b8f"
+    }
+  ]
+}

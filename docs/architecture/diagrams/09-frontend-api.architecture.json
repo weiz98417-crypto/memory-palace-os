@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "前端应用、共享入口与 API 业务域", "locale": "zh-CN", "quality_profile": "showcase", "viewBox": [1390, 630]},
+  "components": [
+    {"id": "console", "type": "frontend", "label": "Console", "sublabel": "13 个管理工作区", "pos": [40, 54], "size": [250, 82]},
+    {"id": "field", "type": "frontend", "label": "Field", "sublabel": "现场采集与任务", "pos": [40, 196], "size": [250, 82]},
+    {"id": "operations", "type": "frontend", "label": "Operations", "sublabel": "受保护的景区运行入口", "pos": [40, 339], "size": [250, 82]},
+    {"id": "integration", "type": "frontend", "label": "Integration", "sublabel": "渠道接入与模拟", "pos": [40, 482], "size": [250, 82]},
+    {"id": "nginx", "type": "security", "label": "Nginx", "sublabel": "静态应用 · API 代理", "pos": [370, 264], "size": [250, 82]},
+    {"id": "api", "type": "backend", "label": "FastAPI /api/v1", "sublabel": "JWT · venue_id · HTTP / SSE", "pos": [700, 264], "size": [250, 82]},
+    {"id": "scenic", "type": "backend", "label": "景区命令与态势", "sublabel": "scenic / operations/scenic", "pos": [1030, 54], "size": [250, 82]},
+    {"id": "messages", "type": "backend", "label": "消息与会话", "sublabel": "messages / assistant / channels", "pos": [1030, 196], "size": [250, 82]},
+    {"id": "management", "type": "backend", "label": "管理与执行治理", "sublabel": "admin / workflows / tasks", "pos": [1030, 339], "size": [250, 82]},
+    {"id": "knowledge", "type": "backend", "label": "知识、经验与巡检", "sublabel": "knowledge / experiences / watcher", "pos": [1030, 482], "size": [250, 82]}
+  ],
+  "connections": [
+    {"from": "console", "to": "nginx"},
+    {"from": "field", "to": "nginx"},
+    {"from": "operations", "to": "nginx"},
+    {"from": "integration", "to": "nginx"},
+    {"from": "nginx", "to": "api", "label": "代理 API / SSE"},
+    {"from": "api", "to": "scenic"},
+    {"from": "api", "to": "messages"},
+    {"from": "api", "to": "management"},
+    {"from": "api", "to": "knowledge"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Console 路由", "items": ["/command-center 是指挥中心路由；另有 events、sessions、tasks、approvals、actions、knowledge、experience、watcher、sops、management、settings、diagnostics。", "工作区按角色显示；系统管理员独占部分管理与诊断入口。"]},
+    {"dot": "amber", "title": "API 边界", "items": ["所有四个应用通过共享入口访问 v1 业务域；图中各域之间没有伪造调用。", "景区 SSE 为 /api/v1/scenic/stream；鉴权和租户隔离在 API 层执行。"]}
+  ]
+}

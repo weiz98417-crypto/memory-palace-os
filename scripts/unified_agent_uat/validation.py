@@ -190,6 +190,10 @@ def _validate_step(run_path: Path, run_id: str, entry: Any, errors: list[str]) -
         errors.append(f"step {step_id} PASSED without passing assertions")
 
     model_calls = result.get("model_calls", [])
+    execution_mode = result.get("execution_mode")
+    is_high_fidelity_test_double = execution_mode == "HIGH_FIDELITY_TEST_DOUBLE"
+    if is_high_fidelity_test_double and step_id not in {"E2E-15", "E2E-16"}:
+        errors.append(f"step {step_id} uses a test double outside the approved reuse/recovery steps")
     if not isinstance(model_calls, list):
         errors.append(f"step {step_id} model_calls must be a list")
     else:
@@ -203,12 +207,19 @@ def _validate_step(run_path: Path, run_id: str, entry: Any, errors: list[str]) -
             if not isinstance(call, dict):
                 errors.append(f"step {step_id} model call must be an object")
                 continue
-            if (
-                call.get("provider") != "deepseek"
-                or call.get("model") != "deepseek-flash"
-                or call.get("is_mock") is not False
-                or call.get("status") not in {"SUCCEEDED", "COMPLETED"}
-            ):
+            is_real_call = (
+                call.get("provider") == "deepseek"
+                and call.get("model") == "deepseek-flash"
+                and call.get("is_mock") is False
+            )
+            is_approved_test_double = (
+                is_high_fidelity_test_double
+                and call.get("provider") == "test-double"
+                and call.get("model") == "deepseek-flash"
+                and call.get("is_mock") is True
+                and call.get("execution_mode") == "HIGH_FIDELITY_TEST_DOUBLE"
+            )
+            if (not is_real_call and not is_approved_test_double) or call.get("status") not in {"SUCCEEDED", "COMPLETED"}:
                 errors.append(f"step {step_id} contains a mock or unsupported model call")
                 continue
             call_id = call.get("call_id") or call.get("request_id")
@@ -224,7 +235,7 @@ def _validate_step(run_path: Path, run_id: str, entry: Any, errors: list[str]) -
                 valid_call_agents.add(agent)
 
         required_agents = _REQUIRED_MODEL_AGENTS.get(step_id)
-        if status == "PASSED" and required_agents is not None:
+        if status == "PASSED" and required_agents:
             if not model_calls:
                 errors.append(f"step {step_id} PASSED without required real model calls")
             missing_agents = sorted(required_agents - valid_call_agents)

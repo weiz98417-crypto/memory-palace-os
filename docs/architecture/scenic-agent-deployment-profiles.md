@@ -16,7 +16,7 @@
 | `pgvector/pgvector` | `0.8.1-pg15-bookworm` | 业务唯一事实源与向量 |
 | `postgres` | `15.6` | Hatchet 独立运行库 |
 
-Hatchet 的 SDK 版本与 engine/API 版本独立。Python worker 使用 `hatchet-sdk==1.40.1`，票 08 已加入独立的 `scenic-agent-prototype` worker 验证真实四 agent 和 durable event wait；它使用单独的 prototype 镜像，不代表正式 worker 已完成业务接线。`HATCHET_POSTGRES_PASSWORD` 的本地默认值只用于本机演示，正式部署必须显式设置强密码。
+Hatchet 的 SDK 版本与 engine/API 版本独立。正式 Python worker 使用 `hatchet-sdk==1.40.1`；`scenic-agent-prototype` 保留为单独镜像中的原型验证服务，不随正式运行 profile 启动。`HATCHET_POSTGRES_PASSWORD` 的本地默认值只用于本机演示，正式部署必须显式设置强密码。
 
 ## 2. compose profile 划分
 
@@ -24,11 +24,12 @@ Hatchet 的 SDK 版本与 engine/API 版本独立。Python worker 使用 `hatche
 
 | profile | 服务 | 用途 |
 | --- | --- | --- |
-| 默认 | `app`、`postgres`、`redis`、`nginx` | 当前业务与演示栈；不要求 TEI/Hatchet/Jaeger 常驻 |
+| 默认 | `app`、`postgres`、`redis`、`nginx` | 基础业务入口；Hatchet/Jaeger 由 profile 控制 |
 | 默认 | `tei-embedding` | bge-m3 向量服务；与 app 同栈常驻（app 镜像已去 torch，ADR-0020） |
 | `tei-reranker` | `tei-reranker` | bge-reranker-base 重排；`max-batch-tokens=1024` |
 | `rerank-v2` | `tei-reranker-v2` | 可选更强 bge-reranker-v2-m3；与 base reranker 互斥，需 8GB 预算 |
-| `agent-runtime` | `hatchet-postgres`、`hatchet-migrate`、`hatchet-admin`、`hatchet-token`、`hatchet-engine`、`hatchet-api`、`hatchet-dashboard`、`scenic-agent-prototype` | Hatchet split 运行栈 + 票 08 prototype worker；迁移和 quickstart 是一次性 job，正式 worker 仍由后续实现接入 |
+| `agent-runtime` | `hatchet-postgres`、`hatchet-migrate`、`hatchet-admin`、`hatchet-token`、`hatchet-engine`、`hatchet-api`、`hatchet-dashboard`、`scenic-agent-worker` | Hatchet split 运行栈和正式 worker；迁移、初始化与 token 创建是一次性 job |
+| `agent-prototype` | `scenic-agent-prototype` | 仅供原型验证，常规演示不启动 |
 | `tracing` | `jaeger` | OTLP 追踪；缺它不影响业务事实和关闭门禁 |
 
 命令（使用与运行文档一致的 8090 业务端口，避让本机 8080）：

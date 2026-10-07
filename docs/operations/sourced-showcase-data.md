@@ -10,7 +10,7 @@ All content is:
 
 - adapted from public guidance;
 - rewritten in neutral third-person language;
-- labelled `【公开资料改编｜非真实个人访谈】`;
+- presented in operational language, with citations kept in the knowledge record and interview source field rather than repeated in answers or policy names;
 - seeded through formal HTTP APIs;
 - traceable to the public source title and URL.
 
@@ -54,4 +54,4 @@ uv run --no-project --with-requirements requirements.txt `
   showcase-seed --sections sourced
 ```
 
-The seeder is idempotent by source event, interview title, source knowledge ID, task session ID, and Watcher policy `sourced_key`.
+The seeder is idempotent by source event, interview title, source knowledge ID, task session ID, and Watcher policy `sourced_key`. Rerunning it updates only knowledge records that still match the original seeded text and sourced Watcher policy names/descriptions; historical interview answers and experience-card versions remain unchanged.

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "高风险事件 · 处置完成与关闭是两道门禁", "locale": "zh-CN", "quality_profile": "showcase", "viewBox": [1390, 630]},
+  "components": [
+    {"id": "tasks", "type": "database", "label": "任务事实", "sublabel": "至少 2 项 · 全部 DONE", "pos": [40, 60], "size": [260, 82]},
+    {"id": "approval", "type": "security", "label": "高风险审批", "sublabel": "审批通过且执行成功", "pos": [40, 173], "size": [260, 82]},
+    {"id": "photo", "type": "database", "label": "现场图片证据", "sublabel": "现场回执附件", "pos": [40, 285], "size": [260, 82]},
+    {"id": "sop", "type": "security", "label": "SOP 核验", "sublabel": "有已核验命中", "pos": [40, 397], "size": [260, 82]},
+    {"id": "alerts", "type": "database", "label": "告警恢复", "sublabel": "无未恢复告警", "pos": [40, 509], "size": [260, 82]},
+    {"id": "resolve", "type": "security", "label": "ScenicAreaOperations", "sublabel": "检查五项条件", "pos": [430, 285], "size": [260, 82]},
+    {"id": "resolved", "type": "database", "label": "RESOLVED", "sublabel": "处置完成 · 尚未关闭", "pos": [780, 285], "size": [240, 82]},
+    {"id": "closed", "type": "database", "label": "CLOSED", "sublabel": "授权负责人确认关闭", "pos": [1090, 285], "size": [240, 82]}
+  ],
+  "connections": [
+    {"from": "tasks", "to": "resolve", "label": "全部完成", "labelAt": [325, 160]},
+    {"from": "approval", "to": "resolve", "label": "通过并执行", "labelAt": [325, 273]},
+    {"from": "photo", "to": "resolve", "label": "图片证据", "labelAt": [325, 385]},
+    {"from": "sop", "to": "resolve", "label": "核验命中", "labelAt": [325, 497]},
+    {"from": "alerts", "to": "resolve", "label": "全部恢复", "labelAt": [325, 609]},
+    {"from": "resolve", "to": "resolved", "label": "MITIGATING → RESOLVED", "labelAt": [735, 381]},
+    {"from": "resolved", "to": "closed", "label": "单独关闭动作"}
+  ],
+  "cards": [
+    {"dot": "rose", "title": "两个不同动作", "items": ["五项条件只允许 MITIGATING → RESOLVED；RESOLVED 不等于 CLOSED。", "关闭动作生成关闭总结，更新事件及卷宗，并把未完成建议标为 SUPERSEDED。"]},
+    {"dot": "amber", "title": "当前实现范围", "items": ["至少两个任务的要求与关闭后 CASE 向量文本含固定演示场景约束。", "高风险人工审批和建议采纳理由都不能由 Agent 自动代替。"]}
+  ]
+}

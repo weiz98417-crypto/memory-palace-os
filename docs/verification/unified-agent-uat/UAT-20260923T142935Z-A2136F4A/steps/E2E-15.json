@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260923T142935Z-A2136F4A",
+  "step_id": "E2E-15",
+  "status": "PASSED",
+  "recorded_at": "2026-09-23T14:29:59Z",
+  "execution_mode": "HIGH_FIDELITY_TEST_DOUBLE",
+  "test_double": {
+    "name": "formal-api-second-employee-reuse-v1",
+    "scope": "model decision envelope only",
+    "real_operations": [
+      "independent employee login",
+      "published experience retrieval",
+      "pgvector-backed search response",
+      "usage ledger persistence",
+      "feedback persistence"
+    ]
+  },
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "employee_user_id": "b99aa8bf9f52460596468e4c5b272ffd",
+    "experience_card_id": "238a0122d3fe4c089b4d80bb130fdc79",
+    "experience_business_id": "JY-20260923-32E2",
+    "published_version": "1",
+    "reuse_trace_id": "uat-test-double:UAT-20260923T142935Z-A2136F4A:e2e-15"
+  },
+  "references": [
+    "/api/v1/auth/login (li-ming)",
+    "/api/v1/assistant/experience/search",
+    "/api/v1/assistant/experience/cards/238a0122d3fe4c089b4d80bb130fdc79/feedback",
+    "/api/v1/admin/experience-cards/238a0122d3fe4c089b4d80bb130fdc79"
+  ],
+  "assertions": [
+    {
+      "name": "第二员工使用独立正式账号登录",
+      "passed": true,
+      "actual": {
+        "user_id": "b99aa8bf9f52460596468e4c5b272ffd",
+        "role": "operator",
+        "username": "li-ming"
+      }
+    },
+    {
+      "name": "检索只返回已发布且带版本的经验",
+      "passed": true,
+      "actual": {
+        "card_id": "238a0122d3fe4c089b4d80bb130fdc79",
+        "version": 1,
+        "published": true
+      }
+    },
+    {
+      "name": "使用记录绑定第二员工并包含检索与反馈",
+      "passed": true,
+      "actual": {
+        "usage_types": [
+          "HELPFUL",
+          "RETRIEVED"
+        ],
+        "employee_usage_count": 6
+      }
+    },
+    {
+      "name": "反馈接口返回正式采用记录",
+      "passed": true,
+      "actual": {
+        "recorded": true,
+        "feedback_id": "32262860ad6b491f8fca0cb3f619acf7"
+      }
+    }
+  ],
+  "model_calls": [
+    {
+      "call_id": "uat-test-double:UAT-20260923T142935Z-A2136F4A:e2e-15:router",
+      "trace_id": "uat-test-double:UAT-20260923T142935Z-A2136F4A:e2e-15",
+      "provider": "test-double",
+      "model": "deepseek-flash",
+      "is_mock": true,
+      "status": "COMPLETED",
+      "agent": "Router",
+      "execution_mode": "HIGH_FIDELITY_TEST_DOUBLE"
+    },
+    {
+      "call_id": "uat-test-double:UAT-20260923T142935Z-A2136F4A:e2e-15:memoryops",
+      "trace_id": "uat-test-double:UAT-20260923T142935Z-A2136F4A:e2e-15",
+      "provider": "test-double",
+      "model": "deepseek-flash",
+      "is_mock": true,
+      "status": "COMPLETED",
+      "agent": "MemoryOps",
+      "execution_mode": "HIGH_FIDELITY_TEST_DOUBLE"
+    },
+    {
+      "call_id": "uat-test-double:UAT-20260923T142935Z-A2136F4A:e2e-15:persona",
+      "trace_id": "uat-test-double:UAT-20260923T142935Z-A2136F4A:e2e-15",
+      "provider": "test-double",
+      "model": "deepseek-flash",
+      "is_mock": true,
+      "status": "COMPLETED",
+      "agent": "Persona",
+      "execution_mode": "HIGH_FIDELITY_TEST_DOUBLE"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "employee-principal",
+      "path": "artifacts/E2E-15/employee-principal.json",
+      "sha256": "98244fb78ab4b556227dc769672e6da68346a60e394ca83a66dc65c16f163043"
+    },
+    {
+      "name": "identity-binding",
+      "path": "artifacts/E2E-15/identity-binding.json",
+      "sha256": "2a59b752c004cfec5774cf2802f877ed47a22b59e2454b20dc16c0690c0d890b"
+    },
+    {
+      "name": "published-card",
+      "path": "artifacts/E2E-15/published-card.json",
+      "sha256": "0f031c09743908903604503af075fb4214c78159a8f78a3418269f98857f37df"
+    },
+    {
+      "name": "search-response",
+      "path": "artifacts/E2E-15/search-response.json",
+      "sha256": "bafe819b041b38b6ac98b32642b710e42d727e2a2451b079e5f04ab5a25f65cc"
+    },
+    {
+      "name": "feedback-response",
+      "path": "artifacts/E2E-15/feedback-response.json",
+      "sha256": "60ad726949a850e9238244b00defb27b6398daacd90233b3b00838f06aab9b7d"
+    },
+    {
+      "name": "usage-ledger",
+      "path": "artifacts/E2E-15/usage-ledger.json",
+      "sha256": "a37293e615bc26c356c6f15db5fdc0dad7162765af21d289a3bbfff047fe11de"
+    }
+  ]
+}

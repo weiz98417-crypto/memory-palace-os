@@ -1,0 +1,246 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T080209Z-84A31C3E",
+  "status": "FAILED",
+  "created_at": "2026-09-27T08:02:09Z",
+  "completed_at": "2026-09-27T08:27:05Z",
+  "architecture": {
+    "business_data": "PostgreSQL",
+    "queue": "Redis Streams",
+    "vector_store": "PostgreSQL pgvector",
+    "generative_model": "deepseek-flash"
+  },
+  "channel": {
+    "mode": "WECOM_SIMULATOR_ONLY",
+    "entrypoint": "/simulator/wecom/",
+    "real_wecom_enabled": false
+  },
+  "source": {
+    "status": "CAPTURED",
+    "commit": "611609513c5bf2ebd0e8f9fa6cb1fd49789f2b44",
+    "dirty": true,
+    "changed_paths": [
+      "deploy/docker-compose.yml",
+      "frontend/scripts/generate-openapi-types.mjs",
+      "scripts/import_knowledge_batch.py",
+      "scripts/unified_agent_uat/cli.py",
+      "scripts/unified_agent_uat/journey.py",
+      "scripts/unified_agent_uat/validation.py",
+      "src/memory_palace/api/v1/endpoints/admin.py",
+      "src/memory_palace/config/feature_registry.yaml",
+      "src/memory_palace/core/event_experience_candidates.py",
+      "src/memory_palace/core/orchestrator.py",
+      "src/memory_palace/operations/uat_bootstrap.py",
+      "static/assistant/styles.css",
+      "static/simulator/wecom/styles.css",
+      "tests/unit/test_experience_assets.py",
+      "tests/unit/test_runtime_hardening.py",
+      "tests/unit/test_unified_agent_uat_evidence.py",
+      "deploy/docker-compose.uat.yml"
+    ],
+    "tracked_diff_sha256": "0a80c99434462b9d80ff8b2af562edb51bf3df76ea3966db1317eb4b4a5fc3eb",
+    "untracked_source_sha256": "be5f791b06cb08a0a90b0a09e457080aecc63367a925c420b4d3799c73a5f040"
+  },
+  "baseline": {
+    "path": "artifacts/uat-baseline.json",
+    "sha256": "b4e007973722b8b4fd04aaca5aae31f67f6cee723a9bacc0a95811249590954c"
+  },
+  "steps": [
+    {
+      "id": "E2E-00",
+      "status": "PASSED",
+      "result": "steps/E2E-00.json",
+      "failure": null,
+      "sha256": "664346ad370d3a1fa8d644924fce78e26ca29c2b6a3ed03de1a719327a27e991"
+    },
+    {
+      "id": "E2E-01",
+      "status": "PASSED",
+      "result": "steps/E2E-01.json",
+      "failure": null,
+      "sha256": "ab3c318f68e49ca6546ad8bace7da76b12b14f620d799ad2a5cce28335e6b37d"
+    },
+    {
+      "id": "E2E-02",
+      "status": "PASSED",
+      "result": "steps/E2E-02.json",
+      "failure": null,
+      "sha256": "1c44e18adbf7063f12e8f063f0e6679cbe494a5398f041198fe716999db80aac"
+    },
+    {
+      "id": "UAT-F05",
+      "status": "PASSED",
+      "result": "steps/UAT-F05.json",
+      "failure": null,
+      "sha256": "9cd1df97c8bcc986460e84531da342529878b3c98e5036524ebf692514b4eeb9"
+    },
+    {
+      "id": "E2E-03",
+      "status": "PASSED",
+      "result": "steps/E2E-03.json",
+      "failure": null,
+      "sha256": "b14ac1b96bc609db0adc731216e5fe64063fbd7503677f9d177079f106cce953"
+    },
+    {
+      "id": "UAT-F11",
+      "status": "PASSED",
+      "result": "steps/UAT-F11.json",
+      "failure": null,
+      "sha256": "6264417b04d2b0a3624bd16f1728222d1a5a90ada68aee4469cb205d2d83662c"
+    },
+    {
+      "id": "UAT-F12",
+      "status": "PASSED",
+      "result": "steps/UAT-F12.json",
+      "failure": null,
+      "sha256": "1f1e1902e24fe5e9947ce7ab2849659eb57be0735373bf9fedfddc5d6a8c87e3"
+    },
+    {
+      "id": "UAT-F13",
+      "status": "PASSED",
+      "result": "steps/UAT-F13.json",
+      "failure": null,
+      "sha256": "93d962dd517856af0bc88cdb6f33386478a7e9ca1005ed08bda630b2fb40fc11"
+    },
+    {
+      "id": "E2E-04",
+      "status": "PASSED",
+      "result": "steps/E2E-04.json",
+      "failure": null,
+      "sha256": "b3c331891d7dabecf7ecad37bfe0f6af28c747fccfc639b7ebd020d7d5618091"
+    },
+    {
+      "id": "E2E-05",
+      "status": "PASSED",
+      "result": "steps/E2E-05.json",
+      "failure": null,
+      "sha256": "6752638b73dedceb14a50516cb40d2119005e3b19759f0703440e3dd73d72dcc"
+    },
+    {
+      "id": "E2E-06",
+      "status": "PASSED",
+      "result": "steps/E2E-06.json",
+      "failure": null,
+      "sha256": "9df3e38f83746c1483a11fa79998bd4cde16670edf2e48d6bb108fc257a1b599"
+    },
+    {
+      "id": "E2E-07",
+      "status": "PASSED",
+      "result": "steps/E2E-07.json",
+      "failure": null,
+      "sha256": "79bd9a7066ceb2aad4e272276e6de77df34ad30704e3469e8bc7d1224ed1a995"
+    },
+    {
+      "id": "E2E-08",
+      "status": "PASSED",
+      "result": "steps/E2E-08.json",
+      "failure": null,
+      "sha256": "126b5861275fbee7232d9210140ddfad3c767fea863ab8f1b7d32a5001bde2ee"
+    },
+    {
+      "id": "E2E-09",
+      "status": "PASSED",
+      "result": "steps/E2E-09.json",
+      "failure": null,
+      "sha256": "fe4410b826ec758d4adde15cacd7b9462f75d931322b8a5633bedeb47b85d9d7"
+    },
+    {
+      "id": "E2E-10",
+      "status": "PASSED",
+      "result": "steps/E2E-10.json",
+      "failure": null,
+      "sha256": "854b30f312128dcf28949f0897b0cb2f0e4116031fe113fe133eb935866720eb"
+    },
+    {
+      "id": "E2E-11",
+      "status": "PASSED",
+      "result": "steps/E2E-11.json",
+      "failure": null,
+      "sha256": "958f0abf48ba90f00ca008b90a19c09bacaa136d903f4f744e4979af038a04f1"
+    },
+    {
+      "id": "E2E-12",
+      "status": "PASSED",
+      "result": "steps/E2E-12.json",
+      "failure": null,
+      "sha256": "28bcefdf12178bf5541badce5d4a367594c31d488ba2972fb60fb0354926cd4c"
+    },
+    {
+      "id": "E2E-13",
+      "status": "PASSED",
+      "result": "steps/E2E-13.json",
+      "failure": null,
+      "sha256": "1603175cef773e31a7488462e0c81aa9d9e8afc6ae47fea3924e68b988d07b51"
+    },
+    {
+      "id": "E2E-14",
+      "status": "PASSED",
+      "result": "steps/E2E-14.json",
+      "failure": null,
+      "sha256": "99cd8e94d771625390f301741a1dfc0e1a764d93166e0d0da1374bc1ec2a324b"
+    },
+    {
+      "id": "E2E-15",
+      "status": "PASSED",
+      "result": "steps/E2E-15.json",
+      "failure": null,
+      "sha256": "f1fa290f57d9908f889c913a31fe89a1d54f7a1ef1f357a70cfb97612dd8c977"
+    },
+    {
+      "id": "E2E-16",
+      "status": "PASSED",
+      "result": "steps/E2E-16.json",
+      "failure": null,
+      "sha256": "2332ac75d360d93ac4c0ff0e3a1e9b412a55ed159366c0dfeb97aa6a651ee333"
+    },
+    {
+      "id": "UAT-F01",
+      "status": "PASSED",
+      "result": "steps/UAT-F01.json",
+      "failure": null,
+      "sha256": "cc400495c3bdf8198bde352786bd38ef0e90054ac1e17ce2c4243cc603acd37c"
+    },
+    {
+      "id": "UAT-F10",
+      "status": "PASSED",
+      "result": "steps/UAT-F10.json",
+      "failure": null,
+      "sha256": "ad90b5b1565b9e9b67520ddf3ad81b01365c120c59d7812c914b773818b9d59f"
+    },
+    {
+      "id": "UAT-F07",
+      "status": "PASSED",
+      "result": "steps/UAT-F07.json",
+      "failure": null,
+      "sha256": "ba5264894833165133c7be93f56f70b1ca0bede4df3cd030240dbcdaf0542bcc"
+    },
+    {
+      "id": "UAT-F09",
+      "status": "PASSED",
+      "result": "steps/UAT-F09.json",
+      "failure": null,
+      "sha256": "1b233a6817173f2232abfb71c81961ef13746bc0de854f3318d441c8e3feccce"
+    },
+    {
+      "id": "UAT-F06",
+      "status": "PASSED",
+      "result": "steps/UAT-F06.json",
+      "failure": null,
+      "sha256": "9dbfd8d3784d69d6cbdae2d4e3a42a58cef28984730c2654847bf6a66395c772"
+    },
+    {
+      "id": "UAT-F04",
+      "status": "PASSED",
+      "result": "steps/UAT-F04.json",
+      "failure": null,
+      "sha256": "d26a7be6977f70b8600c8d45d28b2838b7ba2a6ad4eaca5d50182d4756489bef"
+    },
+    {
+      "id": "UAT-F08",
+      "status": "FAILED",
+      "result": "steps/UAT-F08.json",
+      "failure": "failures/UAT-F08.json",
+      "sha256": "5e6d38c37736860e2b47640d21e565369cebbe1e3b735106118b6284c8fe7ea1"
+    }
+  ]
+}

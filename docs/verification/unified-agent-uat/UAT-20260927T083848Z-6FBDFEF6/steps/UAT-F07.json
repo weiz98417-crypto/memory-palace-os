@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T083848Z-6FBDFEF6",
+  "step_id": "UAT-F07",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:42:29Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "interview_id": "95058b9755a84b14b83b934d592a460e",
+    "before_instance_id": "1aea81c08f314ad58ffb48668890562f",
+    "after_instance_id": "b6beb25980ac41789b053a422812c37c"
+  },
+  "references": [
+    "GET /api/v1/assistant/experience/interviews/95058b9755a84b14b83b934d592a460e",
+    "POST /api/v1/assistant/experience/interviews/95058b9755a84b14b83b934d592a460e/resume",
+    "POST /api/v1/assistant/experience/interviews/95058b9755a84b14b83b934d592a460e/answers",
+    "GET /api/v1/admin/diagnostics",
+    "docker compose up --force-recreate app"
+  ],
+  "assertions": [
+    {
+      "name": "访谈期间 App 运行实例真实变化",
+      "passed": true,
+      "actual": {
+        "before_instance_id": "1aea81c08f314ad58ffb48668890562f",
+        "after_instance_id": "b6beb25980ac41789b053a422812c37c"
+      }
+    },
+    {
+      "name": "重启后暂停访谈和首轮回答完整恢复",
+      "passed": true,
+      "actual": {
+        "status": "PAUSED",
+        "progress": {
+          "answered": 1,
+          "total": 4,
+          "percent": 25
+        },
+        "turn_count": 1
+      }
+    },
+    {
+      "name": "恢复后重复回答去重并可继续下一轮",
+      "passed": true,
+      "actual": {
+        "replay": true,
+        "answered": 2,
+        "turn_count": 2
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "before-restart",
+      "path": "artifacts/UAT-F07/before-restart.json",
+      "sha256": "7a02ae954b8514f67feba28298f0f28011905aa00222c5c517148735216a9176"
+    },
+    {
+      "name": "restored",
+      "path": "artifacts/UAT-F07/restored.json",
+      "sha256": "07d71fb46fff2d501b0f7a06dccb595c92c6910e10a9d686ac72525ce1bdd9f6"
+    },
+    {
+      "name": "replayed-answer",
+      "path": "artifacts/UAT-F07/replayed-answer.json",
+      "sha256": "38965d33a589e9d2213b9cc0c441d322883c311d2e349345707ea5ae6abb5eac"
+    },
+    {
+      "name": "second-answer",
+      "path": "artifacts/UAT-F07/second-answer.json",
+      "sha256": "65d2bd073f1e7e170ca1a67d5350e8b5c9e847ef4c2eabbc079384db12d3ba94"
+    },
+    {
+      "name": "after",
+      "path": "artifacts/UAT-F07/after.json",
+      "sha256": "ee269436632caab192f816c1dc62e95fd39c89f995dc28c91dba0b41fe94e5f3"
+    }
+  ]
+}

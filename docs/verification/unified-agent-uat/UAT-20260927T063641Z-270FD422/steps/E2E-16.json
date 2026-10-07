@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T063641Z-270FD422",
+  "step_id": "E2E-16",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T06:37:51Z",
+  "execution_mode": "HIGH_FIDELITY_TEST_DOUBLE",
+  "test_double": {
+    "name": "restart-recovery-observer-v1",
+    "scope": "observation envelope only"
+  },
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "restart_before_instance_id": "36a41b06635848a4a2f2ad5cb1ecac28",
+    "restart_after_instance_id": "3263e301f0924dfd9356499f774c6e2d",
+    "runtime_recovery_id": "89c9a3f114d54196be46033351be2ed0",
+    "recovery_task_id": "5c3addbb-c0a8-4f19-90f6-ad1fc7dca972"
+  },
+  "references": [
+    "/api/v1/auth/login",
+    "/api/v1/admin/diagnostics",
+    "/api/v1/admin/queue",
+    "/api/v1/admin/recovery-runs",
+    "/api/v1/admin/tasks/5c3addbb-c0a8-4f19-90f6-ad1fc7dca972",
+    "scripts/mvp.cmd restart-app"
+  ],
+  "assertions": [
+    {
+      "name": "管理员身份在重启后仍可建立正式会话",
+      "passed": true,
+      "actual": {
+        "role": "admin",
+        "venue_id": "venue-yueshan"
+      }
+    },
+    {
+      "name": "应用重启后核心运行依赖保持健康",
+      "passed": true,
+      "actual": {
+        "status": "degraded",
+        "runtime": {
+          "app": {
+            "status": "healthy",
+            "version": "1.0.0",
+            "instance_id": "3263e301f0924dfd9356499f774c6e2d"
+          },
+          "postgresql": {
+            "status": "healthy"
+          },
+          "redis": {
+            "status": "healthy",
+            "backend": "redis_streams",
+            "stream_depth": 0,
+            "pending": 0,
+            "lag": 0,
+            "dead_letter_depth": 0
+          },
+          "pgvector": {
+            "status": "healthy",
+            "backend": "postgresql_pgvector",
+            "extension_version": "0.8.1",
+            "index_name": "knowledge_vectors_bge_m3_v1",
+            "model": "BAAI/bge-m3",
+            "dimension": 1024,
+            "device": "custom"
+          },
+          "worker": {
+            "status": "healthy",
+            "running": true,
+            "backend": "redis_streams",
+            "concurrency": 5,
+            "inflight": 0,
+            "started_at": 1790491047.4577835
+          }
+        }
+      }
+    },
+    {
+      "name": "Redis 队列在重启后可用",
+      "passed": true,
+      "actual": {
+        "status": null,
+        "connected": true
+      }
+    },
+    {
+      "name": "存在重启前后运行实例标识",
+      "passed": true,
+      "actual": {
+        "before_instance_id": "36a41b06635848a4a2f2ad5cb1ecac28",
+        "after_instance_id": "3263e301f0924dfd9356499f774c6e2d"
+      }
+    },
+    {
+      "name": "启动恢复审计状态为成功",
+      "passed": true,
+      "actual": {
+        "recovery": {
+          "id": "89c9a3f114d54196be46033351be2ed0",
+          "scope_type": "GLOBAL",
+          "instance_id": "3263e301f0924dfd9356499f774c6e2d",
+          "app_version": "1.0.0",
+          "status": "SUCCEEDED",
+          "trace_id": "4e0c4c41439f416da9e47b40a07b6f9a",
+          "task_graph_recovered_count": 1,
+          "task_graph_reset_count": 1,
+          "approval_interrupted_count": 0,
+          "approval_pending_loaded_count": 0,
+          "watcher_interrupted_count": 0,
+          "redis_status": "AVAILABLE",
+          "redis_pending_count": 0,
+          "redis_claimed_count": 0,
+          "redis_acked_count": 0,
+          "error_summary": null,
+          "trace": [
+            {
+              "phase": "task_graph",
+              "recovered_count": 1,
+              "reset_count": 1,
+              "status": "SUCCEEDED"
+            },
+            {
+              "interrupted_count": 0,
+              "pending_loaded_count": 0,
+              "phase": "approvals",
+              "status": "SUCCEEDED"
+            },
+            {
+              "interrupted_count": 0,
+              "phase": "watcher",
+              "status": "SUCCEEDED"
+            },
+            {
+              "acked_count": 0,
+              "claimed_count": 0,
+              "pending_count": 0,
+              "phase": "redis",
+              "status": "SUCCEEDED"
+            }
+          ],
+          "started_at": 1790491047.006314,
+          "completed_at": 1790491047.0223522
+        },
+        "recent_count": 20
+      }
+    },
+    {
+      "name": "处理中任务在重启后恢复为待处理",
+      "passed": true,
+      "actual": {
+        "task_id": "5c3addbb-c0a8-4f19-90f6-ad1fc7dca972",
+        "before_status": "RUNNING",
+        "after_status": "PENDING",
+        "task_graph_reset_count": 1
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "runtime-before",
+      "path": "artifacts/E2E-16/runtime-before.json",
+      "sha256": "ee4cd4fa00050ff3617e188ee075db097f9636c561372b1599f5b25e0c773aa6"
+    },
+    {
+      "name": "runtime-after",
+      "path": "artifacts/E2E-16/runtime-after.json",
+      "sha256": "12cac946911c3c71253ec0d1d250ca43a25ee04c8df1df338e89e7b5d08652b8"
+    },
+    {
+      "name": "queue-after",
+      "path": "artifacts/E2E-16/queue-after.json",
+      "sha256": "d5bbdb53de7bdd7fe4a721a919e8c645b3d683a44345cc2631d87750fdb508f3"
+    },
+    {
+      "name": "recovery-runs",
+      "path": "artifacts/E2E-16/recovery-runs.json",
+      "sha256": "bbb7f3a565ee07a898265d2b51e6e0a3845106ce1c73ee6395bc3c3b4f2d73c9"
+    },
+    {
+      "name": "recovery-task-after",
+      "path": "artifacts/E2E-16/recovery-task-after.json",
+      "sha256": "7eb1989acae8cfbd420dad49be34f7bf5493e83f3ada3634bddc33e1338cc2af"
+    }
+  ]
+}

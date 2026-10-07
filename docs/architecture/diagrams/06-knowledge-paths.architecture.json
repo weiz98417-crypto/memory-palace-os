@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "知识系统 · 建索引、检索与来源核验", "locale": "zh-CN", "quality_profile": "showcase", "viewBox": [1390, 630]},
+  "components": [
+    {"id": "sources", "type": "database", "label": "已发布知识来源", "sublabel": "SOP · 经验卡 · 关闭 CASE", "pos": [40, 81], "size": [260, 82]},
+    {"id": "tei", "type": "backend", "label": "TEI · bge-m3", "sublabel": "来源与查询同模型嵌入", "pos": [380, 81], "size": [260, 82]},
+    {"id": "vectors", "type": "database", "label": "knowledge_vectors", "sublabel": "pgvector · 租户 · 来源版本", "pos": [720, 81], "size": [260, 82]},
+    {"id": "versions", "type": "database", "label": "vector_index_versions", "sublabel": "索引与模型版本", "pos": [1060, 81], "size": [260, 82]},
+    {"id": "query", "type": "backend", "label": "MemoryOps 检索请求", "sublabel": "venue_id · trace_id · 问题", "pos": [40, 394], "size": [260, 82]},
+    {"id": "retriever", "type": "backend", "label": "证据检索器", "sublabel": "语义召回 · 扩大召回 · 可选重排", "pos": [380, 394], "size": [260, 82]},
+    {"id": "verify", "type": "security", "label": "实时来源核验", "sublabel": "发布状态 · 授权 · 版本", "pos": [720, 394], "size": [260, 82]},
+    {"id": "snapshot", "type": "database", "label": "knowledge_retrieval_snapshots", "sublabel": "命中 · 排除 · 零命中 · 失败", "pos": [1060, 394], "size": [260, 82]}
+  ],
+  "connections": [
+    {"from": "sources", "to": "tei", "label": "发布后索引"},
+    {"from": "tei", "to": "vectors", "label": "1024 维向量"},
+    {"from": "vectors", "to": "versions", "label": "索引版本"},
+    {"from": "query", "to": "tei", "label": "同模型嵌入查询"},
+    {"from": "query", "to": "retriever", "label": "租户内检索", "labelAt": [340, 499]},
+    {"from": "retriever", "to": "vectors", "label": "语义召回"},
+    {"from": "vectors", "to": "verify", "label": "候选命中", "labelAt": [850, 177]},
+    {"from": "verify", "to": "snapshot", "label": "持久化检索证据"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "来源与版本", "items": ["经验资产需要审核发布与授权；闭环 CASE 由关闭动作直接写向量，不存在 incidents 表。", "来源改版或撤销后，查询时按当前关系事实重新核验，不能只信向量命中。"]},
+    {"dot": "amber", "title": "结果语义", "items": ["先按阈值语义检索，未得可靠结果时扩大召回；可选 TEI 重排。", "检索快照记录尝试、排除理由与 ZERO_HITS / FAILED；没有可靠依据就明确说明。"]}
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T074541Z-2FAD6B30",
+  "step_id": "E2E-11",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T07:48:32Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "event_id": "c5057e90-573e-41a9-a147-3fd51d077e09",
+    "watcher_run_id": "ef7fe5ba5afc4b08a77ecbdd2de43f3d",
+    "trace_id": "6b58ed5f79e844b08f1d5df3d0214fc8"
+  },
+  "references": [
+    "POST /api/v1/admin/events/c5057e90-573e-41a9-a147-3fd51d077e09/watcher-check",
+    "GET /api/v1/admin/llm-calls"
+  ],
+  "assertions": [
+    {
+      "name": "Watcher 使用真实 DeepSeek 对本事件运行",
+      "passed": true,
+      "actual": {
+        "run_id": "ef7fe5ba5afc4b08a77ecbdd2de43f3d",
+        "run_status": "SUCCEEDED",
+        "call_count": 1
+      }
+    },
+    {
+      "name": "目标快照包含事件与任务处置证据",
+      "passed": true,
+      "actual": {
+        "target_count": 1,
+        "snapshot_present": true
+      }
+    },
+    {
+      "name": "本次闭环检查无 finding",
+      "passed": true,
+      "actual": {
+        "ready_to_close": true,
+        "finding_count": 0
+      }
+    }
+  ],
+  "model_calls": [
+    {
+      "agent": "Watcher",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "is_mock": false,
+      "request_id": "7b6f4cfe-ff23-4a68-acd8-465b22f65d22",
+      "trace_id": "6b58ed5f79e844b08f1d5df3d0214fc8",
+      "status": "SUCCEEDED"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "watcher-check",
+      "path": "artifacts/E2E-11/watcher-check.json",
+      "sha256": "b6cdb627b6ccbfa64a6f028cd297d15bba0149210e3b7589562cadb715d30a11"
+    },
+    {
+      "name": "model-call-metadata",
+      "path": "artifacts/E2E-11/model-call-metadata.json",
+      "sha256": "9a7ca26c76d77724dc1cdd0c1060f28d977b6c17b70c54fab6c577585c0c3bf6"
+    }
+  ]
+}

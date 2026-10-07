@@ -1,0 +1,32 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {"title": "景区事件生命周期 · 七个真实状态", "locale": "zh-CN", "quality_profile": "showcase"},
+  "lanes": [
+    {"id": "incident", "label": "scenic_incidents 生命周期"},
+    {"id": "closure", "label": "关闭与沉淀"}
+  ],
+  "nodes": [
+    {"id": "detected", "lane": "incident", "col": 0, "type": "database", "label": "DETECTED", "sublabel": "信号生成事件"},
+    {"id": "triaged", "lane": "incident", "col": 1, "type": "backend", "label": "TRIAGED", "sublabel": "现场证据与 SOP 核验"},
+    {"id": "dispatched", "lane": "incident", "col": 2, "type": "backend", "label": "DISPATCHED", "sublabel": "任务与审批已生成"},
+    {"id": "acknowledged", "lane": "incident", "col": 3, "type": "backend", "label": "ACKNOWLEDGED", "sublabel": "检修任务已接单"},
+    {"id": "mitigating", "lane": "incident", "col": 4, "type": "backend", "label": "MITIGATING", "sublabel": "现场检查结果提交"},
+    {"id": "resolved", "lane": "incident", "col": 5, "type": "security", "label": "RESOLVED", "sublabel": "五项处置条件齐备"},
+    {"id": "closed", "lane": "closure", "col": 5, "type": "database", "label": "CLOSED", "sublabel": "授权负责人关闭"}
+  ],
+  "mainPath": ["detected", "triaged", "dispatched", "acknowledged", "mitigating", "resolved", "closed"],
+  "edges": [
+    {"from": "detected", "to": "triaged", "label": "核验", "role": "main"},
+    {"from": "triaged", "to": "dispatched", "label": "派单", "role": "main"},
+    {"from": "dispatched", "to": "acknowledged", "label": "接单", "role": "main"},
+    {"from": "acknowledged", "to": "mitigating", "label": "回执", "role": "main"},
+    {"from": "mitigating", "to": "resolved", "label": "处置完成", "role": "main"},
+    {"from": "resolved", "to": "closed", "label": "关闭确认", "role": "main"}
+  ],
+  "cards": [
+    {"dot": "amber", "title": "MITIGATING → RESOLVED", "items": ["至少两个任务且全部 DONE；高风险审批通过并执行成功。", "有现场图片证据、已核验 SOP 命中，并且没有未恢复告警。"]},
+    {"dot": "cyan", "title": "RESOLVED → CLOSED", "items": ["关闭会生成总结，将在途建议置为 SUPERSEDED，更新事件和卷宗。", "当前 CASE 向量与处置结论文案含演示场景固定内容，不能解释为任意事件的通用自动归档。"]},
+    {"dot": "rose", "title": "人工决定", "items": ["建议的采纳、忽略或不等待必须留理由；建议不会自动推进事件。", "高风险动作受权限和审批约束，状态箭头不代表绕过门禁。"]}
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T083848Z-6FBDFEF6",
+  "step_id": "UAT-F02",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:45:03Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "event_id": "0c232793-4858-4a7a-929c-3e1ec1ef20ad",
+    "session_id": "b5b70684-b5b8-5618-a3b2-e0cc072ac28e",
+    "trace_id": "e699e3b92ec94aa997422170ef37035e",
+    "stream_message_id": "1790498697270-0",
+    "recovery_id": "0dce7a125de64146a3946646be1bd9ae"
+  },
+  "references": [
+    "Redis Streams XADD/XREADGROUP/XPENDING",
+    "Docker Engine /containers/app/stop",
+    "Docker Engine /containers/app/start",
+    "GET /api/v1/admin/recovery-runs",
+    "GET /api/v1/admin/events",
+    "GET /api/v1/admin/tasks"
+  ],
+  "assertions": [
+    {
+      "name": "Worker 停止后同一正式消息进入 Redis pending 且未 ACK",
+      "passed": true,
+      "actual": {
+        "stream_message_id": "1790498697270-0",
+        "claimed_ids": [
+          "1790498697270-0"
+        ],
+        "pending_before": 1
+      }
+    },
+    {
+      "name": "Worker 启动回收 pending 并完成 ACK",
+      "passed": true,
+      "actual": {
+        "pending_after": 0,
+        "recovery_id": "0dce7a125de64146a3946646be1bd9ae",
+        "pending_count": 1,
+        "claimed_count": 1,
+        "acked_count": 1
+      }
+    },
+    {
+      "name": "重放原消息未复制事件或任务",
+      "passed": true,
+      "actual": {
+        "events_before": 1,
+        "events_after": 1,
+        "tasks_before": 1,
+        "tasks_after": 1
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "queue-before",
+      "path": "artifacts/UAT-F02/queue-before.json",
+      "sha256": "2dbfbe2b3bfd67b256c7d68d92a1d7fda2cf8740bc87c11f4bd98f3268fa4010"
+    },
+    {
+      "name": "app-stopped",
+      "path": "artifacts/UAT-F02/app-stopped.json",
+      "sha256": "2ddee106029f1f9e81c45f1aa20387ba7cc7254bdd9c2155aec8b1481e346c1b"
+    },
+    {
+      "name": "pending-injected",
+      "path": "artifacts/UAT-F02/pending-injected.json",
+      "sha256": "21df81255b7c496257899277af6f4e8964e1c9d4a5ae11c46f89c50275440f0b"
+    },
+    {
+      "name": "app-restored",
+      "path": "artifacts/UAT-F02/app-restored.json",
+      "sha256": "5a5fc62494816d9b037612e7e7bd16aeb452fcab3527e86f5b807068a0046479"
+    },
+    {
+      "name": "recovery",
+      "path": "artifacts/UAT-F02/recovery.json",
+      "sha256": "9ff28cf35238d2b19d842342d47b5521dfdf2265c4e97f3a03dc47c9ceacc45e"
+    },
+    {
+      "name": "queue-after",
+      "path": "artifacts/UAT-F02/queue-after.json",
+      "sha256": "f64be91f8de72758dea32747ddb4b402cc0b6b31c2b4a5af1a922c4d863856c6"
+    },
+    {
+      "name": "business-counts",
+      "path": "artifacts/UAT-F02/business-counts.json",
+      "sha256": "c092152de0dd02adeb76378a4b95c8b19d54ebed10743e8c3321f495ed5701ac"
+    }
+  ]
+}

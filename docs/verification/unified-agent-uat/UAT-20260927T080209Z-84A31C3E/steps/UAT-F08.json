@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T080209Z-84A31C3E",
+  "step_id": "UAT-F08",
+  "status": "FAILED",
+  "recorded_at": "2026-09-27T08:27:05Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "interview_id": "6ffd6ca27f27459498fced1ea9e21928",
+    "experience_card_id": "3e7da339b75a40a5926a17665a95964f",
+    "vector_doc_id": "experience:venue-yueshan:3e7da339b75a40a5926a17665a95964f:v1"
+  },
+  "references": [
+    "POST /api/v1/assistant/experience/interviews/6ffd6ca27f27459498fced1ea9e21928/complete",
+    "POST /api/v1/admin/experience-cards/3e7da339b75a40a5926a17665a95964f/publish",
+    "GET /api/v1/admin/experience-cards/3e7da339b75a40a5926a17665a95964f",
+    "Docker Engine /containers/tei-embedding/stop",
+    "Docker Engine /containers/tei-embedding/start"
+  ],
+  "assertions": [
+    {
+      "name": "重启恢复的专家访谈完成并生成待审核卡片",
+      "passed": false,
+      "actual": {
+        "interview_id": "6ffd6ca27f27459498fced1ea9e21928",
+        "card_id": "3e7da339b75a40a5926a17665a95964f",
+        "submitted_status": "IN_REVIEW"
+      }
+    },
+    {
+      "name": "TEI 停止时发布失败且数据库未假发布",
+      "passed": true,
+      "actual": {
+        "failure": {
+          "status_code": 503,
+          "detail": {
+            "code": "EXPERIENCE_INDEX_WRITE_FAILED",
+            "message": "经验索引写入失败，尚未发布。",
+            "trace_id": "789263f9491e49b19dc9b70449186b87",
+            "retryable": true,
+            "action": "保持当前审核状态，稍后重试发布。"
+          }
+        },
+        "status": "IN_REVIEW",
+        "index_status": "NOT_INDEXED",
+        "vector_doc_id": null
+      }
+    },
+    {
+      "name": "TEI 恢复后同一版本成功发布并建立索引",
+      "passed": true,
+      "actual": {
+        "health": "healthy",
+        "status": "PUBLISHED",
+        "index_status": "INDEXED",
+        "vector_doc_id": "experience:venue-yueshan:3e7da339b75a40a5926a17665a95964f:v1"
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "completed-interview",
+      "path": "artifacts/UAT-F08/completed-interview.json",
+      "sha256": "7e2f3f3f024b05993d181cf6f5330db2cbf5c12f1e7701875ab1578412a7e9a3"
+    },
+    {
+      "name": "confirmed-card",
+      "path": "artifacts/UAT-F08/confirmed-card.json",
+      "sha256": "a23ab7da501acb16b163b699d5db3b80b994d8a43b85e49cee99008a3915f0c5"
+    },
+    {
+      "name": "submitted-card",
+      "path": "artifacts/UAT-F08/submitted-card.json",
+      "sha256": "c101ca4b2d159d26140dcdb5e6a7c449c35c416a073ddca89d74b3d34b8641a2"
+    },
+    {
+      "name": "tei-stopped",
+      "path": "artifacts/UAT-F08/tei-stopped.json",
+      "sha256": "706fad9691a3f0652281d81bfc02719da0cee44a1b7268aefc23729324a7a24b"
+    },
+    {
+      "name": "publish-failure",
+      "path": "artifacts/UAT-F08/publish-failure.json",
+      "sha256": "a89108b8735f93884ebda5c538e661f2374885a0cc5c77e84964533189bc2b76"
+    },
+    {
+      "name": "card-after-failure",
+      "path": "artifacts/UAT-F08/card-after-failure.json",
+      "sha256": "0a6434a7c406a4fec212e0a92e9a71c03dc1e430eef65ae6f0985e7e30bf03c4"
+    },
+    {
+      "name": "tei-restored",
+      "path": "artifacts/UAT-F08/tei-restored.json",
+      "sha256": "1e49eb6999228bdada8bf87d40a070806bb12ead5738c2127945b3a392eb5b59"
+    },
+    {
+      "name": "published-card",
+      "path": "artifacts/UAT-F08/published-card.json",
+      "sha256": "5019ce5a368b68b8651a3b67d5838ac601f48304f72b495291a2dccecdb480c6"
+    },
+    {
+      "name": "card-final",
+      "path": "artifacts/UAT-F08/card-final.json",
+      "sha256": "d907f28872ee8755ec4417485f6dcacba22e9491254a1ea53a09cb37d54d3625"
+    }
+  ]
+}

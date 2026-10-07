@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T074541Z-2FAD6B30",
+  "step_id": "E2E-08",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T07:46:50Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "event_id": "c5057e90-573e-41a9-a147-3fd51d077e09",
+    "task_id": "bba810dc-6b5a-4fdf-8e1a-d00edb836bdb",
+    "rejected_approval_id": "e8e19e74-dd6b-446e-9e7b-34af3f844798",
+    "revised_approval_id": "1f4642d4-9956-4062-aade-265c28097080"
+  },
+  "references": [
+    "POST /api/v1/admin/approvals/e8e19e74-dd6b-446e-9e7b-34af3f844798/reject",
+    "POST /api/v1/admin/tasks/bba810dc-6b5a-4fdf-8e1a-d00edb836bdb/complete",
+    "POST /api/v1/admin/action-requests",
+    "GET /api/v1/admin/approvals/1f4642d4-9956-4062-aade-265c28097080"
+  ],
+  "assertions": [
+    {
+      "name": "第一张审批明确拒绝且动作未执行",
+      "passed": true,
+      "actual": {
+        "status": "REJECTED",
+        "execution_status": "NOT_EXECUTED",
+        "comment": "缺少三轮空载试车记录，请补证后重新提交。"
+      }
+    },
+    {
+      "name": "李明补齐三轮结构化试车证据",
+      "passed": true,
+      "actual": {
+        "task_status": "DONE",
+        "trials": [
+          {
+            "round": 1,
+            "noise": false,
+            "brake_ok": true,
+            "temperature_c": 31
+          },
+          {
+            "round": 2,
+            "noise": false,
+            "brake_ok": true,
+            "temperature_c": 32
+          },
+          {
+            "round": 3,
+            "noise": false,
+            "brake_ok": true,
+            "temperature_c": 33
+          }
+        ]
+      }
+    },
+    {
+      "name": "新审批关联旧拒绝并冻结已完成任务证据",
+      "passed": true,
+      "actual": {
+        "revised_id": "1f4642d4-9956-4062-aade-265c28097080",
+        "supersedes": "e8e19e74-dd6b-446e-9e7b-34af3f844798",
+        "snapshot_task_status": "DONE"
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "rejected-approval",
+      "path": "artifacts/E2E-08/rejected-approval.json",
+      "sha256": "9a639b29899fb81a9b487ea32c08afa6a9ebe767ffced093e6a160abff657adb"
+    },
+    {
+      "name": "trial-task",
+      "path": "artifacts/E2E-08/trial-task.json",
+      "sha256": "12d526c546298146058249d137b6b908c5179c5f625f702cfb4aa2a97eca6e11"
+    },
+    {
+      "name": "revised-approval",
+      "path": "artifacts/E2E-08/revised-approval.json",
+      "sha256": "ae93931a3b7851abb19a0cc57163d866131b1e97c8cccc3897e1c8eb1e5415c3"
+    }
+  ]
+}

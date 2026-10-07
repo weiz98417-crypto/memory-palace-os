@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "运行事实、健康指标与可选追踪", "locale": "zh-CN", "quality_profile": "showcase", "viewBox": [1390, 630]},
+  "components": [
+    {"id": "api", "type": "backend", "label": "FastAPI", "sublabel": "请求与运行入口", "pos": [40, 251], "size": [250, 82]},
+    {"id": "command", "type": "backend", "label": "IncidentCommand", "sublabel": "Agent 调用与降级", "pos": [370, 251], "size": [250, 82]},
+    {"id": "logs", "type": "database", "label": "llm_call_logs", "sublabel": "模型、token、耗时、失败与 trace", "pos": [700, 81], "size": [250, 82]},
+    {"id": "otel", "type": "backend", "label": "OpenTelemetry", "sublabel": "配置 OTLP 时导出 span", "pos": [700, 251], "size": [250, 82]},
+    {"id": "jaeger", "type": "external", "label": "Jaeger", "sublabel": "tracing profile · 可选", "pos": [1030, 251], "size": [250, 82]},
+    {"id": "endpoints", "type": "backend", "label": "运维 API", "sublabel": "探针 · 指标 · 诊断", "pos": [370, 421], "size": [250, 82]},
+    {"id": "console", "type": "frontend", "label": "Console 运维诊断", "sublabel": "/diagnostics · 管理员", "pos": [700, 421], "size": [250, 82]}
+  ],
+  "connections": [
+    {"from": "api", "to": "command", "label": "景区 Agent 请求"},
+    {"from": "command", "to": "logs", "label": "真实调用留痕"},
+    {"from": "command", "to": "otel", "label": "可选 span", "labelAt": [660, 361]},
+    {"from": "otel", "to": "jaeger", "label": "OTLP"},
+    {"from": "api", "to": "endpoints", "label": "暴露运维入口"},
+    {"from": "endpoints", "to": "console", "label": "/admin/diagnostics", "labelAt": [660, 517]}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "事实源", "items": ["llm_call_logs 与 scenic_commands 分别是调用和建议运行的持久化事实；Jaeger 仅供追踪下钻。", "人的采纳决策读取建议结果，不读取 llm_call_logs 作为决策对象。"]},
+    {"dot": "amber", "title": "检查范围", "items": ["/health 报进程与队列；/ready 检查 PostgreSQL、Redis 及已配置的 Hatchet 健康，不把恢复审计当就绪条件。", "Console 读取 /api/v1/admin/diagnostics；/api/v1/admin/metrics 是需鉴权的 Prometheus 指标端点。"]}
+  ]
+}

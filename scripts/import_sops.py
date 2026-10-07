@@ -168,7 +168,7 @@ def main() -> None:
         type=Path,
         default=PROJECT_ROOT / "artifacts" / "knowledge" / "sop-import-report.json",
     )
-    parser.add_argument("--reviewer-note", default="知识导入：已核对公开来源后发布")
+    parser.add_argument("--reviewer-note", default="知识导入：已核对参考依据后发布")
     args = parser.parse_args()
 
     password = ""

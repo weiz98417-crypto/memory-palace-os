@@ -12,6 +12,7 @@ body {
 }
 
 .simulator-app {
+  --ink-faint: #5f6b78;
   width: 100vw;
   height: 100dvh;
   overflow: hidden;
@@ -415,7 +416,7 @@ body {
   place-items: center;
   border-radius: 5px;
   color: #ffffff;
-  background: #6d7a81;
+  background: #586b75;
   font-size: 11px;
   font-weight: 750;
 }
@@ -1163,12 +1164,12 @@ body {
   padding: 7px 13px;
   border-radius: 5px;
   color: #ffffff;
-  background: #238a5e;
+  background: #176f4a;
   font-weight: 700;
 }
 
 .wecom-send:hover:not(:disabled) {
-  background: #176f4a;
+  background: #0f5f46;
 }
 
 .evidence-panel {

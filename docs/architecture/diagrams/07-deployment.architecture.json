@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "Docker Compose · 默认部署与显式扩展", "locale": "zh-CN", "quality_profile": "showcase", "viewBox": [1390, 630]},
+  "components": [
+    {"id": "browser", "type": "external", "label": "业务浏览器", "sublabel": "HTTP 入口 :8090", "pos": [40, 251], "size": [250, 82]},
+    {"id": "nginx", "type": "security", "label": "Nginx", "sublabel": "静态资源 · 反向代理 · SSE", "pos": [370, 251], "size": [250, 82]},
+    {"id": "app", "type": "backend", "label": "App · FastAPI", "sublabel": "内部 :8000 · 默认 redis 模式", "pos": [700, 251], "size": [250, 82]},
+    {"id": "postgres", "type": "database", "label": "PostgreSQL + pgvector", "sublabel": "唯一业务事实源", "pos": [700, 67], "size": [250, 82]},
+    {"id": "redis", "type": "messagebus", "label": "Redis", "sublabel": "两条 Stream · 实时唤醒", "pos": [1030, 251], "size": [250, 82]},
+    {"id": "tei", "type": "backend", "label": "TEI Embedding", "sublabel": "默认常驻 · bge-m3", "pos": [700, 434], "size": [250, 82]},
+    {"id": "deepseek", "type": "external", "label": "DeepSeek API", "sublabel": "deepseek-flash · 出站调用", "pos": [370, 434], "size": [250, 82]}
+  ],
+  "connections": [
+    {"from": "browser", "to": "nginx", "label": "HTTP"},
+    {"from": "nginx", "to": "app", "label": "代理 API / SSE"},
+    {"from": "app", "to": "postgres", "label": "SQL"},
+    {"from": "app", "to": "redis", "label": "Streams"},
+    {"from": "app", "to": "tei", "label": "HTTP 嵌入", "labelAt": [825, 347]},
+    {"from": "app", "to": "deepseek", "label": "LiteLLM 出站"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "默认服务与网络", "items": ["attachment-init、app、postgres、redis、nginx、tei-embedding 为默认服务。", "data-plane 与 agent-plane 是 internal 网络；app 另外连接 egress，Nginx 对外发布端口。"]},
+    {"dot": "amber", "title": "显式启用", "items": ["运维通过 docker compose --profile 启用 tei-reranker、rerank-v2、agent-runtime 或 tracing。", "Hatchet 需 ADVICE_EXECUTION_MODE=hatchet、token、健康服务和 worker 就绪；默认仍是 Redis Stream。"]}
+  ]
+}

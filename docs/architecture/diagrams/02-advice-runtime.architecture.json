@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "事件处置建议 · 持久化与执行", "locale": "zh-CN", "quality_profile": "showcase", "viewBox": [1390, 630]},
+  "components": [
+    {"id": "caller", "type": "backend", "label": "ScenicAreaOperations", "sublabel": "SOP 后触发 / 手动 POST", "pos": [40, 237], "size": [250, 82]},
+    {"id": "ledger", "type": "database", "label": "scenic_commands", "sublabel": "GENERATE_ADVICE · 幂等键 · 租约", "pos": [350, 88], "size": [250, 82]},
+    {"id": "dispatch", "type": "backend", "label": "Advice Dispatcher", "sublabel": "新增后派发 · 启动时重新派发", "pos": [350, 387], "size": [250, 82]},
+    {"id": "redis", "type": "messagebus", "label": "Redis Advice Stream", "sublabel": "memory_palace:advice_runs · 默认", "pos": [680, 88], "size": [250, 82]},
+    {"id": "hatchet", "type": "cloud", "label": "Hatchet", "sublabel": "显式切换执行模式", "pos": [680, 387], "size": [250, 82]},
+    {"id": "worker", "type": "backend", "label": "AdviceWorker", "sublabel": "claim · 执行 · CAS 终态", "pos": [1010, 237], "size": [250, 82]},
+    {"id": "command", "type": "backend", "label": "IncidentCommand", "sublabel": "按模式编排 Agent", "pos": [1010, 67], "size": [250, 82]},
+    {"id": "sink", "type": "backend", "label": "DatabaseAdviceSink", "sublabel": "活动记录 · SSE 通知", "pos": [1010, 407], "size": [250, 82]}
+  ],
+  "connections": [
+    {"from": "caller", "to": "ledger", "label": "先写运行"},
+    {"from": "caller", "to": "dispatch", "label": "新增运行后派发"},
+    {"from": "dispatch", "to": "redis", "label": "redis 模式"},
+    {"from": "dispatch", "to": "hatchet", "label": "hatchet 模式", "labelAt": [640, 487]},
+    {"from": "redis", "to": "worker", "label": "领取 / ACK"},
+    {"from": "hatchet", "to": "worker", "label": "工作流执行"},
+    {"from": "worker", "to": "command", "label": "生成建议"},
+    {"from": "worker", "to": "sink", "label": "终态投影", "labelAt": [1135, 333]}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "状态事实", "items": ["AdviceRun 不是独立数据表；scenic_commands 的 command_type 为 GENERATE_ADVICE。", "PENDING / RUNNING 经比较并交换进入 READY、FAILED 或 SUPERSEDED；READY 包含降级结果。"]},
+    {"dot": "amber", "title": "恢复与人工决定", "items": ["list_dispatchable 重新派发 PENDING 与租约过期的 RUNNING。", "人工不等待、推进或关闭后，在途建议可以标为 SUPERSEDED；Hatchet 路径向 scenic:advice:decision 发决策事件。"]}
+  ]
+}

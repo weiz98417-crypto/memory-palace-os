@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T083848Z-6FBDFEF6",
+  "records": [
+    {
+      "step_id": "UAT-F02",
+      "stream_message_id": "1790498697270-0",
+      "recovery_id": "0dce7a125de64146a3946646be1bd9ae",
+      "pending_before": 1,
+      "pending_after": 0,
+      "claimed": 1,
+      "acked": 1,
+      "duplicate_events": 0
+    }
+  ]
+}

@@ -290,7 +290,7 @@ services:
     command:
       - /bin/sh
       - -c
-      - /hatchet/hatchet-admin token create --config /config --name scenic-agent-prototype --expiresIn 720h > /tokens/worker
+      - /hatchet/hatchet-admin token create --config /config --name scenic-agent-worker --expiresIn 720h > /tokens/worker && chown 999:999 /tokens
     environment:
       DATABASE_URL: postgresql://${HATCHET_POSTGRES_USER:-hatchet}:${HATCHET_POSTGRES_PASSWORD:-hatchet-local}@hatchet-postgres:5432/${HATCHET_POSTGRES_DB:-hatchet}?sslmode=disable
       SERVER_AUTH_COOKIE_DOMAIN: ${HATCHET_AUTH_COOKIE_DOMAIN:-127.0.0.1}
@@ -308,7 +308,7 @@ services:
 
   scenic-agent-prototype:
     image: memory-palace-scenic-agent-prototype:local
-    profiles: ["agent-runtime"]
+    profiles: ["agent-prototype"]
     restart: unless-stopped
     healthcheck:
       disable: true

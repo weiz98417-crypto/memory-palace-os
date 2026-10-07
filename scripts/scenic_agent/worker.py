@@ -72,32 +72,30 @@ def main() -> None:
     ready_path = Path(
         os.environ.get("HATCHET_WORKER_READY_FILE", "/tmp/scenic-agent-worker.ready")
     )
+    ready_path.unlink(missing_ok=True)
     try:
-        grace_seconds = max(
-            1.0,
-            float(os.environ.get("HATCHET_WORKER_READY_GRACE_SECONDS", "5")),
-        )
-    except ValueError:
-        grace_seconds = 5.0
-
-    def _run_worker() -> None:
         worker, _client = build_worker(worker_provider=provide_worker)
-        worker.start()
+        stop_monitor = threading.Event()
 
-    runner = threading.Thread(target=_run_worker, name="hatchet-worker", daemon=True)
-    runner.start()
-    try:
-        # 就绪标记必须反映真实启动：只构造 client 不代表连上了 Hatchet。
-        # worker 线程在观察期内退出说明 start() 失败，此时绝不写就绪标记，
-        # 让健康检查保持不健康并由部署层重启。
-        runner.join(timeout=grace_seconds)
-        if not runner.is_alive():
-            raise RuntimeError("Hatchet worker exited during startup grace period")
-        ready_path.parent.mkdir(parents=True, exist_ok=True)
-        ready_path.write_text("ready\n", encoding="utf-8")
-        runner.join()
+        def _monitor_health() -> None:
+            while not stop_monitor.is_set():
+                if worker.status.name == "HEALTHY":
+                    if not ready_path.exists():
+                        ready_path.parent.mkdir(parents=True, exist_ok=True)
+                        ready_path.write_text("ready\n", encoding="utf-8")
+                else:
+                    ready_path.unlink(missing_ok=True)
+                stop_monitor.wait(1)
+
+        monitor = threading.Thread(target=_monitor_health, name="worker-health", daemon=True)
+        monitor.start()
+        try:
+            worker.start()
+        finally:
+            stop_monitor.set()
+            monitor.join()
+            ready_path.unlink(missing_ok=True)
     finally:
-        ready_path.unlink(missing_ok=True)
         if tracing_provider is not None:
             tracing_provider.shutdown()
 

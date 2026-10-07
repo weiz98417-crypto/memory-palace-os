@@ -1,0 +1,18 @@
+services:
+  attachment-init:
+    image: memory-palace-mvp-app:latest
+  app:
+    image: memory-palace-uat-app:latest
+    environment:
+      LLM_TIMEOUT: ${UAT_LLM_TIMEOUT:-30}
+  nginx:
+    networks:
+      data-plane:
+        ipv4_address: ${UAT_NGINX_IP:-172.31.0.10}
+      egress: {}
+
+networks:
+  data-plane:
+    ipam:
+      config:
+        - subnet: ${UAT_SUBNET:-172.31.0.0/24}

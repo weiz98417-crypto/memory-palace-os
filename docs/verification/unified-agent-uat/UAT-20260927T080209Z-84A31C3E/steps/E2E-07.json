@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T080209Z-84A31C3E",
+  "step_id": "E2E-07",
+  "status": "PASSED",
+  "recorded_at": "2026-09-27T08:03:14Z",
+  "business_ids": {
+    "venue_id": "venue-yueshan",
+    "event_id": "79af7e2b-0353-4a0d-ae2d-d54fd7c6c1f0",
+    "session_id": "a1479819-e567-52eb-b951-5b55f84248ae",
+    "task_id": "1fe587b8-c564-4bbd-b700-1dd65397015b",
+    "approval_id": "e7acb2fc-a6aa-4638-ae7a-9bc2ec7305d7"
+  },
+  "references": [
+    "POST /api/v1/admin/action-requests",
+    "GET /api/v1/admin/approvals/e7acb2fc-a6aa-4638-ae7a-9bc2ec7305d7",
+    "GET /api/v1/channels/simulator/sessions/a1479819-e567-52eb-b951-5b55f84248ae/outbox"
+  ],
+  "assertions": [
+    {
+      "name": "高风险调度告警创建待审批单",
+      "passed": true,
+      "actual": {
+        "request_status": "pending_approval",
+        "approval_status": "PENDING",
+        "approval_id": "e7acb2fc-a6aa-4638-ae7a-9bc2ec7305d7"
+      }
+    },
+    {
+      "name": "审批前动作未执行且接入环境未送达",
+      "passed": true,
+      "actual": {
+        "execution_status": "NOT_STARTED",
+        "outbox_before": 0,
+        "outbox_after": 1
+      }
+    },
+    {
+      "name": "审批保存场景证据快照",
+      "passed": true,
+      "actual": {
+        "tool_name": "send_in_app_alert",
+        "snapshot_present": true
+      }
+    }
+  ],
+  "model_calls": [],
+  "artifacts": [
+    {
+      "name": "approval-request",
+      "path": "artifacts/E2E-07/approval-request.json",
+      "sha256": "38d8a5c6d39c6b3f92ff374278e80c62f007d3e37e963b5b7c09e6af54eb6aaa"
+    },
+    {
+      "name": "approval",
+      "path": "artifacts/E2E-07/approval.json",
+      "sha256": "d3c3cc45fee0b0d51fd23aa85d1ddc4bd6f53fc3ee0cd47d957f257e14e973c9"
+    },
+    {
+      "name": "outbox-before",
+      "path": "artifacts/E2E-07/outbox-before.json",
+      "sha256": "9d22754ec029c4c2bd66cb4947453b7429a0ffb7b0bf2ebaeac46b3906353814"
+    },
+    {
+      "name": "outbox-after",
+      "path": "artifacts/E2E-07/outbox-after.json",
+      "sha256": "537090d943a38dc952d61621300157ec66869d210c7c823a4a54d8475828c05e"
+    }
+  ]
+}

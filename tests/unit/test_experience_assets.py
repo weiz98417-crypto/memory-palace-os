@@ -10,6 +10,24 @@ from src.memory_palace.core.experience_assets import (
     next_experience_status,
     validate_extracted_experience_draft,
 )
+from src.memory_palace.core.event_experience_candidates import _extraction_source_corpus
+
+
+def test_event_candidate_prompt_uses_bounded_business_evidence() -> None:
+    evidence = {
+        "event": {"business_id": "SJ-1", "event_type": "车辆故障", "severity": "P1", "raw_text": "右后轮有摩擦声", "resolution": "已完成检修和试车", "internal_blob": "x" * 30000},
+        "task_results": [{"description": "检查制动盘", "status": "DONE", "result": {"gap_mm": 3.2}, "internal_blob": "x" * 30000}],
+        "approval_evidence": [{"status": "APPROVED", "comment": "证据齐全", "execution_status": "SUCCEEDED", "execution_result": {"delivered": True}, "evidence_snapshot": "x" * 30000}],
+        "watcher_evidence": {"run": {"summary": "证据完整，可闭环", "finding_count": 0, "target_snapshot": "x" * 30000}, "findings": []},
+    }
+
+    source = _extraction_source_corpus(evidence)
+
+    assert "右后轮有摩擦声" in source
+    assert "证据齐全" in source
+    assert "internal_blob" not in source
+    assert "target_snapshot" not in source
+    assert len(source) < 2000
 
 
 class _DraftLLM:

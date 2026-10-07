@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T083848Z-6FBDFEF6",
+  "records": [
+    {
+      "step_id": "E2E-14",
+      "name": "审核退回并由专家修订后重新确认",
+      "passed": true
+    },
+    {
+      "step_id": "E2E-14",
+      "name": "旧版本快照不可变且审核轨迹完整",
+      "passed": true
+    },
+    {
+      "step_id": "E2E-14",
+      "name": "经验发布版本与 pgvector 索引一致",
+      "passed": true
+    },
+    {
+      "step_id": "UAT-F02",
+      "name": "Worker 停止后同一正式消息进入 Redis pending 且未 ACK",
+      "passed": true
+    },
+    {
+      "step_id": "UAT-F02",
+      "name": "Worker 启动回收 pending 并完成 ACK",
+      "passed": true
+    },
+    {
+      "step_id": "UAT-F02",
+      "name": "重放原消息未复制事件或任务",
+      "passed": true
+    },
+    {
+      "step_id": "UAT-F03",
+      "name": "两个 401 与一个超时均明确失败且可追踪",
+      "passed": true
+    },
+    {
+      "step_id": "UAT-F03",
+      "name": "故障期不生成假任务且诊断进入熔断状态",
+      "passed": true
+    },
+    {
+      "step_id": "UAT-F03",
+      "name": "恢复真实 DeepSeek 后原业务动作可用同一幂等键重试",
+      "passed": true
+    },
+    {
+      "step_id": "UAT-F06",
+      "name": "并发审批只有一次成功领取终态",
+      "passed": true
+    },
+    {
+      "step_id": "UAT-F06",
+      "name": "失效身份使已批准动作显式执行失败",
+      "passed": true
+    },
+    {
+      "step_id": "UAT-F06",
+      "name": "动作失败不产生已送达通知且测试身份恢复",
+      "passed": true
+    },
+    {
+      "step_id": "UAT-F08",
+      "name": "重启恢复的专家访谈完成并生成待审核卡片",
+      "passed": true
+    },
+    {
+      "step_id": "UAT-F08",
+      "name": "TEI 停止时发布失败且数据库未假发布",
+      "passed": true
+    },
+    {
+      "step_id": "UAT-F08",
+      "name": "TEI 恢复后同一版本成功发布并建立索引",
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T065304Z-A4939230",
+  "status": "FAILED",
+  "created_at": "2026-09-27T06:53:04Z",
+  "completed_at": "2026-09-27T07:13:09Z",
+  "architecture": {
+    "business_data": "PostgreSQL",
+    "queue": "Redis Streams",
+    "vector_store": "PostgreSQL pgvector",
+    "generative_model": "deepseek-flash"
+  },
+  "channel": {
+    "mode": "WECOM_SIMULATOR_ONLY",
+    "entrypoint": "/simulator/wecom/",
+    "real_wecom_enabled": false
+  },
+  "source": {
+    "status": "CAPTURED",
+    "commit": "611609513c5bf2ebd0e8f9fa6cb1fd49789f2b44",
+    "dirty": true,
+    "changed_paths": [
+      "deploy/docker-compose.yml",
+      "frontend/scripts/generate-openapi-types.mjs",
+      "scripts/import_knowledge_batch.py",
+      "scripts/unified_agent_uat/cli.py",
+      "scripts/unified_agent_uat/journey.py",
+      "scripts/unified_agent_uat/validation.py",
+      "src/memory_palace/config/feature_registry.yaml",
+      "static/assistant/styles.css",
+      "static/simulator/wecom/styles.css",
+      "tests/unit/test_runtime_hardening.py",
+      "tests/unit/test_unified_agent_uat_evidence.py",
+      "deploy/docker-compose.uat.yml"
+    ],
+    "tracked_diff_sha256": "0ed6469743727d0c169f5942a642bde7ccbae0f052ba86e8c5003d014b9d4bd5",
+    "untracked_source_sha256": "0c2d1a3226cd43f28b20c80a14b4214524645a6003c9bca99938484be21e3f1e"
+  },
+  "baseline": {
+    "path": "artifacts/uat-baseline.json",
+    "sha256": "d55ed4df0f7bbb2b073703ae3978b634c5bc4495c847f3545eb2c27a571e870d"
+  },
+  "steps": [
+    {
+      "id": "E2E-00",
+      "status": "PASSED",
+      "result": "steps/E2E-00.json",
+      "failure": null,
+      "sha256": "fa54feea68e79ab1bbedb9056b72169c24f000671c0566966d54bf0cd437f8a0"
+    },
+    {
+      "id": "E2E-01",
+      "status": "PASSED",
+      "result": "steps/E2E-01.json",
+      "failure": null,
+      "sha256": "eec9e4b61f4e3ca4008cf3c4d7eb60e0c98d537cd136825dd40371292bb8cf33"
+    },
+    {
+      "id": "E2E-02",
+      "status": "PASSED",
+      "result": "steps/E2E-02.json",
+      "failure": null,
+      "sha256": "552b6fcf11319dfc317797e81e2217cd05c4f59d9427d82859c15961b6b09cde"
+    },
+    {
+      "id": "UAT-F05",
+      "status": "PASSED",
+      "result": "steps/UAT-F05.json",
+      "failure": null,
+      "sha256": "0b2f2cce24bb207b22a78e5458703f00a6541b357e8cb61dcfd1291206787677"
+    },
+    {
+      "id": "E2E-03",
+      "status": "PASSED",
+      "result": "steps/E2E-03.json",
+      "failure": null,
+      "sha256": "c4dac41289a4547b05f4f4318a8856baa30b768717775b5e869bc3089b1043e1"
+    },
+    {
+      "id": "UAT-F11",
+      "status": "PASSED",
+      "result": "steps/UAT-F11.json",
+      "failure": null,
+      "sha256": "40bba105011cae8202183a8cb05e52a3f4bbf3757ddee26a9e2a2ca6147c5aec"
+    },
+    {
+      "id": "UAT-F12",
+      "status": "PASSED",
+      "result": "steps/UAT-F12.json",
+      "failure": null,
+      "sha256": "54ca9b3cb3da3855e758af88cd672cc9e85921b12e0e176f274a058d915e81fb"
+    },
+    {
+      "id": "UAT-F13",
+      "status": "PASSED",
+      "result": "steps/UAT-F13.json",
+      "failure": null,
+      "sha256": "8814792ad8d4f80d670ba70f8474f318c34750afc00f3e10f4d2117cf7d7b701"
+    },
+    {
+      "id": "E2E-04",
+      "status": "FAILED",
+      "result": "steps/E2E-04.json",
+      "failure": "failures/E2E-04.json",
+      "sha256": "a1b37e3634bf71f264443fc45bc1ef53c1e417de0e83b2868857ba509c69681d"
+    }
+  ]
+}

@@ -88,9 +88,9 @@ def build_entry(query_record: dict, *, collected_on: str) -> dict:
     lines: list[str] = [
         f"【适用场景】{query}",
         f"【整理日期】{collected_on}",
-        "【状态】公开来源整理稿，供检索与演示使用；现场执行前须由客户按自身管理制度细化为执行版。",
+        "【状态】资料整理稿，待按现场制度复核；复核前不可作为执行版。",
         "",
-        "【来源要点】（逐条摘自公开资料，保留原文与链接）",
+        "【参考要点】（附原文与链接）",
     ]
     sources: list[str] = []
     for index, result in enumerate(results[:6], start=1):
@@ -142,8 +142,8 @@ def main() -> None:
     ]
     document = {
         "note": (
-            "由 AnySearch 公开来源整理生成；每条 SOP 内含逐条引用与链接，未编造内容。"
-            "正式交付前需客户按自身制度复核并替换为内部执行版。"
+            "根据检索材料整理，附引用与链接。"
+            "正式交付前需按现场制度复核并替换为内部执行版。"
         ),
         "generated_from": str(args.raw),
         "collected_on": collected_on,

@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "正式运行与企业演示 · 互斥进程模式", "locale": "zh-CN", "quality_profile": "showcase", "viewBox": [1390, 630]},
+  "components": [
+    {"id": "mode", "type": "security", "label": "DEMO_MODE", "sublabel": "进程启动时选择模式", "pos": [40, 251], "size": [260, 82]},
+    {"id": "formal", "type": "backend", "label": "正式 lifespan", "sublabel": "数据库 · 恢复 · Redis · Worker", "pos": [370, 81], "size": [260, 82]},
+    {"id": "formal_api", "type": "backend", "label": "正式路由", "sublabel": "v1 / v2 / webhook", "pos": [700, 81], "size": [260, 82]},
+    {"id": "formal_store", "type": "database", "label": "正式依赖", "sublabel": "PostgreSQL · Redis · TEI", "pos": [1030, 81], "size": [260, 82]},
+    {"id": "demo", "type": "backend", "label": "Demo 路由", "sublabel": "/demo · /demo/*", "pos": [370, 421], "size": [260, 82]},
+    {"id": "controller", "type": "backend", "label": "ScenarioController", "sublabel": "单 run 锁 · expected_version", "pos": [700, 421], "size": [260, 82]},
+    {"id": "adapter", "type": "backend", "label": "演示场景运行时", "sublabel": "YAML 场景 · Demo Adapter", "pos": [1030, 421], "size": [260, 82]}
+  ],
+  "connections": [
+    {"from": "mode", "to": "formal", "label": "false"},
+    {"from": "formal", "to": "formal_api", "label": "挂载"},
+    {"from": "formal_api", "to": "formal_store", "label": "真实依赖"},
+    {"from": "mode", "to": "demo", "label": "true"},
+    {"from": "demo", "to": "controller", "label": "受控场景动作"},
+    {"from": "controller", "to": "adapter", "label": "加载步骤 / 生成证据", "labelAt": [995, 517]}
+  ],
+  "cards": [
+    {"dot": "rose", "title": "模式边界", "items": ["DEMO_MODE=true 时正式 lifespan 提前返回，v1、v2、webhook 不挂载。", "Demo 默认路径不初始化真实 LLM、企微、短信、语音或企业数据库连接；模拟回执不代表外部送达。"]},
+    {"dot": "cyan", "title": "演示控制", "items": ["版本化 YAML 定义步骤；ScenarioController 使用锁与 expected_version 保护 Play / Pause / Step / Stop / Reset。", "默认 Demo Compose 单 worker、本机 127.0.0.1 绑定、进程内运行状态与确定性 Adapter。"]}
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "uat_run_id": "UAT-20260927T063641Z-270FD422",
+  "status": "FAILED",
+  "created_at": "2026-09-27T06:36:41Z",
+  "completed_at": "2026-09-27T06:45:24Z",
+  "architecture": {
+    "business_data": "PostgreSQL",
+    "queue": "Redis Streams",
+    "vector_store": "PostgreSQL pgvector",
+    "generative_model": "deepseek-flash"
+  },
+  "channel": {
+    "mode": "WECOM_SIMULATOR_ONLY",
+    "entrypoint": "/simulator/wecom/",
+    "real_wecom_enabled": false
+  },
+  "source": {
+    "status": "CAPTURED",
+    "commit": "611609513c5bf2ebd0e8f9fa6cb1fd49789f2b44",
+    "dirty": true,
+    "changed_paths": [
+      "deploy/docker-compose.yml",
+      "frontend/scripts/generate-openapi-types.mjs",
+      "scripts/import_knowledge_batch.py",
+      "scripts/unified_agent_uat/cli.py",
+      "scripts/unified_agent_uat/journey.py",
+      "scripts/unified_agent_uat/validation.py",
+      "src/memory_palace/config/feature_registry.yaml",
+      "static/assistant/styles.css",
+      "static/simulator/wecom/styles.css",
+      "tests/unit/test_runtime_hardening.py"
+    ],
+    "tracked_diff_sha256": "355309757ae33525c0702d938f2b706938801190ea02693447a1b0e4872f7667",
+    "untracked_source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "baseline": {
+    "path": "artifacts/uat-baseline.json",
+    "sha256": "676c23ba7472410ff78616dabda0822ff7f236ed01fe2d3a47d5daa1e6d401ef"
+  },
+  "steps": [
+    {
+      "id": "E2E-15",
+      "status": "PASSED",
+      "result": "steps/E2E-15.json",
+      "failure": null,
+      "sha256": "1b4dd05e2091918516cbfa6205a1d836976619ebdc35b1077a0a2fac21a2912d"
+    },
+    {
+      "id": "E2E-16",
+      "status": "PASSED",
+      "result": "steps/E2E-16.json",
+      "failure": null,
+      "sha256": "ef92b364859470f265e5e3a5bf99fe2c80c2fee0a0e383b5687ce8a1883d100c"
+    },
+    {
+      "id": "UAT-F05",
+      "status": "FAILED",
+      "result": "steps/UAT-F05.json",
+      "failure": "failures/UAT-F05.json",
+      "sha256": "4edfe0933fad5dea2696f3dda90bd2a9467e51a4d57ffc5904d4539897b58425"
+    }
+  ]
+}
