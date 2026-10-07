@@ -2,7 +2,9 @@
 
 **景区运营智能应急响应与经验传承系统**
 
-基于 OpenClaw 多Agent架构启发，融合 Harness 式自主Agent生命周期管理，打造景区运营场景下的**智能体协作平台**。
+文档核对日期：2026-10-07。目录、运行入口和接口说明以当前 `master` 源码为准。
+
+支持景区事件上报、Agent 处置建议、任务与审批闭环、SOP 检索，以及专家访谈和经验资产发布。正式客户端包括管理台、员工助手、景区运行准备入口与企微流程模拟器。
 
 ---
 
@@ -18,6 +20,7 @@ Windows + Docker Desktop 快速启动：
 $envFile = 'C:\secure\memory-palace-uat.env'
 scripts\mvp.cmd install -EnvFile $envFile -Project memory-palace-uat -SecretsVolume memory-palace-secrets
 powershell -ExecutionPolicy Bypass -File scripts\set_deepseek_secret.ps1 -VolumeName memory-palace-secrets
+powershell -ExecutionPolicy Bypass -File scripts\set_scenic_account_secret.ps1 -VolumeName memory-palace-secrets
 scripts\mvp.cmd start -EnvFile $envFile -Project memory-palace-uat -SecretsVolume memory-palace-secrets
 scripts\mvp.cmd verify -EnvFile $envFile -Project memory-palace-uat -SecretsVolume memory-palace-secrets
 ```
@@ -25,11 +28,12 @@ scripts\mvp.cmd verify -EnvFile $envFile -Project memory-palace-uat -SecretsVolu
 启动成功后访问 [http://localhost:8090/admin/](http://localhost:8090/admin/)。系统不提供公开默认密码；使用部署 EnvFile 初始化的管理员账号登录，并在交付前完成密码轮换。
 
 - [企业 MVP 交付 PRD](PRD-memory-palace-enterprise-mvp.md)
-- [内部 UAT 与发布就绪报告](docs/verification/mvp-uat-20260728/internal-uat-release-readiness.md)
-- [浏览器 QA 报告](docs/verification/mvp-uat-20260728/browser-qa-report.md)
+- [统一员工助手与经验资产 PRD](PRD-memory-palace-unified-agent-experience-mvp.md)
+- [2026-09-27 UAT 执行报告](docs/verification/unified-agent-uat/UAT-20260927T083848Z-6FBDFEF6/execution-report.md)
+- [前端源码构建与入口切换](docs/operations/frontend-source-build.md)
 - [备份、恢复与诊断手册](docs/operations/mvp-backup-restore.md)
 
-> 当前仓库目标是企业 MVP 发布候选。开发团队内部 UAT 不替代客户 UAT；24 小时连续运行与客户签收仍需在目标环境完成。企微、短信和语音未配置时保持 `DISABLED_REQUIRES_CONFIG`，不会伪造发送成功。旧 `/demo` 仅保留为历史开发资产，不是交付入口。
+> 当前仓库目标是企业 MVP 发布候选。2026-09-27 的内部 UAT 记录 30/30 必需旅程通过，其中 E2E-15/16 的部分模型决策使用报告声明的测试替身；不代表全部场景均为真实模型调用。客户 UAT、24 小时连续运行与客户签收仍需在目标环境完成。真实企微回调和发送当前按项目策略禁用，展示使用内部模拟器；短信和语音缺少配置时不会伪造发送成功。7 月的 UAT 证据已标记为历史快照。
 
 ## 本地景区模拟环境
 
@@ -44,7 +48,7 @@ powershell -ExecutionPolicy Bypass -File scripts/set_scenic_account_secret.ps1 -
 powershell -ExecutionPolicy Bypass -File scripts/scenic.ps1 start -ModelCache $env:BGE_M3_CACHE_DIR
 ```
 
-在 `.env` 中设置 PostgreSQL、JWT 和管理员强密码。模型缓存由容器只读挂载，不进入 Git 或应用镜像。CPU 是默认路径；具备 CUDA 环境时可显式设置 `EMBEDDING_DEVICE=cuda`。
+在 `.env` 中设置 PostgreSQL、JWT 和管理员强密码，确认 `MEMORY_PALACE_SECRETS_VOLUME` 与两个密钥脚本的卷名相同。正式默认嵌入由 TEI CPU 容器提供，模型缓存只读挂载；切换本地嵌入回退路径需按部署 profile 文档配置。
 
 演示使用三个独立浏览器会话：
 
@@ -62,37 +66,17 @@ powershell -ExecutionPolicy Bypass -File scripts/scenic.ps1 start -ModelCache $e
 
 ---
 
-## 核心定位
+## 业务闭环
 
-当员工在企微群发"有人晕倒了"，系统 30 秒内自动完成：**P0 事件识别 → SOP 指令下发 → 责任人通知 → 全链路记录**。
+现场消息通过统一入口写入 PostgreSQL 并进入 Redis Streams；Agent 结合来源证据生成处置建议。管理人员审核高风险动作、分派任务，员工接单并提交回执；事件关闭时核对任务、审批、风险和卷宗证据。模型延迟取决于网络与运行环境，处理失败会记录错误和恢复状态。
 
-这不是一个聊天机器人，而是一个**多Agent协作的智能体网络**——每个 Agent 各司其职，从上下文感知到经验检索，从推理决策到推送生成，整个过程无需人工介入，且全程可审计、可干预、可追溯。
+专家通过结构化访谈形成经验卡，经过确认、审查、授权和发布后进入检索；现场处置反馈与知识缺口继续回到管理工作台。
 
 ---
 
-## 架构哲学
+## Agent 与业务能力
 
-### OpenClaw 式多Agent协作
-
-```
-企微消息
-    ↓
-┌──────────────────────────────────────────────────────────────┐
-│                     Orchestrator (主控)                       │
-│  意图分发 · SLA 记录 · Agent 调度 · 上下文管理                │
-└──────────────────────────────────────────────────────────────┘
-    ↓
-┌─────────┐  ┌──────────┐  ┌───────────┐  ┌────────────┐
-│  Router │→│ Commander│→│ Memory Ops│→│  Persona   │
-│ (情境感知)│  │ (SOP执行) │  │ (经验检索) │  │ (数字分身)  │
-└─────────┘  └──────────┘  └───────────┘  └────────────┘
-                                           ↑
-              ┌────────────────────────────┘
-              ↓
-┌─────────┐  ┌──────────┐  ┌───────────┐  ┌────────────┐
-│ Watcher │  │ TodoWrite │  │(主动监控) │  │(任务分解)   │
-└─────────┘  └──────────┘  └───────────┘  └────────────┘
-```
+景区建议由 `IncidentCommand` 编排 ContextTrigger、Router、MemoryOps 和 Commander。访谈、经验资产、巡检和任务中心由对应技能与业务服务配合完成。
 
 **Agent 矩阵：**
 
@@ -107,63 +91,13 @@ powershell -ExecutionPolicy Bypass -File scripts/scenic.ps1 start -ModelCache $e
 | **Watcher** | SLA 巡检 · 发现分派 · 闭环审计 | 手动 / 定时任务 |
 | **TodoWrite** | 复杂目标 → 可恢复任务依赖图 | 任务中心 |
 
-### 四层上下文压缩 (Token 防火墙)
-
-```
-┌─────────────────────────────────────────────────────┐
-│                   LLM Context                       │
-├─────────────────────────────────────────────────────┤
-│  Tier 0 (Hot)   │ 最近 10 条 · 完整 fidelity        │
-├─────────────────┼───────────────────────────────────┤
-│  Tier 1 (Warm)  │ 被 evict 消息的 LLM 摘要          │
-├─────────────────┼───────────────────────────────────┤
-│  Tier 2 (Cold)  │ 会话级叙事摘要 · 50 轮触发        │
-└─────────────────┴───────────────────────────────────┘
-```
-
-### 权限引擎 (企业级安全边界)
-
-| Level | 名称 | 行为 |
-|-------|------|------|
-| **FREE** | 直接执行 | `search_memory`, `get_context` |
-| **LOGGED** | 执行+审计 | `write_memory`, `update_session` |
-| **APPROVAL** | 需审批 | `send_sms`, `send_alert`, `send_wechat_message` |
-
-```
-工具调用 → 权限检查 → [APPROVAL] → 挂起 → 微信通知 Admin → 等待审批 → 执行
-```
-
-### 任务依赖图 (Docker 重启不死)
-
-```python
-# 复杂目标自动分解为任务图
-goal: "生成月报并发送"
-    ↓ TodoWrite Skill
-task_1: 收集数据 ──→ task_2: 生成报告 ──→ task_3: 发送邮件
-              │              │
-              └────── A 失败，B 挂起 ──────┘
-                            ↓
-              Docker 重启后自动恢复 PENDING 任务
-```
-
-### 工作区隔离 (文件系统沙盒)
-
-```
-data/workspaces/{task-id}/
-├── input/       # 任务输入
-├── output/      # 生成输出
-├── temp/        # 临时文件 (完成时清理)
-└── metadata/    # 元数据
-
-路径遍历攻击 → ValueError: 路径逃逸检测
-```
+角色与 `venue_id` 限制数据访问，高风险动作经过审批；任务图、消息运行、建议运行和审计保存在 PostgreSQL，启动恢复与队列重试由运行时服务处理。相关实现位于 `core/permissions.py`、`core/task_graph.py`、`core/runtime_recovery.py` 和 `scenic/advice_runs.py`。
 
 ---
 
 ## 技术架构
 
-景区正式主干是 **Agent 主干化**：`IncidentCommand` 是编排四个 agent 的唯一深 seam，Hatchet 负责
-编排与人工中断，pydantic-ai 承载四 agent 契约，LiteLLM 作为进程内模型网关。
+`IncidentCommand` 编排四个景区 Agent，pydantic-ai 校验结构化输出，LiteLLM 负责模型调用。建议运行支持 Redis 与 Hatchet 模式；Hatchet 编排与人工中断需启用 `agent-runtime` profile 并配置对应运行模式。
 
 ```text
 正式客户端 / 现场端 / 受保护的景区运行入口
@@ -190,7 +124,7 @@ data/workspaces/{task-id}/
 
 数据与运行平面
  PostgreSQL（唯一业务事实源：事件、卷宗、任务、审批、经验、审计、llm_call_logs）
- PostgreSQL pgvector（1024 维；TEI 承载 bge-m3 嵌入与 bge-reranker-base 重排）
+ PostgreSQL pgvector（1024 维；TEI bge-m3 嵌入，可选 TEI 重排）
  Redis Streams（消息与建议运行队列）
  external secret volume（DeepSeek Key）
 
@@ -198,20 +132,22 @@ data/workspaces/{task-id}/
  DeepEval 4.2.x
 ```
 
+默认 Compose 栈包含 App、PostgreSQL、Redis、Nginx 和 TEI 嵌入服务；`tei-reranker`、`agent-runtime`、`tracing` 等按需启用。版本、资源预算和启动顺序见 [部署 profiles](docs/architecture/scenic-agent-deployment-profiles.md)。
+
 技术栈与选型理由见 [ADR-0018](docs/adr/0018-agent-chain-as-scenic-incident-trunk.md) 与
 [ADR-0019](docs/adr/0019-agent-runtime-stack-selection.md)；运行时差距与风险见
 [docs/architecture/agent-runtime-gap-review.md](docs/architecture/agent-runtime-gap-review.md)。
 
 pgvector 里应当有哪些数据、来自哪张事实表、如何核验，见 [docs/vector-data-contract.md](docs/vector-data-contract.md)；
-可用 `uv run --no-project --with "psycopg[binary]" python scripts/verify_vector_data.py` 检查数据契约。
+可用 `uv run --no-project --python 3.11 --with-requirements requirements.lock python scripts/verify_vector_data.py` 检查数据契约。
 
 现场演示（人工操作）看 [docs/operations/scenic-demo-startup.md](docs/operations/scenic-demo-startup.md)：
 先执行 `powershell -ExecutionPolicy Bypass -File scripts/scenic-demo-start.ps1` 启动完整栈，再执行
 `powershell -ExecutionPolicy Bypass -File scripts/scenic-demo-open.ps1` 打开 5 个已登录入口，最后由人操作；
 15 步流程见 [docs/operations/scenic-demo-runbook.md](docs/operations/scenic-demo-runbook.md)。
 SOP/知识导入走正式发布链路：
-`uv run --no-project --with httpx python scripts/import_sops.py --input artifacts/knowledge/sops-curated.json --base-url http://127.0.0.1:8090`；
-公开来源检索可用 `uv run --no-project python scripts/collect_knowledge_sources.py`（AnySearch，匿名可用，配置 `ANYSEARCH_API_KEY` 提升配额）。
+`uv run --no-project --python 3.11 --with-requirements requirements.lock python scripts/import_sops.py --input artifacts/knowledge/sops-curated.json --base-url http://127.0.0.1:8090`；
+公开来源检索可用 `uv run --no-project --python 3.11 --with-requirements requirements.lock python scripts/collect_knowledge_sources.py`（AnySearch，匿名可用，配置 `ANYSEARCH_API_KEY` 提升配额）。
 
 ---
 ## 目录结构
@@ -221,7 +157,7 @@ SOP/知识导入走正式发布链路：
 ├── main.py                  # FastAPI 应用入口；生产和本地 uvicorn 都从这里启动
 ├── src/memory_palace/
 │   ├── api/
-│   │   ├── v1/endpoints/    # auth / attachments / assistant / channels / experiences /
+│   │   ├── v1/endpoints/    # admin / auth / attachments / assistant / channels / experiences /
 │   │   │                     # knowledge / management / messages / scenic / sessions /
 │   │   │                     # skills / watcher / workflows
 │   │   └── v2/              # 已挂载的空路由占位，当前没有公开 v2 业务端点
@@ -236,6 +172,7 @@ SOP/知识导入走正式发布链路：
 │   ├── scenic/              # 景区事件、建议运行、实时视图和 Redis/Hatchet 编排
 │   ├── skills/              # commander / context_trigger / memory_ops / persona /
 │   │                         # persona_extract / router / todo / watcher
+│   ├── static/              # Python 包占位；实际页面和资源在根目录 static/
 │   └── tools/               # LLM、嵌入、企微、数据库和工具执行器
 ├── deploy/                  # Docker Compose、Dockerfile 和部署 profile
 ├── frontend/
@@ -252,9 +189,12 @@ SOP/知识导入走正式发布链路：
 ├── openspec/                # 规格和变更提案
 ├── graphify-out/            # 生成的代码图和缓存（已标记为 Linguist generated）
 ├── pyproject.toml           # Python 包和工具配置
-├── requirements*.txt, uv.lock
+├── requirements.lock        # 生产与测试的 Python 依赖固定解析结果
+├── requirements*.txt        # 依赖输入及 eval/原型/本地嵌入扩展
 └── README.md / REPRODUCE.md # 使用说明与可复现交付说明
 ```
+
+该树列出维护入口，省略单文件和辅助目录。`artifacts/knowledge/` 是本机保留的可移植夹具目录：若 Git clone 后不存在，需从交付包取得，不能用运行数据库替代。`.venv`、`node_modules`、数据库、日志和模型缓存不属于源码目录。
 
 ---
 
@@ -263,8 +203,8 @@ SOP/知识导入走正式发布链路：
 ### 前置
 
 - Python 3.11（以 `requirements.lock` 和 Dockerfile 为准）
-- 企业微信应用（CorpID + AgentID + CorpSecret + EncodingAESKey）
-- LLM API（OpenAI / 通义千问 / 智谱GLM）可选，Demo 模式可跳过
+- `uv` 和已配置的 PostgreSQL、Redis、TEI 服务
+- 正式模式的管理员、景区账号及 DeepSeek 凭据；详细变量以 `.env.example` 为准
 
 ### 安装
 
@@ -273,7 +213,7 @@ cd memory-palace-os
 cp .env.example .env
 # 编辑 .env 填入非 LLM 密钥配置
 
-uv run --no-project --with-requirements requirements.txt \
+uv run --no-project --python 3.11 --with-requirements requirements.lock \
   uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -303,7 +243,7 @@ scripts\mvp.cmd doctor -Project memory-palace-uat
 
 ### 管理后台功能
 
-访问 `/admin/` 进入正式企业运营工作台，包含 13 个产品视图：
+访问 `/admin/` 进入正式企业运营工作台。当前 Vue 客户端源码位于 `frontend/apps/console/`，主要业务能力包括：
 
 | 模块 | 说明 |
 |------|------|
@@ -321,17 +261,7 @@ scripts\mvp.cmd doctor -Project memory-palace-uat
 | **系统设置** | 非敏感设置、模型和外部集成状态 |
 | **运维诊断** | 健康、队列、死信、热重载、Trace 和审计 |
 
-**数字分身访谈萃取流程：**
-
-```
-点击「唤醒新专家分身」→ 填写专家代号与职务 → 确认保存
-    ↓ 自动弹出访谈窗口
-回答 5 类结构化问题（触发情境 / 判断行为 / 经验教训等）
-    ↓ 全部回答完毕
-点击「结束萃取」→ 逻辑条目自动存入分身档案
-    ↓
-点击分身卡片 → 向该专家提问 → 获取第一人称回答
-```
+专家经验流程：管理端登记专家与授权、创建访谈 → 员工端接受并回答结构化问题 → 生成、修订和确认经验卡 → 管理端审查与发布 → 授权检索与反馈。旧 Persona 接口仍保留；正式经验资产流程见 [页面与入口说明](docs/product/unified-agent-page-map.md)。
 
 ---
 
@@ -347,6 +277,9 @@ scripts\mvp.cmd doctor -Project memory-palace-uat
 | `DEFAULT_VENUE_ID` / `DEFAULT_VENUE_NAME` | ✅ | 初始租户与场地 |
 | `HTTP_PORT` | ✅ | Nginx 对外端口，景区演示默认 `8090`（8080 常被其他本地项目占用） |
 | `MEMORY_PALACE_SECRETS_VOLUME` | ✅ | DeepSeek 外部 Secret 卷名称 |
+| `BGE_M3_CACHE_DIR` | ✅ | TEI 使用的本地模型缓存绝对路径 |
+| `FRONTEND_V2_APPS` | 选填 | Vue 客户端入口选择：`console,field,integration,operations` |
+| `ADVICE_EXECUTION_MODE` | 选填 | `redis`（默认）或 `hatchet`；后者需 `agent-runtime` profile 与凭据 |
 | `WECHAT_*` / `SMS_*` / `VOICE_*` | 选填 | 缺少真实供应商配置时安全禁用 |
 
 DeepSeek API Key 不写入 EnvFile，而是通过 `scripts/set_deepseek_secret.ps1` 一次性注入外部 Docker volume。所有生成式调用固定使用 `deepseek-flash`，正式 MVP 不允许通过 `DEMO_MODE` 或 Mock 绕过模型。
@@ -364,9 +297,10 @@ DeepSeek API Key 不写入 EnvFile，而是通过 `scripts/set_deepseek_secret.p
 | `POST` | `/api/v1/auth/login` | 登录并获取访问令牌 |
 | `POST` | `/api/v1/auth/refresh` | 刷新访问令牌 |
 | `GET` | `/api/v1/auth/me` | 当前用户身份 |
-| `POST` | `/api/v1/assistant/...` | 员工工作台、任务和经验交互 |
-| `POST` | `/api/v1/assistant/attachments` | 员工端和模拟器附件上传 |
-| `POST` | `/api/v1/channels/...` | 企微/模拟器消息入口和 outbox |
+| `GET` | `/api/v1/assistant/work` | 员工工作台与任务 |
+| `POST` | `/api/v1/assistant/attachments` | 员工端附件上传 |
+| `POST` | `/api/v1/channels/simulator/messages` | 模拟器消息入口 |
+| `GET` | `/api/v1/channels/simulator/sessions/{session_id}/outbox` | 会话通知送达与回执 |
 | `POST` | `/api/v1/messages/` | 接收消息并返回运行 ID |
 | `GET` | `/api/v1/messages/{message_id}` | 查询消息运行状态 |
 | `GET` | `/api/v1/sessions/` | 会话列表 |
@@ -382,10 +316,14 @@ DeepSeek API Key 不写入 EnvFile，而是通过 `scripts/set_deepseek_secret.p
 | `GET` | `/api/v1/admin/diagnostics` | 运维诊断 |
 | `GET` | `/api/v1/admin/knowledge` | 知识文档管理 |
 | `GET` | `/api/v1/admin/sops` | SOP 生命周期管理 |
-| `GET` | `/demo/...` | 仅 `DEMO_MODE=true` 时可用的演示场景 API |
-| `POST` | `/webhook/v1/wechat/...` | 正式模式企微 Webhook 网关 |
+| `GET` | `/api/v1/admin/experts` | 专家名录 |
+| `GET` | `/api/v1/admin/experience-interviews` | 专家访谈 |
+| `GET` | `/api/v1/admin/experience-cards` | 经验卡审查与发布 |
+| `GET` | `/api/v1/assistant/experience` | 员工经验与访谈入口 |
+| `GET` | `/demo/scenarios` | 仅 `DEMO_MODE=true` 时可用的演示场景 API |
+| `GET` / `POST` | `/webhook/v1/wechat` | 真实企微回调当前禁用，返回 503 |
 
-完整路由实现见 `src/memory_palace/api/v1/endpoints/` 和 [内部接口手册](docs/api_reference.md)。
+表中列出常用端点；完整定义以 `src/memory_palace/api/v1/router.py` 及 `endpoints/` 中的路由为准。
 `/api/v2` 当前只保留空路由占位，没有稳定公开端点；正式客户端使用 `/api/v1` 和受保护的页面入口。
 
 ---
@@ -393,18 +331,12 @@ DeepSeek API Key 不写入 EnvFile，而是通过 `scripts/set_deepseek_secret.p
 ## 监控指标
 
 ```
-memory_palace_requests_total{method, endpoint, status}
-memory_palace_request_duration_seconds{method, endpoint}
-memory_palace_messages_processed_total{agent, status}
-memory_palace_llm_calls_total{provider, model}
-
-# SLA 指标
-memory_palace_sla_breach_total{priority}     # P0/P1/P2 超时次数
-memory_palace_sla_response_seconds{priority}  # 实际响应时长
-
-# 熔断指标
-memory_palace_circuit_breaker_state{name, state}
-memory_palace_circuit_breaker_failures_total{name}
+memory_palace_http_requests_total{method, endpoint, status_code}
+memory_palace_http_request_duration_seconds{method, endpoint}
+memory_palace_queue_depth{queue_name}
+memory_palace_queue_messages_processed_total{queue_name, status}
+memory_palace_llm_requests_total{provider, model, status}
+memory_palace_llm_tokens_total{provider, model, token_type}
 ```
 
 健康检查：
@@ -418,27 +350,28 @@ GET /api/v1/admin/health → 管理员依赖、队列和 pgvector 健康状态
 
 ## 测试
 
-```bash
+```powershell
 # 运行全部测试
-uv run --no-project --with-requirements requirements.txt pytest -q
+uv run --no-project --python 3.11 --with-requirements requirements.lock pytest -q
 
 # 运行景区 Agent contract eval
-uv run --no-project --with-requirements requirements-eval.txt `
+uv run --no-project --python 3.11 --with-requirements requirements.lock `
   python evals/scenic_agent/run_deepeval.py --mode contract `
   --report artifacts/scenic-agent-eval/contract-report-local.json
 
 # 只跑单元测试
-uv run --no-project --with-requirements requirements.txt pytest -q tests/unit
+uv run --no-project --python 3.11 --with-requirements requirements.lock pytest -q tests/unit
 ```
+
+`contract` 检查金标准数据与输出约束，不调用真实模型，也不需要 DeepEval 包。真实模型与裁判评测使用独立 eval 环境；`requirements-eval.txt` 中的 DeepEval 4.2.3 与当前生产锁的 Click 8.5.0 约束冲突，不能直接叠加安装。升级或重新锁定 eval 依赖需单独验证。
 
 ---
 
 ## 常见问题
 
 **Q: 企微回调收不到消息**
-- 检查外网是否可达：`curl https://your-domain.com/health`
-- 确认企微后台填写的回调地址与实际一致
-- 确认 AES Key 长度为 43 位（Base64）
+- 当前真实企微回调与发送按项目策略禁用；演示与验证使用 `/simulator/wecom/` 内部渠道。
+- 配置企微凭据不会自动启用真实回调，需另行实现并验证集成切换。
 
 **Q: 服务启动报错**
 - 运行 `scripts\mvp.cmd doctor -Project <project>` 检查 Docker、容器、卷和依赖健康。
