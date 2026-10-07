@@ -209,8 +209,9 @@ pgvector 里应当有哪些数据、来自哪张事实表、如何核验，见 [
 先执行 `powershell -ExecutionPolicy Bypass -File scripts/scenic-demo-start.ps1` 启动完整栈，再执行
 `powershell -ExecutionPolicy Bypass -File scripts/scenic-demo-open.ps1` 打开 5 个已登录入口，最后由人操作；
 15 步流程见 [docs/operations/scenic-demo-runbook.md](docs/operations/scenic-demo-runbook.md)。
-SOP/知识导入走正式发布链路：`python scripts/import_sops.py --input artifacts/knowledge/sops.json`；
-公开来源检索可用 `python scripts/collect_knowledge_sources.py`（AnySearch，匿名可用，配置 `ANYSEARCH_API_KEY` 提升配额）。
+SOP/知识导入走正式发布链路：
+`uv run --no-project --with httpx python scripts/import_sops.py --input artifacts/knowledge/sops-curated.json --base-url http://127.0.0.1:8090`；
+公开来源检索可用 `uv run --no-project python scripts/collect_knowledge_sources.py`（AnySearch，匿名可用，配置 `ANYSEARCH_API_KEY` 提升配额）。
 
 ---
 ## 目录结构
