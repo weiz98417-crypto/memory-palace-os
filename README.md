@@ -217,32 +217,43 @@ SOP/知识导入走正式发布链路：
 ## 目录结构
 
 ```
-src/memory_palace/
-├── api/
-│   ├── v1/endpoints/        # auth / admin / assistant / messages / scenic / watcher
-│   └── v2/                  # 预留路由，占位中未提供稳定公开端点
-├── agent_contracts/         # Agent 输入、输出和模型契约
-├── config/                  # 配置、Secret、环境校验和功能注册表
-├── core/                    # 消息、队列、任务、权限、租户、审计和运行恢复
-├── demo/                    # 受控 DEMO_MODE 场景与适配器
-├── incident/                # IncidentCommand 与四 Agent 生产主干
-├── knowledge/               # 来源、SOP、经验资产和 PostgreSQL pgvector
-├── metrics/                 # Prometheus 指标、告警和仪表盘定义
-├── operations/              # 运行诊断、UAT bootstrap 和展示数据
-├── scenic/                  # 景区事件、建议运行、实时视图和 Hatchet/Redis 编排
-├── skills/                  # context_trigger / router / commander / memory_ops /
-│                           # persona / persona_extract / watcher / todo
-├── static/                  # 服务端静态资源与前端入口
-└── tools/                   # LLM、嵌入、企微、数据库和工具执行器
-
-deploy/                      # Docker Compose、Dockerfile 和部署 profile
-scripts/                     # MVP 生命周期、景区演示、导入和验证命令
-frontend/                    # Vue 前端源码与离线构建目标
-static/                      # Nginx/应用直接提供的静态页面和资源
-docs/                        # ADR、架构图、运维手册和 UAT 证据
-evals/                       # Scenic Agent contract/live eval 数据集
-artifacts/knowledge/         # 可移植知识与 SOP 夹具
-tests/                       # unit / integration / js / powershell 测试
+.
+├── main.py                  # FastAPI 应用入口；生产和本地 uvicorn 都从这里启动
+├── src/memory_palace/
+│   ├── api/
+│   │   ├── v1/endpoints/    # auth / attachments / assistant / channels / experiences /
+│   │   │                     # knowledge / management / messages / scenic / sessions /
+│   │   │                     # skills / watcher / workflows
+│   │   └── v2/              # 已挂载的空路由占位，当前没有公开 v2 业务端点
+│   ├── agent_contracts/     # Agent 输入、输出和模型契约
+│   ├── config/              # 配置、Secret、环境校验和功能注册表
+│   ├── core/                # 消息、队列、任务、权限、租户、审计和运行恢复
+│   ├── demo/                # DEMO_MODE 场景与适配器（不作为正式数据源）
+│   ├── incident/            # IncidentCommand 与四 Agent 生产主干
+│   ├── knowledge/           # 来源、SOP、经验资产和 PostgreSQL pgvector
+│   ├── metrics/             # Prometheus 指标和告警定义
+│   ├── operations/          # 运行诊断、UAT bootstrap 和展示数据
+│   ├── scenic/              # 景区事件、建议运行、实时视图和 Redis/Hatchet 编排
+│   ├── skills/              # commander / context_trigger / memory_ops / persona /
+│   │                         # persona_extract / router / todo / watcher
+│   └── tools/               # LLM、嵌入、企微、数据库和工具执行器
+├── deploy/                  # Docker Compose、Dockerfile 和部署 profile
+├── frontend/
+│   ├── apps/                # console / field / integration / operations
+│   ├── packages/            # api-client / design-tokens / domain-ui
+│   ├── e2e/                 # 前端端到端测试
+│   └── scripts/             # OpenAPI 类型和离线构建脚本
+├── static/                  # 已构建的管理台、员工端、运营端和企微模拟器资源
+├── scripts/                 # MVP 生命周期、景区演示、导入和验证命令
+├── docs/                    # ADR、架构图、运维手册和 UAT 证据
+├── evals/                   # Scenic Agent contract/live eval 数据集
+├── artifacts/knowledge/     # 可移植知识与 SOP 夹具
+├── tests/                   # unit / integration / js / powershell 测试
+├── openspec/                # 规格和变更提案
+├── graphify-out/            # 生成的代码图和缓存（已标记为 Linguist generated）
+├── pyproject.toml           # Python 包和工具配置
+├── requirements*.txt, uv.lock
+└── README.md / REPRODUCE.md # 使用说明与可复现交付说明
 ```
 
 ---
@@ -259,17 +270,14 @@ tests/                       # unit / integration / js / powershell 测试
 
 ```bash
 cd memory-palace-os
-python -m venv .venv
-source .venv/bin/activate  # Linux/macOS
-# .\.venv\Scripts\activate  # Windows
-
-pip install -r requirements.txt
 cp .env.example .env
 # 编辑 .env 填入非 LLM 密钥配置
 
-python -c "from src.memory_palace.knowledge.db_init import init_db; init_db()"
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uv run --no-project --with-requirements requirements.txt \
+  uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+数据库表和正式运行依赖由 `main.py` 的 lifespan 在启动时初始化；不要再调用已经移除的 `init_db()`。
 
 ### Docker 持久化 DeepSeek 密钥
 
@@ -347,14 +355,18 @@ DeepSeek API Key 不写入 EnvFile，而是通过 `scripts/set_deepseek_secret.p
 
 ## API 端点
 
-### 运行与 v1 业务 API
+### 运行与 API 入口
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | `GET` | `/health` | 轻量健康页或 JSON |
 | `GET` | `/ready` | 依赖就绪检查 |
 | `POST` | `/api/v1/auth/login` | 登录并获取访问令牌 |
+| `POST` | `/api/v1/auth/refresh` | 刷新访问令牌 |
 | `GET` | `/api/v1/auth/me` | 当前用户身份 |
+| `POST` | `/api/v1/assistant/...` | 员工工作台、任务和经验交互 |
+| `POST` | `/api/v1/assistant/attachments` | 员工端和模拟器附件上传 |
+| `POST` | `/api/v1/channels/...` | 企微/模拟器消息入口和 outbox |
 | `POST` | `/api/v1/messages/` | 接收消息并返回运行 ID |
 | `GET` | `/api/v1/messages/{message_id}` | 查询消息运行状态 |
 | `GET` | `/api/v1/sessions/` | 会话列表 |
@@ -370,8 +382,11 @@ DeepSeek API Key 不写入 EnvFile，而是通过 `scripts/set_deepseek_secret.p
 | `GET` | `/api/v1/admin/diagnostics` | 运维诊断 |
 | `GET` | `/api/v1/admin/knowledge` | 知识文档管理 |
 | `GET` | `/api/v1/admin/sops` | SOP 生命周期管理 |
+| `GET` | `/demo/...` | 仅 `DEMO_MODE=true` 时可用的演示场景 API |
+| `POST` | `/webhook/v1/wechat/...` | 正式模式企微 Webhook 网关 |
 
-`/api/v2` 当前只保留路由占位，没有稳定公开端点；正式客户端使用 `/api/v1` 和受保护的页面入口。
+完整路由实现见 `src/memory_palace/api/v1/endpoints/` 和 [内部接口手册](docs/api_reference.md)。
+`/api/v2` 当前只保留空路由占位，没有稳定公开端点；正式客户端使用 `/api/v1` 和受保护的页面入口。
 
 ---
 
